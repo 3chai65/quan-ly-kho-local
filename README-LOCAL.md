@@ -10,7 +10,7 @@ giữa máy tính và điện thoại trong cùng mạng WiFi (LAN), không cầ
 
 ## Chạy
 ```powershell
-cd "G:\Quản Lý Kho-local"
+cd "G:\quan-ly-kho-local"
 docker compose up -d --build
 ```
 
@@ -20,16 +20,16 @@ Mở trên điện thoại: **http://<IP-máy-tính>:8787**
 - Xem IP máy tính: `ipconfig` → dòng `IPv4 Address` của card WiFi (dạng `192.168.x.x`).
 
 ## Dữ liệu nằm ở đâu
-- File SQLite: `G:\Quản Lý Kho-local\data\app.db`
+- File SQLite: `G:\quan-ly-kho-local\data\app.db`
 
 ## Tự động sao lưu (mỗi ngày)
-- Server tự tạo **1 bản backup/ngày** vào `G:\Quản Lý Kho-local\data\backups\`,
+- Server tự tạo **1 bản backup/ngày** vào `G:\quan-ly-kho-local\data\backups\`,
   tên `backup-YYYY-MM-DD.db`, giữ **30 bản** gần nhất (bản cũ tự xóa, chụp trước lần ghi đầu tiên trong ngày);
   đồng thời tự chụp thêm bản `backup-YYYY-MM-DD-truoc-ghi-de-HHmmssSSS.db` (giữ **10 bản**) trước mỗi lần ghi đè chủ động (`X-Force`).
 - Xem danh sách backup: mở `http://localhost:8787/api/backups`.
 - **Khôi phục nhanh:** dừng container, copy file backup đè lên `app.db`, khởi động lại:
   ```powershell
-  cd "G:\Quản Lý Kho-local"
+  cd "G:\quan-ly-kho-local"
   docker compose stop
   Copy-Item "data\backups\backup-2026-11-06.db" "data\app.db" -Force
   Remove-Item "data\app.db-wal","data\app.db-shm" -ErrorAction SilentlyContinue

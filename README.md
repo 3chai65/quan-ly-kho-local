@@ -48,7 +48,7 @@ Máy tính (máy chủ)                          Điện thoại / PC khác (cù
 ## Chạy
 
 ```powershell
-cd "G:\Quản Lý Kho-local"
+cd "G:\quan-ly-kho-local"
 docker compose up -d --build
 ```
 

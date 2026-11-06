@@ -6,7 +6,7 @@ services:
     ports:
       - "8787:8787"
     volumes:
-      # File SQLite thật nằm trên ổ cứng máy bạn tại G:\Quản Lý Kho-local\data\app.db
+      # File SQLite thật nằm trên ổ cứng máy bạn tại G:\quan-ly-kho-local\data\app.db
       - ./data:/data
     environment:
       - PORT=8787
