@@ -1,8 +1,8 @@
 # Quản Lý Kho — bản chạy local (Docker + SQLite)
 
-Bản này thay thế Cloudflare Worker + D1 bằng một server Node nhỏ chạy trong
-Docker, lưu dữ liệu vào **file SQLite thật trên ổ cứng**. Dùng chung dữ liệu
-giữa máy tính và điện thoại trong cùng mạng WiFi (LAN), không cần internet.
+Bản đang dùng: server Node trong Docker, dữ liệu là **file SQLite trên ổ cứng**.
+PC và điện thoại xem cùng một kho trong mạng nhà, dùng riêng từng máy, không mở cùng lúc.
+Repo Cloudflare Worker (`quan-ly-kho`) để nguyên, không nằm trong thư mục này.
 
 ## Yêu cầu
 - Docker Desktop đang chạy.
@@ -63,6 +63,10 @@ $s = $req.GetRequestStream(); $s.Write($bytes, 0, $bytes.Length); $s.Close()
 
 Hoặc đơn giản hơn: mở app → **Sao lưu & khôi phục → Khôi phục từ file** trên
 chính giao diện web.
+
+File JSON không có `moneyUnit: "dong"` được coi là nghìn đồng và nhân 1000 khi nạp.
+File xuất từ bản 2.6.6 trở đi có cờ đó thì giữ nguyên số đồng. Khôi phục đúng
+kho đang chạy bằng cách copy `app.db` (mục sao lưu phía trên), không bằng JSON.
 
 ## Chạy test
 ```powershell

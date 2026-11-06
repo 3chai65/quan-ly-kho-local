@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.7] - 2026-11-06
+
+### Dọn mô tả lệch và code không còn đường vào
+
+- README mô tả đúng đơn vị tiền: lưu đồng, hiển thị nghìn tối đa 3 số lẻ, cờ `moneyUnit`.
+- Gỡ nút hoàn tác chuẩn hoá cũ (`migUndo`) và `fmtInt` vì không còn chỗ nào ghi hoặc gọi.
+- `GET /api/backups` không trả đường dẫn thư mục. Container có healthcheck, vẫn chạy bằng user mặc định của image.
+- Nếu trình duyệt còn bản chưa gửi theo đơn vị nghìn trong lúc server đã là đồng, trang bỏ bản đó và báo một lần.
+
 ## [2.6.6] - 2026-11-06
 
 ### Lưu tiền bằng đồng nguyên, hiển thị vẫn là nghìn

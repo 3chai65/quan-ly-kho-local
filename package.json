@@ -1,9 +1,9 @@
 {
   "name": "quan-ly-kho-local",
-  "version": "2.6.6",
+  "version": "2.6.7",
   "private": true,
   "type": "module",
-  "description": "Quản Lý Kho — bản chạy local (Docker + SQLite), thay thế Cloudflare Worker/D1",
+  "description": "Quản Lý Kho — app một người dùng, chạy local bằng Docker và SQLite",
   "main": "server.js",
   "engines": {
     "node": ">=22"

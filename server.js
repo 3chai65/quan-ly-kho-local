@@ -1,18 +1,16 @@
 /**
  * Quản Lý Kho — server local (Docker + SQLite)
  * ---------------------------------------------------------------
- * Bản thay thế `worker.js` (Cloudflare Worker + D1) để chạy hoàn toàn
- * trong mạng nội bộ (LAN), dữ liệu là file SQLite thật trên ổ cứng.
+ * App một người, chỉ trong LAN. Dữ liệu là file SQLite trên ổ cứng.
+ * Repo Cloudflare Worker là bản khác, không còn trong thư mục này.
  *
- * Giữ NGUYÊN hợp đồng API của worker cũ:
- *   GET  /api/state          -> { success:true, data:{products,transactions,prescriptions,updatedAt} }
- *   PUT  /api/state          -> ghi snapshot; hỗ trợ X-Base-Updated / X-Force (409 conflict)
- *   GET  /                   -> HTML (src/page.js với placeholder CSP/SSR)
+ *   GET  /api/state   -> { success, data } ; data.moneyUnit = "dong" (tiền là đồng nguyên)
+ *   PUT  /api/state   -> ghi snapshot. Thiếu X-Base-Updated và không có X-Force: 428.
+ *                        X-Base-Updated không phải số: 400. Base cũ: 409, trừ khi X-Force.
+ *   GET  /api/backups -> danh sách file backup (không trả đường dẫn thư mục)
+ *   GET  /            -> HTML (src/page.js, CSP inline, không nonce)
  *
- * Thay đổi so với bản Cloudflare:
- *   - Bỏ xác thực (chạy trong LAN nội bộ) — không còn /login, cookie, APP_TOKEN.
- *   - Không có nonce động: CSP cho phép 'unsafe-inline' (trang tĩnh nội bộ).
- *   - SQLite chạy đồng bộ (better-sqlite3), ghi trong 1 transaction.
+ * Không đăng nhập. SQLite đồng bộ (better-sqlite3), mỗi lần ghi là một transaction.
  */
 
 'use strict';
@@ -513,7 +511,7 @@ app.get('/api/backups', (req, res) => {
         const st = fs.statSync(path.join(BACKUP_DIR, n));
         return { name: n, size: st.size, modified: st.mtime.toISOString() };
       });
-    res.json({ success: true, dir: BACKUP_DIR, keepDays: BACKUP_KEEP_DAYS, count: files.length, backups: files });
+    res.json({ success: true, keepDays: BACKUP_KEEP_DAYS, count: files.length, backups: files });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Không đọc được danh sách backup' });
   }

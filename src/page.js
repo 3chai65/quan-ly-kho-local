@@ -798,9 +798,6 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
             <button class="btn btn--sm" type="button" data-action="latest-exp">Gần nhất</button>
             <button class="btn btn--sm" type="button" data-action="clear-exp">Tất cả</button>
             <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" hidden>Gộp đơn thuốc lẻ cũ</button>
-            <button class="btn btn--sm" type="button" data-action="mig-restore" id="migUndo" hidden>
-              <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Hoàn tác chuẩn hoá
-            </button>
           </div>
         </div>
         <div class="tw">
@@ -1103,7 +1100,6 @@ function fmtMoney(dong){
   return (neg ? '-' : '') + (ip || '0') + fp;
 }
 function fmtUnitPrice(k){ return fmtMoney(k) + '/kg'; }
-function fmtInt(n){ return fmtNum(n); }
 function pad2(n){ return n < 10 ? '0' + n : '' + n; }
 function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 function thisMonth(){ return todayISO().slice(0, 7); }
@@ -2870,23 +2866,6 @@ function recFixAll(){
   commit('Đã chỉnh tồn ' + valid.length + ' vị thuốc');
   renderRec();
 }
-/* ================= HOÀN TÁC CHUẨN HOÁ CŨ ================= */
-var MIG_KEY = 'kho_migrate_retail_v1';
-var MIG_BAK = 'kho_backup_premig_v1';
-
-function restoreMigrate(){
-  var raw = null;
-  try { raw = localStorage.getItem(MIG_BAK); } catch (e) {}
-  if (!raw) { toast('Không có bản sao lưu', 'error'); return; }
-  if (!confirm('Khôi phục toàn bộ dữ liệu trước khi chuẩn hoá?')) return;
-  var bak = null;
-  try { bak = sanitize(JSON.parse(raw)); } catch (e) {}
-  if (!bak) { toast('Bản sao lưu không đọc được', 'error'); return; }
-  db = bak;
-  try { localStorage.removeItem(MIG_KEY); } catch (e) {}
-  commit('Đã khôi phục dữ liệu trước chuẩn hoá', true);
-}
-
 /* ================= BIỂU ĐỒ ================= */
 var chartSel = -1, chartGeo = null;
 function chartData(){
@@ -3997,7 +3976,6 @@ function handleAction(btn){
     case 'rec-fix': recFix(id); break;
     case 'rec-fix-all': recFixAll(); break;
     case 'latest-exp': setMonthInput('expMonth', ''); expAll = false; expPage = 1; renderHistory('exp'); break;
-    case 'mig-restore': restoreMigrate(); break;
     case 'backup-now': downloadBackup(true); break;
     case 'restore-file': {
       var ri = $('#restoreInput');
@@ -4187,7 +4165,8 @@ function init(){
   if (local) delete local._scaledFromK;
   /* Bản local cũ còn đơn vị nghìn. Server đã migrate sang đồng thì bỏ
      bản đó, kẻo đẩy số đã làm tròn đè lên số lẻ gốc vừa nhân 1000. */
-  if (local && wasDirty && !(scaledFromK && remote && remote.moneyUnit === 'dong')) {
+  var dropLegacy = !!(local && wasDirty && scaledFromK && remote && remote.moneyUnit === 'dong');
+  if (local && wasDirty && !dropLegacy) {
     /* Có thay đổi chưa gửi: giữ bản local và đẩy lên máy chủ. */
     db = local;
     cloudBase = savedBase;
@@ -4216,19 +4195,13 @@ function init(){
   var cy = $('#chartYear');
   if (cy) cy.value = thisYear();
 
-  var undo = $('#migUndo');
-  if (undo) {
-    var hasBak = false;
-    try { hasBak = !!localStorage.getItem(MIG_BAK); } catch (e) {}
-    undo.hidden = !hasBak;
-  }
-
   bindEvents();
   initSuggest();
   resetRetail();
   resetRemedy();
   renderAll();
   renderBackupInfo();
+  if (dropLegacy) toast('Đã bỏ thay đổi chưa gửi (nâng cấp dữ liệu)');
 
   if (dirty) {
     /* Đẩy bản local chưa gửi lên trước; server trả 409 nếu máy khác đã sửa. */

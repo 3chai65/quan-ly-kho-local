@@ -4,6 +4,16 @@ App quản lý kho dược liệu cá nhân (1 người dùng): nhập hàng, b�
 tồn kho, thống kê doanh thu 12 tháng. Bản này chạy **hoàn toàn trong mạng nội bộ**,
 dữ liệu là **file SQLite trên ổ cứng** — không phụ thuộc cloud.
 
+## Phạm vi
+
+- Bản đang dùng là thư mục `G:\quan-ly-kho-local`. Remote `origin-local` trỏ
+  https://github.com/3chai65/quan-ly-kho-local , nhánh `main`.
+- Repo `quan-ly-kho` (Cloudflare Worker + D1, remote git tên `origin`) giữ nguyên
+  từ lúc chuyển sang Docker. Không sửa code ở đó và không push sang remote đó.
+- Một người dùng. PC và điện thoại dùng riêng, không mở cùng lúc. Tab đang ẩn
+  không tự tải (`document.hidden`). Khi quay lại máy, trang lấy bản server nếu
+  `updatedAt` mới hơn.
+
 ## Tinh thần dự án (đặt từ đầu)
 
 - **PageSpeed/Lighthouse cao nhất có thể**: không tài nguyên ngoài (font/CDN/analytics),
@@ -72,9 +82,21 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
 1. **Tồn kho** (`products.stock_kg`, đơn vị kg, kiểu REAL): `NHAP` cộng, `BAN` trừ;
    bán/xuất phải kiểm tra đủ hàng trước (sai số cho phép `1e-9`). App có màn
    **đối soát tồn kho**: so `stock_kg` với tổng từ `transactions`, cho phép sửa về `calc`.
-2. **Tiền** (đơn vị **nghìn VND — "k"**): lưu và hiển thị **số nguyên** (làm tròn).
-   `fmtMoney` dùng `Math.round`; làm tròn cả khi lưu (`money()` ở client và `validateState`
-   ở server) để tổng các dòng luôn khớp dòng tổng.
+2. **Tiền lưu bằng đồng nguyên**, người dùng vẫn gõ và đọc theo **nghìn đồng**.
+   Cột SQLite `price_vnd`, `total_vnd`, `cost_vnd`, `cost_price_vnd`, `unit_price_vnd`
+   là đồng. `GET /api/state` kèm `moneyUnit: "dong"`.
+   - Ô nhập nhận nghìn (`kInput` đổ ra ô, `kToDong` đổi lúc lưu: gõ `135` thành `135000`).
+   - `fmtMoney` hiện nghìn, tối đa 3 số lẻ: `400` đồng → `0,4`, `13500` → `13,5`, `135000` → `135`.
+   - `money()` làm tròn tới đồng gần nhất, cả client lẫn `validateState` trên server.
+   - Vốn một vị đơn thuốc = làm tròn `kg × giá nhập` tới đồng. Lãi chia đều, dòng cuối
+     nhận số dư. Giá một thang và tổng các dòng có thể lệch vài đồng.
+   - JSON hoặc localStorage **không** có `moneyUnit: "dong"` là bản nghìn cũ.
+     Client nhân 1000 một lần (`scaleLegacyMoney`) rồi mới `sanitize`. Bản đã có cờ
+     thì giữ nguyên, không nhân lần hai.
+   - Migrate trên server chạy một lần khi `app_meta.money_unit` chưa phải `dong`.
+     Giao dịch có trong `data/truoc-lam-tron-2026-11-06-1047.json` lấy số lẻ gốc
+     rồi nhân 1000. Giao dịch không có trong file đó chỉ nhân 1000 từ số nghìn
+     nguyên đã lưu. Không nhân bản SQLite đã làm tròn nếu còn file số lẻ.
 3. **Số kg**: dùng `dec()` để khử sai số dấu phẩy động nhị phân; hiển thị 1 kg = 10 lạng = 1000 g.
 4. **Đồng bộ**: `PUT /api/state` ghi snapshot toàn bộ trong 1 transaction SQLite.
    Client gửi `X-Base-Updated: <updatedAt>`; server so với `app_meta.source_updated_at`,
@@ -90,7 +112,7 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
 | Endpoint | Mô tả |
 |---|---|
 | `GET /` | Trang app đầy đủ (SSR dữ liệu vào HTML) |
-| `GET /api/state` | Lấy toàn bộ state (JSON) |
+| `GET /api/state` | State JSON, kèm `moneyUnit: "dong"` |
 | `PUT /api/state` | Ghi snapshot (cần `X-Base-Updated`, xem mục 4) |
 | `GET /api/backups` | Liệt kê các bản backup `.db` hiện có |
 
@@ -100,6 +122,9 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
 - **Khôi phục**: dừng container, copy file backup đè lên `app.db`, khởi động lại
   (xem `README-LOCAL.md`).
 - **Trong app**: nút "Sao lưu" tải file JSON theo trình duyệt của từng thiết bị.
+  File xuất từ bản 2.6.6 có `moneyUnit: "dong"` trong dữ liệu. File cũ không có
+  cờ này bị hiểu là nghìn đồng và nhân 1000 lúc khôi phục. Muốn đúng từng đồng
+  của kho đang chạy thì copy file `app.db`, không đi đường JSON.
 
 ## Quy ước làm việc
 
