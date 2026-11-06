@@ -205,8 +205,8 @@ function validateState(d) {
     if (!isNonNegNumber(p.costPrice)) fail(label + ' "' + name + '": giá nhập phải >= 0');
     const id = String(p.id || randomId());
     const nameKey = name.toLowerCase();
-    if (productIds.has(id)) { warn('Bỏ sản phẩm trùng id: ' + id); return; }
-    if (productNames.has(nameKey)) { warn('Bỏ sản phẩm trùng tên: ' + name); return; }
+    if (productIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
+    if (productNames.has(nameKey)) { fail(label + ': trùng tên sản phẩm "' + name + '"'); return; }
     productIds.add(id);
     productNames.add(nameKey);
     state.products.push({ id, name, stock: decNum(p.stock), costPrice: money(p.costPrice) });
@@ -230,11 +230,11 @@ function validateState(d) {
     if (t.thang != null && !(Number(t.thang) >= 1)) fail(label + ': số thang phải >= 1');
     if (t.unitPrice != null && !isNonNegNumber(t.unitPrice)) fail(label + ': giá 1 thang phải >= 0');
     const id = String(t.id || randomId());
-    if (txIds.has(id)) { warn('Bỏ giao dịch trùng id: ' + id); return; }
+    if (txIds.has(id)) { fail(label + ': trùng id giao dịch ' + id); return; }
     txIds.add(id);
     const rawOid = t.oid != null ? String(t.oid) : (t.orderId != null ? String(t.orderId) : null);
     const rawOname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : null);
-    const orderId = rawOid || (rawOname || null);
+    const orderId = rawOid || null;
     const orderName = (rawOname && rawOname !== rawOid) ? rawOname : null;
     state.transactions.push({
       id, date: String(t.date), type: t.type, productId,
@@ -255,8 +255,8 @@ function validateState(d) {
     if (!Array.isArray(r.items) || !r.items.length) { fail(label + ' "' + name + '": chưa có vị thuốc'); return; }
     const id = String(r.id || randomId());
     const nameKey = name;
-    if (rxIds.has(id)) { warn('Bỏ đơn thuốc trùng id: ' + id); return; }
-    if (rxNames.has(nameKey)) { warn('Bỏ đơn thuốc trùng tên: ' + name); return; }
+    if (rxIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
+    if (rxNames.has(nameKey)) { fail(label + ': trùng tên đơn thuốc "' + name + '"'); return; }
     rxIds.add(id);
     rxNames.add(nameKey);
     const itemIds = new Set();
@@ -267,7 +267,7 @@ function validateState(d) {
       if (!itemPid) { fail(label + ' dòng ' + (j + 1) + ': thiếu productId'); return; }
       if (!productIds.has(itemPid)) warn(label + ' dòng ' + (j + 1) + ': productId không có trong danh sách sản phẩm: ' + itemPid);
       if (!(Number(item.grams) > 0)) { fail(label + ' dòng ' + (j + 1) + ': số gram phải > 0'); return; }
-      if (itemIds.has(itemPid)) { warn('Bỏ vị trùng trong đơn "' + name + '"'); return; }
+      if (itemIds.has(itemPid)) { fail(label + ' "' + name + '": vị thuốc ' + itemPid + ' bị lặp'); return; }
       itemIds.add(itemPid);
       items.push({ productId: itemPid, grams: decNum(item.grams) });
     });
@@ -360,6 +360,29 @@ function runDailyBackup(force) {
   pruneBackups();
 }
 
+/* Ghi đè chủ động (X-Force: khôi phục / "giữ bản máy này") xóa sạch rồi ghi lại toàn bộ,
+ * nên chụp bản trước-ghi-đè riêng (giữ 10 bản gần nhất, tách khỏi 30 bản theo ngày). */
+const FORCE_BACKUP_KEEP = 10;
+const FORCE_BACKUP_RE = /^backup-\d{4}-\d{2}-\d{2}-truoc-ghi-de-\d{9}\.db$/;
+function snapshotBeforeForce() {
+  try {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    const d = new Date();
+    const p = n => (n < 10 ? '0' + n : '' + n);
+    const ms = d.getMilliseconds();
+    const hms = p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + (ms < 10 ? '00' : ms < 100 ? '0' : '') + ms;
+    const file = path.join(BACKUP_DIR, 'backup-' + todayStamp() + '-truoc-ghi-de-' + hms + '.db');
+    if (!fs.existsSync(file)) {
+      db.prepare('VACUUM INTO ?').run(file);
+      console.log('[backup] Đã chụp bản trước khi ghi đè: ' + file);
+    }
+    const olds = fs.readdirSync(BACKUP_DIR).filter(n => FORCE_BACKUP_RE.test(n)).sort();
+    while (olds.length > FORCE_BACKUP_KEEP) fs.unlinkSync(path.join(BACKUP_DIR, olds.shift()));
+  } catch (err) {
+    console.error('[backup] Lỗi chụp bản trước khi ghi đè:', err && err.message ? err.message : err);
+  }
+}
+
 function pruneBackups() {
   try {
     const files = fs.readdirSync(BACKUP_DIR)
@@ -423,8 +446,12 @@ app.put('/api/state', (req, res) => {
     if (checked.errors.length) {
       return res.status(400).json({ success: false, error: 'Dữ liệu không hợp lệ', details: checked.errors });
     }
+    const force = req.get('X-Force') === '1';
     const baseHdr = req.get('X-Base-Updated');
-    if (baseHdr != null && req.get('X-Force') !== '1') {
+    if (!force && baseHdr == null) {
+      return res.status(428).json({ success: false, error: 'Thiếu X-Base-Updated (hoặc gửi X-Force: 1 để chủ động ghi đè)' });
+    }
+    if (baseHdr != null && !force) {
       const baseNum = Number(baseHdr);
       // Header không phải số hợp lệ → coi như xung đột (an toàn) thay vì bỏ qua kiểm tra.
       if (!Number.isFinite(baseNum)) {
@@ -435,8 +462,10 @@ app.put('/api/state', (req, res) => {
         return res.status(409).json({ success: false, conflict: true, updatedAt: current });
       }
     }
+    // Chụp TRƯỚC khi ghi: bản của ngày = trạng thái trước lần ghi đầu tiên trong ngày.
+    runDailyBackup(false);
+    if (force) snapshotBeforeForce();
     const updatedAt = writeState(checked.state);
-    runDailyBackup(false); // tạo bản backup ngày (nếu chưa có)
     res.json({ success: true, updatedAt, warnings: checked.warnings.length ? checked.warnings : undefined });
   } catch (err) {
     console.error('/api/state PUT', err);
@@ -475,7 +504,7 @@ app.get('/api/backups', (req, res) => {
   try {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
     const files = fs.readdirSync(BACKUP_DIR)
-      .filter(n => /^backup-\d{4}-\d{2}-\d{2}\.db$/.test(n))
+      .filter(n => /^backup-\d{4}-\d{2}-\d{2}(-truoc-ghi-de-\d{9})?\.db$/.test(n))
       .sort()
       .reverse()
       .map(n => {

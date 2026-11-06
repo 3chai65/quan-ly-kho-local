@@ -3433,22 +3433,39 @@ function delProduct(id){
   commit('Đã xóa vị thuốc');
 }
 /* Giữ nguyên số khách đã trả, ghi lại vốn và thành tiền mọi vị trong đơn. */
+/* Vốn từng dòng đã lưu lúc bán là vốn lịch sử: không tính lại theo giá nhập hiện tại.
+   Chỉ dòng cũ chưa có cost mới fallback về giá nhập hiện tại. */
+function remedyLineCost(t){
+  if (t.cost != null && isFinite(Number(t.cost))) return money(t.cost);
+  var prod = findProduct(t.productId);
+  return money(num(t.qty) * (prod ? num(prod.costPrice) : 0));
+}
+/* Vốn mới của dòng bị sửa gram: co giãn theo vốn lịch sử của chính dòng đó. */
+function scaledRemedyCost(t, prevQty, prevCost){
+  var nq = num(t.qty);
+  if (prevCost != null && num(prevCost) > 0 && num(prevQty) > 0) {
+    return money(num(prevCost) * nq / num(prevQty));
+  }
+  var prod = findProduct(t.productId);
+  return money(nq * (prod ? num(prod.costPrice) : 0));
+}
+/* Chia lại tiền khách trả cho các dòng cùng đơn. Giữ nguyên vốn đã lưu của từng dòng,
+   chỉ chia lại phần lãi đều. Trả false (không đổi gì) khi giá bán thấp hơn tổng vốn. */
 function applyRemedyBalance(lines, grand){
-  var prepared = lines.map(function(t){
-    var prod = findProduct(t.productId);
-    var kg = num(t.qty);
-    var unit = (prod && num(prod.costPrice) > 0) ? num(prod.costPrice) : 0;
-    return { t: t, kg: kg, exactCost: kg * unit };
-  });
-  var balanced = balanceRemedyMoney(grand, prepared);
-  if (!balanced) return false;
+  var costs = lines.map(function(t){ return remedyLineCost(t); });
+  var totalCost = 0;
+  costs.forEach(function(c){ totalCost += c; });
+  var g0 = money(grand);
+  if (g0 < totalCost) return false;
+  var totals = allocateRemedyByCost(g0, costs.map(function(c){ return { cost: c }; }));
   var unitPrice = 0;
   lines.forEach(function(t){ if (num(t.unitPrice) > 0) unitPrice = money(t.unitPrice); });
-  prepared.forEach(function(row, i){
-    row.t.cost = balanced[i].cost;
-    row.t.total = balanced[i].total;
-    row.t.price = row.kg > 0 ? money(balanced[i].total / row.kg) : 0;
-    if (unitPrice > 0) row.t.unitPrice = unitPrice;
+  lines.forEach(function(t, i){
+    var kg = num(t.qty);
+    t.cost = costs[i];
+    t.total = totals[i];
+    t.price = kg > 0 ? money(totals[i] / kg) : 0;
+    if (unitPrice > 0) t.unitPrice = unitPrice;
   });
   return true;
 }
@@ -3603,11 +3620,14 @@ function saveTxEdit(){
     lines.forEach(function(x){ grand += num(x.total); });
     var prevQty = t.qty;
     var prevG = t.g;
+    var prevCost = t.cost;
     t.qty = dec(q);
     t.g = dec(qRaw);
+    t.cost = scaledRemedyCost(t, prevQty, prevCost);
     if (!applyRemedyBalance(lines, grand)) {
       t.qty = prevQty;
       t.g = prevG;
+      t.cost = prevCost;
       if (p) p.stock = dec(num(p.stock) + delta);
       toast('Giá bán thấp hơn vốn của đơn', 'error');
       return;

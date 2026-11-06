@@ -49,6 +49,7 @@ globalThis.__test = {
   saveLocal: saveLocal, readDirty: readDirty, readBase: readBase,
   computeStats: computeStats, allocateRemedyByCost: allocateRemedyByCost,
   balanceRemedyMoney: balanceRemedyMoney,
+  applyRemedyBalance: applyRemedyBalance, scaledRemedyCost: scaledRemedyCost, remedyLineCost: remedyLineCost,
   backupBeforeRestore: backupBeforeRestore, downloadBackup: downloadBackup,
   pushState: pushState, pullState: pullState, cloudConflict: cloudConflict,
   autoRefresh: autoRefresh, busyEditing: busyEditing,
@@ -301,6 +302,60 @@ test('balanceRemedyMoney làm tròn vốn cả đơn một lần rồi chia xu�
   assert.deepEqual(even.map(row => row.total), [64, 66, 70]);
 
   assert.equal(app.balanceRemedyMoney(5, [{ exactCost: 10 }]), null);
+});
+
+test('applyRemedyBalance giữ vốn lịch sử, không tính lại theo giá nhập hiện tại', () => {
+  /* Bán lúc A=100k/kg, B=200k/kg, C=50k/kg; sau đó giá nhập A tăng lên 160k/kg. */
+  app.setDb({
+    products: [
+      { id: 'A', name: 'A', stock: 5, costPrice: 160 },
+      { id: 'B', name: 'B', stock: 5, costPrice: 200 },
+      { id: 'C', name: 'C', stock: 5, costPrice: 50 }
+    ],
+    transactions: [], prescriptions: [], updatedAt: 0
+  });
+  const lines = [
+    { id: 'a', productId: 'A', qty: 0.04, cost: 4, total: 40, price: 1000, unitPrice: 60 },
+    { id: 'b', productId: 'B', qty: 0.02, cost: 4, total: 40, price: 2000, unitPrice: 60 },
+    { id: 'c', productId: 'C', qty: 0.06, cost: 3, total: 40, price: 667, unitPrice: 60 }
+  ];
+  /* Xóa vị C: khách vẫn trả 120, vốn A và B phải giữ 4 và 4 (không thành 6 vì giá nhập mới). */
+  const rest = lines.slice(0, 2);
+  assert.equal(app.applyRemedyBalance(rest, 120), true);
+  assert.deepEqual(rest.map(x => x.cost), [4, 4]);
+  assert.deepEqual(rest.map(x => x.total), [60, 60]);
+  assert.equal(rest.reduce((a, x) => a + x.total, 0), 120);
+});
+
+test('applyRemedyBalance trả false và không đổi gì khi giá bán thấp hơn vốn', () => {
+  app.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 0 });
+  const lines = [
+    { id: 'a', productId: 'X', qty: 1, cost: 30, total: 40, price: 40, unitPrice: 50 },
+    { id: 'b', productId: 'Y', qty: 1, cost: 30, total: 40, price: 40, unitPrice: 50 }
+  ];
+  const before = JSON.stringify(lines);
+  assert.equal(app.applyRemedyBalance(lines, 50), false);
+  assert.equal(JSON.stringify(lines), before);
+});
+
+test('dòng chưa có cost (dữ liệu cũ) mới fallback giá nhập hiện tại', () => {
+  app.setDb({
+    products: [{ id: 'L', name: 'L', stock: 5, costPrice: 200 }],
+    transactions: [], prescriptions: [], updatedAt: 0
+  });
+  assert.equal(app.remedyLineCost({ productId: 'L', qty: 0.02 }), 4);
+  assert.equal(app.remedyLineCost({ productId: 'L', qty: 0.02, cost: 0 }), 0);
+});
+
+test('scaledRemedyCost co giãn theo vốn lịch sử của chính dòng, không theo giá hiện tại', () => {
+  app.setDb({
+    products: [{ id: 'A', name: 'A', stock: 5, costPrice: 160 }],
+    transactions: [], prescriptions: [], updatedAt: 0
+  });
+  /* Vốn cũ 4 cho 0,04 kg → 0,06 kg phải là 6 (giá lúc bán 100k/kg), không phải 10 (giá 160k/kg). */
+  assert.equal(app.scaledRemedyCost({ productId: 'A', qty: 0.06 }, 0.04, 4), 6);
+  /* Không có vốn cũ thì mới dùng giá nhập hiện tại. */
+  assert.equal(app.scaledRemedyCost({ productId: 'A', qty: 0.05 }, 0.04, null), 8);
 });
 
 /* ------------------------------------------------------------------ */

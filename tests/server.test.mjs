@@ -85,7 +85,7 @@ test('server.js: PUT hợp lệ ghi rồi GET đọc lại đúng', async () => 
     products: [{ id: 'P1', name: 'Cam thảo', stock: 10, costPrice: 50 }],
     transactions: [{ id: 'T1', date: '2026-11-06', type: 'NHAP', productId: 'P1', qty: 10, price: 50, total: 500, ts: 1 }]
   });
-  const res = await put(state);
+  const res = await put(state, { 'X-Base-Updated': '0' });
   assert.equal(res.status, 200);
   assert.equal(res.body.success, true);
 
@@ -295,4 +295,114 @@ test('server.js: payload quá lớn trả JSON 413', async () => {
     assert.equal(json.success, false);
     assert.equal(json.error, 'Payload too large');
   }
+});
+
+test('server.js: thiếu X-Base-Updated (và không X-Force) bị từ chối 428, dữ liệu không đổi', async () => {
+  await put(emptyState({ products: [{ id: 'H1', name: 'GiuNguyen', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  const res = await put(emptyState({ products: [{ id: 'H2', name: 'GhiMu', stock: 1, costPrice: 1 }] }));
+  assert.equal(res.status, 428);
+  assert.equal(res.body.success, false);
+  const data = await getState();
+  assert.deepEqual(data.products.map(p => p.id), ['H1']);
+});
+
+test('server.js: trùng tên/id bị 400 thay vì âm thầm bỏ dòng, dữ liệu cũ còn nguyên', async () => {
+  await put(emptyState({ products: [{ id: 'D0', name: 'Goc', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  const base = (await getState()).updatedAt;
+  const hdr = { 'X-Base-Updated': String(base) };
+
+  const dupName = await put(emptyState({
+    products: [{ id: 'D1', name: 'Cam Thảo', stock: 1, costPrice: 1 }, { id: 'D2', name: 'cam thảo', stock: 2, costPrice: 1 }]
+  }), hdr);
+  assert.equal(dupName.status, 400);
+  assert.ok(dupName.body.details.some(m => m.includes('trùng tên')));
+
+  const dupTx = await put(emptyState({
+    products: [{ id: 'D1', name: 'A', stock: 1, costPrice: 1 }],
+    transactions: [
+      { id: 'TD', date: '2026-11-06', type: 'BAN', productId: 'D1', qty: 1, price: 1, total: 1, ts: 1 },
+      { id: 'TD', date: '2026-11-06', type: 'BAN', productId: 'D1', qty: 2, price: 1, total: 2, ts: 2 }
+    ]
+  }), hdr);
+  assert.equal(dupTx.status, 400);
+  assert.ok(dupTx.body.details.some(m => m.includes('trùng id giao dịch')));
+
+  const dupRx = await put(emptyState({
+    products: [{ id: 'D1', name: 'A', stock: 1, costPrice: 1 }],
+    prescriptions: [
+      { id: 'R1', name: 'Bai 1', items: [{ productId: 'D1', grams: 5 }], total: 10, thang: 1 },
+      { id: 'R2', name: 'Bai 1', items: [{ productId: 'D1', grams: 5 }], total: 10, thang: 1 }
+    ]
+  }), hdr);
+  assert.equal(dupRx.status, 400);
+
+  const data = await getState();
+  assert.deepEqual(data.products.map(p => p.id), ['D0'], 'bị từ chối thì dữ liệu cũ phải còn nguyên');
+});
+
+test('server.js: có oname mà thiếu oid thì không mượn tên làm mã đơn', async () => {
+  await put(emptyState({
+    products: [{ id: 'O1', name: 'A', stock: 5, costPrice: 1 }],
+    transactions: [
+      { id: 'TO1', date: '2026-11-06', type: 'BAN', productId: 'O1', qty: 1, price: 2, total: 2, oname: 'Đơn thuốc lẻ', ts: 1 },
+      { id: 'TO2', date: '2026-11-07', type: 'BAN', productId: 'O1', qty: 1, price: 2, total: 2, oname: 'Đơn thuốc lẻ', ts: 2 }
+    ]
+  }), { 'X-Force': '1' });
+  const data = await getState();
+  for (const id of ['TO1', 'TO2']) {
+    const tx = data.transactions.find(x => x.id === id);
+    assert.equal(tx.oid, undefined, 'hai đơn khác ngày không được gộp chung theo tên');
+  }
+});
+
+test('server.js: ghi đè chủ động (X-Force) chụp bản trước-ghi-đè chứa dữ liệu cũ', async () => {
+  await put(emptyState({ products: [{ id: 'SNAPA', name: 'TruocA', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  await put(emptyState({ products: [{ id: 'SNAPB', name: 'SauB', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+
+  const backupDir = path.join(dataDir, 'backups');
+  const forced = fs.readdirSync(backupDir).filter(n => /-truoc-ghi-de-\d{9}\.db$/.test(n));
+  assert.ok(forced.length >= 1, 'phải có bản trước-ghi-đè');
+
+  const DB = (await import('better-sqlite3')).default;
+  const holdsOldOnly = forced.some(n => {
+    const conn = new DB(path.join(backupDir, n), { readonly: true });
+    const a = conn.prepare('SELECT id FROM products WHERE id = ?').get('SNAPA');
+    const b = conn.prepare('SELECT id FROM products WHERE id = ?').get('SNAPB');
+    conn.close();
+    return !!a && !b;
+  });
+  assert.ok(holdsOldOnly, 'có bản chụp chứa dữ liệu trước lần ghi đè thứ hai');
+
+  const list = await (await fetch(`${BASE}/api/backups`)).json();
+  assert.ok(list.backups.some(b => /truoc-ghi-de/.test(b.name)), '/api/backups phải liệt kê cả bản trước-ghi-đè');
+});
+
+test('server.js: bản backup ngày chụp trạng thái TRƯỚC lần ghi đầu tiên trong ngày', async () => {
+  await put(emptyState({ products: [{ id: 'DAYOLD', name: 'CuTrongNgay', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  const backupDir = path.join(dataDir, 'backups');
+  for (const n of fs.readdirSync(backupDir)) {
+    if (/^backup-\d{4}-\d{2}-\d{2}\.db$/.test(n)) fs.unlinkSync(path.join(backupDir, n));
+  }
+  const base = (await getState()).updatedAt;
+  const res = await put(emptyState({ products: [{ id: 'DAYNEW', name: 'MoiTrongNgay', stock: 1, costPrice: 1 }] }), { 'X-Base-Updated': String(base) });
+  assert.equal(res.status, 200);
+
+  const daily = fs.readdirSync(backupDir).filter(n => /^backup-\d{4}-\d{2}-\d{2}\.db$/.test(n));
+  assert.equal(daily.length, 1, 'phải có bản backup ngày vừa tạo lại');
+  const DB = (await import('better-sqlite3')).default;
+  const conn = new DB(path.join(backupDir, daily[0]), { readonly: true });
+  const oldRow = conn.prepare('SELECT id FROM products WHERE id = ?').get('DAYOLD');
+  const newRow = conn.prepare('SELECT id FROM products WHERE id = ?').get('DAYNEW');
+  conn.close();
+  assert.ok(oldRow, 'bản backup ngày phải chứa dữ liệu trước khi ghi');
+  assert.ok(!newRow, 'bản backup ngày không được chứa lần ghi đầu tiên');
+});
+
+test('server.js: chỉ giữ 10 bản trước-ghi-đè gần nhất', async () => {
+  for (let i = 0; i < 13; i++) {
+    await put(emptyState({ products: [{ id: 'PR' + i, name: 'Prune ' + i, stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  }
+  const backupDir = path.join(dataDir, 'backups');
+  const forced = fs.readdirSync(backupDir).filter(n => /-truoc-ghi-de-\d{9}\.db$/.test(n));
+  assert.equal(forced.length, 10);
 });

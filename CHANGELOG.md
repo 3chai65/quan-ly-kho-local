@@ -5,6 +5,26 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.5] - 2026-11-06
+
+### Giữ vốn lịch sử đơn thuốc, không để mất dữ liệu âm thầm
+
+- **Sửa gram hoặc xóa một vị** trong đơn thuốc chén không còn tính lại vốn cả đơn theo
+  giá nhập hiện tại. Mỗi dòng giữ vốn đã lưu lúc bán; dòng bị sửa gram co giãn theo vốn
+  cũ của chính nó; chỉ phần lãi được chia lại đều. Trước đây giá nhập tăng rồi sửa một
+  dòng làm vốn và lãi của đơn (và của tháng cũ) đổi theo.
+- **Server trả 400 khi trùng khóa** (trùng id/tên sản phẩm, trùng id giao dịch, trùng
+  tên/id đơn thuốc, vị lặp trong đơn) thay vì âm thầm bỏ dòng rồi ghi đè mất dữ liệu.
+- **Thiếu `X-Base-Updated` trả 428** (trừ khi gửi `X-Force: 1`), thay vì ghi đè không kiểm
+  tra xung đột. App luôn gửi header này nên không ảnh hưởng thao tác thường ngày.
+- **`orderId` không mượn từ tên đơn**: dòng có `oname` mà thiếu `oid` không còn bị gộp
+  thành một đơn theo tên.
+- **Backup**: bản ngày nay chụp **trước** lần ghi đầu tiên trong ngày (trước đây chụp sau,
+  nên chứa luôn lần ghi đó). Mỗi lần ghi đè chủ động (`X-Force`: khôi phục, "giữ bản máy
+  này") chụp thêm `backup-YYYY-MM-DD-truoc-ghi-de-HHmmssSSS.db`, giữ 10 bản gần nhất;
+  `/api/backups` liệt kê cả các bản này.
+- Thêm 4 test client (31/31) và 6 test server (20/20).
+
 ## [2.6.4] - 2026-11-06
 
 ### Vốn đơn thuốc làm tròn một lần, sửa dòng giữ giá khách trả
