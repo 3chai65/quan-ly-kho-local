@@ -5,6 +5,20 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.6] - 2026-11-06
+
+### Lưu tiền bằng đồng nguyên, hiển thị vẫn là nghìn
+
+- Cột `price_vnd`, `total_vnd`, `cost_vnd`, `cost_price_vnd` từ nay là **đồng**.
+  Ô nhập và số trên trang vẫn là nghìn đồng, có tới 3 số lẻ để thấy từng đồng
+  (400 đồng hiện `0,4`).
+- Vốn từng vị đơn thuốc là `kg × giá nhập`, làm tròn tới đồng. Không còn chia
+  vốn thành các số nguyên nghìn nên không còn dòng vốn 0 khi vị chỉ tốn vài trăm đồng.
+  Phần lãi vẫn chia đều, dòng cuối nhận số dư.
+- Migrate một lần từ file `data/truoc-lam-tron-2026-11-06-1047.json` cho các giao dịch
+  còn số lẻ gốc. Giao dịch phát sinh sau lần làm tròn chỉ nhân 1000. Cờ
+  `money_unit=dong` chặn nhân lần hai.
+
 ## [2.6.5] - 2026-11-06
 
 ### Giữ vốn lịch sử đơn thuốc, không để mất dữ liệu âm thầm

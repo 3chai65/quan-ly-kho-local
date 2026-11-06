@@ -103,10 +103,10 @@ test('server.js: làm tròn tiền về số nguyên khi lưu', async () => {
   const res = await put(state, { 'X-Force': '1' });
   assert.equal(res.status, 200);
   const data = await getState();
-  assert.equal(data.products[0].costPrice, 43);      // 42.6 -> 43
-  assert.equal(data.transactions[0].price, 42);      // 42.4 -> 42
-  assert.equal(data.transactions[0].total, 100);     // 99.5 -> 100
-  assert.equal(data.transactions[0].cost, 10);       // 10.49 -> 10
+  assert.equal(data.products[0].costPrice, 43);      // 42.6 đồng -> 43 đồng
+  assert.equal(data.transactions[0].price, 42);
+  assert.equal(data.transactions[0].total, 100);
+  assert.equal(data.transactions[0].cost, 10);
 });
 
 test('server.js: PUT dữ liệu âm bị chặn 400', async () => {

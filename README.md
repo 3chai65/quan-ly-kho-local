@@ -79,8 +79,7 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
 4. **Đồng bộ**: `PUT /api/state` ghi snapshot toàn bộ trong 1 transaction SQLite.
    Client gửi `X-Base-Updated: <updatedAt>`; server so với `app_meta.source_updated_at`,
    nếu bản trên server mới hơn → **409 conflict** (client hiện dialog "Lấy bản mới nhất" /
-   "Giữ bản máy này", hoặc gửi `X-Force: 1` để ép ghi đè). Header `X-Base-Updated` không
-   hợp lệ → **400**. Server kiểm tra snapshot trước khi ghi (tồn/tiền không âm, ngày
+   "Giữ bản máy này", hoặc gửi `X-Force: 1` để ép ghi đè). Header `X-Base-Updated` thiếu (và không có `X-Force: 1`) → **428**; không hợp lệ → **400**. Server kiểm tra snapshot trước khi ghi (tồn/tiền không âm, ngày
    `YYYY-MM-DD`, đủ 3 bảng, không trùng khoá) và trả **400** kèm chi tiết; JSON hỏng cũng
    trả **400**. Server **cảnh báo** (không chặn) khi giao dịch/dòng đơn trỏ tới `productId`
    không tồn tại.
@@ -97,7 +96,7 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
 
 ## Backup & khôi phục
 
-- **Tự động**: server tạo 1 bản `data/backups/backup-YYYY-MM-DD.db` mỗi ngày (giữ 30 bản).
+- **Tự động**: server tạo 1 bản `data/backups/backup-YYYY-MM-DD.db` mỗi ngày (giữ 30 bản) chụp trước lần ghi đầu tiên trong ngày; và chụp snapshot riêng `backup-YYYY-MM-DD-truoc-ghi-de-*.db` (giữ 10 bản) trước mỗi lần ghi đè chủ động (`X-Force`).
 - **Khôi phục**: dừng container, copy file backup đè lên `app.db`, khởi động lại
   (xem `README-LOCAL.md`).
 - **Trong app**: nút "Sao lưu" tải file JSON theo trình duyệt của từng thiết bị.

@@ -1055,9 +1055,15 @@ function dec(n){
   }
   return Number(n.toPrecision(15));
 }
-/* Làm tròn tiền (đơn vị nghìn VND) về số nguyên. Dùng cho cả lưu trữ và
-   hiển thị, để tổng các dòng luôn khớp dòng tổng. */
+/* Lưu và tính bằng đồng nguyên. Người dùng vẫn gõ và đọc theo nghìn đồng. */
+var DONG_PER_K = 1000;
 function money(v){ return Math.round(num(v)); }
+function kToDong(k){ return Math.round(num(k) * DONG_PER_K); }
+function kInput(dong){
+  var k = num(dong) / DONG_PER_K;
+  if (!isFinite(k)) return '0';
+  return String(Math.round(k * DONG_PER_K) / DONG_PER_K);
+}
 /* Hiển thị đầy đủ chữ số, không làm tròn. Dùng dấu . phân cách nghìn, , thập phân. */
 function fmtNum(n){
   var v = dec(n);
@@ -1084,12 +1090,17 @@ function fmtQty(kg){
   if (Math.abs(lang) >= 1) return fmtNum(lang) + ' lạng';
   return fmtNum(dec(n * 1000)) + ' g';
 }
-function fmtMoney(k){
-  /* Tiền (đơn vị nghìn VND): làm tròn thành số nguyên, bỏ phần thập phân.
-     Tổng các dòng khớp dòng tổng vì mọi dòng đều làm tròn cùng quy tắc. */
-  var v = Number(k);
+function fmtMoney(dong){
+  /* Hiển thị nghìn đồng, giữ tới 3 số lẻ để thấy từng đồng (0,4 nghĩa là 400 đồng). */
+  var v = num(dong) / DONG_PER_K;
   if (!isFinite(v)) v = 0;
-  return NF0.format(Math.round(v));
+  var neg = v < 0;
+  if (neg) v = -v;
+  var rounded = Math.round(v * DONG_PER_K) / DONG_PER_K;
+  var bits = rounded.toFixed(3).replace(/\.?0+$/, '').split('.');
+  var ip = bits[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  var fp = bits[1] ? ',' + bits[1] : '';
+  return (neg ? '-' : '') + (ip || '0') + fp;
 }
 function fmtUnitPrice(k){ return fmtMoney(k) + '/kg'; }
 function fmtInt(n){ return fmtNum(n); }
@@ -1265,8 +1276,27 @@ var syncErrorShown = false;
 var conflictOpen = false;
 var toastTimer = null;
 
+function scaleLegacyMoney(d){
+  if (!d || d.moneyUnit === 'dong') return d;
+  function up(n){ return Math.round(num(n) * DONG_PER_K); }
+  if (Array.isArray(d.products)) d.products.forEach(function(p){
+    if (p) p.costPrice = up(p.costPrice);
+  });
+  if (Array.isArray(d.transactions)) d.transactions.forEach(function(t){
+    if (!t) return;
+    t.price = up(t.price);
+    t.total = up(t.total);
+    if (t.cost != null && t.cost !== '') t.cost = up(t.cost);
+    if (t.unitPrice != null && t.unitPrice !== '') t.unitPrice = up(t.unitPrice);
+  });
+  if (Array.isArray(d.prescriptions)) d.prescriptions.forEach(function(r){
+    if (r) r.total = up(r.total);
+  });
+  d.moneyUnit = 'dong';
+  return d;
+}
 function sanitize(d){
-  var o = { products: [], transactions: [], prescriptions: [], updatedAt: 0 };
+  var o = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
   if (!d || typeof d !== 'object') return o;
   o.updatedAt = dec(d.updatedAt);
   if (Array.isArray(d.products)) {
@@ -1354,7 +1384,11 @@ function readLocal(){
   try {
     var raw = localStorage.getItem(KEY);
     if (!raw) return null;
-    return sanitize(JSON.parse(raw));
+    var parsed = JSON.parse(raw);
+    var legacy = !parsed || parsed.moneyUnit !== 'dong';
+    var out = sanitize(scaleLegacyMoney(parsed));
+    if (legacy) out._scaledFromK = true;
+    return out;
   } catch (e) { return null; }
 }
 function readDirty(){
@@ -1681,7 +1715,7 @@ function renderNote(){
       tdm = el('td', 'c-money');
       var mi = el('input', 'inp inp--sm inp--num');
       mi.id = 'noteEditMoney'; mi.type = 'number'; mi.step = 'any'; mi.min = '0'; mi.inputMode = 'decimal';
-      mi.value = String(num(it.amount));
+      mi.value = kInput(it.amount);
       mi.setAttribute('aria-label', 'Thành tiền');
       tdm.appendChild(mi);
       var bs = el('button', 'btn btn--icon');
@@ -1729,7 +1763,7 @@ function commitRetailRow(){
       if (mi) { mi.focus(); if (mi.select) mi.select(); }
       return false;
     }
-    retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: dec(m) });
+    retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
     notePage = 1e9;
   }
   tb.textContent = '';
@@ -1759,14 +1793,14 @@ function noteSave(){
   if (q <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
   if (m < 0) { toast('Thành tiền không được âm', 'error'); return; }
   it.kg = dec(q);
-  it.amount = dec(m);
+  it.amount = kToDong(m);
   noteEditIdx = -1;
   calcRetail();
 }
 function calcRetail(){
   var total = 0;
   retailItems.forEach(function(it){ total += num(it.amount); });
-  $$('#retailBody .retail-money').forEach(function(i){ total += num(i.value); });
+  $$('#retailBody .retail-money').forEach(function(i){ total += kToDong(i.value); });
   var out = $('#retailTotal');
   if (out) out.textContent = fmtMoney(total);
   renderNote();
@@ -1776,58 +1810,14 @@ function remedyThang(){
   return v >= 1 ? v : 1;
 }
 function remedyGrand(){
-  return money(remedyThang() * num(($('#remedyUnitPrice') || {}).value));
+  return kToDong(remedyThang() * num(($('#remedyUnitPrice') || {}).value));
 }
-/* Chia một số nguyên theo trọng số. Tổng các phần đúng bằng total.
-   Phần dư (do làm tròn xuống) cộng vào trọng số có phần lẻ lớn nhất. */
-function spreadInteger(total, weights){
-  var list = weights || [];
-  var n = list.length;
-  if (!n) return [];
-  var t = money(total);
-  if (t < 0) t = 0;
-  var w = list.map(function(x){ var v = num(x); return v > 0 ? v : 0; });
-  var sumW = 0;
-  w.forEach(function(v){ sumW += v; });
-  if (t === 0) return w.map(function(){ return 0; });
-  if (!(sumW > 0)) return w.map(function(_, i){ return i === n - 1 ? t : 0; });
-  var rows = w.map(function(weight, idx){
-    var exact = t * weight / sumW;
-    var base = Math.floor(exact + 1e-9);
-    if (base < 0) base = 0;
-    return { idx: idx, base: base, frac: exact - base };
-  });
-  var used = 0;
-  rows.forEach(function(r){ used += r.base; });
-  var left = t - used;
-  if (left < 0) {
-    for (var i = rows.length - 1; i >= 0 && left < 0; i--) {
-      var cut = Math.min(rows[i].base, -left);
-      rows[i].base -= cut;
-      left += cut;
-    }
-  }
-  var order = rows.slice().sort(function(a, b){
-    if (b.frac !== a.frac) return b.frac - a.frac;
-    return a.idx - b.idx;
-  });
-  for (var j = 0; j < order.length && left > 0; j++) {
-    order[j].base += 1;
-    left--;
-  }
-  rows.sort(function(a, b){ return a.idx - b.idx; });
-  return rows.map(function(r){ return r.base; });
-}
-/* Vốn cả đơn = làm tròn một lần của tổng (giá nhập × kg).
-   Chia số nguyên đó theo vốn thật từng vị, rồi cộng lãi chia đều.
-   Trả null khi giá khách trả thấp hơn vốn. */
+/* Vốn từng vị là đồng nguyên (kg × giá nhập). Chỉ phần lãi chia đều,
+   dòng cuối nhận số dư vài đồng. Trả null khi giá khách trả thấp hơn vốn. */
 function balanceRemedyMoney(grand, lines){
   var list = lines || [];
   var g0 = money(grand);
-  var exact = list.map(function(l){ return num(l.exactCost); });
-  var sumExact = 0;
-  exact.forEach(function(v){ sumExact += v; });
-  var costs = spreadInteger(money(sumExact), exact);
+  var costs = list.map(function(l){ return money(l.exactCost); });
   var totalCost = 0;
   costs.forEach(function(c){ totalCost += c; });
   if (g0 < totalCost) return null;
@@ -1956,7 +1946,7 @@ function loadPreset(id){
   var th = $('#remedyThang');
   if (th) th.value = String(thang);
   var up = $('#remedyUnitPrice');
-  if (up) up.value = num(r.total) > 0 ? String(dec(num(r.total) / thang)) : '';
+  if (up) up.value = num(r.total) > 0 ? kInput(num(r.total) / thang) : '';
   renumber(tb);
   calcRemedy();
   updatePresetUI();
@@ -2143,7 +2133,7 @@ function saveRemedy(){
     var kg = dec(it.g / 1000 * thang);
     return { it: it, p: p, kg: kg, exactCost: kg * num(p.costPrice) };
   });
-  /* Vốn cộng một lần rồi chia số nguyên. Khách vẫn trả số thang × giá 1 thang. */
+  /* Vốn từng vị = kg × giá nhập, làm tròn tới đồng. Khách vẫn trả số thang × giá 1 thang. */
   var balanced = balanceRemedyMoney(grand, priced);
   if (!balanced) { toast('Giá bán thấp hơn vốn của đơn', 'error'); return; }
   var oname = capWords(($('#remedyName') || {}).value) || 'Đơn thuốc lẻ';
@@ -2908,8 +2898,8 @@ function chartData(){
     db.transactions.forEach(function(t){
       if (!t.date || t.date.indexOf(ym) !== 0) return;
       var v = num(t.total);
-      if (t.type === 'NHAP') { a += v / 1000; ak += v; }
-      else { b += v / 1000; bk += v; }
+      if (t.type === 'NHAP') { a += v / 1000000; ak += v; }
+      else { b += v / 1000000; bk += v; }
     });
     imp.push(dec(a)); exp.push(dec(b));
     impK.push(dec(ak)); expK.push(dec(bk));
@@ -3223,7 +3213,7 @@ function nhapPick(p){
   var price = $('#nhapPrice');
   var l = lastImport(p.id);
   var v = l ? l.price : num(p.costPrice);
-  if (price) price.value = v > 0 ? String(v) : '';
+  if (price) price.value = v > 0 ? kInput(v) : '';
   var hint = $('#nhapHint');
   if (hint) {
     if (v > 0) {
@@ -3259,7 +3249,7 @@ function calcNhap(){
   var q = num(($('#nhapQty') || {}).value);
   var p = num(($('#nhapPrice') || {}).value);
   var out = $('#nhapTotal');
-  if (out) out.textContent = fmtMoney(q * p);
+  if (out) out.textContent = fmtMoney(kToDong(q * p));
 }
 var nhapList = [];
 function nhapPriceOk(p, price){
@@ -3321,13 +3311,13 @@ function addNhapItem(){
   var inp = $('#nhapSearch');
   var name = capWords((inp || {}).value);
   var qty = num(($('#nhapQty') || {}).value);
-  var price = num(($('#nhapPrice') || {}).value);
+  var price = kToDong(($('#nhapPrice') || {}).value);
   if (!name) { toast('Nhập tên vị thuốc', 'error'); if (inp) inp.focus(); return; }
   if (qty <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); var q = $('#nhapQty'); if (q) q.focus(); return; }
   if (price < 0) { toast('Giá nhập không được âm', 'error'); var pNeg = $('#nhapPrice'); if (pNeg) { pNeg.focus(); pNeg.select(); } return; }
   var p = nhapPid ? findProduct(nhapPid) : findByName(name);
   if (!nhapPriceOk(p, price)) { var pi = $('#nhapPrice'); if (pi) { pi.focus(); pi.select(); } return; }
-  nhapList.push({ pid: p ? p.id : null, name: p ? p.name : name, qty: dec(qty), price: dec(price) });
+  nhapList.push({ pid: p ? p.id : null, name: p ? p.name : name, qty: dec(qty), price: price });
   resetNhapInputs();
   renderNhapList();
   closeSuggest('nhap');
@@ -3340,11 +3330,11 @@ function saveNhap(e){
   var name = capWords(($('#nhapSearch') || {}).value);
   if (name) {
     var qty = num(($('#nhapQty') || {}).value);
-    var price = num(($('#nhapPrice') || {}).value);
+    var price = kToDong(($('#nhapPrice') || {}).value);
     if (price < 0) { toast('Giá nhập không được âm', 'error'); var pn = $('#nhapPrice'); if (pn) { pn.focus(); pn.select(); } return; }
     var cp = nhapPid ? findProduct(nhapPid) : findByName(name);
     if (qty > 0 && !nhapPriceOk(cp, price)) { var pi2 = $('#nhapPrice'); if (pi2) { pi2.focus(); pi2.select(); } return; }
-    if (qty > 0 || !cp) entries.push({ pid: cp ? cp.id : null, name: name, qty: dec(qty), price: dec(price) });
+    if (qty > 0 || !cp) entries.push({ pid: cp ? cp.id : null, name: name, qty: dec(qty), price: price });
     else if (!entries.length) { toast('Nhập số lượng lớn hơn 0', 'error'); return; }
   }
   if (!entries.length) { toast('Nhập tên vị thuốc', 'error'); var i0 = $('#nhapSearch'); if (i0) i0.focus(); return; }
@@ -3402,14 +3392,14 @@ function openEdit(id){
   if (!p) return;
   $('#editId').value = p.id;
   $('#editName').value = p.name;
-  $('#editPrice').value = String(num(p.costPrice));
+  $('#editPrice').value = kInput(p.costPrice);
   var d = $('#editDlg');
   if (d && d.showModal) d.showModal(); else if (d) d.setAttribute('open', '');
 }
 function saveEdit(){
   var id = $('#editId').value;
   var name = capWords($('#editName').value);
-  var price = num($('#editPrice').value);
+  var price = kToDong($('#editPrice').value);
   if (!name) { toast('Tên vị thuốc không được để trống', 'error'); return; }
   if (price < 0) { toast('Giá nhập không được âm', 'error'); var ep = $('#editPrice'); if (ep) { ep.focus(); ep.select(); } return; }
   var p = findProduct(id);
@@ -3557,7 +3547,7 @@ function openTxEdit(id){
   var priceField = $('#txEditPriceField');
   if (priceField) priceField.hidden = isRx;
   $('#txEditQty').value = String(isRx ? num(t.g) : dec(t.qty));
-  $('#txEditPrice').value = String(dec(t.price));
+  $('#txEditPrice').value = kInput(t.price);
   var meta = $('#txEditMeta');
   if (meta) meta.textContent = (t.rx ? 'Đơn thuốc chén · giá khách trả giữ nguyên' : t.type === 'NHAP' ? 'Nhập hàng' : 'Bán hàng') + ' · ngày ' +
     dateVN(t.date) + (txHasTime(t) ? ' ' + timeVN(txStamp(t)) : '');
@@ -3576,7 +3566,7 @@ function calcTxEdit(){
   }
   var q = num(($('#txEditQty') || {}).value);
   var p = num(($('#txEditPrice') || {}).value);
-  if (out) out.textContent = fmtMoney(txEditKg(txEditCur, q) * p);
+  if (out) out.textContent = fmtMoney(kToDong(txEditKg(txEditCur, q) * p));
 }
 function closeTxEdit(){
   var d = $('#txDlg');
@@ -3587,7 +3577,7 @@ function saveTxEdit(){
   var t = txEditCur;
   if (!t) return;
   var qRaw = num($('#txEditQty').value);
-  var price = num($('#txEditPrice').value);
+  var price = kToDong($('#txEditPrice').value);
   if (qRaw <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
   var isRx = !!t.rx;
   var q = txEditKg(t, qRaw);
@@ -3869,6 +3859,7 @@ function parseBackup(text){
   /* Bắt buộc đủ 3 bảng: thiếu một bảng sẽ khiến restore xóa mất dữ liệu. */
   if (!Array.isArray(d.products) || !Array.isArray(d.transactions) || !Array.isArray(d.prescriptions)) return null;
   if (obj.app && obj.app !== 'quan-ly-kho') return null;
+  if (obj.moneyUnit === 'dong') d.moneyUnit = 'dong';
   for (var i = 0; i < d.transactions.length; i++) {
     var t = d.transactions[i];
     if (!t || (t.type !== 'NHAP' && t.type !== 'BAN')) return null;
@@ -3879,7 +3870,7 @@ function parseBackup(text){
     var p = d.products[j];
     if (!p || !p.name || num(p.stock) < 0 || num(p.costPrice) < 0) return null;
   }
-  return sanitize(d);
+  return sanitize(scaleLegacyMoney(d));
 }
 function restoreFromFile(file){
   if (!file) return;
@@ -4192,7 +4183,11 @@ function init(){
   var wasDirty = readDirty();
   var savedBase = readBase();
 
-  if (local && wasDirty) {
+  var scaledFromK = !!(local && local._scaledFromK);
+  if (local) delete local._scaledFromK;
+  /* Bản local cũ còn đơn vị nghìn. Server đã migrate sang đồng thì bỏ
+     bản đó, kẻo đẩy số đã làm tròn đè lên số lẻ gốc vừa nhân 1000. */
+  if (local && wasDirty && !(scaledFromK && remote && remote.moneyUnit === 'dong')) {
     /* Có thay đổi chưa gửi: giữ bản local và đẩy lên máy chủ. */
     db = local;
     cloudBase = savedBase;

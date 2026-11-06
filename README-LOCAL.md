@@ -24,7 +24,8 @@ Mở trên điện thoại: **http://<IP-máy-tính>:8787**
 
 ## Tự động sao lưu (mỗi ngày)
 - Server tự tạo **1 bản backup/ngày** vào `G:\Quản Lý Kho-local\data\backups\`,
-  tên `backup-YYYY-MM-DD.db`, giữ **30 bản** gần nhất (bản cũ tự xóa).
+  tên `backup-YYYY-MM-DD.db`, giữ **30 bản** gần nhất (bản cũ tự xóa, chụp trước lần ghi đầu tiên trong ngày);
+  đồng thời tự chụp thêm bản `backup-YYYY-MM-DD-truoc-ghi-de-HHmmssSSS.db` (giữ **10 bản**) trước mỗi lần ghi đè chủ động (`X-Force`).
 - Xem danh sách backup: mở `http://localhost:8787/api/backups`.
 - **Khôi phục nhanh:** dừng container, copy file backup đè lên `app.db`, khởi động lại:
   ```powershell

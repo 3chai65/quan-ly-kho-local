@@ -48,7 +48,7 @@ globalThis.__test = {
   getBase: function(){ return cloudBase; },
   saveLocal: saveLocal, readDirty: readDirty, readBase: readBase,
   computeStats: computeStats, allocateRemedyByCost: allocateRemedyByCost,
-  balanceRemedyMoney: balanceRemedyMoney,
+  balanceRemedyMoney: balanceRemedyMoney, kToDong: kToDong,
   applyRemedyBalance: applyRemedyBalance, scaledRemedyCost: scaledRemedyCost, remedyLineCost: remedyLineCost,
   backupBeforeRestore: backupBeforeRestore, downloadBackup: downloadBackup,
   pushState: pushState, pullState: pullState, cloudConflict: cloudConflict,
@@ -117,12 +117,15 @@ test('src/page.js giữ placeholder SSR cần thiết của trang', () => {
 /* Hàm thuần: tiền, số lượng, chuẩn hoá dữ liệu                        */
 /* ------------------------------------------------------------------ */
 
-test('fmtMoney làm tròn thành số nguyên, bỏ phần thập phân', () => {
-  assert.equal(app.fmtMoney(42.5), '43');
+test('fmtMoney hiện nghìn đồng và giữ tới từng đồng', () => {
   assert.equal(app.fmtMoney(0), '0');
-  assert.equal(app.fmtMoney(1000), '1.000');
-  assert.equal(app.fmtMoney(-2.5), '-2');
-  assert.equal(app.fmtMoney(1234.56), '1.235');
+  assert.equal(app.fmtMoney(135000), '135');
+  assert.equal(app.fmtMoney(13500), '13,5');
+  assert.equal(app.fmtMoney(400), '0,4');
+  assert.equal(app.fmtMoney(1000000), '1.000');
+  assert.equal(app.fmtMoney(15088170), '15.088,17');
+  assert.equal(app.fmtMoney(-2500), '-2,5');
+  assert.equal(app.kToDong(13.5), 13500);
   assert.equal(app.fmtNum(0.1 + 0.2), '0,3');
 });
 
@@ -287,21 +290,21 @@ test('allocateRemedyByCost: vốn cộng lãi chia đều, dòng cuối nhận p
   assert.deepEqual(app.allocateRemedyByCost(42.6, [{ cost: 10 }, { cost: 20 }]), [16, 27]);
 });
 
-test('balanceRemedyMoney làm tròn vốn cả đơn một lần rồi chia xuống từng vị', () => {
-  const tiny = app.balanceRemedyMoney(100, [{ exactCost: 0.4 }, { exactCost: 0.4 }, { exactCost: 0.4 }]);
-  assert.equal(tiny.reduce((a, b) => a + b.cost, 0), 1);
-  assert.equal(tiny.reduce((a, b) => a + b.total, 0), 100);
-  assert.ok(tiny.every(row => row.total >= row.cost && row.cost >= 0));
+test('balanceRemedyMoney giữ vốn từng vị theo đồng, chỉ chia phần lãi', () => {
+  const tiny = app.balanceRemedyMoney(100000, [{ exactCost: 400 }, { exactCost: 400 }, { exactCost: 400 }]);
+  assert.deepEqual(tiny.map(row => row.cost), [400, 400, 400]);
+  assert.equal(tiny.reduce((a, b) => a + b.total, 0), 100000);
 
-  const many = app.balanceRemedyMoney(50, Array.from({ length: 10 }, () => ({ exactCost: 0.4 })));
-  assert.equal(many.reduce((a, b) => a + b.cost, 0), 4);
-  assert.equal(many.reduce((a, b) => a + b.total, 0), 50);
+  const many = app.balanceRemedyMoney(50000, Array.from({ length: 10 }, () => ({ exactCost: 400 })));
+  assert.deepEqual(many.map(row => row.cost), Array.from({ length: 10 }, () => 400));
+  assert.equal(many.reduce((a, b) => a + b.total, 0), 50000);
 
-  const even = app.balanceRemedyMoney(200, [{ exactCost: 1 }, { exactCost: 3 }, { exactCost: 6 }]);
-  assert.deepEqual(even.map(row => row.cost), [1, 3, 6]);
-  assert.deepEqual(even.map(row => row.total), [64, 66, 70]);
+  const even = app.balanceRemedyMoney(200000, [{ exactCost: 1000 }, { exactCost: 3000 }, { exactCost: 6000 }]);
+  assert.deepEqual(even.map(row => row.cost), [1000, 3000, 6000]);
+  assert.equal(even.reduce((a, b) => a + b.total, 0), 200000);
+  assert.equal(even[2].total - even[2].cost, 200000 - 10000 - (even[0].total - even[0].cost) - (even[1].total - even[1].cost));
 
-  assert.equal(app.balanceRemedyMoney(5, [{ exactCost: 10 }]), null);
+  assert.equal(app.balanceRemedyMoney(5000, [{ exactCost: 10000 }]), null);
 });
 
 test('applyRemedyBalance giữ vốn lịch sử, không tính lại theo giá nhập hiện tại', () => {
