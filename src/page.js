@@ -939,7 +939,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
           <label class="lbl" for="txEditQty" id="txEditQtyLbl">Số lượng (kg)</label>
           <input class="inp inp--num" id="txEditQty" type="number" step="any" min="0" inputmode="decimal">
         </div>
-        <div class="field">
+        <div class="field" id="txEditPriceField">
           <label class="lbl" for="txEditPrice">Đơn giá (k/kg)</label>
           <input class="inp inp--num" id="txEditPrice" type="number" step="any" min="0" inputmode="decimal">
         </div>
@@ -1778,8 +1778,64 @@ function remedyThang(){
 function remedyGrand(){
   return money(remedyThang() * num(($('#remedyUnitPrice') || {}).value));
 }
+/* Chia một số nguyên theo trọng số. Tổng các phần đúng bằng total.
+   Phần dư (do làm tròn xuống) cộng vào trọng số có phần lẻ lớn nhất. */
+function spreadInteger(total, weights){
+  var list = weights || [];
+  var n = list.length;
+  if (!n) return [];
+  var t = money(total);
+  if (t < 0) t = 0;
+  var w = list.map(function(x){ var v = num(x); return v > 0 ? v : 0; });
+  var sumW = 0;
+  w.forEach(function(v){ sumW += v; });
+  if (t === 0) return w.map(function(){ return 0; });
+  if (!(sumW > 0)) return w.map(function(_, i){ return i === n - 1 ? t : 0; });
+  var rows = w.map(function(weight, idx){
+    var exact = t * weight / sumW;
+    var base = Math.floor(exact + 1e-9);
+    if (base < 0) base = 0;
+    return { idx: idx, base: base, frac: exact - base };
+  });
+  var used = 0;
+  rows.forEach(function(r){ used += r.base; });
+  var left = t - used;
+  if (left < 0) {
+    for (var i = rows.length - 1; i >= 0 && left < 0; i--) {
+      var cut = Math.min(rows[i].base, -left);
+      rows[i].base -= cut;
+      left += cut;
+    }
+  }
+  var order = rows.slice().sort(function(a, b){
+    if (b.frac !== a.frac) return b.frac - a.frac;
+    return a.idx - b.idx;
+  });
+  for (var j = 0; j < order.length && left > 0; j++) {
+    order[j].base += 1;
+    left--;
+  }
+  rows.sort(function(a, b){ return a.idx - b.idx; });
+  return rows.map(function(r){ return r.base; });
+}
+/* Vốn cả đơn = làm tròn một lần của tổng (giá nhập × kg).
+   Chia số nguyên đó theo vốn thật từng vị, rồi cộng lãi chia đều.
+   Trả null khi giá khách trả thấp hơn vốn. */
+function balanceRemedyMoney(grand, lines){
+  var list = lines || [];
+  var g0 = money(grand);
+  var exact = list.map(function(l){ return num(l.exactCost); });
+  var sumExact = 0;
+  exact.forEach(function(v){ sumExact += v; });
+  var costs = spreadInteger(money(sumExact), exact);
+  var totalCost = 0;
+  costs.forEach(function(c){ totalCost += c; });
+  if (g0 < totalCost) return null;
+  var totals = allocateRemedyByCost(g0, costs.map(function(c){ return { cost: c }; }));
+  return costs.map(function(c, i){ return { cost: c, total: totals[i] }; });
+}
 /* Hàm thuần cho đơn thuốc chén. grand là số khách trả (số nguyên).
-   lines[].cost là vốn từng vị, đã làm tròn: giá nhập × kg.
+   lines[].cost là vốn từng vị, đã là số nguyên.
    Thành tiền vị = vốn + phần lãi chia đều theo số vị.
    Dòng cuối nhận phần dư để tổng các dòng đúng bằng grand. */
 function allocateRemedyByCost(grand, lines){
@@ -2084,27 +2140,25 @@ function saveRemedy(){
   }
   var priced = items.map(function(it){
     var p = findProduct(it.pid);
-    var kg = it.g / 1000 * thang;
-    return { it: it, p: p, kg: kg, cost: money(kg * num(p.costPrice)) };
+    var kg = dec(it.g / 1000 * thang);
+    return { it: it, p: p, kg: kg, exactCost: kg * num(p.costPrice) };
   });
-  var totalCost = 0;
-  priced.forEach(function(row){ totalCost += row.cost; });
-  if (grand < totalCost) { toast('Giá bán thấp hơn vốn của đơn', 'error'); return; }
+  /* Vốn cộng một lần rồi chia số nguyên. Khách vẫn trả số thang × giá 1 thang. */
+  var balanced = balanceRemedyMoney(grand, priced);
+  if (!balanced) { toast('Giá bán thấp hơn vốn của đơn', 'error'); return; }
   var oname = capWords(($('#remedyName') || {}).value) || 'Đơn thuốc lẻ';
   var oid = uid('OD');
   var ts = Date.now();
-  /* Vốn từng vị + lãi chia đều theo số vị. Khách vẫn trả số thang × giá 1 thang. */
-  var amounts = allocateRemedyByCost(grand, priced);
   priced.forEach(function(row, idx){
     var it = row.it;
     var p = row.p;
     var kg = row.kg;
     p.stock = dec(p.stock - kg);
-    var amount = amounts[idx];
+    var amount = balanced[idx].total;
     var tx = {
       id: uid('TX'), date: date, type: 'BAN', productId: it.pid,
-      qty: dec(kg), price: kg > 0 ? money(amount / kg) : 0,
-      total: amount, cost: row.cost,
+      qty: kg, price: kg > 0 ? money(amount / kg) : 0,
+      total: amount, cost: balanced[idx].cost,
       rx: true, g: dec(it.g), thang: thang, unitPrice: thang > 0 ? money(grand / thang) : 0,
       ts: ts
     };
@@ -3378,22 +3432,60 @@ function delProduct(id){
   db.products = db.products.filter(function(x){ return String(x.id) !== String(id); });
   commit('Đã xóa vị thuốc');
 }
+/* Giữ nguyên số khách đã trả, ghi lại vốn và thành tiền mọi vị trong đơn. */
+function applyRemedyBalance(lines, grand){
+  var prepared = lines.map(function(t){
+    var prod = findProduct(t.productId);
+    var kg = num(t.qty);
+    var unit = (prod && num(prod.costPrice) > 0) ? num(prod.costPrice) : 0;
+    return { t: t, kg: kg, exactCost: kg * unit };
+  });
+  var balanced = balanceRemedyMoney(grand, prepared);
+  if (!balanced) return false;
+  var unitPrice = 0;
+  lines.forEach(function(t){ if (num(t.unitPrice) > 0) unitPrice = money(t.unitPrice); });
+  prepared.forEach(function(row, i){
+    row.t.cost = balanced[i].cost;
+    row.t.total = balanced[i].total;
+    row.t.price = row.kg > 0 ? money(balanced[i].total / row.kg) : 0;
+    if (unitPrice > 0) row.t.unitPrice = unitPrice;
+  });
+  return true;
+}
+function remedyMates(t){
+  if (!t || !t.rx || !t.oid) return [];
+  return db.transactions.filter(function(x){
+    return x.rx && x.oid && String(x.oid) === String(t.oid);
+  });
+}
 function delTx(id){
   var t = null;
   for (var i = 0; i < db.transactions.length; i++) if (db.transactions[i].id === id) { t = db.transactions[i]; break; }
   if (!t) return;
-  if (!confirm('Xóa giao dịch này? Tồn kho sẽ được điều chỉnh lại.')) return;
+  var mates = remedyMates(t).filter(function(x){ return x.id !== t.id; });
+  var msg = mates.length
+    ? 'Xóa vị này khỏi đơn thuốc? Tồn kho hoàn lại. Tiền khách trả giữ nguyên và chia lại cho các vị còn lại.'
+    : 'Xóa giao dịch này? Tồn kho sẽ được điều chỉnh lại.';
+  if (!confirm(msg)) return;
   var p = findProduct(t.productId);
   if (p && t.type === 'NHAP' && num(p.stock) - num(t.qty) < -1e-9) {
     toast('Không thể xóa: "' + p.name + '" đã bán, tồn sẽ âm. Hãy sửa/xóa đơn bán liên quan trước.', 'error');
     return;
   }
+  var grand = num(t.total);
+  mates.forEach(function(x){ grand += num(x.total); });
   if (p) {
     if (t.type === 'NHAP') p.stock = dec(p.stock - num(t.qty));
     else p.stock = dec(p.stock + num(t.qty));
   }
   db.transactions = db.transactions.filter(function(x){ return x.id !== id; });
-  commit('Đã xóa giao dịch');
+  if (mates.length && !applyRemedyBalance(mates, grand)) {
+    db.transactions.push(t);
+    if (p) p.stock = dec(num(p.stock) - num(t.qty));
+    toast('Giá bán thấp hơn vốn của đơn', 'error');
+    return;
+  }
+  commit(mates.length ? 'Đã xóa vị và chia lại đơn thuốc' : 'Đã xóa giao dịch');
 }
 /* ================= SỬA GIAO DỊCH ================= */
 var txEditCur = null;
@@ -3445,19 +3537,28 @@ function openTxEdit(id){
   var isRx = !!t.rx;
   var lbl = $('#txEditQtyLbl');
   if (lbl) lbl.textContent = isRx ? 'Số gram (mỗi thang)' : 'Số lượng (kg)';
+  var priceField = $('#txEditPriceField');
+  if (priceField) priceField.hidden = isRx;
   $('#txEditQty').value = String(isRx ? num(t.g) : dec(t.qty));
   $('#txEditPrice').value = String(dec(t.price));
   var meta = $('#txEditMeta');
-  if (meta) meta.textContent = (t.rx ? 'Đơn thuốc chén' : t.type === 'NHAP' ? 'Nhập hàng' : 'Bán hàng') + ' · ngày ' +
+  if (meta) meta.textContent = (t.rx ? 'Đơn thuốc chén · giá khách trả giữ nguyên' : t.type === 'NHAP' ? 'Nhập hàng' : 'Bán hàng') + ' · ngày ' +
     dateVN(t.date) + (txHasTime(t) ? ' ' + timeVN(txStamp(t)) : '');
   calcTxEdit();
   var d = $('#txDlg');
   if (d && d.showModal) d.showModal(); else if (d) d.setAttribute('open', '');
 }
 function calcTxEdit(){
+  var out = $('#txEditTotal');
+  if (txEditCur && txEditCur.rx) {
+    var grand = 0;
+    remedyMates(txEditCur).forEach(function(x){ grand += num(x.total); });
+    if (!grand) grand = num(txEditCur.total);
+    if (out) out.textContent = fmtMoney(grand);
+    return;
+  }
   var q = num(($('#txEditQty') || {}).value);
   var p = num(($('#txEditPrice') || {}).value);
-  var out = $('#txEditTotal');
   if (out) out.textContent = fmtMoney(txEditKg(txEditCur, q) * p);
 }
 function closeTxEdit(){
@@ -3471,9 +3572,9 @@ function saveTxEdit(){
   var qRaw = num($('#txEditQty').value);
   var price = num($('#txEditPrice').value);
   if (qRaw <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
-  if (price < 0) { toast('Đơn giá không được âm', 'error'); var ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
   var isRx = !!t.rx;
   var q = txEditKg(t, qRaw);
+  if (!isRx && price < 0) { toast('Đơn giá không được âm', 'error'); var ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
 
   var p = findProduct(t.productId);
   var oldQty = num(t.qty);
@@ -3495,26 +3596,33 @@ function saveTxEdit(){
       p.stock = dec(num(p.stock) - delta);
     }
   }
+  if (isRx) {
+    var lines = remedyMates(t);
+    if (!lines.length) lines = [t];
+    var grand = 0;
+    lines.forEach(function(x){ grand += num(x.total); });
+    var prevQty = t.qty;
+    var prevG = t.g;
+    t.qty = dec(q);
+    t.g = dec(qRaw);
+    if (!applyRemedyBalance(lines, grand)) {
+      t.qty = prevQty;
+      t.g = prevG;
+      if (p) p.stock = dec(num(p.stock) + delta);
+      toast('Giá bán thấp hơn vốn của đơn', 'error');
+      return;
+    }
+    closeTxEdit();
+    commit('Đã cập nhật đơn thuốc');
+    return;
+  }
   /* Giữ giá vốn lịch sử: nhân theo đơn giá vốn cũ của chính giao dịch,
      chỉ fallback về giá hiện tại khi giao dịch cũ không có cost. */
   var oldUnitCost = oldQty > 0 && oldCost > 0 ? dec(oldCost / oldQty) : (p ? num(p.costPrice) : 0);
   t.qty = dec(q);
   t.price = money(price);
   t.total = money(q * price);
-  if (isRx) t.g = dec(qRaw);
   if (t.type === 'BAN') t.cost = money(q * oldUnitCost);
-  if (isRx) {
-    var thang = num(t.thang) > 0 ? num(t.thang) : 1;
-    if (t.oid) {
-      /* Giá 1 thang là metadata cấp đơn: cập nhật lại toàn bộ dòng cùng đơn
-         để hộp chi tiết luôn khớp Số thang × Giá 1 thang = Thành tiền. */
-      var orderItems = db.transactions.filter(function(x){ return x.oid && String(x.oid) === String(t.oid) && x.rx; });
-      var orderTotal = orderItems.reduce(function(a, x){ return a + num(x.total); }, 0);
-      orderItems.forEach(function(x){ x.unitPrice = thang > 0 ? money(orderTotal / thang) : 0; });
-    } else {
-      t.unitPrice = thang > 0 ? money(t.total / thang) : 0;
-    }
-  }
   closeTxEdit();
   commit('Đã cập nhật giao dịch');
 }

@@ -48,6 +48,7 @@ globalThis.__test = {
   getBase: function(){ return cloudBase; },
   saveLocal: saveLocal, readDirty: readDirty, readBase: readBase,
   computeStats: computeStats, allocateRemedyByCost: allocateRemedyByCost,
+  balanceRemedyMoney: balanceRemedyMoney,
   backupBeforeRestore: backupBeforeRestore, downloadBackup: downloadBackup,
   pushState: pushState, pullState: pullState, cloudConflict: cloudConflict,
   autoRefresh: autoRefresh, busyEditing: busyEditing,
@@ -283,6 +284,23 @@ test('allocateRemedyByCost: vốn cộng lãi chia đều, dòng cuối nhận p
   assert.deepEqual(app.allocateRemedyByCost(10, [{ cost: 4 }, { cost: 6 }]), [4, 6]);
   assert.deepEqual(app.allocateRemedyByCost(10, [{ cost: 0 }, { cost: 0 }, { cost: 0 }]), [3, 3, 4]);
   assert.deepEqual(app.allocateRemedyByCost(42.6, [{ cost: 10 }, { cost: 20 }]), [16, 27]);
+});
+
+test('balanceRemedyMoney làm tròn vốn cả đơn một lần rồi chia xuống từng vị', () => {
+  const tiny = app.balanceRemedyMoney(100, [{ exactCost: 0.4 }, { exactCost: 0.4 }, { exactCost: 0.4 }]);
+  assert.equal(tiny.reduce((a, b) => a + b.cost, 0), 1);
+  assert.equal(tiny.reduce((a, b) => a + b.total, 0), 100);
+  assert.ok(tiny.every(row => row.total >= row.cost && row.cost >= 0));
+
+  const many = app.balanceRemedyMoney(50, Array.from({ length: 10 }, () => ({ exactCost: 0.4 })));
+  assert.equal(many.reduce((a, b) => a + b.cost, 0), 4);
+  assert.equal(many.reduce((a, b) => a + b.total, 0), 50);
+
+  const even = app.balanceRemedyMoney(200, [{ exactCost: 1 }, { exactCost: 3 }, { exactCost: 6 }]);
+  assert.deepEqual(even.map(row => row.cost), [1, 3, 6]);
+  assert.deepEqual(even.map(row => row.total), [64, 66, 70]);
+
+  assert.equal(app.balanceRemedyMoney(5, [{ exactCost: 10 }]), null);
 });
 
 /* ------------------------------------------------------------------ */

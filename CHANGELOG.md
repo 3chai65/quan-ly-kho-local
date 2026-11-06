@@ -5,6 +5,19 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.4] - 2026-11-06
+
+### Vốn đơn thuốc làm tròn một lần, sửa dòng giữ giá khách trả
+
+- **Vốn cả đơn** là một lần làm tròn của tổng giá nhập × kg, rồi chia số nguyên
+  xuống từng vị. Mười vị 0,4 nghìn không còn bị ghi vốn 0 và làm lãi thống kê
+  cao hơn thật.
+- **Sửa gram** một vị trong đơn thuốc giữ nguyên số khách đã trả, tính lại vốn
+  và chia lại lãi cho cả đơn. Ô đơn giá/kg không còn hiện, vì số đó không phải
+  giá khách trả.
+- **Xóa một vị** khỏi đơn thuốc hoàn tồn vị đó, giữ tiền khách trả và chia lại
+  cho các vị còn lại. Xóa vị cuối cùng thì xóa cả dòng tiền của đơn.
+
 ## [2.6.3] - 2026-11-06
 
 ### Chia tiền đơn thuốc chén theo vốn và lãi
