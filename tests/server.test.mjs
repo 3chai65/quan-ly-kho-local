@@ -19,16 +19,18 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8899;
 const BASE = `http://127.0.0.1:${PORT}`;
+const SETUP_CODE = 'TESTCODE2026KHO';
 
 let child;
 let dataDir;
+let deviceCookie = '';
 
 function waitForServer(timeoutMs = 15000) {
   const started = Date.now();
   return new Promise((resolve, reject) => {
     const tick = async () => {
       try {
-        const r = await fetch(`${BASE}/api/state`);
+        const r = await fetch(`${BASE}/healthz`);
         if (r.ok) return resolve();
       } catch (e) { /* chưa lên, thử lại */ }
       if (Date.now() - started > timeoutMs) return reject(new Error('server không khởi động kịp'));
@@ -38,10 +40,29 @@ function waitForServer(timeoutMs = 15000) {
   });
 }
 
+/* redirect: 'manual' giữ phản hồi 303, nếu không fetch đi theo Location và mất Set-Cookie.
+   Tên cookie là qlk_dev_<hex>, lấy cặp tên=giá trị đầu tiên, không viết cứng tên. */
+async function enrollDevice() {
+  const r = await fetch(`${BASE}/auth/setup`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ code: SETUP_CODE, name: 'May test' }).toString()
+  });
+  if (r.status === 404 && deviceCookie) return;
+  const parts = typeof r.headers.getSetCookie === 'function' ? r.headers.getSetCookie() : [];
+  if (r.status !== 303 || parts.length === 0) {
+    throw new Error('setup that bai status=' + r.status + ' set-cookie=' + parts.length);
+  }
+  const pair = String(parts[0]).split(';')[0].trim();
+  if (!pair.includes('=')) throw new Error('set-cookie khong co cap ten=gia tri');
+  deviceCookie = pair;
+}
+
 async function put(state, headers = {}) {
   const r = await fetch(`${BASE}/api/state`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...headers },
+    headers: { 'Content-Type': 'application/json', ...headers, Cookie: deviceCookie },
     body: JSON.stringify(state)
   });
   let body = null;
@@ -50,7 +71,7 @@ async function put(state, headers = {}) {
 }
 
 async function getState() {
-  const r = await fetch(`${BASE}/api/state`);
+  const r = await fetch(`${BASE}/api/state`, { headers: { Cookie: deviceCookie } });
   return (await r.json()).data;
 }
 
@@ -62,10 +83,11 @@ test.before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-test-'));
   child = spawn(process.execPath, ['server.js'], {
     cwd: root,
-    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir },
+    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, QLK_SETUP_CODE: SETUP_CODE },
     stdio: 'ignore'
   });
   await waitForServer();
+  await enrollDevice();
 });
 
 test.after(() => {
@@ -120,7 +142,7 @@ test('server.js: PUT dữ liệu âm bị chặn 400', async () => {
 test('server.js: JSON hỏng trả 400', async () => {
   const r = await fetch(`${BASE}/api/state`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Cookie: deviceCookie },
     body: '{khong phai json'
   });
   assert.equal(r.status, 400);
@@ -172,7 +194,7 @@ test('server.js: tự động tạo backup sau khi ghi dữ liệu', async () =>
   const files = fs.readdirSync(backupDir).filter(n => /^backup-\d{4}-\d{2}-\d{2}\.db$/.test(n));
   assert.ok(files.length >= 1, 'phải có ít nhất 1 file backup');
 
-  const r = await fetch(`${BASE}/api/backups`);
+  const r = await fetch(`${BASE}/api/backups`, { headers: { Cookie: deviceCookie } });
   const body = await r.json();
   assert.equal(body.success, true);
   assert.ok(body.count >= 1);
@@ -211,7 +233,7 @@ test('server.js: giữ created_at gốc khi ghi lại (không đặt lại)', as
 });
 
 test('server.js: trang GET / dựng HTML, hết placeholder', async () => {
-  const r = await fetch(`${BASE}/`);
+  const r = await fetch(`${BASE}/`, { headers: { Cookie: deviceCookie } });
   assert.equal(r.status, 200);
   const html = await r.text();
   assert.ok(!html.includes('%%NONCE%%'));
@@ -287,7 +309,7 @@ test('server.js: payload quá lớn trả JSON 413', async () => {
   if (bodyStr.length > 4 * 1024 * 1024) {
     const r = await fetch(`${BASE}/api/state`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Cookie: deviceCookie },
       body: bodyStr
     });
     assert.equal(r.status, 413);
@@ -373,7 +395,7 @@ test('server.js: ghi đè chủ động (X-Force) chụp bản trước-ghi-đè
   });
   assert.ok(holdsOldOnly, 'có bản chụp chứa dữ liệu trước lần ghi đè thứ hai');
 
-  const list = await (await fetch(`${BASE}/api/backups`)).json();
+  const list = await (await fetch(`${BASE}/api/backups`, { headers: { Cookie: deviceCookie } })).json();
   assert.ok(list.backups.some(b => /truoc-ghi-de/.test(b.name)), '/api/backups phải liệt kê cả bản trước-ghi-đè');
 });
 
@@ -471,4 +493,15 @@ test('server.js: chỉ giữ 10 bản trước-ghi-đè gần nhất', async () 
   const backupDir = path.join(dataDir, 'backups');
   const forced = fs.readdirSync(backupDir).filter(n => /-truoc-ghi-de-\d{9}\.db$/.test(n));
   assert.equal(forced.length, 10);
+});
+
+test('server.js: không cookie thì /api/state là 401, /healthz vẫn ok', async () => {
+  const health = await fetch(`${BASE}/healthz`);
+  assert.equal(health.status, 200);
+  assert.equal((await health.text()).trim(), 'ok');
+  const r = await fetch(`${BASE}/api/state`);
+  assert.equal(r.status, 401);
+  const body = await r.json();
+  assert.equal(body.success, false);
+  assert.equal(body.code, 'device_not_approved');
 });

@@ -12,7 +12,10 @@
  *   GET  /api/backups -> danh sách file backup (không trả đường dẫn thư mục)
  *   GET  /            -> HTML (src/page.js, CSP inline, không nonce)
  *
- * Không đăng nhập. SQLite đồng bộ (better-sqlite3), mỗi lần ghi là một transaction.
+ * Chỉ thiết bị đã được duyệt mới vào được (auth.js, cookie qlk_dev; danh sách thiết bị
+ * nằm ở data/auth.db). Thiết bị chủ đầu tiên thiết lập bằng mã in trong log, qua /auth/setup.
+ *   GET  /healthz     -> 'ok' (không cần duyệt, không trả dữ liệu; dùng cho healthcheck)
+ * SQLite đồng bộ (better-sqlite3), mỗi lần ghi là một transaction.
  */
 
 'use strict';
@@ -24,6 +27,7 @@ import express from 'express';
 import Database from 'better-sqlite3';
 
 import { PAGE } from './src/page.js';
+import { createAuth } from './auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -103,6 +107,10 @@ function migrate() {
   `);
 }
 migrate();
+
+/* Danh sách thiết bị được duyệt nằm ở file riêng (data/auth.db), tách khỏi app.db
+   để ghi snapshot hay khôi phục backup không làm đổi quyền truy cập. */
+const auth = createAuth({ Database, dataDir: DATA_DIR });
 
 /* ============================ STATE ============================ */
 
@@ -450,6 +458,22 @@ function bootJson(data) {
 
 const app = express();
 app.disable('x-powered-by');
+
+// Kiểm tra sống cho Docker healthcheck: không cần duyệt, không trả dữ liệu.
+app.get('/healthz', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    db.prepare('SELECT 1').get();
+    res.type('text/plain').send('ok');
+  } catch (e) {
+    res.status(503).type('text/plain').send('db error');
+  }
+});
+
+// Mặc định từ chối: mọi route bên dưới chỉ mở cho thiết bị đã được duyệt.
+// Đặt TRƯỚC bộ đọc body để thiết bị lạ không đẩy được payload 4 MB lên.
+app.use(auth.gate);
+auth.mount(app, express.text({ type: '*/*', limit: '2kb' }));
 app.use(express.text({ type: '*/*', limit: MAX_BODY }));
 
 app.get('/favicon.ico', (req, res) => res.status(204).end());
@@ -630,6 +654,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('  Mobile: http://<IP-máy-tính>:' + PORT);
   console.log('  DB    : ' + DB_FILE);
   console.log('  Backup: ' + BACKUP_DIR + ' (giữ ' + BACKUP_KEEP_DAYS + ' ngày)');
+  auth.announce(PORT);
 
   // Sao lưu ngay khi khởi động (nếu hôm nay chưa có), rồi kiểm tra mỗi giờ
   // để kịp chụp khi app chạy qua nửa đêm.
@@ -649,6 +674,7 @@ function shutdown(signal) {
       db.pragma('wal_checkpoint(TRUNCATE)');
       db.close();
     } catch (e) { /* đã đóng */ }
+    auth.close();
     console.log('[shutdown] Đã đóng sạch.');
     process.exit(0);
   });
@@ -658,6 +684,7 @@ function shutdown(signal) {
       db.pragma('wal_checkpoint(TRUNCATE)');
       db.close();
     } catch (e) { /* đã đóng hoặc đang đóng */ }
+    auth.close();
     process.exit(0);
   }, 10000).unref();
 }

@@ -10,8 +10,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY server.js ./
+COPY server.js auth.js ./
 COPY src ./src
+COPY scripts ./scripts
 COPY tests ./tests
 
 ENV NODE_ENV=production

@@ -104,6 +104,16 @@ robocopy G:\quan-ly-kho-local\data\luu-tru E:\sao-luu-kho\luu-tru /E /XO
 
 Chạy lại hai lệnh mỗi tuần, hoặc sau một đợt nhập nhiều hàng. Vài tháng mở thử một file `.db` trong `E:\sao-luu-kho\backups`. Mỗi tháng chép cả `E:\sao-luu-kho` ra USB hoặc chỗ ngoài máy, vì mất máy vẫn mất cả hai ổ.
 
+`data/auth.db` không nằm trong hai lệnh trên và không sao lưu file này. Server ghi `last_seen_at` khi có thiết bị mở app; chép SQLite đang ở chế độ WAL dễ ra bản lệch. Mất danh sách thiết bị thì đặt lại, vài phút là ghép lại được:
+
+```powershell
+docker compose exec quan-ly-kho node scripts/auth-reset.mjs
+docker compose restart quan-ly-kho
+docker compose logs
+```
+
+Lệnh chỉ xóa bảng thiết bị, không đụng `app.db`. Tên cookie `qlk_dev_…` giữ nguyên. Mã thiết lập mới nằm trong log.
+
 ## Khi server từ chối bản đang sửa
 
 Huy hiệu “Chưa đồng bộ” hiện cạnh nút “Bỏ thay đổi chưa gửi, lấy bản máy chủ” khi máy chủ trả 400 hoặc 428. Bấm nút thì trang hỏi xác nhận, tải file `kho-nhap-bi-tu-choi-….json` trước, rồi lấy lại bản trên máy chủ. Nếu trình duyệt không tải được file, dữ liệu trên máy được giữ nguyên. File này chứa cả kho; xóa khi không cần, và không để thư mục tải của trình duyệt nằm trong repo.
