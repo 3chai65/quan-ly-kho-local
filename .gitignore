@@ -3,6 +3,7 @@ node_modules/
 data/
 # File sao lưu dữ liệu bán hàng: không đưa lên GitHub
 kho-backup-*.json
+kho-nhap-bi-tu-choi-*.json
 *.log
 .code-review-graph/
 # Cấu hình AI/MCP theo máy (đường dẫn tuyệt đối) — không commit

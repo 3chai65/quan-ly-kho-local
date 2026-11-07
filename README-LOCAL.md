@@ -67,6 +67,7 @@ chính giao diện web.
 File JSON không có `moneyUnit: "dong"` được coi là nghìn đồng và nhân 1000 khi nạp.
 File xuất từ bản 2.6.6 trở đi có cờ đó thì giữ nguyên số đồng. Khôi phục đúng
 kho đang chạy bằng cách copy `app.db` (mục sao lưu phía trên), không bằng JSON.
+Bản `kho-backup-2026-11-06.json` trong `data/luu-tru/` xuất lúc 19:48, muộn hơn `backup-2026-11-06.db` (14:51), và có thêm đơn bán lẻ `TX_mw4yzqmggwli1` (Cam Thảo 0,1 kg, thành tiền 20 nghìn) mà sổ hiện tại không còn; khôi phục từ JSON này sẽ đưa đơn đó trở lại.
 
 ## Chạy test
 ```powershell
