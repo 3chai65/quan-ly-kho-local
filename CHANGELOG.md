@@ -5,6 +5,17 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.8] - 2026-11-07
+
+### Báo lỗi lưu, không gửi lại khi server từ chối, và có lối thoát
+
+- Huy hiệu “Chưa đồng bộ” hiện khi lưu lỗi, bộ nhớ trình duyệt đầy, hoặc bản nháp chưa gửi được từ 4 giây. Một lần lưu thành công nhanh không làm huy hiệu nháy.
+- **400** và **428** không được gửi lại. Huy hiệu kèm chi tiết lỗi và nút “Bỏ thay đổi chưa gửi, lấy bản máy chủ”.
+- Nút đó hỏi xác nhận, tải JSON bản nháp (`kho-nhap-bi-tu-choi-….json`) trước, rồi mới lấy bản trên máy chủ. Không tải được file thì giữ nguyên dữ liệu trên máy. File này không ghi đè ngày sao lưu hằng ngày, và bị `.gitignore` chặn.
+- Mất mạng và **5xx** thử lại sau 4 giây, rồi 8, 16, tối đa 60. Một lần `PUT` thành công đưa bước chờ về 4 giây.
+- **409** mở hộp thoại xung đột, không tự gửi lại.
+- `README-LOCAL.md` ghi đơn bán lẻ thừa trong `kho-backup-2026-11-06.json` (`TX_mw4yzqmggwli1`, Cam Thảo 0,1 kg, 20 nghìn) và lệnh `robocopy` không `/MIR` sang ổ khác.
+
 ## [2.6.7] - 2026-11-06
 
 ### Dọn mô tả lệch và code không còn đường vào

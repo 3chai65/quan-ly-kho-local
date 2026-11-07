@@ -105,6 +105,10 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
    `YYYY-MM-DD`, đủ 3 bảng, không trùng khoá) và trả **400** kèm chi tiết; JSON hỏng cũng
    trả **400**. Server **cảnh báo** (không chặn) khi giao dịch/dòng đơn trỏ tới `productId`
    không tồn tại.
+   - Huy hiệu “Chưa đồng bộ” hiện khi lưu lỗi, bộ nhớ trình duyệt đầy, hoặc bản nháp bẩn từ 4 giây. Lưu thành công nhanh thì không nháy.
+   - **400** và **428** không gửi lại. Nút “Bỏ thay đổi chưa gửi, lấy bản máy chủ” hỏi xác nhận, tải `kho-nhap-bi-tu-choi-….json` trước, rồi lấy bản máy chủ. Tải thất bại thì giữ dữ liệu trên máy.
+   - Mất mạng và **5xx** thử lại sau 4 giây, rồi 8, 16, tối đa 60. `PUT` thành công đưa bước chờ về 4 giây.
+   - **409** chỉ mở hộp thoại xung đột, không tự gửi lại.
 5. **Không có đăng nhập**: app chỉ chạy trong LAN nội bộ.
 
 ## API
@@ -125,6 +129,10 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
   File xuất từ bản 2.6.6 có `moneyUnit: "dong"` trong dữ liệu. File cũ không có
   cờ này bị hiểu là nghìn đồng và nhân 1000 lúc khôi phục. Muốn đúng từng đồng
   của kho đang chạy thì copy file `app.db`, không đi đường JSON.
+- **Ngoài ổ `G:`**: `README-LOCAL.md` chép `data\backups` và `data\luu-tru` sang
+  `E:\sao-luu-kho` bằng `robocopy` không `/MIR`. `E:` là HDD khác SSD chứa `G:`.
+  JSON nghìn đồng ngày 6/11 có thêm một đơn bán lẻ không còn trong sổ hiện tại;
+  chi tiết nằm ở mục khôi phục của `README-LOCAL.md`.
 
 ## Quy ước làm việc
 
