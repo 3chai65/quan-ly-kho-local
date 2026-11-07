@@ -67,7 +67,9 @@ globalThis.__test = {
   getSyncRetryDelay: function(){ return syncRetryDelay; },
   isSyncRejected: function(){ return syncRejected; },
   discardUnsynced: discardUnsynced, restoreFromFile: restoreFromFile,
-  readLocal: readLocal
+  readLocal: readLocal,
+  saveNhap: saveNhap, saveRetail: saveRetail, saveRemedy: saveRemedy,
+  openTxEdit: openTxEdit, saveTxEdit: saveTxEdit, delTx: delTx, mergeDo: mergeDo
 };
 })();`;
   const store = new Map();
@@ -938,4 +940,246 @@ test('autoRefresh: không ghi đè nếu máy bắt đầu sửa trong lúc đan
   await client.autoRefresh();
   assert.equal(client.getDb().products[0].name, 'VuaSua', 'bản vừa sửa trên máy phải được giữ');
   assert.equal(client.isDirty(), true);
+});
+
+
+/*
+  Chưa phủ, cố ý:
+  - khôi phục từ file JSON
+  - màn đối soát recFix / recFixAll
+  - sửa hoặc xóa vị thuốc
+  - đồng bộ máy chủ và autoRefresh
+  - dòng dữ liệu cũ sinh từ bản Worker
+  Mỗi chuỗi bắt đầu từ kho trống. Kho thật còn dữ liệu di sản, test này không dựng lại kho đó.
+  Seed: biến môi trường KHO_FUZZ_SEED, mặc định 20261107.
+*/
+function rng32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function irand(rng, n){ return Math.floor(rng() * n); }
+function qtyStep(rng, min, max, step){
+  const lo = Math.round(min / step);
+  const hi = Math.round(max / step);
+  if (hi <= lo) return lo * step;
+  return (lo + irand(rng, hi - lo + 1)) * step;
+}
+
+function stockDom(){
+  const els = new Map();
+  const checks = [];
+  function ensure(id){
+    if (!els.has(id)) {
+      els.set(id, {
+        id, value: '', textContent: '', hidden: false, style: {},
+        classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+        setAttribute(){}, getAttribute(){ return null; }, removeAttribute(){},
+        hasAttribute(){ return false; },
+        appendChild(child){ return child; }, remove(){}, focus(){}, select(){}, click(){},
+        querySelector(){ return null; }, querySelectorAll(){ return []; },
+        addEventListener(){}, removeEventListener(){}, dispatchEvent(){ return true; }
+      });
+    }
+    return els.get(id);
+  }
+  const need = new Set(['txEditId', 'txEditName', 'txEditQty', 'txEditPrice', 'remedyUnitPrice', 'remedyThang']);
+  const document = {
+    readyState: 'loading',
+    documentElement: ensure('html'),
+    body: ensure('body'),
+    activeElement: null,
+    querySelector(sel){
+      const m = /^#([\w-]+)$/.exec(String(sel));
+      if (!m) return null;
+      if (!need.has(m[1]) && !els.has(m[1])) return null;
+      return ensure(m[1]);
+    },
+    querySelectorAll(sel){
+      if (sel === '#mergeList input[type=checkbox]') return checks;
+      return [];
+    },
+    createElement(){ return ensure('n' + els.size); },
+    createElementNS(){ return ensure('n' + els.size); },
+    addEventListener(){}, removeEventListener(){}
+  };
+  return {
+    document,
+    checks,
+    set(id, value){ ensure(id).value = String(value); }
+  };
+}
+
+test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', () => {
+  const SEED = Number(process.env.KHO_FUZZ_SEED || 20261107);
+  const SEQUENCES = 2000;
+  const dom = stockDom();
+  const fuzz = loadClient({
+    document: dom.document,
+    confirm: () => true,
+    fetch: () => Promise.resolve({
+      status: 200,
+      json: async () => ({ success: true, updatedAt: 1 })
+    })
+  });
+  const rng = rng32(SEED);
+  const ran = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0, merge: 0 };
+  const blocked = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0, merge: 0 };
+  const idle = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0, merge: 0 };
+
+  function snap(){
+    const db = fuzz.getDb();
+    return JSON.stringify({
+      p: db.products.map(p => [p.id, p.stock]),
+      t: db.transactions.map(t => [t.id, t.qty, t.oid || '', t.retail ? 1 : 0])
+    });
+  }
+  function check(log){
+    const bad = fuzz.reconcileList();
+    if (!bad.length) return;
+    const detail = bad.map(r => r.name + ' tồn ' + r.stock + ' lịch sử ' + r.calc + ' lệch ' + r.diff).join('; ');
+    assert.fail('Lệch sau ' + log.length + ' bước: ' + detail + '\n' + JSON.stringify(log));
+  }
+  function run(kind, op, log, fn){
+    const before = snap();
+    try { fn(); }
+    catch (e) { assert.fail(JSON.stringify(op) + ' ném lỗi: ' + e.message + '\n' + JSON.stringify(log)); }
+    if (snap() === before) idle[kind] += 1;
+    else ran[kind] += 1;
+    log.push(op);
+    check(log);
+  }
+
+  for (let seq = 0; seq < SEQUENCES; seq++) {
+    fuzz.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+    fuzz.setDirty(false);
+    const log = [{ seed: SEED, seq }];
+    const steps = 15 + irand(rng, 25);
+    for (let step = 0; step < steps; step++) {
+      const db = fuzz.getDb();
+      const bag = ['nhap'];
+      if (db.products.some(p => p.stock >= 0.01)) bag.push('retail', 'retail');
+      if (db.products.some(p => p.stock >= 0.05)) bag.push('remedy');
+      if (db.transactions.length) bag.push('edit', 'edit', 'delete');
+      if (db.products.some(p => p.stock >= 0.04)) bag.push('merge');
+      const kind = bag[irand(rng, bag.length)];
+
+      if (kind === 'nhap') {
+        const makeNew = db.products.length === 0 || (db.products.length < 5 && rng() < 0.45);
+        let entry;
+        if (makeNew) {
+          entry = {
+            pid: null,
+            name: 'Vi ' + String.fromCharCode(65 + db.products.length),
+            qty: qtyStep(rng, 0.5, 4, 0.01),
+            price: (20 + irand(rng, 180)) * 1000
+          };
+        } else {
+          const p = db.products[irand(rng, db.products.length)];
+          entry = { pid: p.id, name: p.name, qty: qtyStep(rng, 0.1, 2, 0.01), price: p.costPrice || 50000 };
+        }
+        run('nhap', { op: 'nhap', ...entry }, log, () => { fuzz.setNhapList([entry]); fuzz.saveNhap(); });
+      } else if (kind === 'retail') {
+        const ps = db.products.filter(p => p.stock >= 0.01);
+        const p = ps[irand(rng, ps.length)];
+        const kg = qtyStep(rng, 0.01, Math.min(p.stock, 1.5), 0.01);
+        const amount = Math.round(kg * (Number(p.costPrice) + 20000));
+        run('retail', { op: 'retail', pid: p.id, kg, amount }, log, () => {
+          fuzz.setRetailItems([{ pid: p.id, kg, amount }]);
+          fuzz.saveRetail();
+        });
+      } else if (kind === 'remedy') {
+        const ps = db.products.filter(p => p.stock >= 0.05);
+        const p = ps[irand(rng, ps.length)];
+        const thang = 1 + irand(rng, 10);
+        const maxG = Math.floor(Math.min(p.stock, 1.2) / thang * 10000) / 10;
+        if (maxG < 1) { blocked.remedy += 1; log.push({ op: 'remedy-bo-qua', ly: 'khong du ton cho so thang' }); continue; }
+        const grams = qtyStep(rng, 1, maxG, 0.1);
+        const kg = grams / 1000 * thang;
+        const cost = kg * Number(p.costPrice || 0);
+        const unitK = Math.ceil(cost / thang / 1000) + 1 + irand(rng, 40);
+        run('remedy', { op: 'remedy', pid: p.id, grams, thang, unitK }, log, () => {
+          dom.set('remedyThang', String(thang));
+          dom.set('remedyUnitPrice', String(unitK));
+          fuzz.setRemedyItems([{ productId: p.id, grams }]);
+          fuzz.saveRemedy();
+        });
+      } else if (kind === 'edit') {
+        const t = db.transactions[irand(rng, db.transactions.length)];
+        const p = db.products.find(x => x.id === t.productId);
+        if (!p) { blocked.edit += 1; log.push({ op: 'edit-bo-qua', ly: 'mat vi thuoc' }); continue; }
+        const old = Number(t.qty);
+        const stock = Number(p.stock);
+        let raw;
+        if (t.rx) {
+          const thang = Number(t.thang) > 0 ? Number(t.thang) : 1;
+          const maxG = Math.floor((old + stock) / thang * 10000) / 10;
+          if (maxG < 0.5) { blocked.edit += 1; log.push({ op: 'edit-bo-qua', ly: 'khong du ton' }); continue; }
+          raw = qtyStep(rng, 0.5, maxG, 0.1);
+        } else if (t.type === 'BAN') {
+          if (old + stock < 0.01) { blocked.edit += 1; log.push({ op: 'edit-bo-qua', ly: 'khong du ton' }); continue; }
+          raw = qtyStep(rng, 0.01, old + stock, 0.01);
+        } else {
+          const lo = Math.max(0.01, Math.round((old - stock) * 100) / 100);
+          if (old + 2 < lo) { blocked.edit += 1; log.push({ op: 'edit-bo-qua', ly: 'tranh ton am' }); continue; }
+          raw = qtyStep(rng, lo, old + 2, 0.01);
+        }
+        const from = t.rx ? Number(t.g) : old;
+        run('edit', { op: 'edit', id: t.id, type: t.type, rx: !!t.rx, thang: t.thang || 1, from, to: raw }, log, () => {
+          fuzz.openTxEdit(t.id);
+          dom.set('txEditQty', String(raw));
+          fuzz.saveTxEdit();
+        });
+      } else if (kind === 'delete') {
+        const ok = db.transactions.filter(t => {
+          const p = db.products.find(x => x.id === t.productId);
+          if (!p || t.type !== 'NHAP') return true;
+          return Number(p.stock) - Number(t.qty) >= -1e-9;
+        });
+        if (!ok.length) { blocked.delete += 1; log.push({ op: 'delete-bo-qua', ly: 'tranh ton am' }); continue; }
+        const t = ok[irand(rng, ok.length)];
+        run('delete', { op: 'delete', id: t.id, type: t.type, qty: t.qty }, log, () => fuzz.delTx(t.id));
+      } else {
+        const ps = db.products.filter(p => p.stock >= 0.04);
+        const p = ps[irand(rng, ps.length)];
+        const kg1 = qtyStep(rng, 0.01, Math.min(0.5, p.stock / 2), 0.01);
+        run('retail', { op: 'merge-ban-1', pid: p.id, kg: kg1 }, log, () => {
+          fuzz.setRetailItems([{ pid: p.id, kg: kg1, amount: Math.round(kg1 * 100000) }]);
+          fuzz.saveRetail();
+          const t = fuzz.getDb().transactions.at(-1);
+          if (t && t.productId === p.id && t.type === 'BAN') delete t.retail;
+        });
+        const left = fuzz.getDb().products.find(x => x.id === p.id);
+        if (!left || left.stock < 0.01) { blocked.merge += 1; log.push({ op: 'merge-bo-qua', ly: 'khong du ton' }); continue; }
+        const kg2 = qtyStep(rng, 0.01, Math.min(0.5, left.stock), 0.01);
+        run('retail', { op: 'merge-ban-2', pid: p.id, kg: kg2 }, log, () => {
+          fuzz.setRetailItems([{ pid: p.id, kg: kg2, amount: Math.round(kg2 * 100000) }]);
+          fuzz.saveRetail();
+          const t = fuzz.getDb().transactions.at(-1);
+          if (t && t.productId === p.id && t.type === 'BAN') delete t.retail;
+        });
+        run('merge', { op: 'merge' }, log, () => {
+          dom.checks.length = 0;
+          for (const g of fuzz.mergeCandidates()) {
+            dom.checks.push({ checked: true, getAttribute(name){ return name === 'data-key' ? g.key : null; } });
+          }
+          fuzz.mergeDo();
+        });
+      }
+    }
+  }
+
+  console.log('Độ phủ seed ' + SEED);
+  console.log('loại\tchạy\tchặn\tkhông đổi');
+  for (const k of ['nhap', 'retail', 'remedy', 'edit', 'delete', 'merge']) {
+    console.log(k + '\t' + ran[k] + '\t' + blocked[k] + '\t' + idle[k]);
+  }
+  for (const k of Object.keys(ran)) assert.ok(ran[k] > 0, k + ' không chạy lần nào');
+  assert.ok(ran.edit > blocked.edit + idle.edit, 'sửa bị bỏ qua nhiều hơn số lần chạy');
+  assert.ok(ran.merge > blocked.merge + idle.merge, 'gộp bị bỏ qua nhiều hơn số lần chạy');
+  assert.ok(ran.remedy > blocked.remedy + idle.remedy, 'đơn thuốc chén bị bỏ qua nhiều hơn số lần chạy');
 });
