@@ -58,7 +58,11 @@ globalThis.__test = {
   setNhapList: function(v){ nhapList = v; },
   setActiveTag: function(tag){ doc.activeElement = tag ? { tagName: tag } : null; },
   setConflictOpen: function(v){ conflictOpen = !!v; },
-  setSyncErrorShown: function(v){ syncErrorShown = !!v; }
+  setSyncErrorShown: function(v){ syncErrorShown = !!v; },
+  isSyncErrorShown: function(){ return syncErrorShown; },
+  getSyncDetail: function(){ return syncDetail; },
+  getQuotaNote: function(){ return quotaNote; },
+  hasSyncRetry: function(){ return !!syncRetryTimer; }
 };
 })();`;
   const store = new Map();
@@ -376,6 +380,109 @@ test('saveLocal lưu đúng cờ dirty và mốc cloud base', () => {
   app.setDirty(true);
   app.saveLocal();
   assert.equal(app.readDirty(), true);
+});
+
+test('saveLocal báo một lần khi hết quota', () => {
+  const localStorage = {
+    getItem() { return null; },
+    setItem() {
+      const e = new Error('full');
+      e.name = 'QuotaExceededError';
+      throw e;
+    },
+    removeItem() {},
+    clear() {}
+  };
+  const client = loadClient({ localStorage });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.saveLocal();
+  client.saveLocal();
+  assert.match(client.getQuotaNote(), /Bộ nhớ trình duyệt đầy/);
+});
+
+test('pushState thất bại giữ đủ details và chỉ xóa lỗi khi lưu thành công', async () => {
+  let mode = 'fail';
+  const fetchStub = async () => ({
+    json: async () => mode === 'fail'
+      ? { success: false, error: 'Dữ liệu không hợp lệ', details: ['trùng tên A', 'trùng tên B'] }
+      : { success: true, updatedAt: 9 }
+  });
+  const client = loadClient({ fetch: fetchStub });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  assert.equal(await client.pushState(false, false), false);
+  assert.equal(client.isSyncErrorShown(), true);
+  assert.match(client.getSyncDetail(), /trùng tên A/);
+  assert.match(client.getSyncDetail(), /trùng tên B/);
+  assert.equal(await client.pushState(false, false), false);
+  assert.equal(client.isSyncErrorShown(), true);
+  mode = 'ok';
+  assert.equal(await client.pushState(true, false), true);
+  assert.equal(client.isSyncErrorShown(), false);
+  assert.equal(client.getSyncDetail(), '');
+});
+
+test('pushState 400 và 428 hiện details, không hẹn gửi lại', async () => {
+  for (const status of [400, 428]) {
+    const fetchStub = async () => ({
+      status,
+      json: async () => ({ success: false, error: 'Từ chối ' + status, details: ['dòng A', 'dòng B'] })
+    });
+    const client = loadClient({
+      fetch: fetchStub,
+      setTimeout(fn, ms) { return ms || 1; },
+      clearTimeout() {}
+    });
+    client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+    client.setBase(1);
+    assert.equal(await client.pushState(false, false), false);
+    assert.match(client.getSyncDetail(), /dòng A/);
+    assert.match(client.getSyncDetail(), /dòng B/);
+    assert.equal(client.hasSyncRetry(), false);
+  }
+});
+
+test('pushState 409 mở xung đột và không hẹn gửi lại', async () => {
+  let confirms = 0;
+  const fetchStub = async (url, opts = {}) => {
+    if ((opts.method || 'GET') === 'PUT') {
+      return { status: 409, json: async () => ({ success: false, conflict: true, updatedAt: 50 }) };
+    }
+    return {
+      status: 200,
+      json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 50, moneyUnit: 'dong' } })
+    };
+  };
+  const client = loadClient({
+    fetch: fetchStub,
+    confirm() { confirms++; return true; },
+    setTimeout(fn, ms) { return ms || 1; },
+    clearTimeout() {}
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  await client.pushState(false, false);
+  assert.equal(confirms, 1);
+  assert.equal(client.hasSyncRetry(), false);
+});
+
+test('parseBackup ghi nhận vị thuốc trùng tên để khôi phục báo cho người dùng', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    moneyUnit: 'dong',
+    data: {
+      products: [
+        { id: 'p1', name: 'A Giao', stock: 1, costPrice: 10 },
+        { id: 'p2', name: 'a giao', stock: 2, costPrice: 20 }
+      ],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const out = app.parseBackup(raw);
+  assert.equal(out.products.length, 1);
+  assert.equal(out._drops.length, 1);
+  assert.match(out._drops[0], /A Giao|a giao/);
 });
 
 test('backupBeforeRestore lưu snapshot hiện tại với tên riêng', () => {

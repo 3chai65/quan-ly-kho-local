@@ -86,6 +86,24 @@ docker compose down      # dừng và xoá container (dữ liệu vẫn còn tro
 docker compose logs -f   # xem log
 ```
 
+## Bản nghìn đồng đã cất riêng
+
+`data/luu-tru/` không nằm trong vòng xóa 30 bản của `data/backups/`:
+
+- `truoc-doi-don-vi.db` — `app.db` trước khi đổi sang đồng (giá còn là nghìn).
+- `truoc-lam-tron-2026-11-06-1047.json` — số lẻ gốc của giao dịch.
+
+File `.db` này chỉ tự thành đồng khi `server.js` còn `migrateMoneyToDong()`: copy đè lên `data/app.db` (xóa `app.db-wal` và `app.db-shm`), khởi động server khi `app_meta` chưa có `money_unit = dong`. Giao dịch có trong file JSON được nhân từ số lẻ; giá nhập và tổng đơn nhân 1000 từ số nghìn đang lưu. Sau này nếu xóa hàm đó khỏi `server.js`, phải tự nhân 1000 các cột `price_vnd`, `total_vnd`, `cost_vnd`, `unit_price_vnd`, `cost_price_vnd`, `prescriptions.total_vnd`, rồi ghi `money_unit = dong`.
+
+Ba thư mục này đang cùng ổ với `app.db`. Đừng copy `app.db` lúc server đang chạy: file WAL có thể lệch với file chính. Chỉ chép `data\backups\` (bản `VACUUM INTO` đã khép) và `data\luu-tru\`. Không dùng `/MIR`, vì cờ đó xóa ở đích những bản nguồn đã prune:
+
+```powershell
+robocopy G:\quan-ly-kho-local\data\backups E:\sao-luu-kho\backups /E /XO
+robocopy G:\quan-ly-kho-local\data\luu-tru E:\sao-luu-kho\luu-tru /E /XO
+```
+
+Đổi `E:\sao-luu-kho` thành USB, ổ khác hoặc thư mục đồng bộ. Chạy tay mỗi tuần là đủ.
+
 ## Ghi chú
 - Bản này **không có đăng nhập** — chỉ nên dùng trong mạng nhà.
 - Cổng đổi được trong `docker-compose.yml` (mục `ports`, ví dụ `"9000:8787"`).

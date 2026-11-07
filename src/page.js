@@ -62,6 +62,9 @@ a{color:var(--brand-text)}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em}
 .brand .ico{width:22px;height:22px;color:var(--brand)}
 .bar__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
+border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber-text);
+font:inherit;font-size:12px;font-weight:700;line-height:1.35;text-align:left;white-space:pre-line;cursor:default}
 .main{padding:18px 0 0}
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 14px;
@@ -376,6 +379,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <span>Quản Lý Kho</span>
     </a>
     <div class="bar__actions">
+      <button class="sync-badge" id="syncBadge" type="button" hidden>Chưa đồng bộ</button>
       <div class="menu">
         <button class="btn btn--sm" type="button" id="themeBtn" data-action="theme-menu" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">
           <svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg><span id="themeLabel">Hệ thống</span>
@@ -1269,7 +1273,15 @@ var impAll = false, expAll = false;
 var cloudBase = 0;
 var dirty = false;
 var syncErrorShown = false;
+var syncDetail = '';
+var quotaNote = '';
+var quotaWarned = false;
 var conflictOpen = false;
+var dirtySince = 0;
+var dirtyBadgeTimer = null;
+var syncRetryTimer = null;
+var pushing = false;
+var DIRTY_BADGE_MS = 4000;
 var toastTimer = null;
 
 function scaleLegacyMoney(d){
@@ -1291,7 +1303,7 @@ function scaleLegacyMoney(d){
   d.moneyUnit = 'dong';
   return d;
 }
-function sanitize(d){
+function sanitize(d, drops){
   var o = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
   if (!d || typeof d !== 'object') return o;
   o.updatedAt = dec(d.updatedAt);
@@ -1302,7 +1314,10 @@ function sanitize(d){
       var id = String(p.id || uid('PROD'));
       var name = String(p.name);
       var nameKey = capWords(name).toLowerCase();
-      if (seenPid[id] || seenPname[nameKey]) return;
+      if (seenPid[id] || seenPname[nameKey]) {
+        if (drops) drops.push('Vị thuốc trùng: ' + name);
+        return;
+      }
       seenPid[id] = true;
       seenPname[nameKey] = true;
       o.products.push({
@@ -1318,7 +1333,10 @@ function sanitize(d){
     d.transactions.forEach(function(t){
       if (!t) return;
       var id = String(t.id || uid('TX'));
-      if (seenTid[id]) return;
+      if (seenTid[id]) {
+        if (drops) drops.push('Giao dịch trùng id: ' + id);
+        return;
+      }
       seenTid[id] = true;
       var tx = {
         id: id,
@@ -1352,7 +1370,10 @@ function sanitize(d){
       var rname = String(r.name);
       /* Tên đơn trong DB là UNIQUE phân biệt hoa/thường → chỉ loại trùng đúng tên. */
       var rnameKey = rname.trim();
-      if (seenRid[rid] || seenRname[rnameKey]) return;
+      if (seenRid[rid] || seenRname[rnameKey]) {
+        if (drops) drops.push('Đơn thuốc trùng: ' + rname);
+        return;
+      }
       var items = [], seenItem = {};
       r.items.forEach(function(it){
         if (!it || !it.productId) return;
@@ -1396,14 +1417,68 @@ function readBase(){
     return isFinite(v) && v > 0 ? v : 0;
   } catch (e) { return 0; }
 }
+function armDirtyBadge(){
+  if (!dirty) {
+    dirtySince = 0;
+    if (dirtyBadgeTimer) { clearTimeout(dirtyBadgeTimer); dirtyBadgeTimer = null; }
+    return;
+  }
+  if (!dirtySince) dirtySince = Date.now();
+  if (dirtyBadgeTimer || Date.now() - dirtySince >= DIRTY_BADGE_MS) return;
+  dirtyBadgeTimer = setTimeout(function(){
+    dirtyBadgeTimer = null;
+    renderSyncBadge();
+  }, DIRTY_BADGE_MS - (Date.now() - dirtySince));
+}
+function renderSyncBadge(){
+  armDirtyBadge();
+  var el = $('#syncBadge');
+  if (!el) return;
+  var stale = !!(dirty && dirtySince && Date.now() - dirtySince >= DIRTY_BADGE_MS);
+  var show = !!(syncErrorShown || quotaNote || stale);
+  el.hidden = !show;
+  if (!show) { el.textContent = ''; return; }
+  var parts = ['Chưa đồng bộ'];
+  if (syncDetail) parts.push(syncDetail);
+  if (quotaNote) parts.push(quotaNote);
+  el.textContent = parts.join('\n');
+}
+function scheduleSyncRetry(){
+  if (syncRetryTimer || conflictOpen) return;
+  syncRetryTimer = setTimeout(function(){
+    syncRetryTimer = null;
+    if ((dirty || syncErrorShown) && !conflictOpen && !busyEditing() && !pushing) pushState(false);
+  }, DIRTY_BADGE_MS);
+}
+function noteSyncFailure(detail, retry){
+  syncErrorShown = true;
+  syncDetail = detail || 'Dữ liệu trên máy này chưa lên máy chủ.';
+  renderSyncBadge();
+  /* 400/428 từ chối đúng dữ liệu này. Gửi lại chỉ lặp cùng một lỗi. */
+  if (retry) scheduleSyncRetry();
+  else if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+}
 function saveLocal(){
   try {
     localStorage.setItem(KEY, JSON.stringify(db));
     localStorage.setItem(DIRTY_KEY, dirty ? '1' : '0');
     localStorage.setItem(BASE_KEY, String(cloudBase || 0));
-  } catch (e) {}
+    if (quotaNote) { quotaNote = ''; quotaWarned = false; renderSyncBadge(); }
+  } catch (e) {
+    var quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+    if (quota && !quotaWarned) {
+      quotaWarned = true;
+      quotaNote = 'Bộ nhớ trình duyệt đầy — bản nháp trên máy này có thể không giữ được.';
+      renderSyncBadge();
+    }
+  }
 }
-function touch(){ db.updatedAt = Date.now(); dirty = true; saveLocal(); }
+function touch(){
+  db.updatedAt = Date.now();
+  if (!dirty) dirtySince = Date.now();
+  dirty = true;
+  saveLocal();
+}
 
 /* ================= THÔNG BÁO ================= */
 function toast(msg, kind){
@@ -3636,8 +3711,19 @@ function cloudConflict(){
   if (useLatest) return pullState(true, true).then(function(){ return false; });
   return pushState(true, true);
 }
+function syncFailText(d, fallback){
+  var lines = [];
+  if (d && d.error) lines.push(String(d.error));
+  if (d && Array.isArray(d.details)) {
+    for (var i = 0; i < d.details.length && lines.length < 21; i++) lines.push(String(d.details[i]));
+  }
+  return lines.length ? lines.join('\n') : fallback;
+}
 function pushState(manual, force){
+  if (pushing) return Promise.resolve(false);
+  pushing = true;
   touch();
+  renderSyncBadge();
   var sent = num(db.updatedAt);
   var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase) };
   if (force) headers['X-Force'] = '1';
@@ -3646,9 +3732,20 @@ function pushState(manual, force){
     headers: headers,
     body: JSON.stringify(db)
   }).then(function(r){
-    return r ? r.json() : null;
-  }).then(function(d){
-    if (d && d.conflict) return cloudConflict();
+    if (!r) return { status: 0, d: null };
+    return r.json().then(function(d){
+      return { status: r.status || 0, d: d };
+    }, function(){
+      return { status: r.status || 0, d: null };
+    });
+  }).then(function(pack){
+    var d = pack.d;
+    var status = pack.status;
+    if (d && d.conflict) {
+      if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+      pushing = false;
+      return cloudConflict();
+    }
     var ok = !!(d && d.success);
     if (ok) {
       cloudBase = num(d.updatedAt) || sent;
@@ -3660,27 +3757,23 @@ function pushState(manual, force){
         dirty = true;
         setTimeout(function(){ pushState(false); }, 0);
       }
-      saveLocal();
-    }
-    if (manual) {
-      var err = d && (d.error || (d.details && d.details[0]));
-      if (ok) syncErrorShown = false;
-      toast(ok ? 'Đã lưu dữ liệu' : (err || 'Lưu dữ liệu thất bại'), ok ? 'ok' : 'error');
-    } else if (ok) {
       syncErrorShown = false;
-    } else if (!syncErrorShown) {
-      syncErrorShown = true;
-      var err2 = d && (d.error || (d.details && d.details[0]));
-      toast((err2 || 'Chưa lưu được lên máy chủ') + ' — dữ liệu vẫn giữ trên máy này', 'error');
+      syncDetail = '';
+      if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+      saveLocal();
+      renderSyncBadge();
+      if (manual) toast('Đã lưu dữ liệu');
+    } else {
+      var rejected = status >= 400 && status < 500;
+      noteSyncFailure(syncFailText(d, 'Chưa lưu được lên máy chủ — dữ liệu vẫn giữ trên máy này'), !rejected);
     }
     return ok;
   }).catch(function(){
-    if (manual) toast('Không kết nối được máy chủ', 'error');
-    else if (!syncErrorShown) {
-      syncErrorShown = true;
-      toast('Mất kết nối — dữ liệu vẫn giữ trên máy này', 'error');
-    }
+    noteSyncFailure('Mất kết nối — dữ liệu vẫn giữ trên máy này.', true);
     return false;
+  }).then(function(ok){
+    pushing = false;
+    return ok;
   });
 }
 function pullState(manual, forceLatest){
@@ -3849,7 +3942,10 @@ function parseBackup(text){
     var p = d.products[j];
     if (!p || !p.name || num(p.stock) < 0 || num(p.costPrice) < 0) return null;
   }
-  return sanitize(scaleLegacyMoney(d));
+  var drops = [];
+  var out = sanitize(scaleLegacyMoney(d), drops);
+  if (drops.length) out._drops = drops;
+  return out;
 }
 function restoreFromFile(file){
   if (!file) return;
@@ -3859,10 +3955,16 @@ function restoreFromFile(file){
     var bak = null;
     try { bak = parseBackup(String(fr.result || '')); } catch (e) {}
     if (!bak) { toast('File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
+    var drops = bak._drops || [];
+    if (bak._drops) delete bak._drops;
     var msg = 'Khôi phục ' + bak.products.length + ' vị thuốc, ' +
       bak.transactions.length + ' giao dịch, ' +
       bak.prescriptions.length + ' đơn thuốc?\n\n' +
       'Dữ liệu hiện tại (kể cả trên máy chủ) sẽ bị thay thế hoàn toàn.';
+    if (drops.length) {
+      msg += '\n\nĐã bỏ ' + drops.length + ' dòng trùng:\n' + drops.slice(0, 8).join('\n');
+      if (drops.length > 8) msg += '\n…';
+    }
     if (!confirm(msg)) return;
     /* Luôn lưu snapshot hiện tại trước khi ghi đè; nếu không tải được thì hủy. */
     if (!backupBeforeRestore()) {
@@ -4171,6 +4273,7 @@ function init(){
     db = local;
     cloudBase = savedBase;
     dirty = true;
+    dirtySince = Date.now();
   } else if (remote) {
     db = remote;
     cloudBase = num(remote.updatedAt) || savedBase;
@@ -4201,6 +4304,7 @@ function init(){
   resetRemedy();
   renderAll();
   renderBackupInfo();
+  renderSyncBadge();
   if (dropLegacy) toast('Đã bỏ thay đổi chưa gửi (nâng cấp dữ liệu)');
 
   if (dirty) {
