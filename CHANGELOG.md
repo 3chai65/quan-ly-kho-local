@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.9] - 2026-11-07
+
+### Hộp xác nhận khôi phục nói đơn vị tiền
+
+- File thiếu `moneyUnit` báo sẽ nhân 1000. File đã có `moneyUnit: "dong"` báo giữ nguyên.
+- Dòng giá nhập lấy vị thuốc đầu tiên và so `costPrice` thật sau khi nạp, ví dụ 85 → 85.000.
+- Cùng một điều kiện `willScaleMoney` cho lúc nạp và lúc đọc lại bản đã lưu, nên tải lại trang không nhân lần hai.
+- Hủy khôi phục, hoặc không tải được bản nháp trước khi ghi đè, thì không giữ ghi chú đơn vị trên dữ liệu.
+
 ## [2.6.8] - 2026-11-07
 
 ### Báo lỗi lưu, không gửi lại khi server từ chối, và có lối thoát

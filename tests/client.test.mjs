@@ -575,6 +575,21 @@ test('parseBackup đọc moneyUnit trong data và giữ nguyên số đồng', (
   assert.equal(out._moneyNote.includes('85.000.000'), false);
 });
 
+test('parseBackup tên viết thường vẫn hiện giá nhập mẫu', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: {
+      products: [{ id: 'p1', name: 'a giao', stock: 1, costPrice: 85 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const out = app.parseBackup(raw);
+  assert.equal(out.products[0].name, 'a giao');
+  assert.equal(out.products[0].costPrice, 85000);
+  assert.match(out._moneyNote, /Giá nhập “a giao”: 85 → 85\.000/);
+});
+
 test('parseBackup không có vị thuốc thì không bịa giá nhập', () => {
   const raw = JSON.stringify({
     app: 'quan-ly-kho',
