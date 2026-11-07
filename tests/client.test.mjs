@@ -62,7 +62,10 @@ globalThis.__test = {
   isSyncErrorShown: function(){ return syncErrorShown; },
   getSyncDetail: function(){ return syncDetail; },
   getQuotaNote: function(){ return quotaNote; },
-  hasSyncRetry: function(){ return !!syncRetryTimer; }
+  hasSyncRetry: function(){ return !!syncRetryTimer; },
+  getSyncRetryDelay: function(){ return syncRetryDelay; },
+  isSyncRejected: function(){ return syncRejected; },
+  discardUnsynced: discardUnsynced
 };
 })();`;
   const store = new Map();
@@ -439,6 +442,7 @@ test('pushState 400 và 428 hiện details, không hẹn gửi lại', async () 
     assert.match(client.getSyncDetail(), /dòng A/);
     assert.match(client.getSyncDetail(), /dòng B/);
     assert.equal(client.hasSyncRetry(), false);
+    assert.equal(client.isSyncRejected(), true);
   }
 });
 
@@ -464,6 +468,77 @@ test('pushState 409 mở xung đột và không hẹn gửi lại', async () => 
   await client.pushState(false, false);
   assert.equal(confirms, 1);
   assert.equal(client.hasSyncRetry(), false);
+  assert.equal(client.isSyncRejected(), false);
+});
+
+test('nút bỏ thay đổi 4xx lấy bản máy chủ và không gửi lại bản hỏng', async () => {
+  let puts = 0;
+  const fetchStub = async (url, opts = {}) => {
+    if ((opts.method || 'GET') === 'PUT') {
+      puts++;
+      return { status: 400, json: async () => ({ success: false, error: 'Dữ liệu không hợp lệ', details: ['hỏng'] }) };
+    }
+    return {
+      status: 200,
+      json: async () => ({
+        success: true,
+        data: { products: [{ id: 's', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' }
+      })
+    };
+  };
+  const client = loadClient({
+    fetch: fetchStub,
+    confirm() { return true; },
+    setTimeout() { return 1; },
+    clearTimeout() {}
+  });
+  client.setDb({ products: [{ id: 'l', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  assert.equal(await client.pushState(false, false), false);
+  assert.equal(client.isSyncRejected(), true);
+  assert.equal(await client.discardUnsynced(), true);
+  assert.equal(client.getDb().products[0].name, 'Server');
+  assert.equal(client.isDirty(), false);
+  assert.equal(client.isSyncRejected(), false);
+  assert.equal(puts, 1);
+});
+
+test('hủy hộp xác nhận thì giữ bản nháp', async () => {
+  let gets = 0;
+  const fetchStub = async () => { gets++; return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' } }) }; };
+  const client = loadClient({ fetch: fetchStub, confirm() { return false; } });
+  client.setDb({ products: [{ id: 'l', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setSyncErrorShown(true);
+  assert.equal(await client.discardUnsynced(), false);
+  assert.equal(client.getDb().products[0].name, 'Local');
+  assert.equal(gets, 0);
+});
+
+test('sau PUT thành công lần lỗi sau bắt đầu lại ở 4 giây', async () => {
+  let mode = 'err';
+  const timers = [];
+  const fetchStub = async () => mode === 'err'
+    ? { status: 500, json: async () => ({ success: false, error: 'lỗi server' }) }
+    : { status: 200, json: async () => ({ success: true, updatedAt: 4 }) };
+  const client = loadClient({
+    fetch: fetchStub,
+    setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; },
+    clearTimeout() {}
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  await client.pushState(false, false);
+  const first = timers.filter(t => t.ms === 4000).pop();
+  assert.ok(first);
+  mode = 'ok';
+  first.fn();
+  for (let i = 0; i < 8; i++) await new Promise(r => setImmediate(r));
+  assert.equal(client.getSyncRetryDelay(), 4000);
+  mode = 'err';
+  timers.length = 0;
+  assert.equal(await client.pushState(false, false), false);
+  assert.equal(timers.some(t => t.ms === 4000), true);
+  assert.equal(timers.some(t => t.ms > 4000), false);
 });
 
 test('parseBackup ghi nhận vị thuốc trùng tên để khôi phục báo cho người dùng', () => {

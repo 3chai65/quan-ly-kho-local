@@ -65,6 +65,7 @@ a{color:var(--brand-text)}
 .sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
 border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber-text);
 font:inherit;font-size:12px;font-weight:700;line-height:1.35;text-align:left;white-space:pre-line;cursor:default}
+.sync-discard{max-width:min(280px,70vw);white-space:normal;line-height:1.3}
 .main{padding:18px 0 0}
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 14px;
@@ -380,6 +381,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
     </a>
     <div class="bar__actions">
       <button class="sync-badge" id="syncBadge" type="button" hidden>Chưa đồng bộ</button>
+      <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
       <div class="menu">
         <button class="btn btn--sm" type="button" id="themeBtn" data-action="theme-menu" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">
           <svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg><span id="themeLabel">Hệ thống</span>
@@ -1280,8 +1282,11 @@ var conflictOpen = false;
 var dirtySince = 0;
 var dirtyBadgeTimer = null;
 var syncRetryTimer = null;
+var syncRetryDelay = 4000;
+var syncRejected = false;
 var pushing = false;
 var DIRTY_BADGE_MS = 4000;
+var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
 
 function scaleLegacyMoney(d){
@@ -1433,30 +1438,56 @@ function armDirtyBadge(){
 function renderSyncBadge(){
   armDirtyBadge();
   var el = $('#syncBadge');
-  if (!el) return;
+  var drop = $('#syncDiscard');
   var stale = !!(dirty && dirtySince && Date.now() - dirtySince >= DIRTY_BADGE_MS);
   var show = !!(syncErrorShown || quotaNote || stale);
-  el.hidden = !show;
-  if (!show) { el.textContent = ''; return; }
-  var parts = ['Chưa đồng bộ'];
-  if (syncDetail) parts.push(syncDetail);
-  if (quotaNote) parts.push(quotaNote);
-  el.textContent = parts.join('\n');
+  if (el) {
+    el.hidden = !show;
+    if (!show) el.textContent = '';
+    else {
+      var parts = ['Chưa đồng bộ'];
+      if (syncDetail) parts.push(syncDetail);
+      if (quotaNote) parts.push(quotaNote);
+      el.textContent = parts.join('\n');
+    }
+  }
+  if (drop) drop.hidden = !syncRejected;
 }
 function scheduleSyncRetry(){
-  if (syncRetryTimer || conflictOpen) return;
+  if (syncRetryTimer || conflictOpen || syncRejected) return;
+  var wait = syncRetryDelay;
   syncRetryTimer = setTimeout(function(){
     syncRetryTimer = null;
-    if ((dirty || syncErrorShown) && !conflictOpen && !busyEditing() && !pushing) pushState(false);
-  }, DIRTY_BADGE_MS);
+    syncRetryDelay = Math.min(syncRetryDelay * 2, SYNC_RETRY_MAX);
+    if ((dirty || syncErrorShown) && !syncRejected && !conflictOpen && !busyEditing() && !pushing) pushState(false);
+  }, wait);
 }
 function noteSyncFailure(detail, retry){
   syncErrorShown = true;
   syncDetail = detail || 'Dữ liệu trên máy này chưa lên máy chủ.';
+  syncRejected = !retry;
   renderSyncBadge();
   /* 400/428 từ chối đúng dữ liệu này. Gửi lại chỉ lặp cùng một lỗi. */
   if (retry) scheduleSyncRetry();
   else if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+}
+function discardUnsynced(){
+  if (!confirm('Bỏ các thay đổi chưa gửi và lấy bản trên máy chủ?\n\nMột file JSON của bản nháp sẽ được tải về trước khi bỏ.')) {
+    return Promise.resolve(false);
+  }
+  if (!downloadBackup(false, 'kho-nhap-bi-tu-choi-' + backupStamp() + '.json', true)) {
+    toast('Không tải được bản nháp — đã giữ nguyên dữ liệu trên máy này', 'error');
+    return Promise.resolve(false);
+  }
+  if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+  syncRetryDelay = DIRTY_BADGE_MS;
+  dirty = false;
+  dirtySince = 0;
+  syncErrorShown = false;
+  syncDetail = '';
+  syncRejected = false;
+  renderSyncBadge();
+  return pullState(true, true);
 }
 function saveLocal(){
   try {
@@ -3759,6 +3790,8 @@ function pushState(manual, force){
       }
       syncErrorShown = false;
       syncDetail = '';
+      syncRejected = false;
+      syncRetryDelay = DIRTY_BADGE_MS;
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
       saveLocal();
       renderSyncBadge();
@@ -3879,7 +3912,7 @@ function renderBackupInfo(){
     ? 'Chưa sao lưu'
     : (last === todayISO() ? 'Đã sao lưu hôm nay' : 'Sao lưu ' + bakDateText(last));
 }
-function downloadBackup(manual, filename){
+function downloadBackup(manual, filename, skipStamp){
   var url = null;
   try {
     var payload = {
@@ -3902,8 +3935,8 @@ function downloadBackup(manual, filename){
     if (manual) toast('Không tạo được bản sao lưu', 'error');
     return false;
   }
-  try { localStorage.setItem(BAK_LAST, todayISO()); } catch (e) {}
-  renderBackupInfo();
+  try { if (!skipStamp) localStorage.setItem(BAK_LAST, todayISO()); } catch (e) {}
+  if (!skipStamp) renderBackupInfo();
   if (manual) toast('Đã tải file sao lưu về máy');
   return true;
 }
@@ -4066,6 +4099,7 @@ function handleAction(btn){
     case 'close-tx': closeTxEdit(); break;
     case 'save-tx': saveTxEdit(); break;
     case 'save-edit': saveEdit(); break;
+    case 'sync-discard': discardUnsynced(); break;
     case 'close-edit': closeEdit(); break;
     case 'clear-imp': setMonthInput('impMonth', ''); impAll = true; impPage = 1; renderHistory('imp'); break;
     case 'clear-exp': setMonthInput('expMonth', ''); expAll = true; expPage = 1; renderHistory('exp'); break;
