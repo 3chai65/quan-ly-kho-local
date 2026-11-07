@@ -3753,6 +3753,25 @@ function syncFailText(d, fallback){
   }
   return lines.length ? lines.join('\n') : fallback;
 }
+/* Một lần mỗi phiên. Đọc stockDrift, không đọc câu warnings.
+   Tối đa 3 tên, phần còn lại ghi “và N vị khác”. */
+var stockWarnShown = false;
+var stockWarnText = '';
+function noteStockWarnings(list){
+  if (stockWarnShown || !list || !list.length) return;
+  var names = [];
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] && list[i].name) names.push(String(list[i].name));
+  }
+  if (!names.length) return;
+  stockWarnShown = true;
+  var shown = names.slice(0, 3);
+  var extra = names.length - shown.length;
+  stockWarnText = 'Tồn lệch so với lịch sử nhập − bán: ' + shown.join(', ');
+  if (extra > 0) stockWarnText += ' và ' + extra + ' vị khác';
+  stockWarnText += '.';
+  toast(stockWarnText, 'error');
+}
 function pushState(manual, force){
   if (pushing) return Promise.resolve(false);
   pushing = true;
@@ -3798,6 +3817,7 @@ function pushState(manual, force){
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
       saveLocal();
       renderSyncBadge();
+      noteStockWarnings(d && d.stockDrift);
       if (manual) toast('Đã lưu dữ liệu');
     } else {
       var rejected = status >= 400 && status < 500;

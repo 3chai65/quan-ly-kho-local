@@ -69,7 +69,8 @@ globalThis.__test = {
   discardUnsynced: discardUnsynced, restoreFromFile: restoreFromFile,
   readLocal: readLocal,
   saveNhap: saveNhap, saveRetail: saveRetail, saveRemedy: saveRemedy,
-  openTxEdit: openTxEdit, saveTxEdit: saveTxEdit, delTx: delTx, mergeDo: mergeDo
+  openTxEdit: openTxEdit, saveTxEdit: saveTxEdit, delTx: delTx, mergeDo: mergeDo,
+  getStockWarnText: function(){ return stockWarnText; }
 };
 })();`;
   const store = new Map();
@@ -1182,4 +1183,58 @@ test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', () 
   assert.ok(ran.edit > blocked.edit + idle.edit, 'sửa bị bỏ qua nhiều hơn số lần chạy');
   assert.ok(ran.merge > blocked.merge + idle.merge, 'gộp bị bỏ qua nhiều hơn số lần chạy');
   assert.ok(ran.remedy > blocked.remedy + idle.remedy, 'đơn thuốc chén bị bỏ qua nhiều hơn số lần chạy');
+});
+
+test('cảnh báo tồn đọc stockDrift, không đọc câu tiếng Việt', async () => {
+  const client = loadClient({
+    fetch: async () => ({
+      status: 200,
+      json: async () => ({
+        success: true,
+        updatedAt: 1,
+        warnings: ['"Hồng Hoa": tồn 1.43 khác nhập − bán 1.42 (lệch 0.01)'],
+        stockDrift: [{ id: 'P1', name: 'Hồng Hoa', stock: 1.43, calc: 1.42 }]
+      })
+    })
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  assert.equal(await client.pushState(false, false), true);
+  assert.equal(client.getStockWarnText(), 'Tồn lệch so với lịch sử nhập − bán: Hồng Hoa.');
+  const first = client.getStockWarnText();
+  assert.equal(await client.pushState(false, false), true);
+  assert.equal(client.getStockWarnText(), first);
+});
+
+test('câu warnings không có stockDrift thì không hiện toast tồn', async () => {
+  const client = loadClient({
+    fetch: async () => ({
+      status: 200,
+      json: async () => ({
+        success: true,
+        updatedAt: 1,
+        warnings: ['"Hồng Hoa": tồn 1.43 khác nhập − bán 1.42 (lệch 0.01)']
+      })
+    })
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  assert.equal(await client.pushState(false, false), true);
+  assert.equal(client.getStockWarnText(), '');
+});
+
+test('toast tồn lệch chỉ nêu 3 tên rồi số vị còn lại', async () => {
+  const stockDrift = ['Một', 'Hai', 'Ba', 'Bốn', 'Năm'].map((name, i) => ({
+    id: 'P' + i, name, stock: 2, calc: 1
+  }));
+  const client = loadClient({
+    fetch: async () => ({
+      status: 200,
+      json: async () => ({ success: true, updatedAt: 1, stockDrift })
+    })
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  assert.equal(await client.pushState(false, false), true);
+  assert.equal(client.getStockWarnText(), 'Tồn lệch so với lịch sử nhập − bán: Một, Hai, Ba và 2 vị khác.');
 });

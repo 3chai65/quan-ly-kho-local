@@ -398,6 +398,72 @@ test('server.js: bản backup ngày chụp trạng thái TRƯỚC lần ghi đ�
   assert.ok(!newRow, 'bản backup ngày không được chứa lần ghi đầu tiên');
 });
 
+test('server.js: tồn khớp nhập trừ bán thì không cảnh báo, kể cả 0.1 + 0.2', async () => {
+  const state = emptyState({
+    products: [{ id: 'P1', name: 'Khớp', stock: 0.1 + 0.2, costPrice: 1 }],
+    transactions: [
+      { id: 'N1', date: '2026-11-07', type: 'NHAP', productId: 'P1', qty: 0.1, price: 1, total: 1, ts: 1 },
+      { id: 'N2', date: '2026-11-07', type: 'NHAP', productId: 'P1', qty: 0.2, price: 1, total: 1, ts: 2 }
+    ]
+  });
+  const res = await put(state, { 'X-Force': '1' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.success, true);
+  const warnings = res.body.warnings || [];
+  assert.equal(warnings.some(w => String(w).includes('tồn')), false);
+  assert.equal(res.body.stockDrift, undefined);
+});
+
+test('server.js: tồn khác nhập trừ bán thì cảnh báo nhưng vẫn ghi', async () => {
+  const state = emptyState({
+    products: [{ id: 'P1', name: 'Lệch', stock: 1.43, costPrice: 1 }],
+    transactions: [
+      { id: 'N1', date: '2026-11-07', type: 'NHAP', productId: 'P1', qty: 1.42, price: 1, total: 1, ts: 1 }
+    ]
+  });
+  const res = await put(state, { 'X-Force': '1' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.success, true);
+  const warnings = res.body.warnings || [];
+  assert.equal(warnings.some(w => w.includes('Lệch') && w.includes('1.43') && w.includes('1.42')), true);
+  assert.deepEqual(res.body.stockDrift, [{ id: 'P1', name: 'Lệch', stock: 1.43, calc: 1.42 }]);
+  const data = await getState();
+  assert.equal(data.products[0].name, 'Lệch');
+  assert.equal(data.products[0].stock, 1.43);
+});
+
+test('server.js: tồn thấp hơn lịch sử thì cảnh báo nhưng vẫn ghi', async () => {
+  const state = emptyState({
+    products: [{ id: 'P1', name: 'Thấp', stock: 1, costPrice: 1 }],
+    transactions: [
+      { id: 'N1', date: '2026-11-07', type: 'NHAP', productId: 'P1', qty: 2, price: 1, total: 1, ts: 1 }
+    ]
+  });
+  const res = await put(state, { 'X-Force': '1' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.success, true);
+  const warnings = res.body.warnings || [];
+  assert.equal(warnings.some(w => w.includes('Thấp') && w.includes('lệch -1')), true);
+  assert.deepEqual(res.body.stockDrift, [{ id: 'P1', name: 'Thấp', stock: 1, calc: 2 }]);
+  const data = await getState();
+  assert.equal(data.products[0].stock, 1);
+});
+
+test('server.js: tồn lớn hơn 0 mà chưa có giao dịch thì cảnh báo, tồn 0 thì không', async () => {
+  const state = emptyState({
+    products: [
+      { id: 'P1', name: 'Tồn đầu', stock: 1, costPrice: 1 },
+      { id: 'P0', name: 'Trống', stock: 0, costPrice: 1 }
+    ]
+  });
+  const res = await put(state, { 'X-Force': '1' });
+  assert.equal(res.status, 200);
+  const warnings = res.body.warnings || [];
+  assert.equal(warnings.some(w => w.includes('Tồn đầu')), true);
+  assert.equal(warnings.some(w => w.includes('Trống')), false);
+  assert.deepEqual(res.body.stockDrift, [{ id: 'P1', name: 'Tồn đầu', stock: 1, calc: 0 }]);
+});
+
 test('server.js: chỉ giữ 10 bản trước-ghi-đè gần nhất', async () => {
   for (let i = 0; i < 13; i++) {
     await put(emptyState({ products: [{ id: 'PR' + i, name: 'Prune ' + i, stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });

@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.10] - 2026-11-07
+
+### Cảnh báo khi tồn khác nhập trừ bán
+
+- `PUT /api/state` vẫn ghi bình thường. Nếu tồn một vị khác tổng nhập trừ tổng bán, phản hồi thêm `stockDrift` (`id`, `name`, `stock`, `calc`) và câu trong `warnings`. Không chặn lưu.
+- So sau `dec()` của client. Ngưỡng là 1e-9 kg (1 microgram), cùng quy ước trong README. `0.1 + 0.2` không bị báo. Tồn lớn hơn 0 mà chưa có giao dịch thì có cảnh báo.
+- Trang đọc `stockDrift`, hiện tối đa 3 tên rồi “và N vị khác”, một lần mỗi phiên. Màn đối chiếu vẫn là chỗ xem chi tiết.
+
 ## [2.6.9] - 2026-11-07
 
 ### Hộp xác nhận khôi phục nói đơn vị tiền

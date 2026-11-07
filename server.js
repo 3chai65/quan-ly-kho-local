@@ -5,7 +5,9 @@
  * Repo Cloudflare Worker là bản khác, không còn trong thư mục này.
  *
  *   GET  /api/state   -> { success, data } ; data.moneyUnit = "dong" (tiền là đồng nguyên)
- *   PUT  /api/state   -> ghi snapshot. Thiếu X-Base-Updated và không có X-Force: 428.
+ *   PUT  /api/state   -> ghi snapshot. Cảnh báo (không chặn) khi productId mồ côi
+ *                        hoặc tồn khác nhập − bán. Tồn lệch còn nằm ở stockDrift
+ *                        (id, name, stock, calc). Thiếu X-Base-Updated và không có X-Force: 428.
  *                        X-Base-Updated không phải số: 400. Base cũ: 409, trừ khi X-Force.
  *   GET  /api/backups -> danh sách file backup (không trả đường dẫn thư mục)
  *   GET  /            -> HTML (src/page.js, CSP inline, không nonce)
@@ -108,6 +110,17 @@ function decNum(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
 }
+/* Cùng dec() trên client: dọn nhiễu nhị phân (0.1 + 0.2), không làm tròn số kg thật.
+   Tồn so với nhập − bán bằng công thức này, rồi mới xét lệch. Không so bằng ===. */
+function decQty(n) {
+  n = Number(n);
+  if (!Number.isFinite(n) || n === 0) return 0;
+  for (let p = 1; p < 15; p++) {
+    const r = Number(n.toPrecision(p));
+    if (Math.abs(n - r) <= Math.abs(n) * 1e-12) return r;
+  }
+  return Number(n.toPrecision(15));
+}
 function decNullable(value) {
   if (value == null) return null;
   const n = Number(value);
@@ -182,16 +195,17 @@ function isNonNegNumber(value) {
 function validateState(d) {
   const errors = [];
   const warnings = [];
+  const stockDrift = [];
   const state = { products: [], transactions: [], prescriptions: [], updatedAt: 0 };
   if (!d || typeof d !== 'object' || Array.isArray(d)) {
-    return { state, errors: ['Dữ liệu không phải object'], warnings };
+    return { state, errors: ['Dữ liệu không phải object'], warnings, stockDrift };
   }
   const fail = msg => { if (errors.length < 20) errors.push(msg); };
   const warn = msg => { if (warnings.length < 50) warnings.push(msg); };
   for (const key of ['products', 'transactions', 'prescriptions']) {
     if (!Array.isArray(d[key])) fail('Thiếu mảng ' + key);
   }
-  if (errors.length) return { state, errors, warnings };
+  if (errors.length) return { state, errors, warnings, stockDrift };
   state.updatedAt = decNum(d.updatedAt);
 
   const productIds = new Set();
@@ -278,7 +292,29 @@ function validateState(d) {
     });
   });
 
-  return { state, errors, warnings };
+  if (!errors.length) warnStockDrift(state, warn, stockDrift);
+  return { state, errors, warnings, stockDrift };
+}
+
+/* Cảnh báo, không chặn. Sau decQty, lệch quá 1e-9 kg (1 microgram) mới tính.
+   Cùng ngưỡng 1e-9 trong README. Không bỏ qua lệch dưới 1 gram.
+   0.1 + 0.2 không bị coi là lệch.
+   stockDrift là dữ liệu cho client. Câu warnings chỉ để đọc log. */
+function warnStockDrift(state, warn, stockDrift) {
+  const inn = new Map();
+  const out = new Map();
+  for (const t of state.transactions) {
+    const bucket = t.type === 'NHAP' ? inn : out;
+    bucket.set(t.productId, (bucket.get(t.productId) || 0) + t.qty);
+  }
+  for (const p of state.products) {
+    const calc = decQty((inn.get(p.id) || 0) - (out.get(p.id) || 0));
+    const diff = decQty(p.stock - calc);
+    if (Math.abs(diff) > 1e-9) {
+      stockDrift.push({ id: p.id, name: p.name, stock: p.stock, calc });
+      warn('"' + p.name + '": tồn ' + p.stock + ' khác nhập − bán ' + calc + ' (lệch ' + diff + ')');
+    }
+  }
 }
 
 function randomId() {
@@ -466,7 +502,10 @@ app.put('/api/state', (req, res) => {
     runDailyBackup(false);
     if (force) snapshotBeforeForce();
     const updatedAt = writeState(checked.state);
-    res.json({ success: true, updatedAt, warnings: checked.warnings.length ? checked.warnings : undefined });
+    const reply = { success: true, updatedAt };
+    if (checked.warnings.length) reply.warnings = checked.warnings;
+    if (checked.stockDrift.length) reply.stockDrift = checked.stockDrift;
+    res.json(reply);
   } catch (err) {
     console.error('/api/state PUT', err);
     res.status(500).json({ success: false, error: 'Không ghi được dữ liệu' });
