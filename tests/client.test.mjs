@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import vm from 'node:vm';
 
 import { PAGE } from '../src/page.js';
@@ -65,7 +66,8 @@ globalThis.__test = {
   hasSyncRetry: function(){ return !!syncRetryTimer; },
   getSyncRetryDelay: function(){ return syncRetryDelay; },
   isSyncRejected: function(){ return syncRejected; },
-  discardUnsynced: discardUnsynced
+  discardUnsynced: discardUnsynced, restoreFromFile: restoreFromFile,
+  readLocal: readLocal
 };
 })();`;
   const store = new Map();
@@ -539,6 +541,142 @@ test('sau PUT thành công lần lỗi sau bắt đầu lại ở 4 giây', asyn
   assert.equal(await client.pushState(false, false), false);
   assert.equal(timers.some(t => t.ms === 4000), true);
   assert.equal(timers.some(t => t.ms > 4000), false);
+});
+
+test('parseBackup báo nhân 1000 khi file thiếu cờ moneyUnit', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: {
+      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const out = app.parseBackup(raw);
+  assert.equal(out.products[0].costPrice, 85000);
+  assert.match(out._moneyNote, /File này tính theo nghìn đồng, sẽ nhân 1000 khi nạp/);
+  assert.ok(out._moneyNote.includes('→ ' + app.fmtNum(out.products[0].costPrice)));
+});
+
+test('parseBackup đọc moneyUnit trong data và giữ nguyên số đồng', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: {
+      moneyUnit: 'dong',
+      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85000 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const out = app.parseBackup(raw);
+  assert.equal(out.products[0].costPrice, 85000);
+  assert.match(out._moneyNote, /File này tính theo đồng, giữ nguyên/);
+  assert.ok(out._moneyNote.includes('→ ' + app.fmtNum(out.products[0].costPrice)));
+  assert.equal(out._moneyNote.includes('85.000.000'), false);
+});
+
+test('parseBackup không có vị thuốc thì không bịa giá nhập', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [] }
+  });
+  const out = app.parseBackup(raw);
+  assert.equal(out.products.length, 0);
+  assert.match(out._moneyNote, /tính theo đồng, giữ nguyên/);
+  assert.equal(out._moneyNote.includes('Giá nhập'), false);
+});
+
+test('file nghìn thật nhân A Giao từ 85 thành 85000', (t) => {
+  const nghinPath = 'G:/quan-ly-kho-local/data/luu-tru/kho-backup-2026-11-06.json';
+  if (!fs.existsSync(nghinPath)) {
+    t.skip('không có kho-backup-2026-11-06.json');
+    return;
+  }
+  const nghin = app.parseBackup(fs.readFileSync(nghinPath, 'utf8'));
+  const giao = nghin.products.find(p => p.name === 'A Giao');
+  assert.equal(giao.costPrice, 85000);
+  assert.equal(nghin.moneyUnit, 'dong');
+  assert.match(nghin._moneyNote, /nghìn đồng, sẽ nhân 1000/);
+  assert.ok(nghin._moneyNote.includes('→ ' + app.fmtNum(nghin.products[0].costPrice)));
+});
+
+test('file đồng thật giữ A Giao ở 85000', (t) => {
+  const dongPath = 'G:/Quản Lý Kho/kho-backup/kho-backup-2026-11-07.json';
+  if (!fs.existsSync(dongPath)) {
+    t.skip('không có kho-backup-2026-11-07.json');
+    return;
+  }
+  const dong = app.parseBackup(fs.readFileSync(dongPath, 'utf8'));
+  const giao = dong.products.find(p => p.name === 'A Giao');
+  assert.equal(giao.costPrice, 85000);
+  assert.equal(dong.moneyUnit, 'dong');
+  assert.match(dong._moneyNote, /tính theo đồng, giữ nguyên/);
+  assert.ok(dong._moneyNote.includes('→ ' + app.fmtNum(dong.products[0].costPrice)));
+  assert.equal(dong._moneyNote.includes('85.000.000'), false);
+});
+
+test('nạp file nghìn, saveLocal, đọc lại localStorage không nhân lần hai', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: {
+      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const out = app.parseBackup(raw);
+  delete out._moneyNote;
+  delete out._drops;
+  assert.equal(out.products[0].costPrice, 85000);
+  assert.equal(out.moneyUnit, 'dong');
+  app.setDb(out);
+  app.setDirty(false);
+  app.saveLocal();
+  const again = app.readLocal();
+  assert.equal(again.products[0].costPrice, 85000);
+  assert.equal(again.moneyUnit, 'dong');
+  assert.equal(again._scaledFromK, undefined);
+});
+
+function readerOf(text) {
+  return class {
+    readAsText() {
+      this.result = text;
+      this.onload();
+    }
+  };
+}
+
+test('hủy khôi phục hoặc lỗi tải bản nháp thì không giữ _moneyNote', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: {
+      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const keep = { products: [{ id: 'keep', name: 'Giữ', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' };
+  const cancel = loadClient({
+    confirm: () => false,
+    FileReader: readerOf(raw),
+    Blob: class { constructor() { throw new Error('không được tải'); } }
+  });
+  cancel.setDb(structuredClone(keep));
+  cancel.restoreFromFile({ size: raw.length });
+  assert.equal(cancel.getDb().products[0].name, 'Giữ');
+  assert.equal(Object.hasOwn(cancel.getDb(), '_moneyNote'), false);
+
+  const failed = loadClient({
+    confirm: () => true,
+    FileReader: readerOf(raw),
+    Blob: class { constructor() { throw new Error('blocked'); } }
+  });
+  failed.setDb(structuredClone(keep));
+  failed.restoreFromFile({ size: raw.length });
+  assert.equal(failed.getDb().products[0].name, 'Giữ');
+  assert.equal(failed.getDb().products[0].costPrice, 1);
+  assert.equal(Object.hasOwn(failed.getDb(), '_moneyNote'), false);
 });
 
 test('parseBackup ghi nhận vị thuốc trùng tên để khôi phục báo cho người dùng', () => {

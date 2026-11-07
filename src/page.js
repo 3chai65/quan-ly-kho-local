@@ -1289,8 +1289,11 @@ var DIRTY_BADGE_MS = 4000;
 var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
 
+function willScaleMoney(d){
+  return !!(d && d.moneyUnit !== 'dong');
+}
 function scaleLegacyMoney(d){
-  if (!d || d.moneyUnit === 'dong') return d;
+  if (!willScaleMoney(d)) return d;
   function up(n){ return Math.round(num(n) * DONG_PER_K); }
   if (Array.isArray(d.products)) d.products.forEach(function(p){
     if (p) p.costPrice = up(p.costPrice);
@@ -1407,7 +1410,7 @@ function readLocal(){
     var raw = localStorage.getItem(KEY);
     if (!raw) return null;
     var parsed = JSON.parse(raw);
-    var legacy = !parsed || parsed.moneyUnit !== 'dong';
+    var legacy = !parsed || willScaleMoney(parsed);
     var out = sanitize(scaleLegacyMoney(parsed));
     if (legacy) out._scaledFromK = true;
     return out;
@@ -3957,6 +3960,15 @@ function maybeAutoBackup(){
   toast('Đã tự sao lưu dữ liệu hôm nay');
   return true;
 }
+function moneyRestoreNote(scale, sample, afterCost){
+  var line = scale
+    ? 'File này tính theo nghìn đồng, sẽ nhân 1000 khi nạp.'
+    : 'File này tính theo đồng, giữ nguyên.';
+  if (sample) {
+    line += '\nGiá nhập “' + sample.name + '”: ' + fmtNum(sample.cost) + ' → ' + fmtNum(afterCost) + '.';
+  }
+  return line;
+}
 function parseBackup(text){
   var obj = JSON.parse(text);
   var d = obj && obj.data ? obj.data : obj;
@@ -3964,7 +3976,15 @@ function parseBackup(text){
   /* Bắt buộc đủ 3 bảng: thiếu một bảng sẽ khiến restore xóa mất dữ liệu. */
   if (!Array.isArray(d.products) || !Array.isArray(d.transactions) || !Array.isArray(d.prescriptions)) return null;
   if (obj.app && obj.app !== 'quan-ly-kho') return null;
-  if (obj.moneyUnit === 'dong') d.moneyUnit = 'dong';
+  if (obj && obj.moneyUnit === 'dong') d.moneyUnit = 'dong';
+  var scale = willScaleMoney(d);
+  var sample = null;
+  if (Array.isArray(d.products)) {
+    for (var s = 0; s < d.products.length; s++) {
+      var sp = d.products[s];
+      if (sp && sp.name) { sample = { name: String(sp.name), cost: num(sp.costPrice) }; break; }
+    }
+  }
   for (var i = 0; i < d.transactions.length; i++) {
     var t = d.transactions[i];
     if (!t || (t.type !== 'NHAP' && t.type !== 'BAN')) return null;
@@ -3978,6 +3998,16 @@ function parseBackup(text){
   var drops = [];
   var out = sanitize(scaleLegacyMoney(d), drops);
   if (drops.length) out._drops = drops;
+  var afterCost = null;
+  if (sample) {
+    for (var k = 0; k < out.products.length; k++) {
+      if (out.products[k] && out.products[k].name === sample.name) {
+        afterCost = out.products[k].costPrice;
+        break;
+      }
+    }
+  }
+  out._moneyNote = moneyRestoreNote(scale, afterCost == null ? null : sample, afterCost);
   return out;
 }
 function restoreFromFile(file){
@@ -3989,11 +4019,14 @@ function restoreFromFile(file){
     try { bak = parseBackup(String(fr.result || '')); } catch (e) {}
     if (!bak) { toast('File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
     var drops = bak._drops || [];
-    if (bak._drops) delete bak._drops;
+    var moneyNote = bak._moneyNote || '';
+    delete bak._drops;
+    delete bak._moneyNote;
     var msg = 'Khôi phục ' + bak.products.length + ' vị thuốc, ' +
       bak.transactions.length + ' giao dịch, ' +
       bak.prescriptions.length + ' đơn thuốc?\n\n' +
       'Dữ liệu hiện tại (kể cả trên máy chủ) sẽ bị thay thế hoàn toàn.';
+    if (moneyNote) msg += '\n\n' + moneyNote;
     if (drops.length) {
       msg += '\n\nĐã bỏ ' + drops.length + ' dòng trùng:\n' + drops.slice(0, 8).join('\n');
       if (drops.length > 8) msg += '\n…';
