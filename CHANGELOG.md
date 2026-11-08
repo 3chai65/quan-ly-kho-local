@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.7.0] - 2026-11-08
+
+### Thêm
+
+- Tờ bán lẻ: ô số lượng hiện thêm giá nhập gần nhất trong ngoặc (nghìn đồng/kg, ví dụ `(135)`). Lịch sử bán lẻ hiện giá vốn tại thời điểm bán trong ngoặc (tổng vốn ÷ số lượng), dòng không có vốn thì ẩn.
+- Lịch sử bán và nhập: mặc định chỉ hiện 10 đơn gần nhất (một đơn là nhóm theo `oid`, dòng lẻ không `oid` tính 1, đơn thuốc chén tính 1), sắp mới nhất trước, có phân trang “Xem thêm”.
+- Lịch sử nhập: bỏ lọc tháng, thay bằng một ô tìm kiếm tên vị thuốc không phân biệt hoa thường/dấu, có gợi ý; xóa ô về 10 mục gần nhất, tìm thì lọc toàn bộ lịch sử theo trang.
+
 ## [2.6.11] - 2026-11-08
 
 ### Sửa ngày bán bị cũ qua nửa đêm
