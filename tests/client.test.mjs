@@ -1642,11 +1642,61 @@ test('(b) sửa số lượng dòng bán lẻ 1kg lên 2kg thì con số vốn v
 });
 
 test('(d) dòng thuộc đơn thuốc chén không hiện con số vốn', () => {
-  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
-  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-  // lịch sử renderHistory loại rx khỏi nhánh giá vốn (tham khảo: tx.rx=true)
-  // ở mức hàm, costParen vẫn tính được nhưng renderHistory không gọi khi rx.
-  // Kiểm chứng qua hàm được xuất: rx line vẫn có cost nhưng render không gắn span.
+  function historyDoc() {
+    const els = new Map();
+    function ensure(id) {
+      if (!els.has(id)) els.set(id, { id, value: '', textContent: '', hidden: false, style: {}, dataset: {}, children: [], classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } }, setAttribute(){}, getAttribute(){ return null; }, removeAttribute(){}, hasAttribute(){ return false; }, appendChild(c){ els.get(id).children.push(c); return c; }, remove(){}, focus(){}, select(){}, click(){}, addEventListener(){}, removeEventListener(){}, querySelector(){ return null; }, querySelectorAll(){ return []; } });
+      return els.get(id);
+    }
+    ensure('expBody'); ensure('expCount'); ensure('expPager');
+    // ghi đè appendChild của body để bắt tr
+    els.get('expBody').appendChild = function(c){ els.get('expBody').children.push(c); return c; };
+    const doc = {
+      readyState: 'loading', hidden: false, activeElement: null,
+      documentElement: makeEl(), body: makeEl(),
+      querySelector(sel) {
+        const m = /^#([\w-]+)$/.exec(String(sel));
+        return m && els.has(m[1]) ? els.get(m[1]) : null;
+      },
+      querySelectorAll(sel) {
+        if (sel === '#mergeList input[type=checkbox]') return [];
+        return [];
+      },
+      createElement(tag) {
+        const e = makeEl();
+        e.tagName = String(tag || '').toUpperCase();
+        e.appendChild = function(c){ e.children.push(c); return c; };
+        return e;
+      },
+      createElementNS(ns, tag) { return makeEl(); },
+      createTextNode(s) { return { textContent: String(s) }; },
+      addEventListener() {}, removeEventListener() {}
+    };
+    return { doc, els };
+  }
+  const { doc, els } = historyDoc();
+  const client = loadClient({
+    document: doc,
+    Date: fakeClock(2026, 10, 8, 12),
+    setTimeout() { return 0; }, clearTimeout() {},
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  // rx mới nhất (ts 3000) nên lên đầu, retail cũ hơn (ts 2000) xuống sau
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }],
+    transactions: [
+      { id: 'r1', date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 2000, total: 2000, cost: 135000, ts: 3000, rx: true },
+      { id: 'b1', date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 2000, total: 2000, cost: 135000, ts: 2000, retail: true }
+    ], prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+  });
+  client.renderHistory('exp');
+  const body = els.get('expBody');
+  assert.equal(body.children.length, 2);
+  // hàng đầu là rx (ts mới nhất) -> qty cell không có span con
+  const qtyRx = body.children[0].children[2];
+  assert.equal(qtyRx.children.length, 0, 'đơn thuốc chén không hiện ngoặc vốn');
+  const qtyRetail = body.children[1].children[2];
+  assert.equal(qtyRetail.children.length, 1, 'bán lẻ hiện ngoặc vốn');
 });
 // (g) phân trang tìm kiếm đã bao trong lịch sử nhập: tìm ra 3 từ dữ liệu gộp, hai trang 10 + phần còn lại
 test('(g) tìm kiếm lịch sử nhập phân trang trên toàn bộ kết quả', () => {
