@@ -382,6 +382,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
     <div class="bar__actions">
       <button class="sync-badge" id="syncBadge" type="button" hidden>Chưa đồng bộ</button>
       <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
+      <a class="btn btn--sm" href="/auth/devices" title="Quản lý thiết bị">Thiết bị</a>
       <div class="menu">
         <button class="btn btn--sm" type="button" id="themeBtn" data-action="theme-menu" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">
           <svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg><span id="themeLabel">Hệ thống</span>
@@ -1284,6 +1285,7 @@ var dirtyBadgeTimer = null;
 var syncRetryTimer = null;
 var syncRetryDelay = 4000;
 var syncRejected = false;
+var authLost = false;
 var pushing = false;
 var DIRTY_BADGE_MS = 4000;
 var SYNC_RETRY_MAX = 60000;
@@ -1443,18 +1445,26 @@ function renderSyncBadge(){
   var el = $('#syncBadge');
   var drop = $('#syncDiscard');
   var stale = !!(dirty && dirtySince && Date.now() - dirtySince >= DIRTY_BADGE_MS);
-  var show = !!(syncErrorShown || quotaNote || stale);
+  var show = !!(authLost || syncErrorShown || quotaNote || stale);
   if (el) {
     el.hidden = !show;
     if (!show) el.textContent = '';
-    else {
+    else if (authLost) {
+      el.textContent = 'Thiết bị này chưa được duyệt hoặc đã bị thu hồi.' +
+        (dirty ? '\nThay đổi chưa gửi vẫn được giữ trên máy này.' : '') + '\n';
+      var a = doc.createElement('a');
+      a.href = '/auth/join';
+      a.textContent = 'Nhập mã mời để vào lại';
+      el.appendChild(a);
+      if (quotaNote) el.appendChild(doc.createTextNode('\n' + quotaNote));
+    } else {
       var parts = ['Chưa đồng bộ'];
       if (syncDetail) parts.push(syncDetail);
       if (quotaNote) parts.push(quotaNote);
       el.textContent = parts.join('\n');
     }
   }
-  if (drop) drop.hidden = !syncRejected;
+  if (drop) drop.hidden = !syncRejected || authLost;
 }
 function scheduleSyncRetry(){
   if (syncRetryTimer || conflictOpen || syncRejected) return;
@@ -1464,6 +1474,15 @@ function scheduleSyncRetry(){
     syncRetryDelay = Math.min(syncRetryDelay * 2, SYNC_RETRY_MAX);
     if ((dirty || syncErrorShown) && !syncRejected && !conflictOpen && !busyEditing() && !pushing) pushState(false);
   }, wait);
+}
+function noteAuthLost(){
+  if (!authLost) toast('Thiết bị này chưa được duyệt hoặc đã bị thu hồi. Dữ liệu chưa gửi vẫn giữ trên máy này.', 'error');
+  authLost = true;
+  syncRejected = false;        // 401 không phải "dữ liệu bị từ chối": không cho bỏ nháp
+  syncErrorShown = false;      // huy hiệu do authLost quản lý
+  syncDetail = '';
+  if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+  renderSyncBadge();
 }
 function noteSyncFailure(detail, retry){
   syncErrorShown = true;
@@ -1475,6 +1494,10 @@ function noteSyncFailure(detail, retry){
   else if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
 }
 function discardUnsynced(){
+  if (authLost) {
+    toast('Thiết bị chưa được duyệt nên chưa lấy được bản máy chủ. Dữ liệu vẫn giữ trên máy này.', 'error');
+    return Promise.resolve(false);
+  }
   if (!confirm('Bỏ các thay đổi chưa gửi và lấy bản trên máy chủ?\n\nMột file JSON của bản nháp sẽ được tải về trước khi bỏ.')) {
     return Promise.resolve(false);
   }
@@ -1482,15 +1505,21 @@ function discardUnsynced(){
     toast('Không tải được bản nháp — đã giữ nguyên dữ liệu trên máy này', 'error');
     return Promise.resolve(false);
   }
-  if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
-  syncRetryDelay = DIRTY_BADGE_MS;
-  dirty = false;
-  dirtySince = 0;
-  syncErrorShown = false;
-  syncDetail = '';
-  syncRejected = false;
-  renderSyncBadge();
-  return pullState(true, true);
+  return pullState(true, true).then(function(ok){
+    if (ok) {
+      if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+      syncRetryDelay = DIRTY_BADGE_MS;
+      dirty = false;
+      dirtySince = 0;
+      syncErrorShown = false;
+      syncDetail = '';
+      syncRejected = false;
+      renderSyncBadge();
+    } else if (!authLost) {
+      toast('Chưa lấy được bản máy chủ — thay đổi chưa gửi vẫn được giữ trên máy này', 'error');
+    }
+    return ok;
+  });
 }
 function saveLocal(){
   try {
@@ -3801,6 +3830,7 @@ function pushState(manual, force){
     }
     var ok = !!(d && d.success);
     if (ok) {
+      authLost = false;
       cloudBase = num(d.updatedAt) || sent;
       if (num(db.updatedAt) === sent) {
         db.updatedAt = cloudBase;
@@ -3819,6 +3849,9 @@ function pushState(manual, force){
       renderSyncBadge();
       noteStockWarnings(d && d.stockDrift);
       if (manual) toast('Đã lưu dữ liệu');
+    } else if (status === 401) {
+      /* Thiết bị chưa được duyệt hoặc đã bị thu hồi: giữ nguyên nháp, không thử lại, không cho bỏ nháp. */
+      noteAuthLost();
     } else {
       var rejected = status >= 400 && status < 500;
       noteSyncFailure(syncFailText(d, 'Chưa lưu được lên máy chủ — dữ liệu vẫn giữ trên máy này'), !rejected);
@@ -3835,14 +3868,16 @@ function pushState(manual, force){
 function pullState(manual, forceLatest){
   return apiFetch('/api/state?t=' + Date.now())
     .then(function(r){
+      if (r && r.status === 401) { noteAuthLost(); return null; }
       return r ? r.json() : null;
     })
     .then(function(d){
       var server = d && d.success ? sanitize(d.data) : null;
       if (!server) {
-        if (manual) toast('Không tải được dữ liệu', 'error');
+        if (manual && !authLost) toast('Không tải được dữ liệu', 'error');
         return false;
       }
+      authLost = false;
       cloudBase = num(server.updatedAt);
       /* Chỉ ưu tiên server khi máy này không có thay đổi chưa gửi.
          Nếu đang dirty, đẩy bản local lên trước; server sẽ trả 409 nếu
@@ -3877,10 +3912,13 @@ function busyEditing(){
   return false;
 }
 function autoRefresh(){
-  if (refreshing || dirty || conflictOpen || doc.hidden || busyEditing()) return Promise.resolve(false);
+  if (refreshing || authLost || dirty || conflictOpen || doc.hidden || busyEditing()) return Promise.resolve(false);
   refreshing = true;
   return apiFetch('/api/state?t=' + Date.now())
-    .then(function(r){ return r ? r.json() : null; })
+    .then(function(r){
+      if (r && r.status === 401) { noteAuthLost(); return null; }
+      return r ? r.json() : null;
+    })
     .then(function(d){
       refreshing = false;
       /* Trong lúc chờ máy chủ, người dùng có thể bắt đầu sửa hoặc mở giỏ hàng.

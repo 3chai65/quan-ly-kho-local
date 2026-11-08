@@ -66,6 +66,12 @@ globalThis.__test = {
   hasSyncRetry: function(){ return !!syncRetryTimer; },
   getSyncRetryDelay: function(){ return syncRetryDelay; },
   isSyncRejected: function(){ return syncRejected; },
+  setSyncRejected: function(v){ syncRejected = !!v; },
+  setSyncDetail: function(v){ syncDetail = String(v || ''); },
+  setDirtySince: function(v){ dirtySince = num(v); },
+  isAuthLost: function(){ return authLost; },
+  setAuthLost: function(v){ authLost = !!v; },
+  renderSyncBadge: renderSyncBadge,
   discardUnsynced: discardUnsynced, restoreFromFile: restoreFromFile,
   readLocal: readLocal,
   saveNhap: saveNhap, saveRetail: saveRetail, saveRemedy: saveRemedy,
@@ -1237,4 +1243,159 @@ test('toast tồn lệch chỉ nêu 3 tên rồi số vị còn lại', async ()
   client.setBase(1);
   assert.equal(await client.pushState(false, false), true);
   assert.equal(client.getStockWarnText(), 'Tồn lệch so với lịch sử nhập − bán: Một, Hai, Ba và 2 vị khác.');
+});
+
+function badgeDoc() {
+  function mkBadge() {
+    const el = makeEl();
+    el.hidden = true; el._t = ''; el.kids = []; el.href = '';
+    el.appendChild = function(k) { el.kids.push(k); return k; };
+    Object.defineProperty(el, 'textContent', {
+      get() { return el._t + el.kids.map(k => k.textContent).join(''); },
+      set(v) { el._t = String(v); el.kids = []; }
+    });
+    return el;
+  }
+  const badge = mkBadge();
+  const drop = mkBadge();
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(sel) { return sel === '#syncBadge' ? badge : sel === '#syncDiscard' ? drop : null; },
+    querySelectorAll() { return []; },
+    createElement() { return mkBadge(); },
+    createElementNS() { return makeEl(); },
+    createTextNode(s) { return { textContent: String(s) }; },
+    addEventListener() {}, removeEventListener() {}
+  };
+  return { doc, badge, drop };
+}
+
+test('401 pushState (page.js thật): giữ dirty, authLost, không hẹn lại, ẩn nút bỏ nháp', async () => {
+  const { doc, badge, drop } = badgeDoc();
+  let fetches = 0;
+  const client = loadClient({
+    document: doc,
+    setTimeout() { return 0; }, clearTimeout() {},
+    fetch: async () => { fetches++; return { status: 401, json: async () => ({ success: false, error: 'Thiết bị chưa được duyệt', code: 'device_not_approved' }) }; }
+  });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
+  client.setBase(10);
+  client.setDirty(true);
+  const ok = await client.pushState(true, false);
+  assert.equal(ok, false);
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.isAuthLost(), true);
+  assert.equal(client.isSyncRejected(), false);
+  assert.equal(client.hasSyncRetry(), false);
+  assert.equal(drop.hidden, true);
+  assert.equal(badge.hidden, false);
+  assert.match(badge.textContent, /chưa được duyệt hoặc đã bị thu hồi/);
+  assert.match(badge.textContent, /Thay đổi chưa gửi vẫn được giữ/);
+  assert.equal(badge.kids[0].href, '/auth/join');
+  assert.equal(fetches, 1);
+});
+
+test('401 pullState thủ công (page.js thật): không ghi đè db, không đổi dirty', async () => {
+  const { doc } = badgeDoc();
+  const client = loadClient({
+    document: doc,
+    fetch: async () => ({ status: 401, json: async () => ({ success: false, error: 'Thiết bị chưa được duyệt', code: 'device_not_approved' }) })
+  });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
+  client.setBase(1);
+  client.setDirty(true);
+  const before = JSON.stringify(client.getDb());
+  const ok = await client.pullState(true, true);
+  assert.equal(ok, false);
+  assert.equal(JSON.stringify(client.getDb()), before);
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.isAuthLost(), true);
+  assert.equal(client.isSyncRejected(), false);
+});
+
+test('401 autoRefresh (page.js thật): một lần rồi không gọi fetch nữa', async () => {
+  const { doc } = badgeDoc();
+  let fetches = 0;
+  const client = loadClient({
+    document: doc,
+    fetch: async () => { fetches++; return { status: 401, json: async () => ({ success: false, error: 'Thiết bị chưa được duyệt', code: 'device_not_approved' }) }; }
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  client.setDirty(false);
+  assert.equal(await client.autoRefresh(), false);
+  assert.equal(client.isAuthLost(), true);
+  const n = fetches;
+  assert.equal(await client.autoRefresh(), false);
+  assert.equal(fetches, n);
+});
+
+test('401 discard khi authLost (page.js thật): không confirm, không fetch, giữ nháp', async () => {
+  const { doc } = badgeDoc();
+  let confirms = 0, fetches = 0;
+  const client = loadClient({
+    document: doc,
+    confirm() { confirms++; return true; },
+    fetch: async () => { fetches++; return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' } }) }; }
+  });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
+  client.setBase(10);
+  client.setDirty(true);
+  client.setAuthLost(true);
+  assert.equal(await client.discardUnsynced(), false);
+  assert.equal(confirms, 0);
+  assert.equal(fetches, 0);
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.isAuthLost(), true);
+});
+
+test('401 discard thành công (page.js thật): tải file nháp, lấy bản máy chủ, xóa cờ và huy hiệu', async () => {
+  const { doc, badge, drop } = badgeDoc();
+  const client = loadClient({
+    document: doc,
+    confirm: () => true,
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { products: [{ id: 'p1', name: 'May chu', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 900, moneyUnit: 'dong' } }) })
+  });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
+  client.setBase(10);
+  client.setDirty(true);
+  client.setDirtySince(1);
+  client.setSyncErrorShown(true);
+  client.setSyncRejected(true);
+  client.setSyncDetail('trùng tên');
+  client.renderSyncBadge();
+  assert.equal(drop.hidden, false);
+  assert.equal(await client.discardUnsynced(), true);
+  assert.equal(client.getDb().products[0].name, 'May Chu');
+  assert.equal(client.isDirty(), false);
+  assert.equal(client.isSyncRejected(), false);
+  assert.equal(badge.hidden, true);
+  assert.equal(drop.hidden, true);
+});
+
+test('401 discard thất bại khi pullState mất mạng (page.js thật): huy hiệu, nút và nháp vẫn còn', async () => {
+  const { doc, badge, drop } = badgeDoc();
+  const client = loadClient({
+    document: doc,
+    confirm: () => true,
+    fetch: async () => { throw new Error('mất mạng'); }
+  });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
+  client.setBase(10);
+  client.setDirty(true);
+  client.setDirtySince(1);
+  client.setSyncErrorShown(true);
+  client.setSyncRejected(true);
+  client.setSyncDetail('trùng tên');
+  client.renderSyncBadge();
+  const before = JSON.stringify(client.getDb());
+  assert.equal(await client.discardUnsynced(), false);
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.isSyncRejected(), true);
+  assert.equal(client.isSyncErrorShown(), true);
+  assert.equal(JSON.stringify(client.getDb()), before);
+  assert.equal(badge.hidden, false);
+  assert.equal(drop.hidden, false);
+  assert.equal(client.isAuthLost(), false);
 });
