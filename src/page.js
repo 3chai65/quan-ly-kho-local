@@ -1144,24 +1144,54 @@ function setDateInput(id, iso){
   var nat = $('#' + id + 'Native');
   if (nat) nat.value = iso || '';
 }
+function userPickedDate(id, iso){
+  setDateInput(id, iso);
+  lastAuto[id] = (iso === todayISO()) ? iso : null;   // chọn hôm nay = vẫn theo hôm nay
+}
 function bindDateInput(id){
   var n = $('#' + id), nat = $('#' + id + 'Native');
   if (!n) return;
   n.addEventListener('change', function(){
-    if (!n.value.trim()) { setDateInput(id, todayISO()); return; }
+    if (!n.value.trim()) { var t0 = todayISO(); setDateInput(id, t0); lastAuto[id] = t0; return; }
     var iso = parseDateVN(n.value);
-    if (iso) { setDateInput(id, iso); return; }
+    if (iso) { userPickedDate(id, iso); return; }
     var prev = n.getAttribute('data-iso') || '';
     n.value = dateInputVN(prev);
     toast(prev ? 'Ngày không hợp lệ, giữ nguyên ngày cũ' : 'Ngày không hợp lệ, dùng hôm nay', 'error');
-    if (!prev) setDateInput(id, todayISO());
+    if (!prev) { var t1 = todayISO(); setDateInput(id, t1); lastAuto[id] = t1; }
   });
   if (nat) {
     var syncNat = function(){ nat.value = parseDateVN(n.value) || todayISO(); };
     nat.addEventListener('focus', syncNat);
     nat.addEventListener('click', syncNat);
-    nat.addEventListener('change', function(){ if (nat.value) setDateInput(id, nat.value); });
+    nat.addEventListener('change', function(){ if (nat.value) { userPickedDate(id, nat.value); } });
   }
+}
+function autoDateInput(id){
+  var t = todayISO();
+  var cur = getDateInput(id);
+  if (cur && cur !== (lastAuto[id] || '')) return;
+  if (cur === t) { lastAuto[id] = t; return; }
+  var n = $('#' + id);
+  if (n && doc.activeElement && (doc.activeElement === n || (doc.activeElement.id && (doc.activeElement.id === id || doc.activeElement.id === id + 'Native')))) return;
+  setDateInput(id, t);
+  lastAuto[id] = t;
+}
+function autoChartYear(){
+  var t = String(thisYear());
+  var n = $('#chartYear');
+  if (!n) return;
+  var cur = String(n.value || '').trim();
+  if (cur && cur !== (lastChartYear || '')) return;
+  if (cur === t) { lastChartYear = t; return; }
+  if (doc.activeElement && (doc.activeElement === n || (doc.activeElement.id && doc.activeElement.id === 'chartYear'))) return;
+  n.value = t;
+  lastChartYear = t;
+}
+function refreshAutoDates(){
+  autoDateInput('retailDate');
+  autoDateInput('remedyDate');
+  autoChartYear();
 }
 function parseMonthVN(s){
   s = String(s || '').trim();
@@ -1290,6 +1320,8 @@ var pushing = false;
 var DIRTY_BADGE_MS = 4000;
 var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
+var lastAuto = {};
+var lastChartYear = '';
 
 function willScaleMoney(d){
   return !!(d && d.moneyUnit !== 'dong');
@@ -2201,6 +2233,7 @@ function commit(msg, force){
   if (msg) toast(msg);
 }
 function saveRetail(){
+  refreshAutoDates();
   var date = getDateInput('retailDate') || todayISO();
   if (!commitRetailRow()) return;
   var items = retailItems.map(function(it){ return { pid: it.pid, kg: it.kg, amount: it.amount }; });
@@ -2240,6 +2273,7 @@ function saveRetail(){
   commit('Đã lưu đơn bán lẻ');
 }
 function saveRemedy(){
+  refreshAutoDates();
   var date = getDateInput('remedyDate') || todayISO();
   commitRemedyRow();
   calcRemedy();
@@ -3942,10 +3976,11 @@ function autoRefresh(){
 }
 function startAutoRefresh(){
   setInterval(autoRefresh, 15000);                      // định kỳ 15s
+  setInterval(refreshAutoDates, 60000);                 // làm mới ngày qua nửa đêm
   doc.addEventListener('visibilitychange', function(){  // quay lại tab
-    if (!doc.hidden) autoRefresh();
+    if (!doc.hidden) { refreshAutoDates(); autoRefresh(); }
   });
-  window.addEventListener('focus', autoRefresh);        // cửa sổ được focus
+  window.addEventListener('focus', function(){ refreshAutoDates(); autoRefresh(); }); // cửa sổ được focus
 }
 
 /* ================= SAO LƯU / KHÔI PHỤC ================= */
@@ -4330,7 +4365,7 @@ function bindEvents(){
   bindMonthInput('expMonth', function(){ expAll = false; expPage = 1; renderHistory('exp'); });
 
   var cy = $('#chartYear');
-  if (cy) cy.addEventListener('change', function(){ chartSel = -1; renderChart(); });
+  if (cy) cy.addEventListener('change', function(){ lastChartYear = (String(cy.value).trim() === String(thisYear())) ? String(thisYear()) : null; chartSel = -1; renderChart(); });
   var ch = $('#statsChart');
   if (ch) ch.addEventListener('click', onChartClick);
 
@@ -4420,8 +4455,11 @@ function init(){
   var t = todayISO();
   setDateInput('retailDate', t);
   setDateInput('remedyDate', t);
+  lastAuto.retailDate = t;
+  lastAuto.remedyDate = t;
   var cy = $('#chartYear');
   if (cy) cy.value = thisYear();
+  lastChartYear = String(thisYear());
 
   bindEvents();
   initSuggest();

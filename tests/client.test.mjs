@@ -76,7 +76,17 @@ globalThis.__test = {
   readLocal: readLocal,
   saveNhap: saveNhap, saveRetail: saveRetail, saveRemedy: saveRemedy,
   openTxEdit: openTxEdit, saveTxEdit: saveTxEdit, delTx: delTx, mergeDo: mergeDo,
-  getStockWarnText: function(){ return stockWarnText; }
+  getStockWarnText: function(){ return stockWarnText; },
+  todayISO: todayISO, thisYear: thisYear,
+  getDateInput: getDateInput, setDateInput: setDateInput,
+  bindDateInput: bindDateInput, userPickedDate: userPickedDate,
+  refreshAutoDates: refreshAutoDates, autoDateInput: autoDateInput, autoChartYear: autoChartYear,
+  getLastAuto: function(id){ return lastAuto[id]; },
+  setLastAuto: function(id, v){ lastAuto[id] = v; },
+  getLastChartYear: function(){ return lastChartYear; },
+  setLastChartYear: function(v){ lastChartYear = v; },
+  setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
+  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); }
 };
 })();`;
   const store = new Map();
@@ -1398,4 +1408,239 @@ test('401 discard thất bại khi pullState mất mạng (page.js thật): huy 
   assert.equal(badge.hidden, false);
   assert.equal(drop.hidden, false);
   assert.equal(client.isAuthLost(), false);
+});
+function fakeClock(y, moIdx, d, h) {
+  const RealDate = Date;
+  let now = new RealDate(y, moIdx, d, h || 12, 0, 0);
+  function FakeDate(...args) {
+    if (args.length === 0) return new RealDate(now.getTime());
+    return new RealDate(...args);
+  }
+  FakeDate.prototype = RealDate.prototype;
+  FakeDate.now = () => now.getTime();
+  FakeDate.parse = RealDate.parse.bind(RealDate);
+  FakeDate.UTC = RealDate.UTC.bind(RealDate);
+  FakeDate.setNow = (yy, mm, dd, hh) => { now = new RealDate(yy, mm, dd, hh == null ? 12 : hh, 0, 0); };
+  return FakeDate;
+}
+
+function dateDoc() {
+  function mkInput(id) {
+    const attrs = {};
+    const listeners = {};
+    const el = {
+      id, value: '', tagName: 'INPUT', checked: false, disabled: false,
+      style: {}, dataset: {}, children: [],
+      classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+      setAttribute(k, v) { attrs[k] = String(v); },
+      getAttribute(k) { return k in attrs ? attrs[k] : null; },
+      removeAttribute() {}, hasAttribute() { return false; },
+      appendChild(c) { el.children.push(c); return c; },
+      remove() {}, focus() {}, select() {}, click() {},
+      addEventListener(ev, fn) { (listeners[ev] = listeners[ev] || []).push(fn); },
+      removeEventListener() {},
+      fire(ev) { (listeners[ev] || []).forEach(fn => fn()); },
+      querySelector() { return null; }, querySelectorAll() { return []; }
+    };
+    return el;
+  }
+  const els = {
+    '#retailDate': mkInput('retailDate'),
+    '#retailDateNative': mkInput('retailDateNative'),
+    '#remedyDate': mkInput('remedyDate'),
+    '#remedyDateNative': mkInput('remedyDateNative'),
+    '#chartYear': mkInput('chartYear')
+  };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(sel) { return els[sel] || null; },
+    querySelectorAll() { return []; },
+    createElement() { return makeEl(); },
+    createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  return { doc, els };
+}
+
+test('ngày tự động: init D, qua D+1 gọi refresh thì cả hai ô chuyển sang D+1', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-07');
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+  assert.equal(client.getLastAuto('retailDate'), '2026-11-08');
+});
+
+test('ngày tự động: không sự kiện nào, saveRetail và saveRemedy vẫn ghi D+1', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  client.initDates();
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 2000 }]);
+  client.saveRetail();
+  assert.equal(client.getDb().transactions.at(-1).date, '2026-11-08');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
+});
+
+test('ngày tự động: người dùng chọn D sau nửa đêm và D-2 trước nửa đêm đều được giữ', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.setDateInput('retailDate', '2026-11-05');
+  client.setLastAuto('retailDate', null);
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
+  client.setDateInput('retailDate', '2026-11-07');
+  client.setLastAuto('retailDate', null);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  client.setDateInput('remedyDate', '2026-11-08');
+  client.setLastAuto('remedyDate', null);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+});
+
+test('ngày tự động: ô đang focus không bị đổi', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.setActiveId('retailDate');
+  assert.equal(doc.activeElement, els['#retailDate']);
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+});
+
+test('todayISO đúng 00:30 giờ Việt Nam và saveNhap không đổi hành vi', () => {
+  const FakeDate = fakeClock(2026, 10, 8, 0);
+  FakeDate.setNow(2026, 10, 8, 0);
+  const { doc } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  assert.equal(client.todayISO(), '2026-11-08');
+  client.initDates();
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  client.setNhapList([{ pid: null, name: 'A', qty: 1, price: 1000 }]);
+  client.saveNhap();
+  assert.equal(client.getDb().transactions.at(-1).date, '2026-11-08');
+  assert.equal(client.getDb().transactions.at(-1).type, 'NHAP');
+});
+
+test('handler ô chữ: chọn ngày cũ bằng change, sang ngày mới vẫn giữ ngày cũ', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.bindDateInput('retailDate');
+  els['#retailDate'].value = '05/11/2026';
+  els['#retailDate'].fire('change');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
+  assert.equal(client.getLastAuto('retailDate'), null);
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
+});
+
+test('handler ô chữ: chọn đúng hôm nay, sang ngày mới thì ô theo ngày mới', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.bindDateInput('retailDate');
+  els['#retailDate'].value = '08/11/2026';
+  els['#retailDate'].fire('change');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
+  assert.equal(client.getLastAuto('retailDate'), '2026-11-08');
+  FakeDate.setNow(2026, 10, 9, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-09');
+});
+
+test('handler bộ chọn gốc: chọn ngày cũ bằng nat, sang ngày mới vẫn giữ', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.bindDateInput('retailDate');
+  els['#retailDateNative'].value = '2026-11-05';
+  els['#retailDateNative'].fire('change');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
+  assert.equal(client.getLastAuto('retailDate'), null);
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
+});
+
+test('handler bộ chọn gốc: chọn đúng hôm nay, sang ngày mới thì ô theo', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.bindDateInput('remedyDate');
+  FakeDate.setNow(2026, 10, 8, 12);
+  els['#remedyDateNative'].value = '2026-11-08';
+  els['#remedyDateNative'].fire('change');
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+  assert.equal(client.getLastAuto('remedyDate'), '2026-11-08');
+  FakeDate.setNow(2026, 10, 9, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-09');
+});
+
+test('handler ô chữ: để trống về hôm nay, văn bản sai giữ ngày cũ', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.bindDateInput('retailDate');
+  els['#retailDate'].value = '   ';
+  els['#retailDate'].fire('change');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  assert.equal(client.getLastAuto('retailDate'), '2026-11-07');
+  els['#retailDate'].value = 'không phải ngày';
+  els['#retailDate'].fire('change');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+});
+
+test('ô năm biểu đồ: qua hai ranh giới năm liên tiếp vẫn theo', () => {
+  const FakeDate = fakeClock(2026, 11, 31, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  assert.equal(els['#chartYear'].value, '2026');
+  assert.equal(typeof client.getLastChartYear(), 'string');
+  FakeDate.setNow(2027, 0, 1, 12);
+  client.refreshAutoDates();
+  assert.equal(els['#chartYear'].value, '2027');
+  assert.equal(client.getLastChartYear(), '2027');
+  FakeDate.setNow(2028, 0, 1, 12);
+  client.refreshAutoDates();
+  assert.equal(els['#chartYear'].value, '2028');
+  assert.equal(client.getLastChartYear(), '2028');
+});
+
+test('ô đang mở bộ chọn gốc (Native) không bị đổi', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.setActiveId('retailDateNative');
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
 });

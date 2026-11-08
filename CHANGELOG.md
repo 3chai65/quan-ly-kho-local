@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.6.11] - 2026-11-08
+
+### Sửa ngày bán bị cũ qua nửa đêm
+
+- Ô ngày bán lẻ và ngày đơn thuốc chén tự làm mới sang ngày mới khi tab qua nửa đêm (qua `visibilitychange`, `focus` và hẹn 60 giây), ô năm biểu đồ cũng vậy. Ô đang được gõ thì không bị đè, ô người dùng cố ý chọn ngày cũ thì giữ nguyên.
+- `saveRetail` và `saveRemedy` làm mới ngày một lần nữa trước khi đọc ô ngày, phòng khi hẹn giờ bị trình duyệt làm chậm. Nhập hàng vốn đã dùng ngày mới mỗi lần nên không đổi.
+
 ## [2.6.10] - 2026-11-07
 
 ### Cảnh báo khi tồn khác nhập trừ bán
