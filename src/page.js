@@ -752,13 +752,10 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       </summary>
       <div class="card__body">
         <div class="row mb-12">
-          <div class="field">
-            <label class="lbl" for="impMonth">Lọc theo tháng (mm/yyyy)</label>
-            <div class="monthfield">
-              <input class="inp inp--sm" id="impMonth" type="text" inputmode="numeric" autocomplete="off" placeholder="mm/yyyy" maxlength="7" aria-label="Lọc theo tháng (mm/yyyy)">
-              <svg class="ico monthfield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-              <input class="monthfield__native" id="impMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
-            </div>
+          <div class="field sug">
+            <label class="lbl" for="impSearch">Tìm kiếm</label>
+            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" data-sug="imph" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm kiếm">
+            <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="inline-row">
             <button class="btn btn--sm" type="button" data-action="latest-imp">Gần nhất</button>
@@ -1293,6 +1290,26 @@ function lastImport(id){
 function refPrice(p){
   var l = lastImport(p.id);
   return l ? l.price : num(p.costPrice);
+}
+function latestImportMap(){
+  var m = {}, stamps = {};
+  db.transactions.forEach(function(t){
+    if (t.type !== 'NHAP' || !(num(t.price) > 0)) return;
+    var pid = String(t.productId);
+    var s = txStamp(t);
+    if (!(pid in m) || s >= stamps[pid]) { m[pid] = num(t.price); stamps[pid] = s; }
+  });
+  return m;
+}
+function importParen(priceDong){
+  if (!(num(priceDong) > 0)) return '';
+  return '(' + fmtNum(dec(num(priceDong) / 1000)) + ')';
+}
+function costParen(costTotal, qty){
+  if (costTotal == null || !(num(qty) > 0)) return '';
+  var unit = num(costTotal) / num(qty);
+  if (!(unit > 0)) return '';
+  return '(' + fmtNum(dec(unit / 1000)) + ')';
 }
 
 /* ================= TRẠNG THÁI ================= */
@@ -1847,6 +1864,7 @@ var noteEditIdx = -1;
 function renderNote(){
   var tb = $('#retailNoteBody');
   if (!tb) return;
+  var impMap = latestImportMap();
   var pages = Math.max(1, Math.ceil(retailItems.length / PAGE_SIZE));
   if (notePage > pages) notePage = pages;
   if (notePage < 1) notePage = 1;
@@ -1893,6 +1911,12 @@ function renderNote(){
       wrap.appendChild(bs); wrap.appendChild(bc);
     } else {
       tdq = el('td', 'num', fmtQty(it.kg));
+      var impPrice = impMap[String(it.pid)] || (p && num(p.costPrice) > 0 ? num(p.costPrice) : 0);
+      if (impPrice > 0) {
+        var sp = el('span', 'muted small', ' ' + importParen(impPrice));
+        sp.setAttribute('title', 'Giá nhập gần nhất (nghìn đồng/kg)');
+        tdq.appendChild(sp);
+      }
       tdm = el('td', 'num r', fmtMoney(it.amount));
       wrap.appendChild(rowMenu([
         { label: 'Sửa dòng', icon: 'edit', action: 'note-edit', idx: i },
@@ -2684,7 +2708,16 @@ function renderOrder(){
       var g = num(t.g) > 0 ? num(t.g) : num(t.qty) * 1000 / thang;
       tr.appendChild(el('td', 'num', fmtGram(g)));
     } else {
-      tr.appendChild(el('td', 'num', fmtQty(t.qty)));
+      var cq = el('td', 'num', fmtQty(t.qty));
+      if (!isImp) {
+        var cp2 = costParen(t.cost, t.qty);
+        if (cp2) {
+          var sp3 = el('span', 'muted small', ' ' + cp2);
+          sp3.setAttribute('title', 'Giá vốn tại thời điểm bán (nghìn đồng/kg)');
+          cq.appendChild(sp3);
+        }
+      }
+      tr.appendChild(cq);
       if (isImp) tr.appendChild(el('td', 'num r', fmtUnitPrice(t.price)));
       tr.appendChild(el('td', 'num r b ' + (isImp ? 'txt-blue' : 'txt-green'), fmtMoney(t.total)));
     }
@@ -2731,11 +2764,13 @@ function dateVN(iso){
   var d = String(iso || '').split('-');
   return d.length === 3 ? d[2] + '/' + d[1] + '/' + d[0] : 'Không rõ ngày';
 }
-function historyData(kind, month, latestOnly){
+function historyData(kind, month, latestOnly, q){
   var isImp = kind === 'imp';
   indexTx();
+  var nq = isImp ? normSearch(q || '') : '';
   var list = db.transactions.filter(function(t){
     if (t.type !== (isImp ? 'NHAP' : 'BAN')) return false;
+    if (isImp) return true;
     return !month || (t.date && String(t.date).indexOf(month) === 0);
   });
 
@@ -2782,6 +2817,16 @@ function historyData(kind, month, latestOnly){
     r.name = r.oname;
   });
 
+  if (isImp && nq) {
+    rows = rows.filter(function(r){
+      if (r.group) {
+        if (normSearch(r.name || '').indexOf(nq) >= 0) return true;
+        return r.items.some(function(t){ var nm = txName(t); return nm && normSearch(nm).indexOf(nq) >= 0; });
+      }
+      return r.name && normSearch(r.name).indexOf(nq) >= 0;
+    });
+  }
+
   var latestDate = '', latestTs = -Infinity, latestHasTime = false;
   rows.forEach(function(r){
     if (!r.date) return;
@@ -2792,12 +2837,13 @@ function historyData(kind, month, latestOnly){
     }
   });
 
-  if (latestOnly) {
-    /* Gần nhất = toàn bộ giao dịch của ngày gần nhất (thay vì theo phút) */
-    rows = rows.filter(function(r){
-      return r.date === latestDate;
+  var searching = isImp && !!nq;
+  if (latestOnly || searching) {
+    rows.sort(function(a, b){
+      if (b.ts !== a.ts) return b.ts - a.ts;
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return 0;
     });
-    rows.sort(function(a, b){ return b.ts - a.ts; });
   } else {
     rows.sort(function(a, b){
       var na = a.name, nb = b.name;
@@ -2817,9 +2863,10 @@ function renderHistory(kind){
   if (!isImp) updateMergeBtn();
   var tbody = $('#' + kind + 'Body');
   if (!tbody) return;
-  var month = getMonthInput(isImp ? 'impMonth' : 'expMonth');
-  var latestOnly = !month && !(isImp ? impAll : expAll);
-  var data = historyData(kind, month, latestOnly);
+  var month = isImp ? '' : getMonthInput('expMonth');
+  var impQ = isImp ? String(($('#impSearch') || {}).value || '') : '';
+  var latestOnly = isImp ? !(impAll) : (!month && !expAll);
+  var data = historyData(kind, month, latestOnly, impQ);
   var rows = data.rows;
 
   var count = $('#' + kind + 'Count');
@@ -2856,6 +2903,14 @@ function renderHistory(kind){
     tr.appendChild(el('td', 'b', name === null ? 'Đã xóa' : name));
     var cQty = el('td', 'num', fmtQty(t.qty));
     cQty.setAttribute('data-label', 'SL');
+    if (!isImp) {
+      var cp = costParen(t.cost, t.qty);
+      if (cp) {
+        var sp2 = el('span', 'muted small', ' ' + cp);
+        sp2.setAttribute('title', 'Giá vốn tại thời điểm bán (nghìn đồng/kg)');
+        cQty.appendChild(sp2);
+      }
+    }
     tr.appendChild(cQty);
     var cPrice = el('td', 'num muted', fmtUnitPrice(t.price));
     cPrice.setAttribute('data-label', 'Đơn giá');
@@ -3177,7 +3232,8 @@ var SUG = {
   retail: { input: 'retailSearch', list: 'retailList' },
   remedy: { input: 'remedySearch', list: 'remedyList' },
   nhap:   { input: 'nhapSearch', list: 'nhapList' },
-  inv:    { input: 'invSearch', list: 'invList' }
+  inv:    { input: 'invSearch', list: 'invList' },
+  imph:   { input: 'impSearch', list: 'impSearchList' }
 };
 var sugIdx = -1;
 
@@ -3310,6 +3366,11 @@ function pickSuggest(key, id){
     $('#invSearch').value = p.name;
     invPage = 1;
     renderInventory();
+  } else if (key === 'imph') {
+    var s9 = $('#impSearch');
+    if (s9) s9.value = p.name;
+    impPage = 1;
+    renderHistory('imp');
   }
   closeSuggest(key);
 }
@@ -3519,7 +3580,7 @@ function saveNhap(e){
   if (savedN > 0) {
     impAll = false;
     impPage = 1;
-    setMonthInput('impMonth', '');
+    var _is = $('#impSearch'); if (_is) _is.value = '';
   }
   nhapList = [];
   resetNhapInputs();
@@ -4227,9 +4288,9 @@ function handleAction(btn){
     case 'save-edit': saveEdit(); break;
     case 'sync-discard': discardUnsynced(); break;
     case 'close-edit': closeEdit(); break;
-    case 'clear-imp': setMonthInput('impMonth', ''); impAll = true; impPage = 1; renderHistory('imp'); break;
+    case 'clear-imp': { var _s1 = $('#impSearch'); if (_s1) _s1.value = ''; impAll = true; impPage = 1; renderHistory('imp'); break; }
     case 'clear-exp': setMonthInput('expMonth', ''); expAll = true; expPage = 1; renderHistory('exp'); break;
-    case 'latest-imp': setMonthInput('impMonth', ''); impAll = false; impPage = 1; renderHistory('imp'); break;
+    case 'latest-imp': { var _s2 = $('#impSearch'); if (_s2) _s2.value = ''; impAll = false; impPage = 1; renderHistory('imp'); break; }
     case 'reconcile': openRec(); break;
     case 'merge-old': openMerge(); break;
     case 'close-merge': closeMerge(); break;
@@ -4361,7 +4422,8 @@ function bindEvents(){
 
   bindDateInput('retailDate');
   bindDateInput('remedyDate');
-  bindMonthInput('impMonth', function(){ impAll = false; impPage = 1; renderHistory('imp'); });
+  var impS = $('#impSearch');
+  if (impS) impS.addEventListener('input', function(){ impPage = 1; if (!impS.value.trim()) impAll = false; renderHistory('imp'); });
   bindMonthInput('expMonth', function(){ expAll = false; expPage = 1; renderHistory('exp'); });
 
   var cy = $('#chartYear');

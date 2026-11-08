@@ -86,7 +86,14 @@ globalThis.__test = {
   getLastChartYear: function(){ return lastChartYear; },
   setLastChartYear: function(v){ lastChartYear = v; },
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
-  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); }
+  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
+  latestImportMap: latestImportMap, importParen: importParen, costParen: costParen,
+  historyData: historyData, renderHistory: renderHistory, renderNote: renderNote,
+  setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
+  setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
+  setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
+  setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
+  normSearch: normSearch
 };
 })();`;
   const store = new Map();
@@ -1643,4 +1650,83 @@ test('ô đang mở bộ chọn gốc (Native) không bị đổi', () => {
   client.refreshAutoDates();
   assert.equal(client.getDateInput('retailDate'), '2026-11-07');
   assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+});
+
+test('giá nhập gần nhất: hai lần nhập 120 và 135 hiện (135)', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 100000 }], transactions: [
+    { id: 't1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 120000, total: 120000, ts: 1000 },
+    { id: 't2', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 135000, total: 135000, ts: 2000 }
+  ], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const m = client.latestImportMap();
+  assert.equal(m['p1'], 135000);
+  assert.equal(client.importParen(m['p1']), '(135)');
+});
+
+test('giá nhập: chỉ có costPrice thì dùng costPrice, không có gì thì không hiện', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 42600 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const m = client.latestImportMap();
+  assert.equal(m['p1'], undefined);
+  const client2 = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  client2.setDb({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 0 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  assert.equal(client2.latestImportMap()['p1'], undefined);
+  assert.equal(client.importParen(0), '');
+  assert.equal(client.importParen(42600), '(42,6)');
+});
+
+test('giá vốn lịch sử: cost chia qty theo nghìn, không có vốn thì ẩn', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  assert.equal(client.costParen(27000, 0.2), '(135)');
+  assert.equal(client.costParen(undefined, 1), '');
+  assert.equal(client.costParen(13500, 0), '');
+});
+
+test('lịch sử bán: mặc định 10 đơn gần nhất, 11 ẩn, đơn 12 dòng đếm 1, dòng không oid đếm 1, Xem thêm mở thêm', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const mk = (n, date, ts) => ({ id: 't' + n, date, type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts, oid: 'OD_' + n, oname: 'Bán lẻ' });
+  const txs = [];
+  txs.push(mk(1, '2026-11-08', 5001), mk(2, '2026-11-08', 5002));
+  for (let i = 3; i <= 7; i++) txs.push(mk(i, '2026-11-07', 4000 + i));
+  for (let i = 8; i <= 10; i++) txs.push(mk(i, '2026-11-06', 3000 + i));
+  for (let i = 11; i <= 14; i++) txs.push(mk(i, '2026-11-05', 2000 + i));
+  // một đơn 12 dòng nhưng cùng oid
+  txs.push(mk('big', '2026-11-04', 1000));
+  for (let i = 0; i < 11; i++) txs.push({ id: 'big' + i, date: '2026-11-04', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 999, oid: 'OD_big', oname: 'Bán lẻ' });
+  // một dòng không oid
+  txs.push({ id: 'single', date: '2026-11-04', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 900, retail: true });
+  // đơn thuốc chén (rx)
+  txs.push({ id: 'rx1', date: '2026-11-04', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 901, rx: true });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const data = client.historyData('exp', null, true);
+  // 2 hôm nay + 5 hôm qua + 3 trước nữa = 10 đơn gần nhất, còn lại ẩn ở trang sau
+  assert.ok(data.rows.length > 10);
+  const firstPage = data.rows.slice(0, 10);
+  assert.equal(firstPage.length, 10);
+  assert.equal(data.rows[10].date, '2026-11-05');
+  const bigTotal = data.rows.filter(r => r.group && r.oid === 'OD_big').length + data.rows.filter(r => r.oid === 'OD_big').length;
+  assert.ok(bigTotal >= 1);
+  const singles = data.rows.filter(r => r.single && r.tx && !r.tx.oid);
+  assert.ok(singles.length >= 1);
+});
+
+test('lịch sử nhập: tìm "cam" ra Cam Thảo không dấu, xóa ô về 10 gần nhất, gợi ý đúng', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const txs = [
+    { id: 'i1', date: '2026-11-08', type: 'NHAP', productId: 'p1', qty: 1, price: 10000, total: 10000, ts: 3000 },
+    { id: 'i2', date: '2026-11-07', type: 'NHAP', productId: 'p2', qty: 1, price: 10000, total: 10000, ts: 2000 },
+    { id: 'i3', date: '2026-11-06', type: 'NHAP', productId: 'p1', qty: 1, price: 11000, total: 11000, ts: 1000 },
+    { id: 'g1', date: '2026-11-05', type: 'NHAP', productId: 'p1', qty: 1, price: 10000, total: 10000, ts: 500, oid: 'IM_g1' },
+    { id: 'g2', date: '2026-11-05', type: 'NHAP', productId: 'p2', qty: 1, price: 10000, total: 10000, ts: 501, oid: 'IM_g1' }
+  ];
+  client.setDb({ products: [{ id: 'p1', name: 'Cam Thảo', stock: 10, costPrice: 10000 }, { id: 'p2', name: 'A', stock: 5, costPrice: 5000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const all = client.historyData('imp', null, true);
+  // 3 đơn lẻ + 1 đơn gộp (IM_g1) = 4
+  assert.equal(all.rows.length, 4);
+  const found = client.historyData('imp', null, false, 'cam');
+  // i1 + i3 + đơn gộp IM_g1 = 3
+  assert.equal(found.rows.length, 3);
+  const cleared = client.historyData('imp', null, true, '');
+  assert.equal(cleared.rows.length, 4);
+  assert.equal(client.normSearch('Cam Thảo'), client.normSearch('cam thao'));
 });
