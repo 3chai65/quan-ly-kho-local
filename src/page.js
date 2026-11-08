@@ -265,6 +265,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .wrap{padding:0 12px}
 .bar{min-height:56px}
 .brand span{font-size:15px}
+#syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
 .hide-sm{display:none}
 .stat__v{font-size:19px}
 .stat__ic{width:36px;height:36px;border-radius:10px}

@@ -100,11 +100,12 @@ function ago(ms) {
 const CSS = 'body{font:16px/1.5 system-ui,sans-serif;max-width:30rem;margin:12vh auto;padding:0 1rem;color:#222}' +
   'h1{font-size:1.3rem}input,button{font:inherit;padding:.6rem;width:100%;box-sizing:border-box;margin:.3rem 0}' +
   'button{cursor:pointer}.err{color:#b00020}.ok{color:#1b7f3b}code{background:#8882;padding:0 .3rem;border-radius:3px}' +
+  'a{color:#0645ad}.danger{background:#c00;color:#fff;border:0}' +
   'body.wide{max-width:44rem;margin-top:6vh}select{font:inherit;padding:.6rem;width:100%;box-sizing:border-box;margin:.3rem 0}' +
   '.dev{border:1px solid #8886;border-radius:8px;padding:.6rem .8rem;margin:.5rem 0}.dev form{margin-top:.4rem}' +
   '.tag{font-size:.8rem;background:#8883;border-radius:4px;padding:0 .4rem}.box{border:2px solid #1b7f3b;border-radius:8px;padding:.4rem .9rem;margin:.8rem 0}' +
   '.code{font:700 1.6rem/1.4 ui-monospace,Consolas,monospace;letter-spacing:.1em}small{opacity:.75}' +
-  '@media(prefers-color-scheme:dark){body{background:#111;color:#eee}input,select{background:#222;color:#eee;border:1px solid #555}.err{color:#ff8a80}.ok{color:#7ee2a0}}';
+  '@media(prefers-color-scheme:dark){body{background:#111;color:#eee}input,select{background:#222;color:#eee;border:1px solid #555}.err{color:#ff8a80}.ok{color:#7ee2a0}a{color:#8ab4ff}}';
 
 function sendHtml(res, status, title, body, opts) {
   res.status(status).set({
@@ -336,7 +337,7 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
       if (!self) {
         h += '<form method="post" action="/auth/devices/revoke"><input type="hidden" name="id" value="' + esc(d.id) + '">' +
           (d.role === 'owner' ? '<label><input type="checkbox" name="confirm" value="yes" required style="width:auto"> Tôi hiểu đây là thiết bị chủ</label>' : '') +
-          '<button type="submit">Thu hồi</button></form>';
+          '<button class="danger" type="submit">Thu hồi</button></form>';
       }
       h += '</div>';
     }
