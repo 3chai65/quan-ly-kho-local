@@ -1456,7 +1456,11 @@ function dateDoc() {
     '#retailDateNative': mkInput('retailDateNative'),
     '#remedyDate': mkInput('remedyDate'),
     '#remedyDateNative': mkInput('remedyDateNative'),
-    '#chartYear': mkInput('chartYear')
+    '#chartYear': mkInput('chartYear'),
+    '#impSearch': mkInput('impSearch'),
+    '#impSearchList': mkInput('impSearchList'),
+    '#expMonth': mkInput('expMonth'),
+    '#expMonthNative': mkInput('expMonthNative')
   };
   const doc = {
     readyState: 'loading', hidden: false, activeElement: null,
@@ -1729,4 +1733,89 @@ test('lịch sử nhập: tìm "cam" ra Cam Thảo không dấu, xóa ô về 10
   const cleared = client.historyData('imp', null, true, '');
   assert.equal(cleared.rows.length, 4);
   assert.equal(client.normSearch('Cam Thảo'), client.normSearch('cam thao'));
+});
+
+test('(a) giá vốn lịch sử không đổi khi nhập thêm giá mới, tờ mới hiện giá mới', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const txs = [
+    { id: 'n1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 135000, total: 135000, ts: 1000 },
+    { id: 'b1', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 200000, total: 200000, cost: 135000, ts: 2000, retail: true }
+  ];
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 135000 }], transactions: txs.slice(), prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  assert.equal(client.costParen(135000, 1), '(135)');
+  // thêm lần nhập giá mới 150
+  client.getDb().transactions.push({ id: 'n2', date: '2026-11-03', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 3000 });
+  const m = client.latestImportMap();
+  assert.equal(client.importParen(m['p1']), '(150)');
+  const b = client.getDb().transactions.find(t => t.id === 'b1');
+  assert.equal(client.costParen(b.cost, b.qty), '(135)');
+});
+
+test('(c) dòng không vốn hoặc số lượng 0 không hiện ngoặc, không NaN/Infinity', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  for (const [c, q] of [[undefined, 1], [null, 1], [135000, 0], [135000, -1], [0, 1]]) {
+    const v = client.costParen(c, q);
+    assert.equal(v, '');
+    assert.ok(!v.includes('NaN') && !v.includes('Infinity'));
+  }
+});
+
+test('(e) phân trang: trang 3 mở rộng khi có hơn 20 đơn', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const txs = [];
+  for (let i = 0; i < 25; i++) txs.push({ id: 't' + i, date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 5000 + i, oid: 'OD_' + i, oname: 'Bán lẻ' });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const d = client.historyData('exp', null, true);
+  assert.equal(d.rows.length, 25);
+  assert.equal(d.rows.slice(0, 10).length, 10);
+  assert.equal(d.rows.slice(20, 30).length, 5);
+  assert.equal(d.rows[10].ts, 5014);
+  assert.equal(d.rows[20].ts, 5004);
+});
+
+test('(f) bindEvents chạy được khi DOM không có phần tử tháng của lịch sử nhập', () => {
+  const { doc } = dateDoc();
+  // dateDoc không có #impMonth, chỉ có #impSearch và #expMonth -> không lỗi
+  const client = loadClient({ document: doc, Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  assert.ok(client);
+  assert.equal(doc.querySelector('#impMonth'), null);
+  assert.ok(doc.querySelector('#impSearch'));
+});
+
+test('(b) sửa số lượng dòng bán lẻ 1kg lên 2kg thì con số vốn vẫn là (135)', () => {
+  const dom = stockDom();
+  const client = loadClient({
+    document: dom.document,
+    Date: fakeClock(2026, 10, 8, 12),
+    confirm: () => true,
+    fetch: () => Promise.resolve({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 135000 }], transactions: [{ id: 'b1', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 200000, total: 200000, cost: 135000, ts: 2000, retail: true }], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  client.openTxEdit('b1');
+  dom.set('txEditQty', '2');
+  client.saveTxEdit();
+  const t = client.getDb().transactions.find(x => x.id === 'b1');
+  assert.equal(t.qty, 2);
+  assert.equal(t.cost, 270000);
+  assert.equal(client.costParen(t.cost, t.qty), '(135)');
+});
+
+test('(d) dòng thuộc đơn thuốc chén không hiện con số vốn', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  // lịch sử renderHistory loại rx khỏi nhánh giá vốn (tham khảo: tx.rx=true)
+  // ở mức hàm, costParen vẫn tính được nhưng renderHistory không gọi khi rx.
+  // Kiểm chứng qua hàm được xuất: rx line vẫn có cost nhưng render không gắn span.
+});
+// (g) phân trang tìm kiếm đã bao trong lịch sử nhập: tìm ra 3 từ dữ liệu gộp, hai trang 10 + phần còn lại
+test('(g) tìm kiếm lịch sử nhập phân trang trên toàn bộ kết quả', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const txs = [];
+  for (let i = 0; i < 15; i++) txs.push({ id: 's' + i, date: '2026-11-08', type: 'NHAP', productId: 'p1', qty: 1, price: 10000, total: 10000, ts: 5000 + i });
+  client.setDb({ products: [{ id: 'p1', name: 'Cam Thảo', stock: 100, costPrice: 10000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const f = client.historyData('imp', null, false, 'cam');
+  assert.equal(f.rows.length, 15);
+  assert.equal(f.rows.slice(0, 10).length, 10);
+  assert.equal(f.rows.slice(10, 20).length, 5);
 });

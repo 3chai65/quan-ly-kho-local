@@ -2710,7 +2710,7 @@ function renderOrder(){
       tr.appendChild(el('td', 'num', fmtGram(g)));
     } else {
       var cq = el('td', 'num', fmtQty(t.qty));
-      if (!isImp) {
+      if (!isImp && !t.rx) {
         var cp2 = costParen(t.cost, t.qty);
         if (cp2) {
           var sp3 = el('span', 'muted small', ' ' + cp2);
@@ -2904,7 +2904,7 @@ function renderHistory(kind){
     tr.appendChild(el('td', 'b', name === null ? 'Đã xóa' : name));
     var cQty = el('td', 'num', fmtQty(t.qty));
     cQty.setAttribute('data-label', 'SL');
-    if (!isImp) {
+    if (!isImp && !t.rx) {
       var cp = costParen(t.cost, t.qty);
       if (cp) {
         var sp2 = el('span', 'muted small', ' ' + cp);

@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.7.1] - 2026-11-09
+
+### Sửa lỗi hiển thị
+
+- Dòng đơn thuốc chén (có cờ `rx`) không hiện con số vốn trong ngoặc ở lịch sử bán và tờ ghi, chỉ dòng bán lẻ mới hiện.
+
 ## [2.7.0] - 2026-11-08
 
 ### Thêm
