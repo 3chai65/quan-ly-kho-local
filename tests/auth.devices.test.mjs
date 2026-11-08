@@ -399,3 +399,42 @@ test('escape HTML ở lớp hiển thị: tên thiết bị có ký tự nguy hi
     assert.match(page, /&lt;img src=x onerror=alert\(1\)&gt;/);
   } finally { s.cleanup(); }
 });
+
+/* ---------- Origin / Referrer-Policy ---------- */
+
+test('mọi trang của auth gửi Referrer-Policy: same-origin (không dùng no-referrer, vì sẽ khiến trình duyệt gửi Origin: null)', () => {
+  const s = setup();
+  try {
+    const setupPage = call(s, 'GET', '/auth/setup');
+    assert.equal(setupPage.headers['referrer-policy'], 'same-origin');
+    assert.equal(call(s, 'GET', '/').headers['referrer-policy'], 'same-origin');   // trang khóa
+    const owner = enrollOwner(s);
+    assert.equal(call(s, 'GET', '/auth/join').statusCode, 200);                      // đã có chủ, chưa có cookie
+    assert.equal(call(s, 'GET', '/auth/join').headers['referrer-policy'], 'same-origin');
+    assert.equal(call(s, 'GET', '/auth/devices', { cookie: owner }).headers['referrer-policy'], 'same-origin');
+  } finally { s.cleanup(); }
+});
+
+test('Origin: null bị từ chối ở thiết lập, tham gia và mọi thao tác quản lý (không để lọt nguồn lạ)', () => {
+  const s = setup();
+  try {
+    const bad = { origin: 'null' };
+    assert.equal(call(s, 'POST', '/auth/setup', { form: { code: s.setupCode, name: 'x' }, headers: bad }).statusCode, 403);
+    assert.equal(s.auth.hasOwner(), false);
+    const owner = enrollOwner(s);
+    const code = invite(s, owner);
+    assert.equal(join(s, code, 'x', { headers: bad }).statusCode, 403);
+    assert.equal(call(s, 'POST', '/auth/devices/invite', { cookie: owner, form: { role: 'member' }, headers: bad }).statusCode, 403);
+    assert.equal(call(s, 'POST', '/auth/devices/revoke', { cookie: owner, form: { id: 'x' }, headers: bad }).statusCode, 403);
+    assert.equal(call(s, 'POST', '/auth/devices/unlock', { cookie: owner, headers: bad }).statusCode, 403);
+    assert.equal(join(s, code, 'Điện thoại').statusCode, 303);   // mã mời chưa bị tiêu thụ bởi request bị chặn
+  } finally { s.cleanup(); }
+});
+
+test('Origin trùng Host (trình duyệt thật gửi khi policy same-origin) được chấp nhận, kể cả localhost và IP', () => {
+  const s = setup();
+  try {
+    const ok = call(s, 'POST', '/auth/setup', { form: { code: s.setupCode, name: 'PC' }, headers: { host: 'localhost:8791', origin: 'http://localhost:8791' } });
+    assert.equal(ok.statusCode, 303);
+  } finally { s.cleanup(); }
+});

@@ -113,7 +113,10 @@ function sendHtml(res, status, title, body, opts) {
     'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
-    'Referrer-Policy': 'no-referrer',
+    /* KHÔNG dùng 'no-referrer': theo đặc tả Fetch, với chính sách đó trình duyệt gửi `Origin: null`
+       cho form POST cùng nguồn, và sameOrigin() sẽ từ chối chính người dùng thật. 'same-origin' vẫn
+       không lộ referrer ra ngoài nhưng giữ Origin thật cho request cùng nguồn. */
+    'Referrer-Policy': 'same-origin',
     'X-Robots-Tag': 'noindex, nofollow'
   }).send('<!doctype html><html lang="vi"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -271,7 +274,8 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
 
   function sameOrigin(req) {
     const origin = req.headers && req.headers.origin;
-    if (!origin) return true; // form cùng nguồn trên trình duyệt cũ có thể không gửi Origin
+    if (!origin) return true; // curl và trình duyệt rất cũ không gửi Origin; cookie SameSite=Lax vẫn bảo vệ các thao tác cần đăng nhập
+    // Cố ý KHÔNG chấp nhận Origin: null (iframe sandbox, chuyển hướng chéo nguồn, file://): đó là cách các trang lạ giả request.
     try { return new URL(origin).host === (req.headers.host || ''); } catch (e) { return false; }
   }
 
