@@ -438,3 +438,15 @@ test('Origin trùng Host (trình duyệt thật gửi khi policy same-origin) đ
     assert.equal(ok.statusCode, 303);
   } finally { s.cleanup(); }
 });
+
+test('giao diện: nút Thu hồi có kiểu nguy hiểm; liên kết có màu đọc được ở chế độ tối', () => {
+  const s = setup();
+  try {
+    const owner = enrollOwner(s);
+    join(s, invite(s, owner), 'Điện thoại');
+    const page = String(call(s, 'GET', '/auth/devices', { cookie: owner }).body);
+    assert.match(page, /<button type="submit" class="danger">Thu hồi<\/button>/);
+    assert.match(page, /prefers-color-scheme:dark\)\{[\s\S]*?a\{color:#8ab4ff\}/);
+    assert.doesNotMatch(page, /<button type="submit" class="danger">Tạo mã mời/);
+  } finally { s.cleanup(); }
+});
