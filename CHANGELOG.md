@@ -5,6 +5,34 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.8.0] - 2026-11-09
+
+### Thêm
+
+- Xác thực thiết bị: chỉ thiết bị đã được duyệt mới truy cập được kho (trang chủ và `/api/*`). Thiết bị chủ đầu tiên thiết lập bằng mã in trong log (`/auth/setup`); tối đa 2 thiết bị chủ.
+- Mã mời (8 ký tự, hiệu lực 5 phút, dùng một lần) để thêm thiết bị mới qua `/auth/join`. Trang `/auth/devices` cho thiết bị chủ tạo mã mời, xem danh sách thiết bị và thu hồi từng thiết bị. Thiết bị "thành viên" xem và sửa kho nhưng không quản lý được thiết bị khác.
+- `/healthz` (không cần duyệt, không trả dữ liệu) cho healthcheck của Docker.
+- Client xử lý lỗi 401: huy hiệu "Thiết bị này chưa được duyệt hoặc đã bị thu hồi" kèm liên kết nhập mã mời; giữ nguyên thay đổi chưa gửi và không cho bỏ nháp.
+- Nút "Thiết bị" trên thanh đầu trang dẫn tới `/auth/devices`.
+- `scripts/auth-reset.mjs` đặt lại danh sách thiết bị (khi mất cả hai thiết bị chủ hoặc đổi máy).
+
+### Đổi
+
+- Healthcheck của compose gọi `/healthz` thay vì `/api/state`.
+- "Bỏ thay đổi chưa gửi" chỉ xóa cờ nháp và huy hiệu sau khi lấy được bản máy chủ; nếu thất bại thì giữ nguyên nháp.
+- Danh sách thiết bị nằm trong `data/auth.db` (file riêng), không bị ghi đè khi lưu hay khôi phục `app.db`.
+
+### Bảo mật
+
+- Cookie `qlk_dev_<8 ký tự hex>`: HttpOnly, SameSite=Lax; tên ngẫu nhiên theo từng bản cài. Máy chủ chỉ lưu bản băm SHA-256 của mã thiết bị và mã mời.
+- Giới hạn thử sai: sai 5 lần thì khóa 15 phút (thiết lập và nhập mã mời có bộ đếm riêng); thiết bị chủ có thể mở khóa.
+- Trang auth gửi `Referrer-Policy: same-origin`, từ chối request có `Origin` lạ hoặc `Origin: null`.
+- **Chưa có HTTPS:** cookie đi qua HTTP trong mạng nội bộ nên người nghe được lưu lượng cùng mạng có thể lấy cookie. Nên tách mạng khách (Wi-Fi khách) khỏi mạng đặt kho.
+
+### Lưu ý nâng cấp
+
+- Sau khi bật, mọi tab đang mở bằng bản cũ phải tải lại (Ctrl+F5). Trước đó, đồng bộ hết thay đổi chưa gửi trên các thiết bị.
+
 ## [2.7.1] - 2026-11-09
 
 ### Sửa lỗi hiển thị

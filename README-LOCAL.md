@@ -114,12 +114,50 @@ docker compose logs
 
 Lệnh chỉ xóa bảng thiết bị, không đụng `app.db`. Tên cookie `qlk_dev_…` giữ nguyên. Mã thiết lập mới nằm trong log.
 
+## Xác thực thiết bị
+
+Từ 2.8.0, chỉ thiết bị đã được duyệt mới vào được kho. Thiết bị lạ trong cùng mạng chỉ thấy trang "chưa được duyệt".
+
+### Thiết lập thiết bị chủ đầu tiên
+1. Xem mã thiết lập trong log: `docker logs quan-ly-kho --tail 50` (dòng `[auth] Mã thiết lập thiết bị chủ: XXXX-XXXX-XXXX`).
+2. Trên PC, mở `http://localhost:8787/auth/setup`, nhập mã, đặt tên thiết bị. Dùng trình duyệt thường.
+3. Coi mã thiết lập là bí mật cho tới khi dùng: ai tới được cổng 8787 và biết mã đều thành thiết bị chủ được. Sau khi có chủ, `/auth/setup` trả 404 vĩnh viễn.
+4. Có thể đặt mã cố định bằng biến môi trường `QLK_SETUP_CODE` (tối thiểu 12 ký tự); mã này không in ra log.
+
+### Thêm thiết bị (điện thoại, máy khác)
+1. Trên thiết bị chủ, mở `/auth/devices` (nút "Thiết bị" ở đầu trang), chọn vai trò, bấm "Tạo mã mời". Mã hiện một lần, hiệu lực 5 phút, dùng một lần.
+2. Trên thiết bị mới, mở `http://<địa chỉ máy>:8787/auth/join`, nhập mã và tên thiết bị.
+3. Thiết bị chủ: tối đa 2, duyệt và thu hồi được thiết bị khác. Thành viên: xem và sửa kho, không quản lý thiết bị.
+4. Nhập sai mã 5 lần thì khóa 15 phút. Thiết bị chủ tạo mã mời mới hoặc bấm "Mở khóa" trên `/auth/devices` để mở lại ngay.
+
+### Thu hồi
+- Trên `/auth/devices`, bấm "Thu hồi" ở thiết bị cần bỏ; có hiệu lực ngay ở yêu cầu kế tiếp của thiết bị đó. Không tự thu hồi chính thiết bị đang dùng. Thu hồi thiết bị chủ khác cần tick ô xác nhận.
+- Thiết bị bị thu hồi giữ nguyên thay đổi chưa gửi trên máy nó, và thấy liên kết "Nhập mã mời để vào lại". Dữ liệu đã tải về máy đó trước đây không xóa từ xa được.
+
+### Lưu ý khi dùng
+- **Mỗi thiết bị dùng một địa chỉ cố định.** Cookie gắn với tên máy: `localhost`, `127.0.0.1` và `192.168.x.x` được coi là ba nơi khác nhau. PC nên luôn dùng `localhost`.
+- **Không dùng tab riêng tư** của trình duyệt cho thiết bị thật: đóng tab là mất cookie và mất nháp chưa gửi.
+- **Chưa có HTTPS.** Người nghe được lưu lượng trong cùng mạng có thể lấy cookie. Tách Wi-Fi khách khỏi mạng đặt kho.
+- `data/auth.db` không nằm trong bản sao lưu (`robocopy` chỉ chép `backups` và `luu-tru`). Mất file này thì thiết lập lại (xem bên dưới), không mất dữ liệu kho.
+
+### Mất thiết bị chủ / đổi máy: đặt lại
+```
+docker exec quan-ly-kho node scripts/auth-reset.mjs
+docker restart quan-ly-kho
+docker logs quan-ly-kho --tail 50
+```
+Lệnh đầu xóa danh sách thiết bị (không đụng `app.db`). Sau khi khởi động lại, log in mã thiết lập mới; thiết lập lại thiết bị chủ như trên.
+
+### Xử lý sự cố
+- Trang hiện `Forbidden` khi bấm Xác nhận hoặc Tham gia: mở lại trang bằng đúng một địa chỉ (không đổi giữa `localhost` và IP giữa chừng) rồi thử lại.
+- Thiết bị đang dùng bình thường bỗng báo "chưa được duyệt": thiết bị đã bị thu hồi, hoặc cookie bị xóa. Dùng liên kết "Nhập mã mời để vào lại".
+
 ## Khi server từ chối bản đang sửa
 
 Huy hiệu “Chưa đồng bộ” hiện cạnh nút “Bỏ thay đổi chưa gửi, lấy bản máy chủ” khi máy chủ trả 400 hoặc 428. Bấm nút thì trang hỏi xác nhận, tải file `kho-nhap-bi-tu-choi-….json` trước, rồi lấy lại bản trên máy chủ. Nếu trình duyệt không tải được file, dữ liệu trên máy được giữ nguyên. File này chứa cả kho; xóa khi không cần, và không để thư mục tải của trình duyệt nằm trong repo.
 
 ## Ghi chú
-- Bản này **không có đăng nhập** — chỉ nên dùng trong mạng nhà.
+- Từ 2.8.0 có **xác thực thiết bị** (xem mục “Xác thực thiết bị” ở trên); vẫn chỉ nên dùng trong mạng nhà.
 - Cổng đổi được trong `docker-compose.yml` (mục `ports`, ví dụ `"9000:8787"`).
 - Muốn dùng ngoài WiFi sau này: cài Tailscale trên PC + điện thoại rồi mở
   `http://<tên-tailscale-PC>:8787`.
