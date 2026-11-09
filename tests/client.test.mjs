@@ -1714,6 +1714,33 @@ test('lịch sử bán: mặc định 10 đơn gần nhất, 11 ẩn, đơn 12 d
   assert.ok(singles.length >= 1);
 });
 
+test('lịch sử bán: trang 1 chỉ hiện 10 dòng (giới hạn 10)', () => {
+  const els = new Map();
+  function ensure(id) {
+    if (!els.has(id)) els.set(id, { id, value: '', textContent: '', hidden: false, style: {}, dataset: {}, children: [], classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } }, setAttribute(){}, getAttribute(){ return null; }, removeAttribute(){}, hasAttribute(){ return false; }, appendChild(c){ els.get(id).children.push(c); return c; }, remove(){}, focus(){}, select(){}, click(){}, addEventListener(){}, removeEventListener(){}, querySelector(){ return null; }, querySelectorAll(){ return []; } });
+    return els.get(id);
+  }
+  ensure('expBody'); ensure('expCount'); ensure('expPager');
+  const body = els.get('expBody');
+  body.appendChild = function(c){ body.children.push(c); return c; };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(sel) { const m = /^#([\w-]+)$/.exec(String(sel)); return m && els.has(m[1]) ? els.get(m[1]) : null; },
+    querySelectorAll() { return []; },
+    createElement(tag) { const e = makeEl(); e.tagName = String(tag || '').toUpperCase(); e.appendChild = function(c){ e.children.push(c); return c; }; return e; },
+    createElementNS() { return makeEl(); },
+    createTextNode(s) { return { textContent: String(s) }; },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const client = loadClient({ document: doc, Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const txs = [];
+  for (let i = 0; i < 15; i++) txs.push({ id: 'p' + i, date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 5000 + i, oid: 'OD_' + i, oname: 'Bán lẻ' });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.renderHistory('exp');
+  assert.equal(body.children.length, 10, 'trang 1 chỉ 10 dòng');
+});
+
 test('lịch sử nhập: tìm "cam" ra Cam Thảo không dấu, xóa ô về 10 gần nhất, gợi ý đúng', () => {
   const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
   const txs = [
