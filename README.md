@@ -109,7 +109,7 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server
    - **400** và **428** không gửi lại. Nút “Bỏ thay đổi chưa gửi, lấy bản máy chủ” hỏi xác nhận, tải `kho-nhap-bi-tu-choi-….json` trước, rồi lấy bản máy chủ. Tải thất bại thì giữ dữ liệu trên máy.
    - Mất mạng và **5xx** thử lại sau 4 giây, rồi 8, 16, tối đa 60. `PUT` thành công đưa bước chờ về 4 giây.
    - **409** chỉ mở hộp thoại xung đột, không tự gửi lại.
-5. **Không có đăng nhập**: app chỉ chạy trong LAN nội bộ.
+5. **Xác thực thiết bị** (từ 2.8.0): chỉ thiết bị đã được duyệt mới vào kho; xem mục “Xác thực thiết bị” trong `README-LOCAL.md`.
 
 ## API
 
