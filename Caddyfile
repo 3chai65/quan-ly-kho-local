@@ -1,0 +1,10 @@
+{
+	auto_https disable_redirects
+	default_sni 192.168.2.46
+}
+
+https://192.168.2.46, https://localhost {
+	tls internal
+	reverse_proxy quan-ly-kho:8787
+	encode zstd gzip
+}
