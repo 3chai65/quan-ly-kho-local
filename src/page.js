@@ -3350,6 +3350,7 @@ function openSuggest(key){
     b.type = 'button';
     b.setAttribute('role', 'option');
     b.setAttribute('aria-selected', 'false');
+    b.setAttribute('data-pid', p.id);
     b.appendChild(el('span', 'sug__name', p.name));
     var meta = 'Tồn ' + fmtQty(p.stock);
     var pr = refPrice(p);
@@ -3481,8 +3482,14 @@ function onSuggestKey(e, key){
           if (normSearch(prods[pi].name) === normSearch(raw)) { exactIdx = pi; break; }
         }
       }
-      if (exactIdx >= 0) pick = items2[exactIdx] || null;
-      else if (items2.length === 1) pick = items2[0];
+      if (exactIdx >= 0) {
+        var exactId = String(prods[exactIdx].id);
+        for (var bi = 0; bi < items2.length; bi++) {
+          var attr = items2[bi] && items2[bi].getAttribute ? items2[bi].getAttribute('data-pid') : null;
+          if (attr === exactId) { pick = items2[bi]; break; }
+        }
+        if (!pick) pick = items2[exactIdx] || null;
+      } else if (items2.length === 1) pick = items2[0];
     }
     if (pick) {
       e.preventDefault();

@@ -2046,6 +2046,74 @@ test('loadPreset cảnh báo khi đơn cũ có vị đã bị xóa', () => {
   assert.match(els['#toastMsg'].textContent, /1 vị đã bị xóa/);
 });
 
+
+test('Enter exact chọn đúng vị theo data-pid, không lệch chỉ số khi DOM có mục thêm đầu', () => {
+  const input = { value: 'Cam thảo' };
+  const buttons = [
+    { getAttribute(k) { return k === 'data-pid' ? 'other' : null; }, dispatchEvent() { this.hit = true; } },
+    { getAttribute(k) { return k === 'data-pid' ? 'p1' : null; }, dispatchEvent() { this.hit = true; } },
+    { getAttribute(k) { return k === 'data-pid' ? 'p2' : null; }, dispatchEvent() { this.hit = true; } }
+  ];
+  const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? input : s === '#nhapList' ? list : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 1, costPrice: 1 }, { id: 'p2', name: 'Cam thảo khô', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  let prevented = 0;
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 1);
+  assert.equal(buttons[1].hit, true);
+  assert.equal(buttons[0].hit, undefined);
+  assert.equal(buttons[2].hit, undefined);
+});
+
+test('Enter nhiều ứng viên không khớp: không chọn, không preventDefault', () => {
+  const input = { value: 'Cam' };
+  const buttons = [
+    { getAttribute(k) { return k === 'data-pid' ? 'p1' : null; }, dispatchEvent() { this.hit = true; } },
+    { getAttribute(k) { return k === 'data-pid' ? 'p2' : null; }, dispatchEvent() { this.hit = true; } }
+  ];
+  const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? input : s === '#nhapList' ? list : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 1, costPrice: 1 }, { id: 'p2', name: 'Cam chua', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  let prevented = 0;
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 0);
+  assert.equal(buttons.some(b => b.hit), false);
+});
+
+test('Enter đúng một ứng viên không khớp: pick nó', () => {
+  const input = { value: 'Cam thảo' };
+  const buttons = [
+    { getAttribute(k) { return k === 'data-pid' ? 'p1' : null; }, dispatchEvent() { this.hit = true; } }
+  ];
+  const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? input : s === '#nhapList' ? list : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  let prevented = 0;
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 1);
+  assert.equal(buttons[0].hit, true);
+});
 test('recFix kẹp tồn về 0 khi số lịch sử âm rất nhỏ', () => {
   const client = loadClient({
     setTimeout() { return 0; }, clearTimeout() {},
