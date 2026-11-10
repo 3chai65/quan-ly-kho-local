@@ -39,6 +39,11 @@ const BACKUP_KEEP_DAYS = Number(process.env.BACKUP_KEEP_DAYS) || 30;
 const MAX_BODY = 4 * 1024 * 1024;
 const MAX_INLINE = 200 * 1024;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const NAME_MAX = 200;
+const QTY_MAX = 1e6;
+const GRAMS_MAX = 1e9;
+const THANG_MAX = 1e4;
+const MONEY_MAX = 1e12;
 
 /* ============================ DATABASE ============================ */
 
@@ -194,10 +199,23 @@ function readState() {
   };
 }
 
-function isNonNegNumber(value) {
+function isNonNegNumber(value, max) {
   if (value == null || value === '') return false;
   const n = Number(value);
-  return Number.isFinite(n) && n >= 0;
+  return Number.isFinite(n) && n >= 0 && n <= max;
+}
+function isPositiveNumber(value, max) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 && n <= max;
+}
+/* Ngày thật, không chỉ đúng hình dạng. Dùng UTC để không phụ thuộc TZ máy chạy. */
+function isRealDate(value) {
+  const s = String(value || '');
+  if (!DATE_RE.test(s)) return false;
+  const y = +s.slice(0, 4), m = +s.slice(5, 7), d = +s.slice(8, 10);
+  if (y < 2000 || y > 2100) return false;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
 }
 
 function validateState(d) {
@@ -223,8 +241,9 @@ function validateState(d) {
     if (!p || typeof p !== 'object') { fail(label + ': không hợp lệ'); return; }
     const name = String(p.name || '').trim();
     if (!name) { fail(label + ': thiếu tên'); return; }
-    if (!isNonNegNumber(p.stock)) fail(label + ' "' + name + '": tồn kho phải >= 0');
-    if (!isNonNegNumber(p.costPrice)) fail(label + ' "' + name + '": giá nhập phải >= 0');
+    if (name.length > NAME_MAX) fail(label + ' "' + name.slice(0, 40) + '…": tên quá dài (tối đa ' + NAME_MAX + ' ký tự)');
+    if (!isNonNegNumber(p.stock, QTY_MAX)) fail(label + ' "' + name + '": tồn kho phải từ 0 đến ' + QTY_MAX);
+    if (!isNonNegNumber(p.costPrice, MONEY_MAX)) fail(label + ' "' + name + '": giá nhập phải từ 0 đến ' + MONEY_MAX);
     const id = String(p.id || randomId());
     const nameKey = name.toLowerCase();
     if (productIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
@@ -239,23 +258,24 @@ function validateState(d) {
     const label = 'Giao dịch #' + (i + 1);
     if (!t || typeof t !== 'object') { fail(label + ': không hợp lệ'); return; }
     if (t.type !== 'NHAP' && t.type !== 'BAN') { fail(label + ': loại phải là NHAP hoặc BAN'); return; }
-    if (!DATE_RE.test(String(t.date || ''))) { fail(label + ': ngày phải dạng YYYY-MM-DD'); return; }
+    if (!isRealDate(t.date)) { fail(label + ': ngày phải là ngày thật YYYY-MM-DD trong 2000-2100'); return; }
     const productId = String(t.productId || '').trim();
     if (!productId) { fail(label + ': thiếu productId'); return; }
     if (!productIds.has(productId)) warn(label + ': productId không có trong danh sách sản phẩm: ' + productId);
-    if (!(Number(t.qty) > 0)) fail(label + ': số lượng phải > 0');
-    if (!isNonNegNumber(t.price)) fail(label + ': đơn giá phải >= 0');
-    if (!isNonNegNumber(t.total)) fail(label + ': thành tiền phải >= 0');
-    if (t.cost != null && !isNonNegNumber(t.cost)) fail(label + ': giá vốn phải >= 0');
+    if (!isPositiveNumber(t.qty, QTY_MAX)) fail(label + ': số lượng phải > 0 và <= ' + QTY_MAX);
+    if (!isNonNegNumber(t.price, MONEY_MAX)) fail(label + ': đơn giá phải từ 0 đến ' + MONEY_MAX);
+    if (!isNonNegNumber(t.total, MONEY_MAX)) fail(label + ': thành tiền phải từ 0 đến ' + MONEY_MAX);
+    if (t.cost != null && !isNonNegNumber(t.cost, MONEY_MAX)) fail(label + ': giá vốn phải từ 0 đến ' + MONEY_MAX);
     if (t.ts != null && !Number.isFinite(Number(t.ts))) fail(label + ': ts không hợp lệ');
-    if (t.g != null && !isNonNegNumber(t.g)) fail(label + ': grams phải >= 0');
-    if (t.thang != null && !(Number(t.thang) >= 1)) fail(label + ': số thang phải >= 1');
-    if (t.unitPrice != null && !isNonNegNumber(t.unitPrice)) fail(label + ': giá 1 thang phải >= 0');
+    if (t.g != null && !isNonNegNumber(t.g, GRAMS_MAX)) fail(label + ': grams phải từ 0 đến ' + GRAMS_MAX);
+    if (t.thang != null && (!Number.isFinite(Number(t.thang)) || Number(t.thang) < 1 || Number(t.thang) > THANG_MAX)) fail(label + ': số thang phải từ 1 đến ' + THANG_MAX);
+    if (t.unitPrice != null && !isNonNegNumber(t.unitPrice, MONEY_MAX)) fail(label + ': giá 1 thang phải từ 0 đến ' + MONEY_MAX);
     const id = String(t.id || randomId());
     if (txIds.has(id)) { fail(label + ': trùng id giao dịch ' + id); return; }
     txIds.add(id);
     const rawOid = t.oid != null ? String(t.oid) : (t.orderId != null ? String(t.orderId) : null);
     const rawOname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : null);
+    if (rawOname && rawOname.length > NAME_MAX) fail(label + ': tên đơn quá dài (tối đa ' + NAME_MAX + ' ký tự)');
     const orderId = rawOid || null;
     const orderName = (rawOname && rawOname !== rawOid) ? rawOname : null;
     state.transactions.push({
@@ -274,6 +294,9 @@ function validateState(d) {
     if (!r || typeof r !== 'object') { fail(label + ': không hợp lệ'); return; }
     const name = String(r.name || '').trim();
     if (!name) { fail(label + ': thiếu tên'); return; }
+    if (name.length > NAME_MAX) fail(label + ' "' + name.slice(0, 40) + '…": tên quá dài (tối đa ' + NAME_MAX + ' ký tự)');
+    if (!isNonNegNumber(r.total, MONEY_MAX)) fail(label + ' "' + name + '": tổng tiền phải từ 0 đến ' + MONEY_MAX);
+    if (r.thang != null && (!Number.isFinite(Number(r.thang)) || Number(r.thang) < 1 || Number(r.thang) > THANG_MAX)) fail(label + ' "' + name + '": số thang phải từ 1 đến ' + THANG_MAX);
     if (!Array.isArray(r.items) || !r.items.length) { fail(label + ' "' + name + '": chưa có vị thuốc'); return; }
     const id = String(r.id || randomId());
     const nameKey = name;
@@ -288,7 +311,7 @@ function validateState(d) {
       const itemPid = String(item.productId || '').trim();
       if (!itemPid) { fail(label + ' dòng ' + (j + 1) + ': thiếu productId'); return; }
       if (!productIds.has(itemPid)) warn(label + ' dòng ' + (j + 1) + ': productId không có trong danh sách sản phẩm: ' + itemPid);
-      if (!(Number(item.grams) > 0)) { fail(label + ' dòng ' + (j + 1) + ': số gram phải > 0'); return; }
+      if (!isPositiveNumber(item.grams, GRAMS_MAX)) { fail(label + ' dòng ' + (j + 1) + ': số gram phải > 0 và <= ' + GRAMS_MAX); return; }
       if (itemIds.has(itemPid)) { fail(label + ' "' + name + '": vị thuốc ' + itemPid + ' bị lặp'); return; }
       itemIds.add(itemPid);
       items.push({ productId: itemPid, grams: decNum(item.grams) });
@@ -386,13 +409,10 @@ function todayStamp() {
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 
-function runDailyBackup(force) {
+function runDailyBackup() {
   try {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
     const file = path.join(BACKUP_DIR, 'backup-' + todayStamp() + '.db');
-    if (fs.existsSync(file)) {
-      if (force) fs.unlinkSync(file);
-    }
     if (!fs.existsSync(file)) {
       // VACUUM INTO tạo bản sao nhất quán, không bị ảnh hưởng bởi ghi đồng thời.
       db.prepare('VACUUM INTO ?').run(file);
@@ -523,7 +543,7 @@ app.put('/api/state', (req, res) => {
       }
     }
     // Chụp TRƯỚC khi ghi: bản của ngày = trạng thái trước lần ghi đầu tiên trong ngày.
-    runDailyBackup(false);
+    runDailyBackup();
     if (force) snapshotBeforeForce();
     const updatedAt = writeState(checked.state);
     const reply = { success: true, updatedAt };
@@ -546,9 +566,12 @@ app.get('/', (req, res) => {
     return res.status(503).type('text/plain').send('Không đọc được dữ liệu. Vui lòng thử lại sau.');
   }
   const boot = bootJson(data);
-  const html = PAGE
-    .split('%%BOOT%%').join(boot.json)
-    .split('%%NEEDFETCH%%').join(boot.needFetch ? 'true' : 'false');
+  /* Một lượt trên template gốc. Dùng callback để `$&`, `$'`, `$`` trong dữ liệu
+     không bị hiểu là mẫu thay thế. */
+  const html = PAGE.replace(/%%BOOT%%|%%NEEDFETCH%%/g, m => {
+    if (m === '%%BOOT%%') return boot.json;
+    return boot.needFetch ? 'true' : 'false';
+  });
 
   res.set({
     'Content-Type': 'text/html; charset=utf-8',
@@ -599,15 +622,22 @@ function dongFromK(value) {
 function loadFractionalTransactions() {
   const file = path.join(DATA_DIR, 'truoc-lam-tron-2026-11-06-1047.json');
   if (!fs.existsSync(file)) return null;
-  let text = fs.readFileSync(file, 'utf8');
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const obj = JSON.parse(text);
-  const data = obj && obj.data ? obj.data : obj;
-  const map = new Map();
-  for (const t of (data && data.transactions) || []) {
-    if (t && t.id != null) map.set(String(t.id), t);
+  try {
+    let text = fs.readFileSync(file, 'utf8');
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const obj = JSON.parse(text);
+    const data = obj && obj.data ? obj.data : obj;
+    const map = new Map();
+    for (const t of (data && data.transactions) || []) {
+      if (t && t.id != null) map.set(String(t.id), t);
+    }
+    return map;
+  } catch (err) {
+    /* File một lần có thể hỏng/thiếu; fallback nhân 1000 từ số đã lưu,
+       không để app kẹt vòng khởi động. */
+    console.error('[money] File số lẻ ' + file + ' lỗi, bỏ qua: ' + (err && err.message ? err.message : err));
+    return null;
   }
-  return map;
 }
 function migrateMoneyToDong() {
   const row = db.prepare("SELECT value FROM app_meta WHERE key = 'money_unit'").get();
@@ -658,8 +688,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
   // Sao lưu ngay khi khởi động (nếu hôm nay chưa có), rồi kiểm tra mỗi giờ
   // để kịp chụp khi app chạy qua nửa đêm.
-  runDailyBackup(false);
-  setInterval(() => runDailyBackup(false), 60 * 60 * 1000);
+  runDailyBackup();
+  setInterval(() => runDailyBackup(), 60 * 60 * 1000);
 });
 
 // Đóng sạch khi container dừng (docker stop gửi SIGTERM): ngừng nhận request
