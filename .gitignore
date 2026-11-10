@@ -9,3 +9,4 @@ kho-nhap-bi-tu-choi-*.json
 # Cấu hình AI/MCP theo máy (đường dẫn tuyệt đối) — không commit
 .mcp.json
 .claude/
+*.crt
