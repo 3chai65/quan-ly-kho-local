@@ -41,6 +41,8 @@ globalThis.__test = {
   fmtMoney: fmtMoney, fmtNum: fmtNum, fmtQty: fmtQty, dec: dec, num: num,
   sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates,
   reconcileList: reconcileList, findProduct: findProduct, renderStats: renderStats,
+  loadPreset: loadPreset, recFix: recFix,
+  getRemedyItems: function(){ return remedyItems; },
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
   setDirty: function(v){ dirty = !!v; },
@@ -151,6 +153,12 @@ test('src/page.js giữ placeholder SSR cần thiết của trang', () => {
 /* ------------------------------------------------------------------ */
 /* Hàm thuần: tiền, số lượng, chuẩn hoá dữ liệu                        */
 /* ------------------------------------------------------------------ */
+
+test('src/page.js giới hạn maxlength 200 cho tên vị thuốc và tên đơn', () => {
+  assert.match(PAGE, /id="nhapSearch"[^>]*maxlength="200"/);
+  assert.match(PAGE, /id="editName"[^>]*maxlength="200"/);
+  assert.match(PAGE, /id="remedyName"[^>]*maxlength="200"/);
+});
 
 test('fmtMoney hiện nghìn đồng và giữ tới từng đồng', () => {
   assert.equal(app.fmtMoney(0), '0');
@@ -1938,4 +1946,50 @@ test('qua nửa đêm refreshAutoDates render lại thống kê', () => {
   FakeDate.setNow(2026, 10, 8, 1);
   client.refreshAutoDates();
   assert.equal(els['#statExportDay'].textContent, '0');
+});
+
+
+function presetDoc() {
+  const els = {
+    '#remedyBody': makeEl(), '#remedyName': makeEl(), '#remedyThang': makeEl(),
+    '#remedyUnitPrice': makeEl(), '#remedyPreset': makeEl(),
+    '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(sel) { return els[sel] || null; },
+    querySelectorAll() { return []; },
+    createElement() { return makeEl(); },
+    createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  return { doc, els };
+}
+
+test('loadPreset cảnh báo khi đơn cũ có vị đã bị xóa', () => {
+  const { doc, els } = presetDoc();
+  const client = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 100 }],
+    transactions: [], updatedAt: 0, moneyUnit: 'dong',
+    prescriptions: [{ id: 'r1', name: 'D', total: 1000, thang: 1, items: [{ productId: 'p1', grams: 1 }, { productId: 'p2', grams: 2 }] }]
+  });
+  client.loadPreset('r1');
+  assert.equal(client.getRemedyItems().length, 1);
+  assert.match(els['#toastMsg'].textContent, /1 vị đã bị xóa/);
+});
+
+test('recFix kẹp tồn về 0 khi số lịch sử âm rất nhỏ', () => {
+  const client = loadClient({
+    setTimeout() { return 0; }, clearTimeout() {},
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 1e-9, costPrice: 100 }],
+    transactions: [{ id: 't1', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 5e-10, price: 1, total: 1, cost: 0 }],
+    prescriptions: [], updatedAt: 0, moneyUnit: 'dong'
+  });
+  client.recFix('p1');
+  assert.equal(client.getDb().products[0].stock, 0);
 });
