@@ -5,6 +5,24 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.8.3] - 2026-11-10
+
+### Sửa
+
+- Thêm `resetDrafts()` xóa nháp bộ nhớ sau khi chọn bản máy chủ, bỏ nháp hoặc khôi phục thành công.
+- Hộp xung đột tải file nháp trước khi lấy bản máy chủ; không tải được thì hủy. `backupBeforeRestore` không chặn tự sao lưu ngày.
+- `pushState` coi HTTP 409 là xung đột dù thân rỗng/không đọc được; 400 vẫn cho bỏ nháp.
+- Sửa NHAP cũ không cập nhật `costPrice`; chỉ dòng nhập mới nhất mới đổi.
+- Dòng bán lẻ/đơn thuốc/nhập thiếu số lượng bị giữ lại và báo, không lưu im lặng.
+- Enter gợi ý chỉ chọn khớp chính xác hoặc một ứng viên duy nhất.
+- `recFix` hỏi xác nhận; `mergeDo` xác nhận cuối; `sanitize` dùng object không prototype.
+- `renderInventory` kẹp `invPage >= 1`.
+- Xóa `suppressSug` (chỉ gán, không đọc); thêm `scripts/lint-client.mjs`, cảnh báo hiện 0.
+
+### Không sửa
+
+- #7 (lệch ≤ thang/2 đồng, đã cảnh báo), #19 (trùng #2; đã có backup trước ghi đè), #20 (chỉ nhãn), #22 (bị `dirty` chặn, hiếm).
+
 ## [2.8.2] - 2026-11-10
 
 ### Sửa
