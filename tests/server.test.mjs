@@ -505,3 +505,99 @@ test('server.js: không cookie thì /api/state là 401, /healthz vẫn ok', asyn
   assert.equal(body.success, false);
   assert.equal(body.code, 'device_not_approved');
 });
+
+test('server.js: placeholder SSR thay một lượt, giữ nguyên ký tự đặc biệt', async () => {
+  const name = "%%NEEDFETCH%% %%BOOT%% $& $' $` </script>";
+  const r = await put(emptyState({
+    products: [{ id: 'P_SPECIAL', name, stock: 0, costPrice: 0 }]
+  }), { 'X-Force': '1' });
+  assert.equal(r.status, 200);
+  const page = await fetch(`${BASE}/`, { headers: { Cookie: deviceCookie } });
+  const html = await page.text();
+  const m = html.match(/window\.__DB__=(.*?);\s*window\.__NEED_FETCH__/s);
+  assert.ok(m, 'phải tìm thấy boot JSON');
+  const boot = JSON.parse(m[1]);
+  assert.equal(boot.products[0].name, name);
+  assert.equal(m[1].includes('$&'), true);
+});
+
+test('server.js: tên quá 200 ký tự bị 400, tên đúng 200 được nhận', async () => {
+  const tooLong = await put(emptyState({
+    products: [{ id: 'P1', name: 'A'.repeat(201), stock: 0, costPrice: 0 }]
+  }), { 'X-Force': '1' });
+  assert.equal(tooLong.status, 400);
+  assert.match(tooLong.body.details.join(' '), /tên quá dài/);
+
+  const oneMb = await put(emptyState({
+    products: [{ id: 'P1', name: 'A'.repeat(1024 * 1024), stock: 0, costPrice: 0 }]
+  }), { 'X-Force': '1' });
+  assert.equal(oneMb.status, 400);
+
+  const ok = await put(emptyState({
+    products: [{ id: 'P1', name: 'A'.repeat(200), stock: 0, costPrice: 0 }]
+  }), { 'X-Force': '1' });
+  assert.equal(ok.status, 200);
+});
+
+test('server.js: số lượng cực lớn, Infinity và vượt trần bị 400', async () => {
+  const base = () => emptyState({
+    products: [{ id: 'P1', name: 'A', stock: 1, costPrice: 1 }],
+    transactions: [{ id: 'T1', date: '2026-11-06', type: 'NHAP', productId: 'P1', qty: 1, price: 1, total: 1 }]
+  });
+  const badQty = (qty) => {
+    const s = base();
+    s.transactions[0].qty = qty;
+    return put(s, { 'X-Force': '1' });
+  };
+  assert.equal((await badQty(1e308)).status, 400);
+  assert.equal((await badQty('1e309')).status, 400);
+  assert.equal((await badQty(1e6 + 1)).status, 400);
+  const zero = base(); zero.transactions[0].qty = 0;
+  assert.equal((await put(zero, { 'X-Force': '1' })).status, 400);
+
+  const bigStock = base(); bigStock.products[0].stock = 1e6 + 1;
+  assert.equal((await put(bigStock, { 'X-Force': '1' })).status, 400);
+  const bigMoney = base(); bigMoney.transactions[0].total = 1e12 + 1;
+  assert.equal((await put(bigMoney, { 'X-Force': '1' })).status, 400);
+  const bigThang = base(); bigThang.transactions[0].thang = 1e4 + 1;
+  assert.equal((await put(bigThang, { 'X-Force': '1' })).status, 400);
+  const bigGrams = base(); bigGrams.transactions[0].g = 1e9 + 1;
+  assert.equal((await put(bigGrams, { 'X-Force': '1' })).status, 400);
+});
+
+test('server.js: ngày không có thật hoặc ngoài 2000-2100 bị 400', async () => {
+  const s = emptyState({
+    products: [{ id: 'P1', name: 'A', stock: 0, costPrice: 0 }],
+    transactions: [{ id: 'T1', date: '2026-13-40', type: 'NHAP', productId: 'P1', qty: 1, price: 1, total: 1 }]
+  });
+  assert.equal((await put(s, { 'X-Force': '1' })).status, 400);
+  const old = structuredClone(s);
+  old.transactions[0].date = '1999-12-31';
+  assert.equal((await put(old, { 'X-Force': '1' })).status, 400);
+});
+
+test('server.js: file migration hỏng không chặn khởi động', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-bad-json-'));
+  const port = 8898;
+  fs.writeFileSync(path.join(dir, 'truoc-lam-tron-2026-11-06-1047.json'), '{bad');
+  const child2 = spawn(process.execPath, ['server.js'], {
+    cwd: root,
+    env: { ...process.env, PORT: String(port), DATA_DIR: dir, QLK_SETUP_CODE: 'TESTCODE2026KHO' },
+    stdio: 'ignore'
+  });
+  try {
+    const started = Date.now();
+    let ok = false;
+    while (Date.now() - started < 15000) {
+      try {
+        const r = await fetch(`http://127.0.0.1:${port}/healthz`);
+        if (r.ok) { ok = true; break; }
+      } catch (e) {}
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    assert.equal(ok, true, 'server phải khởi động dù file migration hỏng');
+  } finally {
+    child2.kill();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
