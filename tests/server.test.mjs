@@ -11,10 +11,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import vm from 'node:vm';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PAGE } from '../src/page.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8899;
@@ -73,6 +75,46 @@ async function put(state, headers = {}) {
 async function getState() {
   const r = await fetch(`${BASE}/api/state`, { headers: { Cookie: deviceCookie } });
   return (await r.json()).data;
+}
+
+
+/* Nạp sanitize/parseBackup thật từ src/page.js để kiểm tương thích client-server. */
+function loadClientStateFns() {
+  const blocks = [...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  let js = blocks.find(b => b.includes('var doc = document;'))
+    .replace(/%%BOOT%%/g, 'null').replace(/%%NEEDFETCH%%/g, 'false');
+  const end = js.lastIndexOf('})();');
+  js = js.slice(0, end) + '\nglobalThis.__compat = { sanitize: sanitize, parseBackup: parseBackup };\n})();';
+  function mk() {
+    return {
+      style: {}, children: [], classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+      setAttribute() {}, getAttribute() { return null; }, removeAttribute() {},
+      appendChild(c) { this.children.push(c); return c; }, remove() {}, addEventListener() {},
+      querySelector() { return null; }, querySelectorAll() { return []; },
+      getBoundingClientRect() { return { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }; }
+    };
+  }
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: mk(), body: mk(), createElement: mk, createElementNS: mk,
+    querySelector() { return null; }, querySelectorAll() { return []; },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const sandbox = {
+    console, Intl, Date, Math, JSON, Number, String, Array, Object,
+    parseFloat, isFinite, NaN, Infinity, Map, Set, Promise,
+    setTimeout() { return 0; }, clearTimeout() {},
+    localStorage: { getItem() { return null; }, setItem() {} },
+    document: doc,
+    window: { matchMedia: () => ({ matches: false, addEventListener() {} }), addEventListener() {} },
+    fetch: async () => null, FileReader: class {}, Blob: class {},
+    URL: { createObjectURL: () => '', revokeObjectURL() {} },
+    confirm: () => true
+  };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(js, sandbox);
+  return sandbox.__compat;
 }
 
 function emptyState(extra = {}) {
@@ -599,5 +641,29 @@ test('server.js: file migration hỏng không chặn khởi động', async () =
   } finally {
     child2.kill();
     fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+
+test('client sanitize/parseBackup tương thích server: mẫu biên không bị 400', async () => {
+  const client = loadClientStateFns();
+  const base = () => ({
+    products: [{ id: 'P1', name: 'A', stock: 0, costPrice: 0 }],
+    transactions: [], prescriptions: []
+  });
+  const samples = [];
+  let s = base(); s.products[0].name = 'A'.repeat(1024 * 1024); samples.push(['tên 1MB', s]);
+  s = base(); s.transactions.push({ id: 'T1', date: '2026-11-06', type: 'NHAP', productId: 'P1', qty: 1e308, price: 1, total: 1 }); samples.push(['qty 1e308', s]);
+  s = base(); s.transactions.push({ id: 'T1', date: '2026-11-06', type: 'NHAP', productId: 'P1', qty: '1e309', price: 1, total: 1 }); samples.push(['qty 1e309', s]);
+  s = base(); s.transactions.push({ id: 'T1', date: '2026-13-40', type: 'NHAP', productId: 'P1', qty: 1, price: 1, total: 1 }); samples.push(['ngày 2026-13-40', s]);
+  s = base(); s.transactions.push({ id: 'T1', date: '2026-11-06', type: 'NHAP', productId: 'P1', qty: 0, price: 1, total: 1 }); samples.push(['qty 0', s]);
+  s = base(); s.prescriptions.push({ id: 'R1', name: 'D', total: 1, thang: 1, items: [{ productId: 'P1', grams: 0 }] }); samples.push(['grams 0', s]);
+  s = base(); s.prescriptions.push({ id: 'R1', name: 'D', total: 1, thang: 0, items: [{ productId: 'P1', grams: 1 }] }); samples.push(['thang 0', s]);
+  for (const [label, state] of samples) {
+    const bak = client.parseBackup(JSON.stringify({ app: 'quan-ly-kho', data: { ...state, moneyUnit: 'dong' } }));
+    assert.equal(bak, null, 'parseBackup phải hủy: ' + label);
+    const out = client.sanitize(state);
+    const r = await put(out, { 'X-Force': '1' });
+    assert.notEqual(r.status, 400, 'sanitize đầu ra bị server từ chối: ' + label);
   }
 });
