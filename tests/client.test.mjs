@@ -40,7 +40,7 @@ function loadClient(extra = {}) {
 globalThis.__test = {
   fmtMoney: fmtMoney, fmtNum: fmtNum, fmtQty: fmtQty, dec: dec, num: num,
   sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates,
-  reconcileList: reconcileList, txCogs: txCogs, findProduct: findProduct,
+  reconcileList: reconcileList, findProduct: findProduct, renderStats: renderStats,
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
   setDirty: function(v){ dirty = !!v; },
@@ -223,16 +223,6 @@ test('parseBackup chỉ nhận file đủ 3 bảng và số liệu hợp lệ', 
 /* ------------------------------------------------------------------ */
 /* Nghiệp vụ kho: đối chiếu, giá vốn, gộp đơn                          */
 /* ------------------------------------------------------------------ */
-
-test('txCogs dùng giá vốn đã lưu, fallback giá hiện tại khi thiếu', () => {
-  app.setDb({
-    products: [{ id: 'p1', name: 'A', stock: 5, costPrice: 99 }],
-    transactions: [], prescriptions: [], updatedAt: 0
-  });
-  assert.equal(app.txCogs({ productId: 'p1', qty: 2, cost: 20 }), 20);
-  assert.equal(app.txCogs({ productId: 'p1', qty: 2, cost: null }), 198);
-  assert.equal(app.txCogs({ productId: 'x', qty: 2 }), 0);
-});
 
 test('computeStats tính đúng doanh thu và lãi ngày/tháng/năm', () => {
   const products = [
@@ -1460,7 +1450,8 @@ function dateDoc() {
     '#impSearch': mkInput('impSearch'),
     '#impSearchList': mkInput('impSearchList'),
     '#expMonth': mkInput('expMonth'),
-    '#expMonthNative': mkInput('expMonthNative')
+    '#expMonthNative': mkInput('expMonthNative'),
+    '#statExportDay': makeEl()
   };
   const doc = {
     readyState: 'loading', hidden: false, activeElement: null,
@@ -1895,4 +1886,56 @@ test('(g) tìm kiếm lịch sử nhập phân trang trên toàn bộ kết qu�
   assert.equal(f.rows.length, 15);
   assert.equal(f.rows.slice(0, 10).length, 10);
   assert.equal(f.rows.slice(10, 20).length, 5);
+});
+
+
+test('parseBackup từ chối cùng mẫu server từ chối (tên, số, ngày, grams, thang)', () => {
+  const base = () => ({
+    app: 'quan-ly-kho',
+    data: {
+      moneyUnit: 'dong',
+      products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const cases = [];
+  let c = base(); c.data.products[0].name = 'A'.repeat(201); cases.push(['tên 201', c]);
+  c = base(); c.data.products[0].stock = 1e6 + 1; cases.push(['stock lớn', c]);
+  c = base(); c.data.transactions.push({ id: 't1', date: '2026-01-01', type: 'NHAP', productId: 'p1', qty: 1e308, price: 1, total: 1 }); cases.push(['qty 1e308', c]);
+  c = base(); c.data.transactions.push({ id: 't1', date: '2026-01-01', type: 'NHAP', productId: 'p1', qty: '1e309', price: 1, total: 1 }); cases.push(['qty 1e309', c]);
+  c = base(); c.data.transactions.push({ id: 't1', date: '2026-01-01', type: 'NHAP', productId: 'p1', qty: 0, price: 1, total: 1 }); cases.push(['qty 0', c]);
+  c = base(); c.data.transactions.push({ id: 't1', date: '2026-13-40', type: 'NHAP', productId: 'p1', qty: 1, price: 1, total: 1 }); cases.push(['ngày sai', c]);
+  c = base(); c.data.transactions.push({ id: 't1', date: '2026-01-01', type: 'NHAP', productId: 'p1', qty: 1, price: 1, total: 1e12 + 1 }); cases.push(['total lớn', c]);
+  c = base(); c.data.prescriptions.push({ id: 'r1', name: 'D', total: 1, thang: 1, items: [{ productId: 'p1', grams: 0 }] }); cases.push(['grams 0', c]);
+  c = base(); c.data.prescriptions.push({ id: 'r1', name: 'D', total: 1, thang: 0, items: [{ productId: 'p1', grams: 1 }] }); cases.push(['thang 0', c]);
+  cases.forEach(([label, state]) => {
+    assert.equal(app.parseBackup(JSON.stringify(state)), null, label);
+  });
+});
+
+test('sanitize cắt tên quá dài và loại giao dịch ngoài luật', () => {
+  const out = app.sanitize({
+    products: [{ id: 'p1', name: 'A'.repeat(201), stock: 1, costPrice: 1 }],
+    transactions: [{ id: 't1', date: '2026-01-01', type: 'NHAP', productId: 'p1', qty: 1e308, price: 1, total: 1 }],
+    prescriptions: []
+  });
+  assert.equal(out.products[0].name.length, 200);
+  assert.equal(out.transactions.length, 0);
+});
+
+test('qua nửa đêm refreshAutoDates render lại thống kê', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 23);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.setDb({
+    products: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong',
+    transactions: [{ id: 't1', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 0 }]
+  });
+  client.renderStats();
+  assert.equal(els['#statExportDay'].textContent, '1');
+  FakeDate.setNow(2026, 10, 8, 1);
+  client.refreshAutoDates();
+  assert.equal(els['#statExportDay'].textContent, '0');
 });
