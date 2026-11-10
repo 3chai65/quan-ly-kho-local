@@ -450,3 +450,73 @@ test('giao diện: nút Thu hồi có kiểu nguy hiểm; liên kết có màu �
     assert.doesNotMatch(page, /<button type="submit" class="danger">Tạo mã mời/);
   } finally { s.cleanup(); }
 });
+
+/* ---------- 2.8.1: cờ Secure, Sec-Fetch-Site, gia hạn cookie ---------- */
+
+test('cookie đặt lúc thiết lập và tham gia có cờ Secure khi đi qua HTTPS, không có khi HTTP', () => {
+  for (const [headers, expected] of [[{ 'x-forwarded-proto': 'https' }, true], [{}, false], [{ 'x-forwarded-proto': 'http' }, false]]) {
+    const s = setup();
+    try {
+      const res = call(s, 'POST', '/auth/setup', { form: { code: s.setupCode, name: 'PC' }, headers });
+      assert.equal(res.statusCode, 303);
+      assert.equal(res.cookies[0].o.secure, expected, JSON.stringify(headers));
+      assert.equal(res.cookies[0].o.httpOnly, true);
+      const owner = cookieOf(s, res);
+      const code = invite(s, owner);
+      const j = join(s, code, 'Điện thoại', { headers });
+      assert.equal(j.cookies[0].o.secure, expected, 'join ' + JSON.stringify(headers));
+    } finally { s.cleanup(); }
+  }
+});
+
+test('Sec-Fetch-Site: cross-site và same-site bị 403; same-origin, none hoặc thiếu thì qua', () => {
+  const s = setup();
+  try {
+    for (const site of ['cross-site', 'same-site']) {
+      assert.equal(call(s, 'POST', '/auth/setup', { form: { code: s.setupCode, name: 'x' }, headers: { 'sec-fetch-site': site } }).statusCode, 403, site);
+    }
+    assert.equal(s.auth.hasOwner(), false);
+    const ok = call(s, 'POST', '/auth/setup', { form: { code: s.setupCode, name: 'PC' }, headers: { 'sec-fetch-site': 'same-origin' } });
+    assert.equal(ok.statusCode, 303);
+    const owner = cookieOf(s, ok);
+    for (const site of ['cross-site', 'same-site']) {
+      assert.equal(call(s, 'POST', '/auth/devices/invite', { cookie: owner, form: { role: 'member' }, headers: { 'sec-fetch-site': site } }).statusCode, 403, site);
+      assert.equal(call(s, 'POST', '/auth/devices/unlock', { cookie: owner, headers: { 'sec-fetch-site': site } }).statusCode, 403, site);
+    }
+    assert.equal(call(s, 'POST', '/auth/devices/invite', { cookie: owner, form: { role: 'member' }, headers: { 'sec-fetch-site': 'none' } }).statusCode, 200);
+    assert.equal(call(s, 'POST', '/auth/devices/invite', { cookie: owner, form: { role: 'member' } }).statusCode, 200);
+  } finally { s.cleanup(); }
+});
+
+test('gia hạn cookie trượt: cấp lại cùng mã tối đa một lần mỗi ngày; cờ Secure theo từng request', () => {
+  const s = setup();
+  try {
+    const owner = enrollOwner(s);
+    const token = owner.split('=')[1];
+    const r1 = call(s, 'GET', '/auth/devices', { cookie: owner });
+    assert.equal(r1.cookies.length, 1);
+    assert.equal(r1.cookies[0].v, token);
+    assert.equal(r1.cookies[0].o.maxAge, 365 * 24 * 3600 * 1000);
+    assert.equal(r1.cookies[0].o.secure, false);
+    assert.equal(call(s, 'GET', '/auth/devices', { cookie: owner }).cookies.length, 0);     // trong ngày: không cấp lại
+    s.clock.t += 24 * 3600 * 1000 + 1;
+    const r3 = call(s, 'GET', '/auth/devices', { cookie: owner, headers: { 'x-forwarded-proto': 'https' } });
+    assert.equal(r3.cookies.length, 1);
+    assert.equal(r3.cookies[0].o.secure, true);                                              // nâng cấp lên Secure khi dùng HTTPS
+    assert.equal(call(s, 'GET', '/auth/devices', { cookie: owner }).cookies.length, 0);
+  } finally { s.cleanup(); }
+});
+
+test('không cấp lại cookie cho yêu cầu chưa duyệt hoặc đường dẫn công khai', () => {
+  const s = setup();
+  try {
+    enrollOwner(s);
+    assert.equal(call(s, 'GET', '/api/state').cookies.length, 0);
+    const pub = mkRes();
+    let passed = false;
+    s.auth.gate(mkReq('GET', '/healthz'), pub, () => { passed = true; });   // công khai: qua cổng, không cấp cookie
+    assert.equal(passed, true);
+    assert.equal(pub.cookies.length, 0);
+    assert.equal(call(s, 'GET', '/', { cookie: s.auth.cookieName + '=' + 'x'.repeat(43) }).cookies.length, 0);
+  } finally { s.cleanup(); }
+});
