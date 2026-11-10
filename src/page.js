@@ -546,7 +546,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
           </div>
           <div class="field">
             <label class="lbl" for="remedyName">Tên đơn</label>
-            <input class="inp" id="remedyName" type="text" autocomplete="off" placeholder="Để trống sẽ ghi là Đơn thuốc lẻ" maxlength="60">
+            <input class="inp" id="remedyName" type="text" autocomplete="off" placeholder="Để trống sẽ ghi là Đơn thuốc lẻ" maxlength="200">
           </div>
         </div>
         <div class="tw">
@@ -626,7 +626,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <div class="nhap-row">
         <div class="field sug">
           <label class="lbl" for="nhapSearch">Vị thuốc</label>
-          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc..." data-sug="nhap" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
+          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc..." maxlength="200" data-sug="nhap" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
           <div class="sug__list" id="nhapList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
         </div>
         <div class="field">
@@ -863,7 +863,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <input type="hidden" id="editId">
       <div class="field">
         <label class="lbl" for="editName">Tên vị thuốc</label>
-        <input class="inp" id="editName" type="text" autocomplete="off" required>
+        <input class="inp" id="editName" type="text" autocomplete="off" maxlength="200" required>
       </div>
       <div class="field mt-12">
         <label class="lbl" for="editPrice">Giá nhập (k/kg)</label>
@@ -1059,6 +1059,13 @@ function dec(n){
 }
 /* Lưu và tính bằng đồng nguyên. Người dùng vẫn gõ và đọc theo nghìn đồng. */
 var DONG_PER_K = 1000;
+var NAME_MAX = 200;
+var QTY_MAX = 1e6;
+var GRAMS_MAX = 1e9;
+var THANG_MAX = 1e4;
+var MONEY_MAX = 1e12;
+function inRange(v, min, max){ var n = Number(v); return isFinite(n) && n >= min && n <= max; }
+function isRealDateISO(s){ s = String(s || ''); return parseDateVN(s) === s; }
 function money(v){ return Math.round(num(v)); }
 function kToDong(k){ return Math.round(num(k) * DONG_PER_K); }
 function kInput(dong){
@@ -1112,6 +1119,7 @@ function parseDateVN(s){
   s = String(s || '').trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     var p = s.split('-');
+    if (+p[0] < 2000 || +p[0] > 2100) return '';
     var dt0 = new Date(+p[0], +p[1] - 1, +p[2]);
     return (dt0.getFullYear() === +p[0] && dt0.getMonth() === +p[1] - 1 && dt0.getDate() === +p[2]) ? s : '';
   }
@@ -1119,7 +1127,7 @@ function parseDateVN(s){
   if (!m) return '';
   var d = +m[1], mo = +m[2], y = +m[3];
   if (y < 100) y += 2000;
-  if (y < 1900 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  if (y < 2000 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return '';
   var dt = new Date(y, mo - 1, d);
   if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return '';
   return y + '-' + pad2(mo) + '-' + pad2(d);
@@ -1189,6 +1197,13 @@ function refreshAutoDates(){
   autoDateInput('retailDate');
   autoDateInput('remedyDate');
   autoChartYear();
+  var today = todayISO();
+  if (lastStatsDay && lastStatsDay !== today) {
+    renderStats();
+    renderBackupInfo();
+    var cb = $('#chartBox');
+    if (cb && cb.open) renderChart();
+  }
 }
 function parseMonthVN(s){
   s = String(s || '').trim();
@@ -1339,6 +1354,7 @@ var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
 var lastAuto = {};
 var lastChartYear = '';
+var lastStatsDay = '';
 
 function willScaleMoney(d){
   return !!(d && d.moneyUnit !== 'dong');
@@ -1371,7 +1387,17 @@ function sanitize(d, drops){
     d.products.forEach(function(p){
       if (!p || !p.name) return;
       var id = String(p.id || uid('PROD'));
-      var name = String(p.name);
+      var name = String(p.name).trim();
+      if (!name) return;
+      if (name.length > NAME_MAX) {
+        if (drops) drops.push('Tên vị thuốc quá dài: ' + name.slice(0, 40) + '…');
+        name = name.slice(0, NAME_MAX);
+      }
+      if (p.stock == null || p.stock === '' || p.costPrice == null || p.costPrice === '' ||
+          !inRange(p.stock, 0, QTY_MAX) || !inRange(p.costPrice, 0, MONEY_MAX)) {
+        if (drops) drops.push('Vị thuốc không hợp lệ: ' + name);
+        return;
+      }
       var nameKey = capWords(name).toLowerCase();
       if (seenPid[id] || seenPname[nameKey]) {
         if (drops) drops.push('Vị thuốc trùng: ' + name);
@@ -1397,21 +1423,39 @@ function sanitize(d, drops){
         return;
       }
       seenTid[id] = true;
+      var type = t.type;
+      var date = String(t.date || '');
+      var productId = String(t.productId || '').trim();
+      if ((type !== 'NHAP' && type !== 'BAN') || !isRealDateISO(date) || !productId ||
+          t.qty == null || t.qty === '' || !inRange(t.qty, 0, QTY_MAX) || !(Number(t.qty) > 0) ||
+          t.price == null || t.price === '' || !inRange(t.price, 0, MONEY_MAX) ||
+          t.total == null || t.total === '' || !inRange(t.total, 0, MONEY_MAX) ||
+          (t.cost != null && !inRange(t.cost, 0, MONEY_MAX)) ||
+          (t.g != null && !inRange(t.g, 0, GRAMS_MAX)) ||
+          (t.thang != null && !inRange(t.thang, 1, THANG_MAX)) ||
+          (t.unitPrice != null && !inRange(t.unitPrice, 0, MONEY_MAX)) ||
+          (t.ts != null && !isFinite(Number(t.ts)))) {
+        if (drops) drops.push('Giao dịch không hợp lệ: ' + id);
+        return;
+      }
       var tx = {
         id: id,
-        date: String(t.date || ''),
-        type: t.type === 'NHAP' ? 'NHAP' : 'BAN',
-        productId: String(t.productId || ''),
+        date: date,
+        type: type,
+        productId: productId,
         qty: dec(t.qty),
         price: money(t.price),
         total: money(t.total),
         cost: t.cost == null ? null : money(t.cost)
       };
-      if (t.oid && t.oname && String(t.oname) !== String(t.oid)) {
-        tx.oid = String(t.oid); tx.oname = String(t.oname);
-      } else if (t.oid) {
-        tx.oid = String(t.oid);
+      var oid = t.oid != null ? String(t.oid) : (t.orderId != null ? String(t.orderId) : null);
+      var oname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : null);
+      if (oname && oname.length > NAME_MAX) {
+        if (drops) drops.push('Tên đơn quá dài: ' + oname.slice(0, 40) + '…');
+        oname = oname.slice(0, NAME_MAX);
       }
+      if (oid && oname && oname !== oid) { tx.oid = oid; tx.oname = oname; }
+      else if (oid) tx.oid = oid;
       if (t.retail) tx.retail = true;
       if (t.rx) tx.rx = true;
       if (t.g != null) tx.g = dec(t.g);
@@ -1426,9 +1470,19 @@ function sanitize(d, drops){
     d.prescriptions.forEach(function(r){
       if (!r || !r.name || !Array.isArray(r.items)) return;
       var rid = String(r.id || uid('RX'));
-      var rname = String(r.name);
-      /* Tên đơn trong DB là UNIQUE phân biệt hoa/thường → chỉ loại trùng đúng tên. */
-      var rnameKey = rname.trim();
+      var rname = String(r.name).trim();
+      if (!rname) return;
+      if (rname.length > NAME_MAX) {
+        if (drops) drops.push('Tên đơn thuốc quá dài: ' + rname.slice(0, 40) + '…');
+        rname = rname.slice(0, NAME_MAX);
+      }
+      var rtotal = (r.total == null || r.total === '') ? 0 : Number(r.total);
+      var rthang = (r.thang == null || r.thang === '') ? 1 : Number(r.thang);
+      if (!inRange(rtotal, 0, MONEY_MAX) || !inRange(rthang, 1, THANG_MAX)) {
+        if (drops) drops.push('Đơn thuốc không hợp lệ: ' + rname);
+        return;
+      }
+      var rnameKey = rname;
       if (seenRid[rid] || seenRname[rnameKey]) {
         if (drops) drops.push('Đơn thuốc trùng: ' + rname);
         return;
@@ -1438,6 +1492,7 @@ function sanitize(d, drops){
         if (!it || !it.productId) return;
         var itemPid = String(it.productId);
         if (seenItem[itemPid]) return;
+        if (!inRange(it.grams, 0, GRAMS_MAX) || !(Number(it.grams) > 0)) return;
         seenItem[itemPid] = true;
         items.push({ productId: itemPid, grams: dec(it.grams) });
       });
@@ -1448,8 +1503,8 @@ function sanitize(d, drops){
         id: rid,
         name: rname,
         items: items,
-        total: money(r.total),
-        thang: Math.max(1, Math.round(num(r.thang)) || 1),
+        total: money(rtotal),
+        thang: Math.max(1, Math.round(rthang)),
         updatedAt: dec(r.updatedAt)
       });
     });
@@ -2123,10 +2178,12 @@ function loadPreset(id){
   if (!r || !tb) return;
   tb.textContent = '';
   remedyItems = [];
+  var missing = 0;
   r.items.forEach(function(it){
-    if (!findProduct(it.productId)) return;
+    if (!findProduct(it.productId)) { missing++; return; }
     remedyItems.push({ productId: it.productId, grams: dec(num(it.grams)) });
   });
+  if (missing) toast('Đơn cũ có ' + missing + ' vị đã bị xóa, kiểm tra lại giá', 'error');
   remedyEditIdx = -1;
   remedyNotePage = 1;
   orderEmpty(tb, 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
@@ -2352,12 +2409,6 @@ function saveRemedy(){
 }
 
 /* ================= THỐNG KÊ ================= */
-function txCogs(t){
-  if (t.cost != null) return num(t.cost);
-  var p = findProduct(t.productId);
-  return num(t.qty) * (p ? num(p.costPrice) : 0);
-}
-/* Hàm thuần để test: không đọc DOM, không phụ thuộc db toàn cục. */
 function computeStats(transactions, products, today){
   var ym = String(today || '').slice(0, 7), yr = String(today || '').slice(0, 4);
   var dExp = 0, dCogs = 0, mImp = 0, mExp = 0, mCogs = 0, yExp = 0, yCogs = 0;
@@ -2389,7 +2440,9 @@ function computeStats(transactions, products, today){
   };
 }
 function renderStats(){
-  var s = computeStats(db.transactions, db.products, todayISO());
+  var today = todayISO();
+  var s = computeStats(db.transactions, db.products, today);
+  lastStatsDay = today;
   var set = function(id, v){ var n = $('#' + id); if (n) n.textContent = v; };
   var setProfit = function(id, v){
     var n = $('#' + id);
@@ -3072,7 +3125,7 @@ function recFix(id){
     toast('Số theo lịch sử đang âm — không thể áp dụng. Hãy sửa giao dịch nhập/bán trước.', 'error');
     return;
   }
-  p.stock = r.calc;
+  p.stock = Math.max(0, r.calc);
   commit('Đã chỉnh tồn "' + p.name + '"');
   renderRec();
 }
@@ -4123,34 +4176,81 @@ function moneyRestoreNote(scale, sample, afterCost){
   }
   return line;
 }
+var backupParseError = '';
+/* Cùng luật với validateState(server). Trả chuỗi lỗi đầu tiên hoặc ''. */
+function validateBackupState(d){
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return 'Dữ liệu không phải object';
+  var keys = ['products', 'transactions', 'prescriptions'];
+  for (var ki = 0; ki < keys.length; ki++) {
+    if (!Array.isArray(d[keys[ki]])) return 'Thiếu mảng ' + keys[ki];
+  }
+  for (var i = 0; i < d.products.length; i++) {
+    var p = d.products[i], pl = 'Sản phẩm #' + (i + 1);
+    if (!p || typeof p !== 'object') return pl + ': không hợp lệ';
+    var pname = String(p.name || '').trim();
+    if (!pname) return pl + ': thiếu tên';
+    if (pname.length > NAME_MAX) return pl + ': tên quá dài (tối đa ' + NAME_MAX + ' ký tự)';
+    if (p.stock == null || p.stock === '' || !inRange(p.stock, 0, QTY_MAX)) return pl + ' "' + pname + '": tồn kho phải từ 0 đến ' + QTY_MAX;
+    if (p.costPrice == null || p.costPrice === '' || !inRange(p.costPrice, 0, MONEY_MAX)) return pl + ' "' + pname + '": giá nhập phải từ 0 đến ' + MONEY_MAX;
+  }
+  for (var j = 0; j < d.transactions.length; j++) {
+    var t = d.transactions[j], tl = 'Giao dịch #' + (j + 1);
+    if (!t || typeof t !== 'object') return tl + ': không hợp lệ';
+    if (t.type !== 'NHAP' && t.type !== 'BAN') return tl + ': loại phải là NHAP hoặc BAN';
+    if (!isRealDateISO(t.date)) return tl + ': ngày phải là ngày thật YYYY-MM-DD trong 2000-2100';
+    if (!String(t.productId || '').trim()) return tl + ': thiếu productId';
+    if (t.qty == null || t.qty === '' || !inRange(t.qty, 0, QTY_MAX) || !(Number(t.qty) > 0)) return tl + ': số lượng phải > 0 và <= ' + QTY_MAX;
+    if (t.price == null || t.price === '' || !inRange(t.price, 0, MONEY_MAX)) return tl + ': đơn giá phải từ 0 đến ' + MONEY_MAX;
+    if (t.total == null || t.total === '' || !inRange(t.total, 0, MONEY_MAX)) return tl + ': thành tiền phải từ 0 đến ' + MONEY_MAX;
+    if (t.cost != null && !inRange(t.cost, 0, MONEY_MAX)) return tl + ': giá vốn phải từ 0 đến ' + MONEY_MAX;
+    if (t.g != null && !inRange(t.g, 0, GRAMS_MAX)) return tl + ': grams phải từ 0 đến ' + GRAMS_MAX;
+    if (t.thang != null && !inRange(t.thang, 1, THANG_MAX)) return tl + ': số thang phải từ 1 đến ' + THANG_MAX;
+    if (t.unitPrice != null && !inRange(t.unitPrice, 0, MONEY_MAX)) return tl + ': giá 1 thang phải từ 0 đến ' + MONEY_MAX;
+    if (t.ts != null && !isFinite(Number(t.ts))) return tl + ': ts không hợp lệ';
+    var oname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : '');
+    if (oname && oname.length > NAME_MAX) return tl + ': tên đơn quá dài (tối đa ' + NAME_MAX + ' ký tự)';
+  }
+  for (var k = 0; k < d.prescriptions.length; k++) {
+    var r = d.prescriptions[k], rl = 'Đơn thuốc #' + (k + 1);
+    if (!r || typeof r !== 'object') return rl + ': không hợp lệ';
+    var rname = String(r.name || '').trim();
+    if (!rname) return rl + ': thiếu tên';
+    if (rname.length > NAME_MAX) return rl + ': tên quá dài (tối đa ' + NAME_MAX + ' ký tự)';
+    if (r.total == null || r.total === '' || !inRange(r.total, 0, MONEY_MAX)) return rl + ' "' + rname + '": tổng tiền phải từ 0 đến ' + MONEY_MAX;
+    if (r.thang != null && !inRange(r.thang, 1, THANG_MAX)) return rl + ' "' + rname + '": số thang phải từ 1 đến ' + THANG_MAX;
+    if (!Array.isArray(r.items) || !r.items.length) return rl + ' "' + rname + '": chưa có vị thuốc';
+    for (var m = 0; m < r.items.length; m++) {
+      var it = r.items[m], il = rl + ' dòng ' + (m + 1);
+      if (!it || typeof it !== 'object') return il + ': không hợp lệ';
+      if (!String(it.productId || '').trim()) return il + ': thiếu productId';
+      if (!inRange(it.grams, 0, GRAMS_MAX) || !(Number(it.grams) > 0)) return il + ': số gram phải > 0 và <= ' + GRAMS_MAX;
+    }
+  }
+  return '';
+}
 function parseBackup(text){
+  backupParseError = '';
   var obj = JSON.parse(text);
   var d = obj && obj.data ? obj.data : obj;
-  if (!d || typeof d !== 'object') return null;
+  if (!d || typeof d !== 'object') { backupParseError = 'Dữ liệu không phải object'; return null; }
   /* Bắt buộc đủ 3 bảng: thiếu một bảng sẽ khiến restore xóa mất dữ liệu. */
-  if (!Array.isArray(d.products) || !Array.isArray(d.transactions) || !Array.isArray(d.prescriptions)) return null;
-  if (obj.app && obj.app !== 'quan-ly-kho') return null;
+  if (!Array.isArray(d.products) || !Array.isArray(d.transactions) || !Array.isArray(d.prescriptions)) {
+    backupParseError = 'File thiếu một trong ba bảng products/transactions/prescriptions';
+    return null;
+  }
+  if (obj.app && obj.app !== 'quan-ly-kho') { backupParseError = 'File không phải bản sao lưu của Quản Lý Kho'; return null; }
   if (obj && obj.moneyUnit === 'dong') d.moneyUnit = 'dong';
   var scale = willScaleMoney(d);
   var sample = null;
-  if (Array.isArray(d.products)) {
-    for (var s = 0; s < d.products.length; s++) {
-      var sp = d.products[s];
-      if (sp && sp.name) { sample = { name: String(sp.name), cost: num(sp.costPrice) }; break; }
-    }
+  for (var s = 0; s < d.products.length; s++) {
+    var sp = d.products[s];
+    if (sp && sp.name) { sample = { name: String(sp.name), cost: num(sp.costPrice) }; break; }
   }
-  for (var i = 0; i < d.transactions.length; i++) {
-    var t = d.transactions[i];
-    if (!t || (t.type !== 'NHAP' && t.type !== 'BAN')) return null;
-    if (num(t.qty) < 0 || num(t.price) < 0 || num(t.total) < 0) return null;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(t.date || ''))) return null;
-  }
-  for (var j = 0; j < d.products.length; j++) {
-    var p = d.products[j];
-    if (!p || !p.name || num(p.stock) < 0 || num(p.costPrice) < 0) return null;
-  }
+  var scaled = scaleLegacyMoney(d);
+  var err = validateBackupState(scaled);
+  if (err) { backupParseError = err; return null; }
   var drops = [];
-  var out = sanitize(scaleLegacyMoney(d), drops);
+  var out = sanitize(scaled, drops);
   if (drops.length) out._drops = drops;
   var afterCost = null;
   if (sample) {
@@ -4170,8 +4270,10 @@ function restoreFromFile(file){
   var fr = new FileReader();
   fr.onload = function(){
     var bak = null;
-    try { bak = parseBackup(String(fr.result || '')); } catch (e) {}
-    if (!bak) { toast('File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
+    try { bak = parseBackup(String(fr.result || '')); } catch (e) {
+      backupParseError = 'File sao lưu không phải JSON hợp lệ';
+    }
+    if (!bak) { toast(backupParseError || 'File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
     var drops = bak._drops || [];
     var moneyNote = bak._moneyNote || '';
     delete bak._drops;
@@ -4229,18 +4331,6 @@ function handleAction(btn){
     case 'save-preset': savePreset(); break;
     case 'del-preset': delPreset(); break;
     case 'copy-preset': copyPreset(); break;
-    case 'del-row': {
-      var tr = btn.closest('tr');
-      if (tr) {
-        var tb = tr.parentNode;
-        tr.remove();
-        renumber(tb);
-        orderEmpty(tb, tb.id === 'retailBody' ? 5 : 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
-        calcRetail();
-        calcRemedy();
-      }
-      break;
-    }
     case 'edit-prod': openEdit(id); break;
     case 'del-prod': delProduct(id); break;
     case 'del-nhap-item': {
