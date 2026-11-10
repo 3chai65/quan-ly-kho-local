@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import Database from 'better-sqlite3';
@@ -518,5 +519,23 @@ test('không cấp lại cookie cho yêu cầu chưa duyệt hoặc đường d�
     assert.equal(passed, true);
     assert.equal(pub.cookies.length, 0);
     assert.equal(call(s, 'GET', '/', { cookie: s.auth.cookieName + '=' + 'x'.repeat(43) }).cookies.length, 0);
+  } finally { s.cleanup(); }
+});
+
+
+test('auth-reset xóa cả thiết bị và mã mời', () => {
+  const s = setup();
+  try {
+    const owner = enrollOwner(s);
+    invite(s, owner);
+    const r = spawnSync(process.execPath, [path.resolve('scripts/auth-reset.mjs')], {
+      env: { ...process.env, DATA_DIR: s.dir },
+      encoding: 'utf8'
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const db = new Database(s.auth.file);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM devices').get().n, 0);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM invites').get().n, 0);
+    db.close();
   } finally { s.cleanup(); }
 });
