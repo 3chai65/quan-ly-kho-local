@@ -29,6 +29,7 @@ import path from 'node:path';
 
 const COOKIE_PREFIX = 'qlk_dev_';
 const COOKIE_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
+const RENEW_EVERY_MS = 24 * 60 * 60 * 1000;   // gia hạn cookie (trượt) tối đa một lần mỗi ngày mỗi thiết bị
 /* 31 ký tự, bỏ 0 1 I L O cho dễ đọc. 12 ký tự ≈ 59 bit. */
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const SETUP_LEN = 12;
@@ -273,7 +274,21 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
     return { id, token };
   }
 
+  /* Request tới qua HTTPS (trực tiếp hoặc sau proxy như Caddy). Chỉ dùng để đặt cờ Secure cho cookie:
+     kẻ giả X-Forwarded-Proto chỉ làm cookie của chính họ có thêm cờ Secure, không gây hại. */
+  function isHttps(req) {
+    if (req.secure === true) return true;
+    const xf = String((req.headers && req.headers['x-forwarded-proto']) || '').split(',')[0].trim().toLowerCase();
+    return xf === 'https';
+  }
+  function cookieOptions(req) {
+    return { httpOnly: true, sameSite: 'lax', path: '/', maxAge: COOKIE_MAX_AGE_MS, secure: isHttps(req) };
+  }
+
   function sameOrigin(req) {
+    // Trình duyệt hiện đại luôn gửi Sec-Fetch-Site; cross-site và same-site (khác cổng) đều bị chặn.
+    const site = req.headers && req.headers['sec-fetch-site'];
+    if (site && site !== 'same-origin' && site !== 'none') return false;
     const origin = req.headers && req.headers.origin;
     if (!origin) return true; // curl và trình duyệt rất cũ không gửi Origin; cookie SameSite=Lax vẫn bảo vệ các thao tác cần đăng nhập
     // Cố ý KHÔNG chấp nhận Origin: null (iframe sandbox, chuyển hướng chéo nguồn, file://): đó là cách các trang lạ giả request.
@@ -304,8 +319,18 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
     const allowed = PUBLIC[req.path];
     if (allowed && allowed.includes(req.method)) return next();
     const dev = authenticate(req);
-    if (dev) { req.device = dev; return next(); }
+    if (dev) { req.device = dev; renewCookie(req, res, dev); return next(); }
     return deny(req, res);
+  }
+
+  /* Cookie sống 365 ngày KỂ TỪ LẦN DÙNG GẦN NHẤT (không phải từ lúc tham gia), và được cấp lại
+     với cờ Secure ngay khi thiết bị bắt đầu dùng HTTPS. Mỗi thiết bị tối đa một lần mỗi ngày. */
+  const renewedAt = new Map();
+  function renewCookie(req, res, dev) {
+    const t = now();
+    if (t - (renewedAt.get(dev.id) || 0) < RENEW_EVERY_MS) return;
+    renewedAt.set(dev.id, t);
+    if (typeof res.cookie === 'function') res.cookie(cookieName, getCookie(req, cookieName), cookieOptions(req));
   }
 
   function formOf(req) {
@@ -385,7 +410,7 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
       const dev = createDevice('owner', params.get('name'));
       setupCode = null;
       log.log('[auth] Đã thiết lập thiết bị chủ (id ' + dev.id + ').');
-      res.cookie(cookieName, dev.token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: COOKIE_MAX_AGE_MS });
+      res.cookie(cookieName, dev.token, cookieOptions(req));
       return res.redirect(303, '/');
     });
 
@@ -418,7 +443,7 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
       const dev = createDevice(inv.role, p.get('name'));
       joinFails = 0;
       log.log('[auth] Thiết bị mới tham gia (id ' + dev.id + ', vai trò ' + inv.role + ').');
-      res.cookie(cookieName, dev.token, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: COOKIE_MAX_AGE_MS });
+      res.cookie(cookieName, dev.token, cookieOptions(req));
       return res.redirect(303, '/');
     });
 
