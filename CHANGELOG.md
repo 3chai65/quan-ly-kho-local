@@ -5,6 +5,31 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.8.2] - 2026-11-10
+
+### Sửa
+
+- SSR: thay `%%BOOT%%`/`%%NEEDFETCH%%` một lượt bằng callback; dữ liệu chứa `$&`, `$'`, `` $` ``, `%%BOOT%%`, `%%NEEDFETCH%%` không còn làm hỏng boot JSON.
+- Giới hạn tên tự do (`NAME_MAX = 200`) cho vị thuốc, đơn thuốc, tên đơn/ca bán; server trả 400, input UI có `maxlength`, `sanitize` cắt cùng luật.
+- Mọi số phải hữu hạn và có trần: `qty/stock <= 1e6`, `grams <= 1e9`, `thang <= 1e4`, tiền `<= 1e12`. Chuỗi `"1e309"` bị 400, không còn âm thầm thành 0.
+- `parseBackup` kiểm cùng luật `validateState` trước khi thay dữ liệu; báo lỗi đầu tiên và hủy khôi phục.
+- Ngày phải là ngày thật trong 2000-01-01..2100-12-31 ở cả server và client.
+- Qua nửa đêm, `refreshAutoDates` render lại thống kê, thông tin sao lưu và biểu đồ đang mở.
+- `auth-reset.mjs` xóa cả `devices` lẫn `invites`.
+- `recFix` kẹp tồn về `>= 0`.
+- File migration `truoc-lam-tron-*.json` hỏng chỉ log và fallback, không chặn khởi động.
+- `loadPreset` cảnh báo khi đơn cũ có vị đã bị xóa.
+
+### Đổi
+
+- Xóa code chết: `txCogs()`, `case 'del-row'`, tham số/nhánh `force` của `runDailyBackup`, nhánh `p.date` trong `tools/doi-ngay-don.mjs`.
+- Thêm `*.crt` vào `.gitignore`.
+
+### Không sửa (giữ thiết kế)
+
+- Không kiểm tra `total = qty × price`: đơn thuốc chén và đơn bán lẻ có phân bổ tiền, chặn sẽ báo sai. `stockDrift` vẫn chỉ so tồn.
+- Không từ chối request thiếu cả `Origin` lẫn `Sec-Fetch-Site`: trình duyệt luôn gửi ít nhất một trong hai cho POST; trường hợp còn lại là công cụ không phải trình duyệt (curl), đã cần cookie hợp lệ, không có CSRF.
+
 ## [2.8.1] - 2026-11-10
 
 ### Bảo mật
