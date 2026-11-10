@@ -41,8 +41,17 @@ globalThis.__test = {
   fmtMoney: fmtMoney, fmtNum: fmtNum, fmtQty: fmtQty, dec: dec, num: num,
   sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates,
   reconcileList: reconcileList, findProduct: findProduct, renderStats: renderStats,
-  loadPreset: loadPreset, recFix: recFix,
+  loadPreset: loadPreset, recFix: recFix, resetDrafts: resetDrafts,
+  backupLastDate: backupLastDate, commitRetailRow: commitRetailRow,
+  commitRemedyRow: commitRemedyRow, onSuggestKey: onSuggestKey,
   getRemedyItems: function(){ return remedyItems; },
+  getRetailItems: function(){ return retailItems; },
+  getNhapList: function(){ return nhapList; },
+  getTxEdit: function(){ return txEditCur; },
+  setTxEdit: function(v){ txEditCur = v; },
+  getInvPage: function(){ return invPage; },
+  setInvPage: function(v){ invPage = v; },
+  renderInventory: renderInventory,
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
   setDirty: function(v){ dirty = !!v; },
@@ -1992,4 +2001,200 @@ test('recFix kẹp tồn về 0 khi số lịch sử âm rất nhỏ', () => {
   });
   client.recFix('p1');
   assert.equal(client.getDb().products[0].stock, 0);
+});
+
+test('resetDrafts xóa nháp bán lẻ, đơn thuốc, nhập hàng và dòng đang sửa', () => {
+  const client = loadClient({ setTimeout() { return 0; }, clearTimeout() {} });
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 1 }]);
+  client.setRemedyItems([{ productId: 'p1', grams: 1 }]);
+  client.setNhapList([{ name: 'A', qty: 1, price: 1 }]);
+  client.setTxEdit({ id: 't1' });
+  client.resetDrafts();
+  assert.equal(client.getRetailItems().length, 0);
+  assert.equal(client.getRemedyItems().length, 0);
+  assert.equal(client.getNhapList().length, 0);
+  assert.equal(client.getTxEdit(), null);
+});
+
+test('backupBeforeRestore không chặn tự sao lưu ngày; cloudConflict hủy khi không tải được nháp', async () => {
+  class BlockedBlob { constructor(){ throw new Error('blocked'); } }
+  const client = loadClient({ Blob: BlockedBlob, confirm: () => true });
+  assert.equal(client.backupBeforeRestore(), false);
+  assert.equal(client.backupLastDate(), '');
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 1 }]);
+  let fetches = 0;
+  const c2 = loadClient({ Blob: BlockedBlob, confirm: () => true, fetch: async () => { fetches++; return { status: 200, json: async () => ({ success: true, updatedAt: 1 }) }; } });
+  c2.setRetailItems([{ pid: 'p1', kg: 1, amount: 1 }]);
+  assert.equal(await c2.cloudConflict(), false);
+  assert.equal(fetches, 0);
+});
+
+test('pushState 409 rỗng vẫn mở xung đột, không đánh dấu từ chối vĩnh viễn', async () => {
+  let puts = 0, force = '';
+  const client = loadClient({
+    confirm: () => false,
+    setTimeout() { return 0; }, clearTimeout() {},
+    fetch: async (url, opts = {}) => {
+      if ((opts.method || 'GET') === 'PUT') {
+        puts++;
+        force = opts.headers && opts.headers['X-Force'] || '';
+        if (puts === 1) return { status: 409, json: async () => { throw new Error('empty'); } };
+        return { status: 200, json: async () => ({ success: true, updatedAt: 2 }) };
+      }
+      return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) };
+    }
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  await client.pushState(false, false);
+  assert.equal(puts, 2);
+  assert.equal(force, '1');
+  assert.equal(client.isSyncRejected(), false);
+});
+
+test('saveTxEdit NHAP cũ không đổi costPrice; NHAP mới nhất thì đổi', () => {
+  const dom = stockDom();
+  const client = loadClient({
+    document: dom.document, confirm: () => true,
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }],
+    transactions: [
+      { id: 'old', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 100000, total: 100000, ts: 1000 },
+      { id: 'new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }
+    ], prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+  });
+  client.setBase(1);
+  client.openTxEdit('old');
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '150');
+  client.saveTxEdit();
+  assert.equal(client.getDb().products[0].costPrice, 200000);
+  client.openTxEdit('new');
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '250');
+  client.saveTxEdit();
+  assert.equal(client.getDb().products[0].costPrice, 250000);
+});
+
+test('dòng bán lẻ/đơn thuốc/nhập thiếu số lượng bị giữ lại và báo, không lưu im lặng', () => {
+  function rowDoc(sel) {
+    const q = { value: '0', focus() {} };
+    const row = { getAttribute() { return 'p1'; }, querySelector() { return q; } };
+    const tb = { textContent: 'giu', querySelector() { return row; } };
+    const doc = {
+      readyState: 'loading', hidden: false, activeElement: null,
+      documentElement: makeEl(), body: makeEl(),
+      querySelector(s) { if (s === '#retailBody' || s === '#remedyBody') return tb; return null; },
+      querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+      addEventListener() {}, removeEventListener() {}
+    };
+    return { doc, tb };
+  }
+  assert.equal(loadClient({ document: rowDoc('.retail-qty').doc }).commitRetailRow(), false);
+  assert.equal(loadClient({ document: rowDoc('.remedy-qty').doc }).commitRemedyRow(), false);
+
+  const nq = { value: '0', focus() {} };
+  const ndoc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? { value: 'A' } : s === '#nhapQty' ? nq : s === '#nhapPrice' ? { value: '10' } : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: ndoc });
+  c.setDb({ products: [{ id: 'p1', name: 'A', stock: 0, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.saveNhap({ preventDefault() {} });
+  assert.equal(c.getDb().transactions.length, 0);
+  assert.equal(nq.value, '0');
+});
+
+test('Enter gợi ý chỉ chọn exact hoặc một ứng viên, không chọn bừa item đầu', () => {
+  function suggestDoc() {
+    const input = { value: 'Cam thảo' };
+    const buttons = [{ dispatchEvent() { this.hit = true; } }, { dispatchEvent() { this.hit = true; } }];
+    const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
+    const doc = {
+      readyState: 'loading', hidden: false, activeElement: null,
+      documentElement: makeEl(), body: makeEl(),
+      querySelector(s) { return s === '#nhapSearch' ? input : s === '#nhapList' ? list : null; },
+      querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+      addEventListener() {}, removeEventListener() {}
+    };
+    return { doc, input, buttons };
+  }
+  const { doc, input, buttons } = suggestDoc();
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 1, costPrice: 1 }, { id: 'p2', name: 'Cam thảo khô', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  let prevented = 0;
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 1);
+  assert.equal(buttons[0].hit, true);
+  input.value = 'Cam';
+  prevented = 0; buttons.forEach(b => delete b.hit);
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 0);
+  assert.equal(buttons.some(b => b.hit), false);
+});
+
+test('recFix không đổi tồn khi người dùng hủy xác nhận', () => {
+  const client = loadClient({ confirm: () => false });
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }],
+    transactions: [{ id: 't1', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, cost: 0 }],
+    prescriptions: [], updatedAt: 0, moneyUnit: 'dong'
+  });
+  client.recFix('p1');
+  assert.equal(client.getDb().products[0].stock, 5);
+});
+
+test('mergeDo hủy xác nhận cuối thì không gộp', () => {
+  const checks = [{ checked: true, getAttribute() { return '2026-11-07|1'; } }];
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector() { return null; }, querySelectorAll(sel) { return sel === '#mergeList input[type=checkbox]' ? checks : []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {}
+  };
+  const client = loadClient({ document: doc, confirm: () => false });
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 2, costPrice: 1 }],
+    transactions: [
+      { id: 'a', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, cost: 0 },
+      { id: 'b', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, cost: 0 }
+    ], prescriptions: [], updatedAt: 0, moneyUnit: 'dong'
+  });
+  client.mergeDo();
+  assert.ok(client.getDb().transactions.every(t => !t.oid));
+});
+
+test('sanitize giữ id/tên constructor, toString, __proto__', () => {
+  const client = loadClient();
+  const out = client.sanitize({
+    products: [
+      { id: 'constructor', name: 'Constructor', stock: 1, costPrice: 1 },
+      { id: 'p2', name: '__proto__', stock: 1, costPrice: 1 },
+      { id: 'p3', name: 'Bình thường', stock: 1, costPrice: 1 }
+    ],
+    transactions: [{ id: 'toString', date: '2026-11-10', type: 'NHAP', productId: 'p3', qty: 1, price: 1, total: 1 }],
+    prescriptions: []
+  });
+  assert.equal(out.products.length, 3);
+  assert.equal(out.transactions.length, 1);
+});
+
+test('invPage âm được kẹp về 1 khi render', () => {
+  const body = makeEl();
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#invBody' ? body : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    createTextNode(s) { return { textContent: String(s) }; },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const client = loadClient({ document: doc });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  client.setInvPage(-5);
+  client.renderInventory();
+  assert.equal(client.getInvPage(), 1);
 });
