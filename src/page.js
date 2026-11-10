@@ -1107,7 +1107,6 @@ function fmtMoney(dong){
 function fmtUnitPrice(k){ return fmtMoney(k) + '/kg'; }
 function pad2(n){ return n < 10 ? '0' + n : '' + n; }
 function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-function thisMonth(){ return todayISO().slice(0, 7); }
 function thisYear(){ return todayISO().slice(0, 4); }
 function parseDateVN(s){
   s = String(s || '').trim();

@@ -5,6 +5,18 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.8.1] - 2026-11-10
+
+### Bảo mật
+
+- Cookie thiết bị được cấp lại tối đa một lần mỗi ngày mỗi thiết bị, tính từ lần dùng gần nhất (trước đây cố định 365 ngày từ lúc tham gia, thiết bị dùng hằng ngày vẫn bị khóa im lặng vào ngày thứ 366). Cookie được tự nâng lên `Secure` khi thiết bị bắt đầu dùng HTTPS.
+- Cookie mang cờ `Secure` khi request tới qua HTTPS (trực tiếp hoặc sau proxy như Caddy, nhận diện qua `req.secure` hoặc `X-Forwarded-Proto: https`).
+- Yêu cầu POST bị từ chối khi `Sec-Fetch-Site` khác `same-origin` hoặc `none` (bao gồm `same-site` khác cổng).
+
+### Đổi
+
+- Xóa hàm `thisMonth()` không còn được gọi trong `src/page.js`.
+
 ## [2.8.0] - 2026-11-09
 
 ### Thêm

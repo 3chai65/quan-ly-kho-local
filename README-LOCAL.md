@@ -104,6 +104,8 @@ robocopy G:\quan-ly-kho-local\data\luu-tru E:\sao-luu-kho\luu-tru /E /XO
 
 Chạy lại hai lệnh mỗi tuần, hoặc sau một đợt nhập nhiều hàng. Vài tháng mở thử một file `.db` trong `E:\sao-luu-kho\backups`. Mỗi tháng chép cả `E:\sao-luu-kho` ra USB hoặc chỗ ngoài máy, vì mất máy vẫn mất cả hai ổ.
 
+**Không bao giờ chạy `docker compose down -v` trong thư mục kho thật** — nó xóa volume `caddy_data`, mất CA nội bộ, phải cài lại trên cả 3 thiết bị.
+
 `data/auth.db` không nằm trong hai lệnh trên và không sao lưu file này. Server ghi `last_seen_at` khi có thiết bị mở app; chép SQLite đang ở chế độ WAL dễ ra bản lệch. Mất danh sách thiết bị thì đặt lại, vài phút là ghép lại được:
 
 ```powershell
@@ -137,7 +139,7 @@ Từ 2.8.0, chỉ thiết bị đã được duyệt mới vào được kho. Th
 ### Lưu ý khi dùng
 - **Mỗi thiết bị dùng một địa chỉ cố định.** Cookie gắn với tên máy: `localhost`, `127.0.0.1` và `192.168.x.x` được coi là ba nơi khác nhau. PC nên luôn dùng `localhost`.
 - **Không dùng tab riêng tư** của trình duyệt cho thiết bị thật: đóng tab là mất cookie và mất nháp chưa gửi.
-- **Chưa có HTTPS.** Người nghe được lưu lượng trong cùng mạng có thể lấy cookie. Tách Wi-Fi khách khỏi mạng đặt kho.
+- **Địa chỉ HTTPS** (từ khi dùng Caddy): PC dùng `https://localhost`; Mac/iPhone dùng `https://192.168.2.46`. Máy khác không vào được `http://192.168.2.46:8787`; chỉ PC dùng `http://localhost:8787` làm đường dự phòng khi Caddy hỏng. Muốn xóa volume Caddy khi cần thay CA thì dùng `docker compose down`, **không dùng `-v`**.
 - `data/auth.db` không nằm trong bản sao lưu (`robocopy` chỉ chép `backups` và `luu-tru`). Mất file này thì thiết lập lại (xem bên dưới), không mất dữ liệu kho.
 
 ### Mất thiết bị chủ / đổi máy: đặt lại
@@ -158,6 +160,7 @@ Huy hiệu “Chưa đồng bộ” hiện cạnh nút “Bỏ thay đổi chưa
 
 ## Ghi chú
 - Từ 2.8.0 có **xác thực thiết bị** (xem mục “Xác thực thiết bị” ở trên); vẫn chỉ nên dùng trong mạng nhà.
+- Khi dùng Caddy HTTPS: **không bao giờ chạy `docker compose down -v`** trong thư mục kho thật, vì lệnh này xóa volume `caddy_data` chứa CA nội bộ; mất CA là phải cài lại trên cả 3 thiết bị. Dùng `docker compose down` (không `-v`) khi cần.
 - Cổng đổi được trong `docker-compose.yml` (mục `ports`, ví dụ `"9000:8787"`).
 - Muốn dùng ngoài WiFi sau này: cài Tailscale trên PC + điện thoại rồi mở
   `http://<tên-tailscale-PC>:8787`.
