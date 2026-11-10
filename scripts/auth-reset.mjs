@@ -19,6 +19,7 @@ if (!fs.existsSync(file)) {
 }
 const db = new Database(file);
 const n = db.prepare('DELETE FROM devices').run().changes;
+const inv = db.prepare('DELETE FROM invites').run().changes;
 db.close();
-console.log('Đã xóa ' + n + ' thiết bị trong ' + file + '.');
+console.log('Đã xóa ' + n + ' thiết bị và ' + inv + ' mã mời trong ' + file + '.');
 console.log('Khởi động lại máy chủ để lấy mã thiết lập mới (xem bằng: docker compose logs).');
