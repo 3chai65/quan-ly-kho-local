@@ -4,7 +4,7 @@ services:
     container_name: quan-ly-kho
     restart: unless-stopped
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8787:8787"
     volumes:
       # File SQLite thật nằm trên ổ cứng máy bạn tại G:\quan-ly-kho-local\data\app.db
       - ./data:/data
@@ -19,3 +19,28 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    networks:
+      - kho
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: quan-ly-kho-caddy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - kho
+    depends_on:
+      quan-ly-kho:
+        condition: service_healthy
+
+networks:
+  kho:
+
+volumes:
+  caddy_data:
+  caddy_config:
