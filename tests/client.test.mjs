@@ -727,6 +727,32 @@ test('hủy khôi phục hoặc lỗi tải bản nháp thì không giữ _money
   assert.equal(Object.hasOwn(failed.getDb(), '_moneyNote'), false);
 });
 
+test('restoreFromFile thành công xóa nháp trong bộ nhớ (resetDrafts)', () => {
+  const raw = JSON.stringify({
+    app: 'quan-ly-kho',
+    data: {
+      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
+      transactions: [],
+      prescriptions: []
+    }
+  });
+  const client = loadClient({
+    confirm: () => true,
+    FileReader: readerOf(raw),
+    Blob: class { constructor() {} },
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 1 }]);
+  client.setNhapList([{ name: 'A', qty: 1, price: 1 }]);
+  client.setRemedyItems([{ productId: 'p1', grams: 1 }]);
+  client.setTxEdit({ id: 't1' });
+  client.restoreFromFile({ size: raw.length });
+  assert.equal(client.getRetailItems().length, 0);
+  assert.equal(client.getNhapList().length, 0);
+  assert.equal(client.getRemedyItems().length, 0);
+  assert.equal(client.getTxEdit(), null);
+});
+
 test('parseBackup ghi nhận vị thuốc trùng tên để khôi phục báo cho người dùng', () => {
   const raw = JSON.stringify({
     app: 'quan-ly-kho',
