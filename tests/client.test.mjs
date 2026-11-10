@@ -753,6 +753,37 @@ test('restoreFromFile thành công xóa nháp trong bộ nhớ (resetDrafts)', (
   assert.equal(client.getTxEdit(), null);
 });
 
+
+
+test('cloudConflict OK: tải nháp trước khi thay db; tải lỗi thì hủy và giữ nguyên db', async () => {
+  const order = [];
+  const client = loadClient({
+    Blob: class { constructor() { order.push('download'); } },
+    confirm: () => true,
+    fetch: async (url) => {
+      order.push('fetch');
+      return { status: 200, json: async () => ({ success: true, data: { products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) };
+    }
+  });
+  client.setDb({ products: [{ id: 'old', name: 'Old', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setRetailItems([{ pid: 'old', kg: 1, amount: 1 }]);
+  await client.cloudConflict();
+  assert.deepEqual(order, ['download', 'fetch']);
+  assert.equal(client.getDb().products[0].name, 'Server');
+  assert.equal(client.getRetailItems().length, 0);
+
+  const client2 = loadClient({
+    Blob: class { constructor() { throw new Error('blocked'); } },
+    confirm: () => true,
+    fetch: async () => { throw new Error('không được fetch'); }
+  });
+  client2.setDb({ products: [{ id: 'old', name: 'Old', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client2.setRetailItems([{ pid: 'old', kg: 1, amount: 1 }]);
+  const r = await client2.cloudConflict();
+  assert.equal(r, false);
+  assert.equal(client2.getDb().products[0].name, 'Old');
+  assert.equal(client2.getRetailItems().length, 1);
+});
 test('parseBackup ghi nhận vị thuốc trùng tên để khôi phục báo cho người dùng', () => {
   const raw = JSON.stringify({
     app: 'quan-ly-kho',
