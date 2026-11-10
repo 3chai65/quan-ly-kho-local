@@ -1300,7 +1300,7 @@ function lastImport(id){
       best = t; bestStamp = s;
     }
   });
-  return best ? { price: num(best.price), date: String(best.date), ts: bestStamp, hasTime: txHasTime(best) } : null;
+  return best ? { id: best.id, price: num(best.price), date: String(best.date), ts: bestStamp, hasTime: txHasTime(best) } : null;
 }
 function refPrice(p){
   var l = lastImport(p.id);
@@ -1383,7 +1383,7 @@ function sanitize(d, drops){
   if (!d || typeof d !== 'object') return o;
   o.updatedAt = dec(d.updatedAt);
   if (Array.isArray(d.products)) {
-    var seenPid = {}, seenPname = {};
+    var seenPid = Object.create(null), seenPname = Object.create(null);
     d.products.forEach(function(p){
       if (!p || !p.name) return;
       var id = String(p.id || uid('PROD'));
@@ -1414,7 +1414,7 @@ function sanitize(d, drops){
     });
   }
   if (Array.isArray(d.transactions)) {
-    var seenTid = {};
+    var seenTid = Object.create(null);
     d.transactions.forEach(function(t){
       if (!t) return;
       var id = String(t.id || uid('TX'));
@@ -1466,7 +1466,7 @@ function sanitize(d, drops){
     });
   }
   if (Array.isArray(d.prescriptions)) {
-    var seenRid = {}, seenRname = {};
+    var seenRid = Object.create(null), seenRname = Object.create(null);
     d.prescriptions.forEach(function(r){
       if (!r || !r.name || !Array.isArray(r.items)) return;
       var rid = String(r.id || uid('RX'));
@@ -1487,7 +1487,7 @@ function sanitize(d, drops){
         if (drops) drops.push('Đơn thuốc trùng: ' + rname);
         return;
       }
-      var items = [], seenItem = {};
+      var items = [], seenItem = Object.create(null);
       r.items.forEach(function(it){
         if (!it || !it.productId) return;
         var itemPid = String(it.productId);
@@ -1619,6 +1619,7 @@ function discardUnsynced(){
       syncDetail = '';
       syncRejected = false;
       renderSyncBadge();
+      resetDrafts();
     } else if (!authLost) {
       toast('Chưa lấy được bản máy chủ — thay đổi chưa gửi vẫn được giữ trên máy này', 'error');
     }
@@ -1727,16 +1728,22 @@ var remedyNotePage = 1;
 var remedyEditIdx = -1;
 function commitRemedyRow(){
   var tb = $('#remedyBody');
-  if (!tb) return;
+  if (!tb) return true;
   var row = tb.querySelector('tr[data-pid]');
-  if (!row) return;
+  if (!row) return true;
   var g = num($('.remedy-qty', row).value);
-  if (g > 0) {
-    remedyItems.push({ productId: row.getAttribute('data-pid'), grams: dec(g) });
-    remedyNotePage = 1e9;
+  if (g <= 0) {
+    var p = findProduct(row.getAttribute('data-pid'));
+    toast('Dòng "' + (p ? p.name : '?') + '" thiếu gram', 'error');
+    var qi = $('.remedy-qty', row);
+    if (qi) qi.focus();
+    return false;
   }
+  remedyItems.push({ productId: row.getAttribute('data-pid'), grams: dec(g) });
+  remedyNotePage = 1e9;
   tb.textContent = '';
   orderEmpty(tb, 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+  return true;
 }
 function addRemedyToNote(){
   var row = $('#remedyBody tr[data-pid]');
@@ -1747,10 +1754,8 @@ function addRemedyToNote(){
   calcRemedy();
   var s = $('#remedySearch');
   if (s) {
-    suppressSug = true;
     s.focus();
     closeSuggest('remedy');
-    setTimeout(function(){ suppressSug = false; }, 0);
   }
 }
 function remedyNoteSave(){
@@ -1913,6 +1918,18 @@ function resetRemedy(){
   calcRemedy();
   updatePresetUI();
 }
+/* Xóa mọi bản nháp đang giữ trong bộ nhớ sau khi đã lấy bản máy chủ/khôi phục. */
+function resetDrafts(){
+  nhapList = [];
+  retailItems = [];
+  remedyItems = [];
+  renderNhapList();
+  resetNhapInputs();
+  resetRetail();
+  resetRemedy();
+  closeTxEdit();
+  if (orderCur) closeOrder();
+}
 var notePage = 1;
 var retailItems = [];
 var noteEditIdx = -1;
@@ -2001,16 +2018,21 @@ function commitRetailRow(){
   if (!row) return true;
   var q = num($('.retail-qty', row).value);
   var m = num($('.retail-money', row).value);
-  if (q > 0) {
-    if (m < 0) {
-      toast('Thành tiền không được âm', 'error');
-      var mi = $('.retail-money', row);
-      if (mi) { mi.focus(); if (mi.select) mi.select(); }
-      return false;
-    }
-    retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
-    notePage = 1e9;
+  if (q <= 0) {
+    var p = findProduct(row.getAttribute('data-pid'));
+    toast('Dòng "' + (p ? p.name : '?') + '" thiếu số lượng', 'error');
+    var qi = $('.retail-qty', row);
+    if (qi) qi.focus();
+    return false;
   }
+  if (m < 0) {
+    toast('Thành tiền không được âm', 'error');
+    var mi = $('.retail-money', row);
+    if (mi) { mi.focus(); if (mi.select) mi.select(); }
+    return false;
+  }
+  retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
+  notePage = 1e9;
   tb.textContent = '';
   orderEmpty(tb, 5, 'Gõ tên vị thuốc ở trên để thêm dòng.');
   return true;
@@ -2024,10 +2046,8 @@ function addRetailToNote(){
   calcRetail();
   var s = $('#retailSearch');
   if (s) {
-    suppressSug = true;
     s.focus();
     closeSuggest('retail');
-    setTimeout(function(){ suppressSug = false; }, 0);
   }
 }
 function noteSave(){
@@ -2125,7 +2145,7 @@ function presetByName(name){
   return null;
 }
 function collectRemedyItems(){
-  commitRemedyRow();
+  if (!commitRemedyRow()) return [];
   calcRemedy();
   var items = [];
   remedyItems.forEach(function(it){
@@ -2356,7 +2376,7 @@ function saveRetail(){
 function saveRemedy(){
   refreshAutoDates();
   var date = getDateInput('remedyDate') || todayISO();
-  commitRemedyRow();
+  if (!commitRemedyRow()) return;
   calcRemedy();
   var grand = remedyGrand();
   var items = [];
@@ -2603,6 +2623,7 @@ function renderInventory(){
   }
 
   var totalPages = Math.ceil(list.length / PAGE_SIZE) || 1;
+  if (invPage < 1) invPage = 1;
   if (invPage > totalPages) invPage = totalPages;
   var slice = list.slice((invPage - 1) * PAGE_SIZE, invPage * PAGE_SIZE);
 
@@ -3045,19 +3066,23 @@ function closeMerge(){
 }
 function mergeDo(){
   var keys = {};
-  var n = 0;
   $$('#mergeList input[type=checkbox]').forEach(function(cb){
     if (cb.checked) keys[cb.getAttribute('data-key')] = true;
   });
+  var groups = [], nTx = 0;
   mergeCandidates().forEach(function(g){
     if (!keys[g.key]) return;
+    groups.push(g);
+    nTx += g.items.length;
+  });
+  if (!nTx) { toast('Chưa chọn đơn nào để gộp', 'error'); return; }
+  if (!confirm('Gộp ' + nTx + ' giao dịch thành đơn thuốc lẻ?')) return;
+  groups.forEach(function(g){
     var oid = uid('OD');
     g.items.forEach(function(t){ t.oid = oid; t.oname = 'Đơn thuốc lẻ'; });
-    n++;
   });
-  if (!n) { toast('Chưa chọn đơn nào để gộp', 'error'); return; }
   closeMerge();
-  commit('Đã gộp ' + n + ' đơn thuốc lẻ');
+  commit('Đã gộp ' + nTx + ' giao dịch thành đơn thuốc lẻ');
 }
 
 /* ================= ĐỐI CHIẾU TỒN KHO ================= */
@@ -3125,6 +3150,7 @@ function recFix(id){
     toast('Số theo lịch sử đang âm — không thể áp dụng. Hãy sửa giao dịch nhập/bán trước.', 'error');
     return;
   }
+  if (!confirm('Đặt tồn "' + p.name + '" từ ' + fmtQty(p.stock) + ' về ' + fmtQty(Math.max(0, r.calc)) + '?')) return;
   p.stock = Math.max(0, r.calc);
   commit('Đã chỉnh tồn "' + p.name + '"');
   renderRec();
@@ -3442,15 +3468,30 @@ function onSuggestKey(e, key){
     items[sugIdx].scrollIntoView({ block: 'nearest' });
   } else if (e.key === 'Enter') {
     var items2 = $$('.sug__item', list);
-    if (!list.hidden && items2.length) {
+    if (list.hidden || !items2.length) return;
+    var pick = null;
+    if (sugIdx >= 0) pick = items2[sugIdx] || null;
+    if (!pick) {
+      var inp = $('#' + cfg.input);
+      var raw = String(inp && inp.value || '').trim();
+      var prods = matchProducts(raw);
+      var exactIdx = -1;
+      if (raw) {
+        for (var pi = 0; pi < prods.length; pi++) {
+          if (normSearch(prods[pi].name) === normSearch(raw)) { exactIdx = pi; break; }
+        }
+      }
+      if (exactIdx >= 0) pick = items2[exactIdx] || null;
+      else if (items2.length === 1) pick = items2[0];
+    }
+    if (pick) {
       e.preventDefault();
-      items2[sugIdx >= 0 ? sugIdx : 0].dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+      pick.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     }
   } else if (e.key === 'Escape') {
     closeSuggest(key);
   }
 }
-var suppressSug = false;
 function initSuggest(){
   Object.keys(SUG).forEach(function(key){
     var cfg = SUG[key];
@@ -3598,9 +3639,13 @@ function saveNhap(e){
     var price = kToDong(($('#nhapPrice') || {}).value);
     if (price < 0) { toast('Giá nhập không được âm', 'error'); var pn = $('#nhapPrice'); if (pn) { pn.focus(); pn.select(); } return; }
     var cp = nhapPid ? findProduct(nhapPid) : findByName(name);
-    if (qty > 0 && !nhapPriceOk(cp, price)) { var pi2 = $('#nhapPrice'); if (pi2) { pi2.focus(); pi2.select(); } return; }
-    if (qty > 0 || !cp) entries.push({ pid: cp ? cp.id : null, name: name, qty: dec(qty), price: price });
-    else if (!entries.length) { toast('Nhập số lượng lớn hơn 0', 'error'); return; }
+    if (!(qty > 0)) {
+      toast('Dòng "' + name + '" thiếu số lượng', 'error');
+      var q0 = $('#nhapQty'); if (q0) q0.focus();
+      return;
+    }
+    if (!nhapPriceOk(cp, price)) { var pi2 = $('#nhapPrice'); if (pi2) { pi2.focus(); pi2.select(); } return; }
+    entries.push({ pid: cp ? cp.id : null, name: name, qty: dec(qty), price: price });
   }
   if (!entries.length) { toast('Nhập tên vị thuốc', 'error'); var i0 = $('#nhapSearch'); if (i0) i0.focus(); return; }
   for (var ei = 0; ei < entries.length; ei++) {
@@ -3859,7 +3904,8 @@ function saveTxEdit(){
         return;
       }
       p.stock = dec(num(p.stock) + delta);
-      if (price > 0) p.costPrice = money(price);
+      var latest = lastImport(t.productId);
+      if (price > 0 && latest && String(latest.id) === String(t.id)) p.costPrice = money(price);
     } else {
       if (num(p.stock) + 1e-9 < delta) {
         toast('Tồn "' + p.name + '" không đủ (còn ' + fmtQty(p.stock) + ')', 'error');
@@ -3917,9 +3963,24 @@ function apiFetch(url, opts){
 function cloudConflict(){
   if (conflictOpen) return Promise.resolve(false);
   conflictOpen = true;
-  var useLatest = confirm('Dữ liệu trên một thiết bị khác đã thay đổi sau lần bạn mở trang này.\n\nOK: tải bản mới nhất về (thay đổi chưa lưu của máy này sẽ mất).\nHủy: giữ bản trên máy này và ghi đè lên máy chủ.');
+  var inMemory = !!(retailItems.length || remedyItems.length || nhapList.length || txEditCur);
+  var LF = String.fromCharCode(10);
+  var msg = 'Dữ liệu trên một thiết bị khác đã thay đổi sau lần bạn mở trang này.' + LF + LF +
+    'OK: tải bản mới nhất về (thay đổi chưa lưu của máy này sẽ mất).' + LF +
+    'Hủy: giữ bản trên máy này và ghi đè lên máy chủ.';
+  if (inMemory) msg += LF + LF + 'Các dòng đang soạn trong bộ nhớ cũng sẽ bị xóa.';
+  var useLatest = confirm(msg);
   conflictOpen = false;
-  if (useLatest) return pullState(true, true).then(function(){ return false; });
+  if (useLatest) {
+    if (!downloadBackup(false, 'kho-nhap-xung-dot-' + backupStamp() + '.json', true)) {
+      toast('Không tải được bản nháp — đã hủy tải bản máy chủ', 'error');
+      return Promise.resolve(false);
+    }
+    return pullState(true, true).then(function(ok){
+      if (ok) resetDrafts();
+      return false;
+    });
+  }
   return pushState(true, true);
 }
 function syncFailText(d, fallback){
@@ -3971,7 +4032,7 @@ function pushState(manual, force){
   }).then(function(pack){
     var d = pack.d;
     var status = pack.status;
-    if (d && d.conflict) {
+    if ((d && d.conflict) || status === 409) {
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
       pushing = false;
       return cloudConflict();
@@ -4157,7 +4218,7 @@ function backupStamp(){
 /* Tải snapshot hiện tại trước khi restore. Trả false nếu trình duyệt chặn,
    để restoreFromFile dừng lại thay vì ghi đè mù. */
 function backupBeforeRestore(){
-  return downloadBackup(false, 'kho-backup-truoc-restore-' + backupStamp() + '.json');
+  return downloadBackup(false, 'kho-backup-truoc-restore-' + backupStamp() + '.json', true);
 }
 function maybeAutoBackup(){
   if (!backupAutoOn()) return false;
@@ -4294,6 +4355,7 @@ function restoreFromFile(file){
       return;
     }
     db = bak;
+    resetDrafts();
     /* Restore là ghi đè chủ động: bỏ qua kiểm tra conflict và ép ghi lên máy chủ. */
     commit('Đã khôi phục từ file sao lưu (đã lưu bản trước đó)', true);
   };
