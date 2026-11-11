@@ -374,6 +374,9 @@ input.qty-hinted{padding-left:50px}
 .card__bar>.inp.card__bar-search{order:3;flex:1 0 100%}
 .card__bar-count{order:4;margin-left:0}
 #impBox .card__bar-count{order:1}
+/* 2.14.0 (giai đoạn 4, M4): điện thoại – nhãn nút Gộp rút còn "Gộp đơn cũ" (aria-label/title giữ đầy đủ); nút nằm hàng 1 cạnh tên nếu còn chỗ. */
+#mergeBtn{order:1;font-size:0}
+#mergeBtn::before{content:"Gộp đơn cũ";font-size:13px}
 }
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
@@ -902,7 +905,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
           </div>
           <input class="inp inp--sm card__bar-search" id="expSearch" type="text" autocomplete="off" placeholder="Tìm vị thuốc…" maxlength="200" aria-label="Tìm theo tên vị thuốc">
-          <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" hidden>Gộp đơn thuốc lẻ cũ</button>
+          <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" aria-label="Gộp đơn thuốc lẻ cũ" title="Gộp đơn thuốc lẻ cũ" hidden>Gộp đơn thuốc lẻ cũ</button>
           <span class="hint card__bar-count" id="expCount"></span>
         </div>
         <div class="tw">
