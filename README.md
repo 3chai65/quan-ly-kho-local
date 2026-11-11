@@ -10,7 +10,8 @@ dữ liệu là **file SQLite trên ổ cứng** — không phụ thuộc cloud.
   https://github.com/3chai65/quan-ly-kho-local , nhánh `main`.
 - Repo `quan-ly-kho` (Cloudflare Worker + D1, remote git tên `origin`) giữ nguyên
   từ lúc chuyển sang Docker. Không sửa code ở đó và không push sang remote đó.
-- Một người dùng. PC và điện thoại dùng riêng, không mở cùng lúc. Tab đang ẩn
+- Một người dùng, nhiều thiết bị đã duyệt (PC, điện thoại) cùng dùng một kho. Đồng bộ
+  theo snapshot: bản gửi cũ bị máy chủ từ chối (409/428), không ghi đè âm thầm. Tab đang ẩn
   không tự tải (`document.hidden`). Khi quay lại máy, trang lấy bản server nếu
   `updatedAt` mới hơn.
 
@@ -90,7 +91,8 @@ Xem `README-LOCAL.md` để biết chi tiết (backup, khôi phục, nạp dữ 
 
 ```powershell
 node --test tests/client.test.mjs                 # test client (trên máy)
-docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho-local-quan-ly-kho npm test   # test server (trong Docker)
+docker compose run --rm --no-deps -e DATA_DIR=/tmp/qlk quan-ly-kho npm test          # test server (trong Docker)
+docker compose run --rm --no-deps -e DATA_DIR=/tmp/qlk quan-ly-kho npm run test:auth # test xác thực (trong Docker)
 ```
 
 ## Logic cốt lõi — KHÔNG được phá vỡ khi sửa
@@ -135,6 +137,15 @@ docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho-local-quan-ly-kho npm test   # 
 | `GET /api/state` | State JSON, kèm `moneyUnit: "dong"` |
 | `PUT /api/state` | Ghi snapshot (cần `X-Base-Updated`, xem mục 4) |
 | `GET /api/backups` | Liệt kê các bản backup `.db` hiện có |
+| `GET /healthz` | `ok`, không cần duyệt, không trả dữ liệu (healthcheck của compose) |
+| `GET /auth/setup`, `POST /auth/setup` | Thiết lập thiết bị chủ đầu tiên bằng mã trong log (404 sau khi đã có chủ) |
+| `GET /auth/join`, `POST /auth/join` | Thiết bị mới nhập mã mời |
+| `GET /auth/devices` | Quản lý thiết bị (trang HTML) |
+| `POST /auth/devices/invite` | Tạo mã mời (thiết bị chủ) |
+| `POST /auth/devices/revoke` | Thu hồi thiết bị |
+| `POST /auth/devices/unlock` | Mở khóa nhập mã mời sau khi nhập sai nhiều lần |
+
+Mọi `/api/*` cần cookie thiết bị đã duyệt; thiếu cookie trả 401.
 
 ## Backup & khôi phục
 

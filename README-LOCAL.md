@@ -1,7 +1,7 @@
 # Quản Lý Kho — bản chạy local (Docker + SQLite)
 
 Bản đang dùng: server Node trong Docker, dữ liệu là **file SQLite trên ổ cứng**.
-PC và điện thoại xem cùng một kho trong mạng nhà, dùng riêng từng máy, không mở cùng lúc.
+PC và điện thoại dùng chung một kho trong mạng nhà. Nhiều thiết bị có thể dùng cùng lúc: đồng bộ theo snapshot, bản gửi cũ bị máy chủ từ chối (409/428), không ghi đè âm thầm.
 Repo Cloudflare Worker (`quan-ly-kho`) để nguyên, không nằm trong thư mục này.
 
 ## Yêu cầu
@@ -33,7 +33,7 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 - Server tự tạo **1 bản backup/ngày** vào `G:\quan-ly-kho-local\data\backups\`,
   tên `backup-YYYY-MM-DD.db`, giữ **30 bản** gần nhất (bản cũ tự xóa, chụp trước lần ghi đầu tiên trong ngày);
   đồng thời tự chụp thêm bản `backup-YYYY-MM-DD-truoc-ghi-de-HHmmssSSS.db` (giữ **10 bản**) trước mỗi lần ghi đè chủ động (`X-Force`).
-- Xem danh sách backup: mở `http://localhost:8787/api/backups`.
+- Xem danh sách backup: trong app, mục "Sao lưu & khôi phục". Các đường `/api/*` cần cookie của thiết bị đã duyệt; mở thẳng `http://localhost:8787/api/backups` từ trình duyệt chưa duyệt sẽ bị 401.
 - **Khôi phục nhanh:** dừng container, copy file backup đè lên `app.db`, khởi động lại:
   ```powershell
   cd "G:\quan-ly-kho-local"
@@ -50,24 +50,9 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 Nếu có file `kho-backup-YYYY-MM-DD.json` (xuất từ bản Cloudflare cũ hoặc từ nút
 "Sao lưu" trong app), nạp vào DB local như sau:
 
-```powershell
-# 1. Tách payload và gửi lên server (giữ đúng UTF-8)
-$raw = Get-Content "đường-dẫn\kho-backup-2026-11-06.json" -Raw -Encoding UTF8
-$obj = $raw | ConvertFrom-Json
-$payload = @{ products = $obj.data.products; transactions = $obj.data.transactions; prescriptions = $obj.data.prescriptions; updatedAt = 0 } | ConvertTo-Json -Depth 20 -Compress
-$bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
-
-$req = [System.Net.HttpWebRequest]::Create("http://localhost:8787/api/state")
-$req.Method = "PUT"
-$req.ContentType = "application/json; charset=utf-8"
-$req.Headers.Add("X-Force", "1")     # ép ghi đè
-$req.ContentLength = $bytes.Length
-$s = $req.GetRequestStream(); $s.Write($bytes, 0, $bytes.Length); $s.Close()
-(New-Object System.IO.StreamReader($req.GetResponse().GetResponseStream())).ReadToEnd()
-```
-
-Hoặc đơn giản hơn: mở app → **Sao lưu & khôi phục → Khôi phục từ file** trên
-chính giao diện web.
+Cách dùng: mở app → **Sao lưu & khôi phục → Khôi phục từ file** trên chính giao
+diện web. Không gửi `PUT /api/state` bằng script tay: `/api/*` cần cookie của thiết
+bị đã duyệt (script không có cookie sẽ nhận 401).
 
 File JSON không có `moneyUnit: "dong"` được coi là nghìn đồng và nhân 1000 khi nạp.
 File xuất từ bản 2.6.6 trở đi có cờ đó thì giữ nguyên số đồng. Khôi phục đúng
@@ -79,9 +64,10 @@ Bản `kho-backup-2026-11-06.json` trong `data/luu-tru/` xuất lúc 19:48, mu�
 # Test client (trên máy, chỉ cần Node):
 node --test tests/client.test.mjs
 
-# Test server thật (cần better-sqlite3 → chạy trong container):
-docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho-local-quan-ly-kho npm test
-# hoặc nếu chưa build: docker build -t quan-ly-kho:latest .  rồi chạy lệnh trên
+# Test server thật và test xác thực (cần better-sqlite3 → chạy trong container).
+# Dùng tên service của compose, không ghi cứng tên image; DATA_DIR tạm để không chạm /data:
+docker compose run --rm --no-deps -e DATA_DIR=/tmp/qlk quan-ly-kho npm test
+docker compose run --rm --no-deps -e DATA_DIR=/tmp/qlk quan-ly-kho npm run test:auth
 ```
 
 ## Dừng / khởi động lại
@@ -121,7 +107,7 @@ docker compose restart quan-ly-kho
 docker compose logs
 ```
 
-Lệnh chỉ xóa bảng thiết bị, không đụng `app.db`. Tên cookie `qlk_dev_…` giữ nguyên. Mã thiết lập mới nằm trong log.
+Lệnh chỉ xóa bảng thiết bị và toàn bộ mã mời chưa dùng (bảng `invites`), không đụng `app.db`. Tên cookie `qlk_dev_…` giữ nguyên. Mã thiết lập mới nằm trong log.
 
 ## Xác thực thiết bị
 
@@ -129,13 +115,13 @@ Từ 2.8.0, chỉ thiết bị đã được duyệt mới vào được kho. Th
 
 ### Thiết lập thiết bị chủ đầu tiên
 1. Xem mã thiết lập trong log: `docker logs quan-ly-kho --tail 50` (dòng `[auth] Mã thiết lập thiết bị chủ: XXXX-XXXX-XXXX`).
-2. Trên PC, mở `http://localhost:8787/auth/setup`, nhập mã, đặt tên thiết bị. Dùng trình duyệt thường.
+2. Trên PC, mở `https://localhost/auth/setup` (dự phòng `http://localhost:8787/auth/setup`), nhập mã, đặt tên thiết bị. Dùng trình duyệt thường.
 3. Coi mã thiết lập là bí mật cho tới khi dùng: ai tới được cổng 8787 và biết mã đều thành thiết bị chủ được. Sau khi có chủ, `/auth/setup` trả 404 vĩnh viễn.
 4. Có thể đặt mã cố định bằng biến môi trường `QLK_SETUP_CODE` (tối thiểu 12 ký tự); mã này không in ra log.
 
 ### Thêm thiết bị (điện thoại, máy khác)
 1. Trên thiết bị chủ, mở `/auth/devices` (nút "Thiết bị" ở đầu trang), chọn vai trò, bấm "Tạo mã mời". Mã hiện một lần, hiệu lực 5 phút, dùng một lần.
-2. Trên thiết bị mới, mở `http://<địa chỉ máy>:8787/auth/join`, nhập mã và tên thiết bị.
+2. Trên thiết bị mới, mở `https://<IP-máy-tính>/auth/join`, nhập mã và tên thiết bị. Cổng 8787 chỉ nghe `127.0.0.1`, nên thiết bị khác không vào được qua 8787.
 3. Thiết bị chủ: tối đa 2, duyệt và thu hồi được thiết bị khác. Thành viên: xem và sửa kho, không quản lý thiết bị.
 4. Nhập sai mã 5 lần thì khóa 15 phút. Thiết bị chủ tạo mã mời mới hoặc bấm "Mở khóa" trên `/auth/devices` để mở lại ngay.
 
@@ -155,7 +141,7 @@ docker exec quan-ly-kho node scripts/auth-reset.mjs
 docker restart quan-ly-kho
 docker logs quan-ly-kho --tail 50
 ```
-Lệnh đầu xóa danh sách thiết bị (không đụng `app.db`). Sau khi khởi động lại, log in mã thiết lập mới; thiết lập lại thiết bị chủ như trên.
+Lệnh đầu xóa danh sách thiết bị và cả mã mời chưa dùng (không đụng `app.db`). Sau khi khởi động lại, log in mã thiết lập mới; thiết lập lại thiết bị chủ như trên.
 
 ### Xử lý sự cố
 - Trang hiện `Forbidden` khi bấm Xác nhận hoặc Tham gia: mở lại trang bằng đúng một địa chỉ (không đổi giữa `localhost` và IP giữa chừng) rồi thử lại.
@@ -168,5 +154,5 @@ Huy hiệu “Chưa đồng bộ” hiện cạnh nút “Bỏ thay đổi chưa
 ## Ghi chú
 - Từ 2.8.0 có **xác thực thiết bị** (xem mục “Xác thực thiết bị” ở trên); vẫn chỉ nên dùng trong mạng nhà.
 - Khi dùng Caddy HTTPS: **không bao giờ chạy `docker compose down -v`** trong thư mục kho thật, vì lệnh này xóa volume `caddy_data` chứa CA nội bộ; mất CA là phải cài lại trên cả 3 thiết bị. Dùng `docker compose down` (không `-v`) khi cần.
-- Cổng đổi được trong `docker-compose.yml` (mục `ports`, ví dụ `"9000:8787"`).
+- Không đổi cổng `127.0.0.1:8787` thành mở ra LAN (ví dụ `"9000:8787"`): làm vậy đưa HTTP không qua Caddy ra mạng, bỏ qua HTTPS.
 - Muốn dùng ngoài WiFi: cài Tailscale trên PC + điện thoại, mở `https://<tên-tailscale-PC>`; nhớ bật cổng 443 trong tường lửa và thêm subnet Tailscale vào quy tắc Caddy. Hiện tại chỉ LAN; cổng 8787 chỉ lắng nghe `127.0.0.1` (dự phòng PC).
