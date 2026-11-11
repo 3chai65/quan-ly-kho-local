@@ -4636,3 +4636,21 @@ test('2.14.0 N1 cấu trúc: resetRetail, resetRemedy, resetNhapInputs, saveNhap
     assert.match(body(n), /\n {2}refreshAllQtyHints\(\);/, n + ' phải làm mới gợi ý sau khi xóa ô');
   }
 });
+
+/* 2.14.0 N3: mỗi ô gợi ý có id mô tả duy nhất (không trùng khi có nhiều dòng đang nhập). */
+test('2.14.0 N3 id mô tả gợi ý duy nhất: hai ô không id tạo hai id khác nhau; aria-describedby khớp id', () => {
+  const doc = trackDoc({});
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  const mk = () => {
+    const rec = { wrap: null };
+    const host = { classList: { add() {}, contains() { return false; } }, insertBefore(w) { rec.wrap = w; return w; } };
+    const input = { id: '', value: '0.2', parentNode: host, attrs: {}, l: {}, clientWidth: 0, style: {},
+      classList: { add() {}, remove() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
+    c.attachQtyHint(input, 'kg');
+    return { input, sr: rec.wrap.children[2] };
+  };
+  const a = mk(), b = mk();
+  assert.notEqual(a.sr.id, b.sr.id, 'hai ô không được trùng id mô tả');
+  assert.equal(a.input.attrs['aria-describedby'], a.sr.id);
+  assert.equal(b.input.attrs['aria-describedby'], b.sr.id);
+});
