@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.0.
+- Phiên bản hiện tại: 2.15.1.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -61,9 +61,9 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.0, commit c49a5af, image `quan-ly-kho:2.15.0` (id be1d98c6…).
-- Đường lui: `quan-ly-kho:pre-2.15.0` = 2.14.0 (id ef0d8296…, commit 07fac42).
-- 2.15.0 chưa thử trên iPhone thật: sticky chân tờ ghi + bàn phím, vùng an toàn, nút "Tải lại" (chỉ hiện khi chạy từ màn hình chính), bo góc đáy tờ ghi, gợi ý có đè chân không. Đã bỏ chức năng "Gộp đơn thuốc lẻ cũ".
+- Đang chạy: 2.15.1, commit e990078, image `quan-ly-kho:2.15.1` (id e046cb86…).
+- Đường lui: `quan-ly-kho:pre-2.15.1` = 2.15.0 (id be1d98c6…, commit c49a5af); trước nữa `pre-2.15.0` = 2.14.0 (id ef0d8296…).
+- 2.15.x chưa thử trên iPhone thật: sticky chân tờ ghi + bàn phím, vùng an toàn, nút "Tải lại" (chỉ hiện khi chạy từ màn hình chính), bo góc đáy tờ ghi, gợi ý có đè chân không. Đã bỏ chức năng "Gộp đơn thuốc lẻ cũ".
 - Nhánh làm việc `local-sqlite` = `origin-local/main`.
 - Chờ/biết chưa sửa: sao lưu tự động đè lên thông báo đang hiện (G17); Dockerfile còn công cụ build và chạy bằng root.
 - Ba đường ghi máy chủ có thể từ chối số liệu ngoài thực tế: `saveRetail` không kiểm `cost`; xóa/giảm đơn bán làm tồn vượt trần; sửa gram đơn thuốc chén làm đơn giá vượt trần.
