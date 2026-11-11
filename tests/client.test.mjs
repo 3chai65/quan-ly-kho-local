@@ -3663,11 +3663,11 @@ test('2.14.0 Bán lẻ: hai bảng (tờ ghi và dòng đang nhập) dùng chung
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (lạng/kg/g) theo đúng fmtQty; chỉ hiển thị, không đổi giá trị. */
 test('2.14.0 N6 hàm gợi ý: 0.2→(2 lạng), 0.25→(2,5 lạng), 2→(2 kg), 1.5→(1,5 kg); gram 200→(2 lạng), 1500→(1,5 kg); rỗng/0/âm/không hợp lệ → ""', () => {
   const c = loadClient();
-  assert.equal(c.qtyHintText('0.2', 'kg'), '(2 lạng)');
-  assert.equal(c.qtyHintText('0.25', 'kg'), '(2,5 lạng)');
+  assert.equal(c.qtyHintText('0.2', 'kg'), '(2 l)');
+  assert.equal(c.qtyHintText('0.25', 'kg'), '(2,5 l)');
   assert.equal(c.qtyHintText('2', 'kg'), '(2 kg)');
   assert.equal(c.qtyHintText('1.5', 'kg'), '(1,5 kg)');
-  assert.equal(c.qtyHintText('200', 'g'), '(2 lạng)');
+  assert.equal(c.qtyHintText('200', 'g'), '(2 l)');
   assert.equal(c.qtyHintText('1500', 'g'), '(1,5 kg)');
   // 0,05 kg: fmtQty chuyển sang gram dưới 0,1 kg → "(50 g)" (theo đúng quy ước hiển thị, không tự đặt quy ước riêng)
   assert.equal(c.qtyHintText('0.05', 'kg'), '(50 g)');
@@ -3685,7 +3685,7 @@ test('2.14.0 N6 gắn gợi ý: .qty-hint đổi theo input và chỉ nhắc (kh
   assert.ok(wrap, 'ô phải được bọc trong khung .qty-host riêng');
   assert.equal(wrap.children[0], input, 'ô nằm trong khung bọc');
   const h = wrap.children[1];
-  assert.equal(h.textContent, '(2 lạng)');
+  assert.equal(h.textContent, '(2 l)');
   assert.equal(input.attrs['aria-describedby'], wrap.children[2].id, 'phải có mô tả cho trình đọc màn hình');
   input.value = '2'; input.l.input();
   assert.equal(h.textContent, '(2 kg)', 'đổi theo sự kiện input');
@@ -4617,7 +4617,7 @@ test('2.14.0 N1 runtime: refreshAllQtyHints làm mới gợi ý; ô bị xóa b�
     classList: { add() {}, remove() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
   c.attachQtyHint(input, 'kg');
   const h = wrap.children[1];
-  assert.equal(h.textContent, '(5 lạng)', 'trước khi xóa: có gợi ý');
+  assert.equal(h.textContent, '(5 l)', 'trước khi xóa: có gợi ý');
   input.value = '';
   doc.querySelectorAll = () => [input];
   c.refreshAllQtyHints();
@@ -4764,7 +4764,7 @@ test('2.14.0 M1 ô 132px (clientWidth 112 vì trừ padding) + gợi ý 50px →
 test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn vị', () => {
   const c = loadClient({ document: trackDoc({}), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
   assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
-  assert.equal(JSON.stringify(c.qtyHintCandidates('(2 lạng)')), JSON.stringify(['(2 lạng)', '2 lạng', 'lạng']));
+  assert.equal(JSON.stringify(c.qtyHintCandidates('(2 l)')), JSON.stringify(['(2 l)', '2 l', 'l']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
   assert.doesNotMatch(PAGE, /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý');
 });
@@ -4775,4 +4775,14 @@ test('2.14.0 M4 điện thoại ẩn tiêu đề cột tờ ghi (.note>table>the
   const m = PAGE.lastIndexOf('@media (max-width:600px){', k);
   const e = PAGE.indexOf('\n}\n', m);
   assert.ok(m > 0 && k < e, 'quy tắc nằm trong khối ≤600px');
+});
+
+test('2.14.0 gợi ý viết tắt "l": không còn chữ "lạng" trong gợi ý; fmtQty toàn app vẫn "lạng"', () => {
+  const c = loadClient({ document: trackDoc({}), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  assert.equal(c.qtyHintText('0.2', 'kg'), '(2 l)');
+  assert.equal(c.qtyHintText('150', 'g'), '(1,5 l)');
+  assert.equal(c.qtyHintText('2', 'kg'), '(2 kg)');
+  assert.equal(c.qtyHintText('0.05', 'kg'), '(50 g)');
+  for (const v of ['0.2', '0.25', '150']) assert.doesNotMatch(c.qtyHintText(v, v === '150' ? 'g' : 'kg'), /lạng/);
+  assert.ok(typeof c.fmtQty === 'function' ? c.fmtQty(0.2) === '2 lạng' : /return fmtNum\(lang\) \+ ' lạng'/.test(PAGE), 'fmtQty vẫn ghi lạng');
 });
