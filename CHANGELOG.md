@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.2] - 2026-11-12
+
+### Giao diện
+
+- Thống kê (dải Bán/Lợi nhuận tháng, Nhập trong tháng, Tổng tồn kho, chú giải tháng): tiền hiện phần nguyên của nghìn đồng, tồn kg cắt phần lẻ (cắt, không làm tròn). Các mục khác, ô nhập, đối soát tồn, xuất JSON và mọi phép tính giữ nguyên số đầy đủ.
+- Thuốc chén (điện thoại ≤400 px): ô ngày rộng 118 px, đệm gọn, hiện đủ dd/mm/yyyy cỡ 16 px; thanh tiêu đề đệm 10 px, khe 4 px; ô chọn đơn tối thiểu 90 px.
+
 ## [2.15.1] - 2026-11-11
 
 ### Giao diện điện thoại

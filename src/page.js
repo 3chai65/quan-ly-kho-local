@@ -399,7 +399,7 @@ td.c-qty{position:relative}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
 @media (max-width:600px){
-#remedyBox .card__bar-preset{order:1;flex:1 1 92px;min-width:92px}
+#remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
 /* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
 /* 2.15.0: điện thoại – Lưu đơn | Tên mới | Bán đơn đúng một hàng; Xóa/Sao chép đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
 #remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
@@ -430,7 +430,10 @@ td.c-qty{position:relative}
 }
 @media (max-width:400px){
 .card__bar-title .ico{display:none}
-#remedyBox .card__bar-date{flex:0 0 108px}
+/* 2.15.2: ô ngày Thuốc chén – dd/mm/yyyy cỡ 16px rộng ~81px; vùng chữ = 118 - viền 2 - đệm 6 - 24 = 86px. Thanh gọn lại (đệm 10, khe 4) để tiêu đề + ô chọn đơn (>=90) + ô ngày vẫn một hàng ở 375px. */
+#remedyBox .card__bar{padding-left:10px;padding-right:10px;gap:4px}
+#remedyBox .card__bar-date{flex:0 0 118px}
+#remedyBox .card__bar-date .inp{padding-left:6px;padding-right:24px}
 /* 2.15.1: chú giải tháng cùng một hàng ở 375px kể cả số lớn. */
 .chart-tip,.chart-tip__m{font-size:12px}
 .chart-chip{font-size:12px;gap:4px}
@@ -1393,6 +1396,16 @@ function fmtMoneyInt(dong){
   if (!isFinite(d)) d = 0;
   var k = Math.floor(d / DONG_PER_K);
   return (num(dong) < 0 && k > 0 ? '-' : '') + String(k).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+/* 2.15.2: số kg chỉ trong Thống kê – chọn đơn vị theo giá trị thật rồi CẮT phần lẻ (không làm tròn). fmtQty (nơi khác) giữ nguyên. */
+function fmtQtyInt(kg){
+  var n = dec(kg), a = Math.abs(n);
+  var t = function(v){ var r = Math.trunc(dec(v)); return r === 0 ? 0 : r; };
+  if (a === 0) return '0g';
+  if (a >= 1) return fmtNum(t(n)) + ' kg';
+  var lang = dec(n * 10);
+  if (Math.abs(lang) >= 1) return fmtNum(t(lang)) + ' lạng';
+  return fmtNum(t(dec(n * 1000))) + ' g';
 }
 function fmtUnitPrice(k){ return fmtMoney(k) + '/kg'; }
 function pad2(n){ return n < 10 ? '0' + n : '' + n; }
@@ -2885,21 +2898,21 @@ function renderStats(){
   var setProfit = function(id, v){
     var n = $('#' + id);
     if (!n) return;
-    n.textContent = fmtMoney(v);
+    n.textContent = fmtMoneyInt(v);
     n.className = v < 0 ? 'txt-red' : '';
   };
-  set('statImport', fmtMoney(s.mImp));
-  set('statExport', fmtMoney(s.mExp));
-  set('statExportDay', fmtMoney(s.dExp));
-  set('statExportYear', fmtMoney(s.yExp));
+  set('statImport', fmtMoneyInt(s.mImp));
+  set('statExport', fmtMoneyInt(s.mExp));
+  set('statExportDay', fmtMoneyInt(s.dExp));
+  set('statExportYear', fmtMoneyInt(s.yExp));
   setProfit('statProfitDay', s.profitDay);
   setProfit('statProfitYear', s.profitYear);
   var pn = $('#statProfit');
   if (pn) {
-    pn.textContent = fmtMoney(s.profitMonth);
+    pn.textContent = fmtMoneyInt(s.profitMonth);
     pn.className = 'stat__v ' + (s.profitMonth < 0 ? 'txt-red' : '');
   }
-  set('statStock', fmtQty(s.stock));
+  set('statStock', fmtQtyInt(s.stock));
 }
 /* ================= PHÂN TRANG ================= */
 function mkPageBtn(label, target, disabled, kind, current){

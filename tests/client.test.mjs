@@ -39,6 +39,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
+  fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
   reconcileList: (typeof reconcileList === 'function' ? reconcileList : null), findProduct: (typeof findProduct === 'function' ? findProduct : null), renderStats: (typeof renderStats === 'function' ? renderStats : null),
@@ -3714,7 +3715,7 @@ test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) n�
 
 /* 2.14.0 (T1–T3, Nhập hàng điện thoại): bố cục gọn theo ảnh duyệt. */
 test('2.14.0 Thuốc chén điện thoại: ô chọn đơn rộng cả hàng 2 của thanh; nút chân ≥44px; tiêu đề cột ẩn khi tờ ghi rỗng', () => {
-  assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:1;flex:1 1 92px;min-width:92px\}/);
+  assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:1;flex:1 1 90px;min-width:90px\}/);
   assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
   assert.match(PAGE, /#remedyNote>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/);
   assert.match(PAGE, /#remedyNote:has\(#remedyBody tr\[data-pid\]\)>table>thead\{display:table-header-group\}/);
@@ -4770,7 +4771,7 @@ test('2.15.0 thanh tiêu đề điện thoại: ô tìm/ô chọn đơn không c
   assert.doesNotMatch(PAGE, /\.card__bar-search\{order:3;flex:1 0 100%\}/);
   assert.doesNotMatch(PAGE, /#remedyBox \.card__bar-preset\{order:3;flex:1 0 100%\}/);
   assert.match(PAGE, /\.card__bar>\.inp\.card__bar-search\{order:1;flex:1 1 80px;min-width:0\}/);
-  assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 92px;min-width:92px\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 90px;min-width:90px\}/);
 });
 
 test('2.15.0 chân Thuốc chén: Lưu đơn | Tên mới | Bán đơn một hàng không xuống dòng; Xóa/Sao chép ở hàng phụ riêng; id/action/aria-label giữ', () => {
@@ -4810,12 +4811,12 @@ test('2.15.0 dữ liệu cũ có oid/oname (đã gộp trước đây) vẫn qua
 });
 
 /* 2.15.1: ràng buộc CSS (số đo thật ở trình duyệt nằm trong báo cáo; ở đây giữ quy tắc). */
-test('2.15.1 Thuốc chén điện thoại: ô chọn đơn không hẹp hơn chữ "Đơn mới" (min-width >= 90px), ô ngày 108px ở <=400px', () => {
+test('2.15.1 Thuốc chén điện thoại: ô chọn đơn không hẹp hơn chữ "Đơn mới" (min-width >= 90px), ô ngày 118px (đủ dd/mm/yyyy 16px) ở <=400px', () => {
   const m = PAGE.match(/#remedyBox \.card__bar-preset\{order:1;flex:1 1 (\d+)px;min-width:(\d+)px\}/);
   assert.ok(m, 'thiếu quy tắc ô chọn đơn điện thoại');
   assert.ok(Number(m[2]) >= 90, 'min-width ô chọn đơn phải >= 90px');
   assert.ok(Number(m[1]) >= Number(m[2]), 'flex-basis không nhỏ hơn min-width');
-  assert.match(PAGE, /@media \(max-width:400px\)\{[^@]*#remedyBox \.card__bar-date\{flex:0 0 108px\}/);
+  assert.match(PAGE, /@media \(max-width:400px\)\{[^@]*#remedyBox \.card__bar-date\{flex:0 0 118px\}/);
 });
 
 test('2.15.1 chú giải tháng cùng một hàng: chart-tip là hàng (row, wrap), không còn cột; chip <=12px ở <=400px', () => {
@@ -4836,4 +4837,76 @@ test('2.15.1 fmtMoneyInt (chú giải tháng): cắt phần lẻ nghìn, không 
   assert.equal(app.fmtMoneyInt(1234567000), '1.234.567');
   assert.equal(app.fmtMoney(123456789), '123.456,789', 'fmtMoney không đổi');
   assert.equal(app.fmtMoney(400), '0,4');
+});
+
+/* 2.15.2: cắt phần lẻ CHỈ trong Thống kê; mục khác giữ cách hiển thị cũ. */
+test('2.15.2 ngoài Thống kê: fmtMoney/fmtQty/fmtUnitPrice vẫn hiện số lẻ như 2.15.1', () => {
+  assert.equal(app.fmtMoney(400), '0,4');
+  assert.equal(app.fmtMoney(123456789), '123.456,789');
+  assert.equal(app.fmtMoney(15088170), '15.088,17');
+  assert.equal(app.fmtMoney(-2500), '-2,5');
+  assert.equal(app.fmtQty(1.5), '1,5 kg');
+  assert.equal(app.fmtQty(0.25), '2,5 lạng');
+  assert.equal(app.fmtQty(0.005), '5 g');
+  assert.equal(app.fmtUnitPrice(42600), '42,6/kg');
+});
+
+test('2.15.2 fmtQtyInt (Thống kê): chọn đơn vị theo giá trị thật rồi cắt lẻ, không làm tròn, không -0', () => {
+  assert.equal(app.fmtQtyInt(0), '0g');
+  assert.equal(app.fmtQtyInt(1.5), '1 kg');
+  assert.equal(app.fmtQtyInt(97.999), '97 kg');
+  assert.equal(app.fmtQtyInt(123456.789), '123.456 kg');
+  assert.equal(app.fmtQtyInt(0.3), '3 lạng');
+  assert.equal(app.fmtQtyInt(0.25), '2 lạng');
+  assert.equal(app.fmtQtyInt(0.0045), '4 g');
+  assert.equal(app.fmtQtyInt(0.0004), '0 g');
+  assert.equal(app.fmtQtyInt(-1.5), '-1 kg');
+  assert.ok(!app.fmtQtyInt(-0.0004).includes('-'), 'không hiện -0');
+});
+
+test('2.15.2 renderStats: mọi số tiền và tồn kg trong Thống kê hiện số tròn; dữ liệu và tính toán không đổi', () => {
+  const els = {};
+  const mk = () => ({ textContent: '', className: '', hidden: false });
+  for (const id of ['statImport', 'statExport', 'statExportDay', 'statExportYear', 'statProfit', 'statProfitDay', 'statProfitYear', 'statStock']) els['#' + id] = mk();
+  const doc = { readyState: 'loading', querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; }, getElementById() { return null; }, createElement() { return mk(); }, addEventListener() {}, body: mk(), documentElement: mk() };
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {} });
+  const d = new Date();
+  const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  c.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 5.7, costPrice: 1000 }], prescriptions: [], updatedAt: 1, moneyUnit: 'dong',
+    transactions: [
+      { id: 'a', date: iso, type: 'NHAP', productId: 'p1', qty: 1, price: 123456789, total: 123456789 },
+      { id: 'b', date: iso, type: 'BAN', productId: 'p1', qty: 1, price: 987654321, total: 987654321, cost: 400 }
+    ]
+  });
+  c.renderStats();
+  assert.equal(els['#statImport'].textContent, '123.456');
+  assert.equal(els['#statExport'].textContent, '987.654');
+  assert.equal(els['#statExportDay'].textContent, '987.654');
+  assert.equal(els['#statExportYear'].textContent, '987.654');
+  assert.ok(!/,/.test(els['#statProfit'].textContent + els['#statProfitDay'].textContent + els['#statProfitYear'].textContent + els['#statStock'].textContent), 'không còn dấu phẩy');
+  assert.equal(els['#statStock'].textContent, '5 kg');
+  assert.equal(c.fmtMoney(123456789), '123.456,789');
+  assert.equal(c.kInput(123456789), '123456.789');
+  assert.equal(c.kToDong(c.kInput(400)), 400);
+  assert.equal(c.fmtKgExact(97.549), '97,549 kg', 'đối soát giữ số đầy đủ');
+});
+
+test('2.15.2 nguồn: chỉ renderStats và chú giải biểu đồ dùng hàm cắt; ô nhập/đối soát/xuất JSON không dùng', () => {
+  const rs = PAGE.slice(PAGE.indexOf('function renderStats(){'), PAGE.indexOf('/* ================= PHÂN TRANG'));
+  assert.ok(!/fmtMoney\(|fmtQty\(/.test(rs), 'renderStats không dùng hàm hiển thị đầy đủ');
+  assert.ok(/fmtMoneyInt\(/.test(rs) && /fmtQtyInt\(/.test(rs));
+  const rest = PAGE.replace(rs, '');
+  const calls = (rest.match(/fmt(MoneyInt|QtyInt)\(/g) || []).length;
+  assert.equal(calls, 2 + 2, 'ngoài renderStats: 2 định nghĩa + 2 lần ở chú giải biểu đồ (impTxt/expTxt)');
+  assert.ok(!/\.value = [^;\n]*(fmtMoneyInt|fmtQtyInt|fmtMoney|fmtQty)\(/.test(PAGE), 'không đổ chuỗi hiển thị vào ô nhập');
+  assert.ok(!/JSON\.stringify\([^)]*(fmtMoneyInt|fmtQtyInt)/.test(PAGE), 'xuất JSON không dùng hàm cắt');
+  assert.ok(PAGE.includes("fmtKgExact(v){ return fmtNum(v) + ' kg'; }"), 'đối soát giữ đủ');
+});
+
+test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm 6/24px (đủ dd/mm/yyyy cỡ 16px), thanh gọn đệm 10 khe 4', () => {
+  assert.match(PAGE, /#remedyBox \.card__bar\{padding-left:10px;padding-right:10px;gap:4px\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-date\{flex:0 0 118px\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px;padding-right:24px\}/);
+  assert.match(PAGE, /\.card__bar-date \.datefield__ico\{right:6px;width:16px;height:16px\}/);
 });
