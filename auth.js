@@ -496,7 +496,7 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
   function announce(port) {
     if (hasOwner()) { log.log('[auth] Chỉ thiết bị đã được duyệt mới truy cập được.'); return; }
     ensureSetupCode();
-    log.log('[auth] Chưa có thiết bị chủ. Mở http://<IP-máy-tính>:' + port + '/auth/setup trên thiết bị đầu tiên và nhập mã ở trên.');
+    log.log('[auth] Chưa có thiết bị chủ. Trên PC mở https://localhost/auth/setup (dự phòng http://localhost:' + port + '/auth/setup); máy khác mở https://<IP-máy-tính>/auth/setup. Nhập mã ở trên.');
   }
 
   function close() {
