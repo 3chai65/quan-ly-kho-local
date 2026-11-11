@@ -3548,6 +3548,33 @@ test('2.14.0 Bán lẻ: renderNote không vẽ dòng trống (chỉ dòng thật
   assert.equal(tb.children.length, 1, 'tờ ghi 1 dòng thật phải có đúng 1 dòng, không có dòng trống');
 });
 
+/* 2.14.0 (sửa giai đoạn 1): STT dòng đang nhập = số dòng tờ ghi + 1; hai bảng Bán lẻ dùng chung colgroup và độ rộng cột. */
+test('2.14.0 Bán lẻ: STT dòng đang nhập = số dòng tờ ghi + 1 (đã có 1 dòng → 2)', () => {
+  const cell = { textContent: '' };
+  const pendingRow = { getAttribute() { return null; }, querySelector(sel) { return sel === '.c-num' ? cell : null; } };
+  const pendingTb = { children: [pendingRow], textContent: '' };
+  const noteTb = { textContent: '', children: [], appendChild(c) { this.children.push(c); return c; } };
+  const els = { '#retailNoteBody': noteTb, '#retailBody': pendingTb, '#retailNotePg': makeEl(), '#retailNotePager': makeEl(), '#retailNote': makeEl() };
+  const doc = trackDoc(els);
+  doc.createTextNode = () => makeEl();
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  c.setRetailItems([{ pid: 'p1', kg: 2, amount: 2000 }]);
+  c.renderNote();
+  assert.equal(cell.textContent, '2', 'STT dòng đang nhập phải là 2 khi tờ ghi có 1 dòng');
+  c.setRetailItems([]);
+  c.renderNote();
+  assert.equal(cell.textContent, '1', 'tờ ghi rỗng → dòng đang nhập là 1');
+});
+
+test('2.14.0 Bán lẻ: hai bảng (tờ ghi và dòng đang nhập) dùng chung colgroup 5 cột và độ rộng cột (col.cg-*)', () => {
+  const rb0 = PAGE.indexOf('id="retailBox"'), rb1 = PAGE.indexOf('id="remedyBox"');
+  const block = PAGE.slice(rb0, rb1);
+  assert.equal(block.split('<colgroup>').length - 1, 2, 'phải có 2 colgroup trong thẻ Bán lẻ');
+  assert.equal(block.split('class="cg-num"').length - 1, 2);
+  for (const k of ['cg-num', 'cg-qty', 'cg-money', 'cg-act']) assert.match(PAGE, new RegExp('#retailNote col\\.' + k + '\\{width:\\d+px\\}'), k);
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
