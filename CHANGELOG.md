@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.12.1] - 2026-11-11
+
+- Điện thoại: nút + ở hàng nhập bán lẻ và thuốc chén thẳng hàng đáy ô nhập, 44px; tên hàng 1 rộng hết hàng.
 ## [2.12.0] - 2026-11-11
 
 ### Giao diện
