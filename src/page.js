@@ -368,9 +368,10 @@ input.qty-hinted{padding-left:50px}
 .card__bar-month{order:2}
 .card__bar-btn{order:2}
 .card__bar-lbl{display:none}
-.card__bar-search.is-inline{order:0;flex:1 1 0;min-width:0}
+.card__bar-search.is-inline{order:3;flex:1 0 100%;min-width:0}
 .card__bar>.inp.card__bar-search{order:3;flex:1 0 100%}
 .card__bar-count{order:4;margin-left:0}
+#impBox .card__bar-count{order:1}
 }
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
