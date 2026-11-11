@@ -40,7 +40,7 @@ function loadClient(extra = {}) {
   js = js.slice(0, end) + `
 globalThis.__test = {
   fmtMoney: fmtMoney, fmtNum: fmtNum, fmtQty: fmtQty, dec: dec, num: num,
-  sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates,
+  sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates, openMerge: openMerge, mergeDo: mergeDo,
   reconcileList: reconcileList, findProduct: findProduct, renderStats: renderStats,
   loadPreset: loadPreset, recFix: recFix, resetDrafts: resetDrafts, checkLimits: checkLimits,
   backupLastDate: backupLastDate, commitRetailRow: commitRetailRow,
@@ -329,6 +329,43 @@ test('mergeCandidates vẫn gộp các dòng bán rời không có cờ retail',
   const list = app.mergeCandidates();
   assert.equal(list.length, 1);
   assert.equal(list[0].items.length, 2);
+});
+
+/* 2.13.0 (N3): hộp gộp không tick sẵn bất kỳ đơn nào (kể cả đơn giá lẻ); sắp theo ngày; không chọn gì thì gộp không đổi db. */
+test('2.13.0 N3 mergeDlg: không checkbox nào checked (có cả giá tròn và giá lẻ); sắp theo ngày mới nhất; không chọn thì mergeDo không đổi db', () => {
+  const mk = tag => ({ tag, type: '', checked: false, hidden: false, textContent: '', children: [], attrs: {}, className: '',
+    setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; },
+    appendChild(c) { this.children.push(c); return c; }, showModal() { this.open = true; },
+    classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } }, style: {}, dataset: {},
+    addEventListener() {}, removeEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, focus() {}, select() {} });
+  const box = mk('div'), hint = mk('p'), dlg = mk('dialog'), go = mk('button');
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null, documentElement: mk('html'), body: mk('body'),
+    querySelector(s) { return s === '#mergeList' ? box : s === '#mergeHint' ? hint : s === '#mergeDlg' ? dlg : s === '[data-action="merge-do"]' ? go : null; },
+    querySelectorAll() { return []; }, createElement(t) { return mk(t); }, createElementNS(t) { return mk(t); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, confirm() { return false; } });
+  c.setDb({
+    products: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong',
+    transactions: [
+      { id: 'a1', date: '2026-01-01', type: 'BAN', productId: 'p1', qty: 1, price: 101, total: 101 },
+      { id: 'a2', date: '2026-01-01', type: 'BAN', productId: 'p2', qty: 1, price: 101, total: 101 },
+      { id: 'b1', date: '2026-01-05', type: 'BAN', productId: 'p1', qty: 1, price: 100, total: 100 },
+      { id: 'b2', date: '2026-01-05', type: 'BAN', productId: 'p2', qty: 1, price: 100, total: 100 }
+    ]
+  });
+  const before = JSON.stringify(c.getDb());
+  c.openMerge();
+  const boxes = [];
+  const walk = n => { for (const k of n.children) { if (k.tag === 'input') boxes.push(k); walk(k); } };
+  walk(box);
+  assert.equal(boxes.length, 2, 'phải có 2 nhóm');
+  assert.ok(boxes.every(b => b.checked === false), 'không checkbox nào được tick sẵn');
+  assert.equal(boxes[0].attrs['data-key'], '2026-01-05|100', 'sắp theo ngày mới nhất');
+  assert.equal(c.isDirty(), false);
+  c.mergeDo();
+  assert.equal(JSON.stringify(c.getDb()), before, 'không chọn nhóm nào thì gộp không đổi db');
 });
 
 test('allocateRemedyByCost: vốn cộng lãi chia đều, dòng cuối nhận phần dư', () => {
