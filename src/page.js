@@ -1254,6 +1254,13 @@ function qtyHintText(v, unit){
 }
 /* 2.14.0 S1: vùng chữ tối thiểu (px) của ô số khi gợi ý đang hiện. */
 var QTY_TEXT_MIN = 56;
+/* N1: làm mới gợi ý của mọi ô số đã gắn gợi ý (sau khi mã gán value rỗng). */
+function refreshAllQtyHints(){
+  var list = doc.querySelectorAll('input.qty-hinted');
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].qtyHintRefresh) list[i].qtyHintRefresh();
+  }
+}
 function attachQtyHint(input, unit){
   if (!input || !input.parentNode) return null;
   var host = input.parentNode;
@@ -1994,6 +2001,7 @@ function commitRemedyRow(){
   remedyNotePage = 1e9;
   tb.textContent = '';
   orderEmpty(tb, 4, '');
+  refreshAllQtyHints();
   return true;
 }
 function addRemedyToNote(){
@@ -2150,6 +2158,7 @@ function resetRetail(){
   var s = $('#retailSearch');
   if (s) s.value = '';
   calcRetail();
+  refreshAllQtyHints();
 }
 function resetRemedy(){
   var tb = $('#remedyBody');
@@ -2171,6 +2180,7 @@ function resetRemedy(){
   if (th) th.value = '1';
   calcRemedy();
   updatePresetUI();
+  refreshAllQtyHints();
 }
 /* Xóa mọi bản nháp đang giữ trong bộ nhớ sau khi đã lấy bản máy chủ/khôi phục. */
 function resetDrafts(){
@@ -2293,6 +2303,7 @@ function commitRetailRow(){
   notePage = 1e9;
   tb.textContent = '';
   orderEmpty(tb, 5, '');
+  refreshAllQtyHints();
   return true;
 }
 function addRetailToNote(){
@@ -3927,6 +3938,7 @@ function resetNhapInputs(){
   var hint = $('#nhapHint');
   if (hint) { hint.hidden = true; hint.textContent = ''; }
   calcNhap();
+  refreshAllQtyHints();
 }
 function addNhapItem(){
   var inp = $('#nhapSearch');
@@ -4024,6 +4036,7 @@ function saveNhap(e){
   resetNhapInputs();
   renderNhapList();
   commit(savedN === 0 ? 'Đã tạo vị thuốc' : savedN > 1 ? 'Đã lưu nhập ' + savedN + ' vị thuốc' : 'Đã lưu nhập hàng');
+  refreshAllQtyHints();
 }
 
 /* ================= SẢN PHẨM ================= */
