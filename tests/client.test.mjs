@@ -3257,9 +3257,53 @@ test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng T
   // quy tắc điện thoại của tab phải nằm trong @media (max-width:600px)
   const m = PAGE.lastIndexOf('@media (max-width:600px)', at('repeat(4,minmax(0,1fr))'));
   assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
-  // .stat: gốc trước override điện thoại (không đổi, làm chốt)
-  assert.ok(at('.stat__v{font-size:17px') < at('.stat__v{font-size:16px}'), '.stat__v gốc phải đứng trước override');
-  assert.ok(at('.stat__ic{width:24px') < at('.stat__ic{width:22px'), '.stat__ic gốc phải đứng trước override');
+});
+
+/* 2.11.0: dải số liệu mỏng (Bán/Lợi nhuận) trên cùng; Nhập/Tồn kho chuyển vào Thống kê. Chỉ giao diện. */
+const STAT_IDS = ['statImport', 'statExport', 'statExportDay', 'statExportYear', 'statProfit', 'statProfitDay', 'statProfitYear', 'statStock'];
+
+test('2.11.0 số liệu: mỗi id đúng một lần; Bán/Lợi nhuận trong dải trên cùng; Nhập/Tồn kho trong #chartBox (đầu thân thẻ)', () => {
+  for (const id of STAT_IDS) assert.equal(PAGE.split('id="' + id + '"').length - 1, 1, id + ' phải đúng một lần');
+  const s0 = PAGE.indexOf('<section class="stats" aria-label="Bán và lợi nhuận tháng">');
+  assert.ok(s0 > 0, 'thiếu dải số liệu');
+  const dai = PAGE.slice(s0, PAGE.indexOf('</section>', s0));
+  for (const id of ['statExport', 'statExportDay', 'statExportYear', 'statProfit', 'statProfitDay', 'statProfitYear']) {
+    assert.ok(dai.includes('id="' + id + '"'), id + ' phải nằm trong dải trên cùng');
+  }
+  const c0 = PAGE.indexOf('<details class="card" id="chartBox"');
+  assert.ok(c0 > 0, 'thiếu #chartBox');
+  const c1 = PAGE.indexOf('<details class="card" id="', c0 + 10);
+  const chart = PAGE.slice(c0, c1 > 0 ? c1 : undefined);
+  for (const id of ['statImport', 'statStock']) {
+    assert.ok(chart.includes('id="' + id + '"'), id + ' phải nằm trong #chartBox');
+    assert.ok(!dai.includes('id="' + id + '"'), id + ' không được nằm trong dải');
+  }
+  assert.ok(chart.indexOf('id="statImport"') < chart.indexOf('class="row mb-12"'), 'ô nhập phải đứng trên hàng chú thích/năm');
+  assert.ok(chart.indexOf('id="statStock"') < chart.indexOf('class="row mb-12"'), 'ô tồn kho phải đứng trên hàng chú thích/năm');
+});
+
+test('2.11.0 renderStats vẫn gán đủ 8 id số liệu (không đổi hành vi)', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  for (const id of STAT_IDS) els['#' + id] = { id, textContent: '', className: '' };
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({
+    products: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong',
+    transactions: [
+      { id: 't1', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 0 },
+      { id: 't2', date: '2026-11-06', type: 'NHAP', productId: 'p1', qty: 2, price: 500, total: 1000 }
+    ]
+  });
+  client.renderStats();
+  for (const id of STAT_IDS) assert.notEqual(els['#' + id].textContent, '', id + ' không được gán');
+});
+
+test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc gốc cùng bộ chọn; không còn .stat__ic/.ic-*/.stat cũ', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  assert.ok(at('.stats__c{padding:6px 12px') < at('.stats__c{padding:6px 10px}'), '.stats__c gốc phải đứng trước khối điện thoại');
+  assert.ok(at('.stat__sub{font-size:10px') < at('.stat__sub span{display:block}'), '.stat__sub gốc phải đứng trước khối điện thoại');
+  assert.ok(at('.stat__sub span+span::before{content:"· "}') < at('.stat__sub span+span::before{content:none}'), 'separator gốc phải đứng trước khối điện thoại');
+  assert.doesNotMatch(PAGE, /\.stat__ic|\.ic-(blue|green|amber|purple)\b|class="stat"/);
 });
 
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
