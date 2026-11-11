@@ -322,7 +322,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .qty-host{position:relative;display:block}
 .qty-host>input{display:block}
 .qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
-input.qty-hinted{padding-left:50px}
+/* 2.14.0 S1: không còn padding-left cố định; JS đặt padding-left (class .has-hint) chỉ khi gợi ý đang hiện và còn đủ chỗ. */
 .note__tot b{font-size:16px}
 /* 2.14.0 (giai đoạn 2a) Thuốc chén: cùng mẫu Bán lẻ – summary ẩn, thanh tiêu đề, dòng nhập trong tờ ghi, chân một hàng. */
 #remedyBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
@@ -501,6 +501,10 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 @media (max-width:600px){
 .tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .tab{min-height:44px;padding:4px 2px;font-size:12px}
+}
+/* 2.14.0 S1 (máy tính): cột SL của tờ ghi và dòng đang nhập rộng 152px → ô nhập 132px, vùng chữ ≥ 56px khi có gợi ý. Đặt SAU mọi quy tắc cg-qty ở trên. */
+@media (min-width:601px){
+#retailNote col.cg-qty,#remedyNote col.cg-qty,#nhapListBox col.cg-qty{width:152px;min-width:152px}
 }
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
@@ -1248,6 +1252,8 @@ function qtyHintText(v, unit){
   var kg = unit === 'g' ? n / 1000 : n;
   return '(' + fmtQty(kg) + ')';
 }
+/* 2.14.0 S1: vùng chữ tối thiểu (px) của ô số khi gợi ý đang hiện. */
+var QTY_TEXT_MIN = 56;
 function attachQtyHint(input, unit){
   if (!input || !input.parentNode) return null;
   var host = input.parentNode;
@@ -1269,16 +1275,33 @@ function attachQtyHint(input, unit){
   host.appendChild(sr);
   input.setAttribute('aria-describedby', sr.id);
   input.classList.add('qty-hinted');
+  /* 2.14.0 S1: gợi ý chỉ chiếm chỗ (padding-left đặt bằng JS, class .has-hint) khi ĐANG HIỆN và còn ≥ QTY_TEXT_MIN px cho chữ số; hết chỗ thì ẩn. */
+  var fit = function(){
+    input.classList.remove('has-hint');
+    input.style.paddingLeft = '';
+    if (!h._want || !(input.clientWidth > 0)) { h.hidden = true; return; }
+    h.hidden = false;
+    var pad = 11 + h.offsetWidth;
+    var padR = parseFloat(window.getComputedStyle(input).paddingRight) || 0;
+    if (input.clientWidth - pad - padR >= QTY_TEXT_MIN) {
+      input.classList.add('has-hint');
+      input.style.paddingLeft = pad + 'px';
+    } else {
+      h.hidden = true;
+    }
+  };
   var upd = function(){
     var t = qtyHintText(input.value, typeof unit === 'function' ? unit() : unit);
     var long = String(input.value || '').length > 6;
     h.textContent = t;
     sr.textContent = t ? 'Quy đổi ' + t : '';
-    h.hidden = !t || long;
+    h._want = !!t && !long;
+    fit();
   };
   input.addEventListener('input', upd);
   input.addEventListener('change', upd);
   input.qtyHintRefresh = upd;
+  if (typeof ResizeObserver === 'function') new ResizeObserver(fit).observe(input);
   upd();
   return h;
 }
