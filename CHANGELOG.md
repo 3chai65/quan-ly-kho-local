@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.10.1] - 2026-11-11
+
+- Nút tab rút gọn một nhãn: “L.s nhập”, “L.s bán”, “Sao lưu”; điện thoại cỡ chữ 11px.
+
 ## [2.10.0] - 2026-11-11
 
 ### Giao diện
