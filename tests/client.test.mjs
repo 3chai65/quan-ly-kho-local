@@ -3245,6 +3245,23 @@ test('2.10.1 nav tab: một nhãn duy nhất (không còn tab__full/tab__short);
   }
 });
 
+/* 2.10.1: quy tắc điện thoại phải đứng SAU quy tắc gốc cùng bộ chọn, nếu không quy tắc gốc ghi đè (cùng độ ưu tiên). */
+test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng TRƯỚC khối điện thoại cùng bộ chọn', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  // .tabs: gốc (8 cột) trước khối 600px (4 cột)
+  assert.ok(at('.tabs{display:grid') < at('repeat(4,minmax(0,1fr))'), '.tabs gốc phải đứng trước quy tắc 4 cột điện thoại');
+  // .tab: gốc (display:flex) trước khối 600px (11px)
+  assert.ok(at('.tab{display:flex') < at('.tab{min-height:38px;padding:4px;font-size:11px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
+  // .tab__ic: gốc (width:16px) trước khối 600px (ẩn)
+  assert.ok(at('.tab__ic{width:16px') < at('.tab__ic{display:none}'), '.tab__ic gốc phải đứng trước quy tắc ẩn điện thoại');
+  // quy tắc điện thoại của tab phải nằm trong @media (max-width:600px)
+  const m = PAGE.lastIndexOf('@media (max-width:600px)', at('repeat(4,minmax(0,1fr))'));
+  assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
+  // .stat: gốc trước override điện thoại (không đổi, làm chốt)
+  assert.ok(at('.stat__v{font-size:17px') < at('.stat__v{font-size:16px}'), '.stat__v gốc phải đứng trước override');
+  assert.ok(at('.stat__ic{width:24px') < at('.stat__ic{width:22px'), '.stat__ic gốc phải đứng trước override');
+});
+
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
   'copy-preset', 'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
