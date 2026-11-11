@@ -4529,3 +4529,16 @@ test('2.14.0 M3c phân trang điện thoại: .pager .btn--sm cao 36px và gap 4
   assert.ok(m, 'thiếu .pager .btn--sm{min-height:36px} trong khối 600px');
   assert.match(css, /@media \(max-width:600px\)\{[\s\S]*?\.pager\{gap:4px\}/);
 });
+
+/* 2.14.0 (giai đoạn 4, M5): Sao lưu – tiêu đề là .card__bar (icon + tên + hint #backupHint); summary ẩn trực quan giữ h2 để tab/test không đổi. */
+test('2.14.0 M5 Sao lưu: summary sr-summary giữ h2; .card__bar có tiêu đề và #backupHint; CSS ẩn summary của #backupBox', () => {
+  const i = PAGE.indexOf('id="backupBox"');
+  const j = PAGE.indexOf('<div class="card__body">', i);
+  const head = PAGE.slice(i, j);
+  assert.match(head, /<summary class="card__head sr-summary">/);
+  assert.match(head, /<h2 class="card__title">Sao lưu &amp; khôi phục<\/h2>/);
+  assert.match(head, /<div class="card__bar">[\s\S]*card__bar-title[\s\S]*id="backupHint"/);
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /#backupBox>summary\.sr-summary,?[^{]*\{position:absolute;/);
+  assert.match(css, /#invBox>summary\.sr-summary,#impBox>summary\.sr-summary,#expBox>summary\.sr-summary,#backupBox>summary\.sr-summary\{/);
+});
