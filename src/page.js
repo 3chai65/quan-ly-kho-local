@@ -10,36 +10,38 @@ export const PAGE = String.raw`<!doctype html>
 <title>Quản Lý Kho — Sổ kho, đơn bán và doanh thu</title>
 <meta name="description" content="Quản lý kho dược liệu: đơn bán lẻ, đơn thuốc chén, nhập hàng, tồn kho, lịch sử giao dịch và thống kê doanh thu 12 tháng. Đồng bộ mạng nội bộ (LAN).">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" id="themeColor" content="#f5f7fa">
+<meta name="theme-color" id="themeColor" content="#eceef2">
 <meta name="robots" content="noindex, nofollow">
 <link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23fff'/%3E%3Cpath fill='%23000' d='M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0'/%3E%3C/svg%3E">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
 color-scheme:light;
---bg:#f5f7fa;--surface:#fff;--surface2:#f8fafc;--border:#e3e8ef;--border2:#eef2f7;
---text:#0f172a;--text2:#475569;--muted:#5b6b81;
---brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#eef2ff;
---green-soft:#ecfdf5;--green-text:#047857;
---amber:#b45309;--amber-soft:#fffbeb;--amber-text:#b45309;
---red:#be123c;--red-soft:#fff1f2;--red-text:#be123c;
---blue-soft:#eff6ff;--blue-text:#1d4ed8;
---purple-soft:#f5f3ff;--purple-text:#6d28d9;
+--bg:#eceef2;--surface:#f6f7f9;--surface2:#eaedf2;--border:#d7dde6;--border2:#e6eaf0;
+--text:#1e293b;--text2:#475569;--muted:#5b6b81;
+--brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#e8ebf8;
+--green-soft:#e6f4ee;--green-text:#047857;
+--amber:#b45309;--amber-soft:#fbf5e6;--amber-text:#b45309;
+--red:#be123c;--red-soft:#f8e7ea;--red-text:#be123c;
+--blue-soft:#e6eef9;--blue-text:#1d4ed8;
+--purple-soft:#ece9f8;--purple-text:#6d28d9;
 --r:14px;--r-sm:10px;
 --sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.05);
+--chart-imp:#5b5fd0;--chart-exp:#2f9e76;
 --ring:0 0 0 3px rgba(79,70,229,.30);
 }
 html[data-theme=dark]{
 color-scheme:dark;
---bg:#0a0f1a;--surface:#111827;--surface2:#182234;--border:#25334a;--border2:#1d2942;
---text:#e9eef8;--text2:#c2cddd;--muted:#95a3b8;
---brand:#6366f1;--brand-text:#a5b4fc;--brand-soft:#1e1b4b;
---green-soft:#062e26;--green-text:#34d399;
---amber:#f59e0b;--amber-soft:#3a2a06;--amber-text:#fbbf24;
---red:#f43f5e;--red-soft:#3f1020;--red-text:#fb7185;
---blue-soft:#0b2447;--blue-text:#93c5fd;
---purple-soft:#241b45;--purple-text:#c4b5fd;
---sh:0 1px 2px rgba(0,0,0,.5);
+--bg:#111620;--surface:#171e2b;--surface2:#1f2736;--border:#2d3850;--border2:#242e41;
+--text:#cdd5e1;--text2:#aab4c4;--muted:#8f9bb0;
+--brand:#5b5fd9;--brand-text:#b4bcf2;--brand-soft:#222545;
+--green-soft:#0f2a24;--green-text:#7fd6ad;
+--amber:#d99a2b;--amber-soft:#2e2412;--amber-text:#e6b964;
+--red:#e0566f;--red-soft:#3a1a22;--red-text:#ec8294;
+--blue-soft:#14233a;--blue-text:#a7c7ea;
+--purple-soft:#2a2341;--purple-text:#cabff0;
+--sh:0 1px 2px rgba(0,0,0,.35);
+--chart-imp:#7f83e0;--chart-exp:#4fb991;
 --ring:0 0 0 3px rgba(129,140,248,.35);
 }
 html{-webkit-text-size-adjust:100%}
@@ -234,8 +236,8 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .foot--retail .btn{width:100%;padding-left:6px;padding-right:6px}
 .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.dot--imp{background:#6366f1}
-.dot--exp{background:#10b981}
+.dot--imp{background:var(--chart-imp)}
+.dot--exp{background:var(--chart-exp)}
 .chart{display:block;width:100%;height:300px;cursor:pointer}
 .chart-tip{margin-top:8px;min-height:18px}
 /* ---------- toast ---------- */
@@ -1717,7 +1719,7 @@ function applyTheme(mode){
     b.setAttribute('aria-checked', b.getAttribute('data-theme-set') === mode ? 'true' : 'false');
   });
   var meta = $('#themeColor');
-  if (meta) meta.setAttribute('content', dark ? '#0a0f1a' : '#f5f7fa');
+  if (meta) meta.setAttribute('content', dark ? '#111620' : '#eceef2');
   setFavicon();
   if ($('#chartBox') && $('#chartBox').open) renderChart();
 }
@@ -3352,9 +3354,9 @@ function renderChart(){
       ctx.fillStyle = 'rgba(99,102,241,.14)';
       ctx.fillRect(padL + groupW * i, padT, groupW, H);
     }
-    ctx.fillStyle = '#6366f1';
+    ctx.fillStyle = cs.getPropertyValue('--chart-imp').trim() || '#6366f1';
     bar(ctx, cx - bw - 1, y0 - H * data.imp[i] / max, bw, H * data.imp[i] / max, 3);
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = cs.getPropertyValue('--chart-exp').trim() || '#10b981';
     bar(ctx, cx + 1, y0 - H * data.exp[i] / max, bw, H * data.exp[i] / max, 3);
     ctx.fillStyle = colText;
     ctx.textAlign = 'center';
