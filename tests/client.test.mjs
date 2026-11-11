@@ -106,8 +106,6 @@ globalThis.__test = {
   historyData: historyData, renderHistory: renderHistory, renderNote: renderNote,
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
-  setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
-  setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
   normSearch: normSearch,
   handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
@@ -1833,7 +1831,7 @@ test('lịch sử bán: mặc định trang 1 đúng 10 đơn gần nhất, đơ
   // đơn thuốc chén (rx)
   txs.push({ id: 'rx1', date: '2026-11-04', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 901, rx: true });
   client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-  const data = client.historyData('exp', null, true);
+  const data = client.historyData('exp', null);
   // 17 dòng: 14 đơn OD_1..OD_14, 1 đơn gộp OD_big (12 dòng), 2 dòng không oid (single, rx1)
   assert.equal(data.rows.length, 17);
   // Trang 1 = 10 dòng mới nhất: 2 hôm nay + 5 hôm qua + 3 hôm kia
@@ -1896,13 +1894,13 @@ test('lịch sử nhập: tìm "cam" ra Cam Thảo không dấu, xóa ô về 10
     { id: 'g2', date: '2026-11-05', type: 'NHAP', productId: 'p2', qty: 1, price: 10000, total: 10000, ts: 501, oid: 'IM_g1' }
   ];
   client.setDb({ products: [{ id: 'p1', name: 'Cam Thảo', stock: 10, costPrice: 10000 }, { id: 'p2', name: 'A', stock: 5, costPrice: 5000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-  const all = client.historyData('imp', null, true);
+  const all = client.historyData('imp', null);
   // 3 đơn lẻ + 1 đơn gộp (IM_g1) = 4
   assert.equal(all.rows.length, 4);
-  const found = client.historyData('imp', null, false, 'cam');
+  const found = client.historyData('imp', null, 'cam');
   // i1 + i3 + đơn gộp IM_g1 = 3
   assert.equal(found.rows.length, 3);
-  const cleared = client.historyData('imp', null, true, '');
+  const cleared = client.historyData('imp', null, '');
   assert.equal(cleared.rows.length, 4);
   assert.equal(client.normSearch('Cam Thảo'), client.normSearch('cam thao'));
 });
@@ -1937,7 +1935,7 @@ test('(e) phân trang: trang 3 mở rộng khi có hơn 20 đơn', () => {
   const txs = [];
   for (let i = 0; i < 25; i++) txs.push({ id: 't' + i, date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 5000 + i, oid: 'OD_' + i, oname: 'Bán lẻ' });
   client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-  const d = client.historyData('exp', null, true);
+  const d = client.historyData('exp', null);
   assert.equal(d.rows.length, 25);
   assert.equal(d.rows.slice(0, 10).length, 10);
   assert.equal(d.rows.slice(20, 30).length, 5);
@@ -2036,7 +2034,7 @@ test('(g) tìm kiếm lịch sử nhập phân trang trên toàn bộ kết qu�
   const txs = [];
   for (let i = 0; i < 15; i++) txs.push({ id: 's' + i, date: '2026-11-08', type: 'NHAP', productId: 'p1', qty: 1, price: 10000, total: 10000, ts: 5000 + i });
   client.setDb({ products: [{ id: 'p1', name: 'Cam Thảo', stock: 100, costPrice: 10000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-  const f = client.historyData('imp', null, false, 'cam');
+  const f = client.historyData('imp', null, 'cam');
   assert.equal(f.rows.length, 15);
   assert.equal(f.rows.slice(0, 10).length, 10);
   assert.equal(f.rows.slice(10, 20).length, 5);
@@ -2668,8 +2666,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - NEW_213.reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 25, 'data-action cũ đã đổi (nhap-add, brand-devices thêm ở 2.12.0/2.13.0 không tính)');
-  assert.equal(PAGE.match(/ id="/g).length, 161); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
+  assert.equal(PAGE.match(/data-action="/g).length - NEW_213.reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
+  assert.equal(PAGE.match(/ id="/g).length, 162); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3323,6 +3321,47 @@ test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), l�
   assert.match(PAGE, /<div class="field sug">\s*<label class="lbl" for="nhapSearch">/, 'ô tên phải là .field.sug');
 });
 
+/* 2.13.0 (N5): lịch sử luôn mới nhất trước; bỏ Gần nhất/Tất cả; Lịch sử bán có ô tìm tên (expSearch) như Lịch sử nhập. */
+test('2.13.0 N5: không còn 4 nút latest/clear, không còn impAll/expAll/latestOnly, historyData không có nhánh sắp theo tên', () => {
+  for (const a of ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp']) assert.equal(PAGE.split('data-action="' + a + '"').length - 1, 0, a + ' còn trong PAGE');
+  assert.doesNotMatch(PAGE, /impAll|expAll|latestOnly/);
+  assert.doesNotMatch(PAGE, /function historyData[\s\S]*?\nfunction renderHistory[\s\S]*?localeCompare/, 'historyData còn sắp theo tên');
+});
+
+test('2.13.0 N5 lịch sử luôn mới nhất trước, kể cả sau khi gõ tìm rồi xóa ô tìm', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({
+    products: [{ id: 'p1', name: 'Đảng sâm', stock: 9, costPrice: 1000 }, { id: 'p2', name: 'Cam thảo', stock: 9, costPrice: 1000 }],
+    transactions: [
+      { id: 'e1', date: '2026-11-02', type: 'BAN', productId: 'p2', qty: 1, price: 1000, total: 1000, cost: 500, ts: 100 },
+      { id: 'e2', date: '2026-11-03', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 200 },
+      { id: 'e3', date: '2026-11-04', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 300 }
+    ],
+    prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+  });
+  const tsOf = d => d.rows.map(r => r.tx ? r.tx.ts : r.ts);
+  assert.equal(tsOf(client.historyData('exp', null, '')).join(','), '300,200,100');
+  client.historyData('exp', null, 'dang sam');
+  assert.equal(tsOf(client.historyData('exp', null, '')).join(','), '300,200,100', 'sau khi gõ rồi xóa ô tìm vẫn mới nhất trước');
+});
+
+test('2.13.0 N5 tìm tên ở Lịch sử bán: "dang sam" khớp "Đảng sâm" (không dấu, không hoa thường), lọc đúng và không giới hạn 10 đơn', () => {
+  const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  const txs = [];
+  for (let i = 0; i < 14; i++) txs.push({ id: 'd' + i, date: '2026-11-05', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 1000 + i });
+  for (let i = 0; i < 3; i++) txs.push({ id: 'c' + i, date: '2026-11-06', type: 'BAN', productId: 'p2', qty: 1, price: 1000, total: 1000, cost: 500, ts: 2000 + i });
+  client.setDb({ products: [{ id: 'p1', name: 'Đảng sâm', stock: 9, costPrice: 1000 }, { id: 'p2', name: 'Cam thảo', stock: 9, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const f = client.historyData('exp', null, 'DANG sam');
+  assert.equal(f.rows.length, 14, 'phải lấy đủ 14 đơn khớp, không chỉ 10');
+  assert.ok(f.rows.every(r => (r.name || '') === 'Đảng sâm'), 'chỉ đơn Đảng sâm');
+  const none = client.historyData('exp', null, 'khong co');
+  assert.equal(none.rows.length, 0);
+  assert.equal(client.historyData('exp', null, '').rows.length, 17, 'xóa ô tìm trả về đủ mọi đơn');
+  const html = PAGE.match(/<input class="inp inp--sm" id="expSearch"[^>]*>/);
+  assert.ok(html, 'thiếu ô expSearch');
+  assert.match(PAGE, /expS\.addEventListener\('input', function\(\)\{ expPage = 1; renderHistory\('exp'\); \}\);/, 'gõ phải đặt trang 1');
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
@@ -3689,6 +3728,8 @@ test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc g�
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
 /* 2.12.0 thêm nhap-add; 2.13.0 thêm brand-devices (không tính khi so với danh sách 1023b40). */
 const NEW_213 = ['nhap-add', 'brand-devices'];
+/* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
+const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
   'copy-preset', 'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
   'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
@@ -3704,8 +3745,8 @@ function oldPageFromGit() {
 
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
   const old = oldPageFromGit();
-  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a)).sort();
-  assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS, 'data-action đã đổi so với 1023b40');
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !REMOVED_213.includes(a)).sort();
+  assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS.filter(a => !REMOVED_213.includes(a)), 'data-action đã đổi so với 1023b40');
   if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
