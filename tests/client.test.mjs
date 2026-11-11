@@ -2323,3 +2323,45 @@ test('invPage âm được kẹp về 1 khi render', () => {
   client.renderInventory();
   assert.equal(client.getInvPage(), 1);
 });
+
+test('Enter chỉ có mục Tạo mới (không vị nào khớp): không chọn, preventDefault=0', () => {
+  const input = { value: 'Rất không có vị' };
+  const buttons = [
+    { getAttribute(k) { return k === 'data-pid' ? null : null; }, dispatchEvent() { this.hit = true; } }
+  ];
+  const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? input : s === '#nhapList' ? list : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  let prevented = 0;
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 0);
+  assert.equal(buttons[0].hit, undefined);
+});
+
+test('Enter vị khớp chính xác không có trong gợi ý hiển thị: không chọn', () => {
+  const input = { value: 'Cam thảo' };
+  const buttons = [
+    { getAttribute(k) { return k === 'data-pid' ? 'p999' : null; }, dispatchEvent() { this.hit = true; } }
+  ];
+  const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? input : s === '#nhapList' ? list : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  let prevented = 0;
+  c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
+  assert.equal(prevented, 0);
+  assert.equal(buttons[0].hit, undefined);
+});
