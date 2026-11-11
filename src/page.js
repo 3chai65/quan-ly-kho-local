@@ -249,6 +249,11 @@ box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .26s ease,opacity .2
 .toast.is-on{transform:translate(-50%,0);opacity:1;visibility:visible}
 .toast .ico{color:#34d399}
 .toast[data-kind=error] .ico{color:#fbbf24}
+/* N2 (2.13.0): điện thoại – thông báo hiện ở ĐẦU màn hình, dưới thanh header (kể cả safe-area), trượt từ trên xuống. Đặt SAU quy tắc gốc. */
+@media (max-width:600px){
+.toast{top:calc(env(safe-area-inset-top,0px) + 64px);bottom:auto;transform:translate(-50%,-150%)}
+.toast.is-on{transform:translate(-50%,0)}
+}
 /* ---------- dialog ---------- */
 .dlg{border:0;padding:0;background:transparent;max-width:min(440px,calc(100% - 24px));width:100%;
 max-height:calc(100dvh - 24px);overflow:auto}
@@ -261,6 +266,8 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .mrow input{margin-top:3px;width:18px;height:18px;flex:none}
 .note td.num{white-space:nowrap}
 .dlg__foot{display:flex;justify-content:flex-end;gap:8px}
+/* N2: khung lỗi trong hộp thoại (role=alert), tạo bằng JS khi có toast lỗi lúc hộp thoại mở. */
+.dlg__err{margin:0 0 12px;padding:9px 12px;border-radius:10px;border:1px solid var(--red-text);background:var(--red-soft);color:var(--red-text);font-size:14px;font-weight:600;line-height:1.4}
 /* ---------- responsive ---------- */
 @media (max-width:900px){
 .grid2{grid-template-columns:1fr}
@@ -1697,15 +1704,32 @@ function touch(){
 }
 
 /* ================= THÔNG BÁO ================= */
+/* N2: lỗi giữ 5 giây và báo assertive; thông báo thường 2,8 giây. Khi có hộp thoại đang mở, lỗi cũng hiện trong hộp (toast dưới lớp phủ dễ bị bỏ lỡ). */
 function toast(msg, kind){
   var t = $('#toast'), m = $('#toastMsg');
   if (!t || !m) return;
+  var isErr = kind === 'error';
   m.textContent = msg;
-  t.setAttribute('data-kind', kind === 'error' ? 'error' : 'ok');
+  t.setAttribute('data-kind', isErr ? 'error' : 'ok');
+  t.setAttribute('role', isErr ? 'alert' : 'status');
+  t.setAttribute('aria-live', isErr ? 'assertive' : 'polite');
   t.classList.add('is-on');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ t.classList.remove('is-on'); }, 2800);
+  toastTimer = setTimeout(function(){ t.classList.remove('is-on'); }, isErr ? 5000 : 2800);
+  if (isErr) { var od = $('dialog[open]'); if (od) dlgErrorBox(od).textContent = msg; }
 }
+function dlgErrorBox(dlg){
+  var box = dlg.querySelector('.dlg__err');
+  if (box) return box;
+  box = doc.createElement('div');
+  box.className = 'dlg__err';
+  box.setAttribute('role', 'alert');
+  var card = dlg.querySelector('.dlg__card') || dlg;
+  var head = card.querySelector('.card__head');
+  if (head && head.nextSibling) card.insertBefore(box, head.nextSibling); else card.appendChild(box);
+  return box;
+}
+function clearDlgErr(dlg){ var box = dlg.querySelector('.dlg__err'); if (box && box.parentNode) box.parentNode.removeChild(box); }
 
 /* ================= GIAO DIỆN SÁNG/TỐI ================= */
 var YIN = 'M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0';
@@ -4654,6 +4678,11 @@ function bindEvents(){
 
   var nf = $('#nhapForm');
   if (nf) nf.addEventListener('submit', saveNhap);
+  /* N2: lỗi trong hộp thoại tự xóa khi hộp đóng hoặc người dùng sửa một ô trong hộp. */
+  $$('dialog').forEach(function(d){
+    d.addEventListener('close', function(){ clearDlgErr(d); });
+    d.addEventListener('input', function(){ clearDlgErr(d); });
+  });
   if (nf) nf.addEventListener('keydown', function(e){
     if (e.key !== 'Enter' || e.defaultPrevented) return;
     if (!e.target || e.target.tagName !== 'INPUT') return;
