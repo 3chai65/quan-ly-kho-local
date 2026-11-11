@@ -324,7 +324,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
 /* 2.14.0 S2: hết chỗ trong ô → gợi ý lên dòng nhãn, mép phải (định vị theo td.c-qty); ngoài bảng thì ngay trên ô. Sau quy tắc gốc. */
 .qty-host.qty-host--lbl{position:static}
-.qty-hint.qty-hint--label{left:auto;right:0;top:0;transform:none;line-height:12px;background:transparent;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.qty-hint.qty-hint--label{left:auto;right:0;top:0;transform:none;line-height:12px;background:transparent;text-align:right}
 .qty-hint.qty-hint--above{top:-14px}
 td.c-qty{position:relative}
 /* 2.14.0 S1: không còn padding-left cố định; JS đặt padding-left (class .has-hint) chỉ khi gợi ý đang hiện và còn đủ chỗ. */
@@ -483,6 +483,8 @@ table.ord .inp{width:100%}
 table.inv .c-del,table.his .c-act{width:auto}
 .note .c-act{width:76px}
 .note td,.note th{padding-left:5px;padding-right:5px}
+/* 2.14.0 M4: điện thoại – ẩn hàng tiêu đề cột của tờ ghi (mỗi ô đã có nhãn riêng); máy tính giữ. */
+.note>table>thead{display:none}
 .note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
 }
 @media (min-width:601px){
@@ -1261,6 +1263,16 @@ function qtyHintText(v, unit){
 var QTY_TEXT_MIN = 56;
 var QTY_LABEL_W = 45; /* 2.14.0 S2: bề rộng nhãn "SL (KG)" (px) để gợi ý trên dòng nhãn không đè nhãn. */
 /* S2: vị trí gợi ý – 'hidden' chỉ khi không có giá trị hợp lệ/ô chưa hiển thị; đủ chỗ → 'inside'; hết chỗ → 'label' (dòng nhãn). */
+/* M2: các dạng hiển thị của gợi ý khi hết chỗ trên dòng nhãn, từ đầy đủ đến ngắn nhất (luôn còn đơn vị). */
+function qtyHintCandidates(t){
+  if (!t) return [''];
+  var a = String(t), b = a.replace(/^\(|\)$/g, '');
+  var c = b.replace(/,\d+/, '');
+  var u = b.split(' ').pop();
+  var out = [a, b, c, u], seen = {}, r = [];
+  for (var i = 0; i < out.length; i++) if (!seen[out[i]]) { seen[out[i]] = 1; r.push(out[i]); }
+  return r;
+}
 function qtyHintPlacement(clientWidth, padR, hintW, want){
   if (!want || !(clientWidth > 0)) return 'hidden';
   return (clientWidth - (11 + hintW) - padR >= QTY_TEXT_MIN) ? 'inside' : 'label';
@@ -1301,8 +1313,12 @@ function attachQtyHint(input, unit){
     h.className = 'qty-hint';
     host.classList.remove('qty-host--lbl');
     h.style.maxWidth = '';
-    var padR = parseFloat(window.getComputedStyle(input).paddingRight) || 0;
-    var cw = input.clientWidth;
+    h.textContent = h._full || '';
+    var cs = window.getComputedStyle(input);
+    var padR = parseFloat(cs.paddingRight) || 0;
+    /* M1: bề rộng khung padding (gồm padding, không gồm viền) lấy từ getBoundingClientRect – không dùng clientWidth (tùy trình duyệt/loại ô). */
+    var rw = input.getBoundingClientRect ? input.getBoundingClientRect().width : 0;
+    var cw = rw > 0 ? rw - (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0) : 0;
     var place = qtyHintPlacement(cw, padR, 0, !!h._want);
     if (place === 'hidden') { h.hidden = true; return; }
     h.hidden = false;
@@ -1315,13 +1331,20 @@ function attachQtyHint(input, unit){
       var inTd = !!(input.closest && input.closest('td'));
       h.className = 'qty-hint qty-hint--label' + (inTd ? '' : ' qty-hint--above');
       if (inTd) host.classList.add('qty-host--lbl');
-      h.style.maxWidth = Math.max(0, (host.offsetWidth || cw) - QTY_LABEL_W - 6) + 'px';
+      /* M2: không cắt bằng "…"; thử lần lượt các dạng rút gọn nội dung, luôn giữ đơn vị. */
+      var maxW = Math.max(0, (host.offsetWidth || cw) - QTY_LABEL_W - 6);
+      var cands = qtyHintCandidates(h._full || '');
+      for (var ci = 0; ci < cands.length; ci++) {
+        h.textContent = cands[ci];
+        if (h.offsetWidth <= maxW) break;
+      }
     }
   };
   var upd = function(){
     var t = qtyHintText(input.value, typeof unit === 'function' ? unit() : unit);
     h.textContent = t;
     sr.textContent = t ? 'Quy đổi ' + t : '';
+    h._full = t;
     h._want = !!t;
     fit();
   };
