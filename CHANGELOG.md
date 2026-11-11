@@ -29,7 +29,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 ### Sửa lỗi
 
-- Ô số có gợi ý đơn vị không còn padding cố định 50 px: vùng chữ luôn ≥ 56 px khi gợi ý hiện; gợi ý ẩn khi hết chỗ; cột SL máy tính rộng 152 px (S1).
+- Ô số có gợi ý đơn vị không còn padding cố định 50 px: vùng chữ luôn ≥ 56 px khi gợi ý hiện; gợi ý chuyển lên dòng nhãn khi hết chỗ; cột SL máy tính rộng 152 px (S1).
 - Gợi ý đơn vị làm mới sau mọi lần xóa ô số bằng mã (Nhập, Bán lẻ, Thuốc chén, lưu nhập, dòng tờ ghi); không còn “(12,5 kg)” trên ô trống (N1).
 - Đổi tên đơn thuốc chén có sẵn được khôi phục: chọn đơn thì hiện ô tên; “Lưu đơn” đổi tên có xác nhận như 2.13.2; “Lưu tên mới” khi đang chọn đơn = sao chép (N2).
 - Id mô tả gợi ý của các ô số không còn trùng (N3).
