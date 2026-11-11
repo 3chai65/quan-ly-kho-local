@@ -20,11 +20,11 @@ color-scheme:light;
 --bg:#f5f7fa;--surface:#fff;--surface2:#f8fafc;--border:#e3e8ef;--border2:#eef2f7;
 --text:#0f172a;--text2:#475569;--muted:#5b6b81;
 --brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#eef2ff;
---green:#047857;--green-soft:#ecfdf5;--green-text:#047857;
+--green-soft:#ecfdf5;--green-text:#047857;
 --amber:#b45309;--amber-soft:#fffbeb;--amber-text:#b45309;
 --red:#be123c;--red-soft:#fff1f2;--red-text:#be123c;
---blue:#1d4ed8;--blue-soft:#eff6ff;--blue-text:#1d4ed8;
---purple:#6d28d9;--purple-soft:#f5f3ff;--purple-text:#6d28d9;
+--blue-soft:#eff6ff;--blue-text:#1d4ed8;
+--purple-soft:#f5f3ff;--purple-text:#6d28d9;
 --r:14px;--r-sm:10px;
 --sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.05);
 --ring:0 0 0 3px rgba(79,70,229,.30);
@@ -34,11 +34,11 @@ color-scheme:dark;
 --bg:#0a0f1a;--surface:#111827;--surface2:#182234;--border:#25334a;--border2:#1d2942;
 --text:#e9eef8;--text2:#c2cddd;--muted:#95a3b8;
 --brand:#6366f1;--brand-text:#a5b4fc;--brand-soft:#1e1b4b;
---green:#10b981;--green-soft:#062e26;--green-text:#34d399;
+--green-soft:#062e26;--green-text:#34d399;
 --amber:#f59e0b;--amber-soft:#3a2a06;--amber-text:#fbbf24;
 --red:#f43f5e;--red-soft:#3f1020;--red-text:#fb7185;
---blue:#60a5fa;--blue-soft:#0b2447;--blue-text:#93c5fd;
---purple:#a78bfa;--purple-soft:#241b45;--purple-text:#c4b5fd;
+--blue-soft:#0b2447;--blue-text:#93c5fd;
+--purple-soft:#241b45;--purple-text:#c4b5fd;
 --sh:0 1px 2px rgba(0,0,0,.5);
 --ring:0 0 0 3px rgba(129,140,248,.35);
 }
@@ -361,7 +361,6 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
 <symbol id="i-yin" viewBox="0 0 512 512"><circle cx="256" cy="256" r="256" fill="#fff" stroke="none"/><path fill="#000" stroke="none" d="M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
@@ -375,19 +374,13 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 <symbol id="i-cloud-down" viewBox="0 0 24 24"><path d="M12 13v8M8 17l4 4 4-4"/><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/></symbol>
 <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></symbol>
 <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></symbol>
-<symbol id="i-plus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
-<symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
 <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
 <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
-<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
 <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
 <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4 3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8"/></symbol>
 <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
-<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4a2 2 0 0 1 2-2h13v20H6a2 2 0 0 1-2-2z"/><path d="M8 2v20M12 7h4M12 11h4"/></symbol>
-<symbol id="i-arrow-down-left" viewBox="0 0 24 24"><path d="M18 6 6 18M6 8v10h10"/></symbol>
-<symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M6 18 18 6M8 6h10v10"/></symbol>
 </svg>
 <header class="top">
   <div class="wrap bar">
@@ -1784,7 +1777,7 @@ function commitRemedyRow(){
   if (g <= 0) {
     var p = findProduct(row.getAttribute('data-pid'));
     toast('Dòng "' + (p ? p.name : '?') + '" thiếu gram', 'error');
-    var qi = $('.remedy-qty', row);
+    qi = $('.remedy-qty', row);
     if (qi) qi.focus();
     return false;
   }
@@ -3531,7 +3524,7 @@ function pickSuggest(key, id){
     invPage = 1;
     renderInventory();
   } else if (key === 'imph') {
-    var s9 = $('#impSearch');
+    s9 = $('#impSearch');
     if (s9) s9.value = p.name;
     impPage = 1;
     renderHistory('imp');
@@ -4015,7 +4008,7 @@ function saveTxEdit(){
     var ep = $('#txEditPrice'); if (ep) ep.focus();
     return;
   }
-  if (!isRx && price < 0) { toast('Đơn giá không được âm', 'error'); var ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
+  if (!isRx && price < 0) { toast('Đơn giá không được âm', 'error'); ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
 
   var p = findProduct(t.productId);
   var oldQty = num(t.qty);
@@ -4073,7 +4066,7 @@ function saveTxEdit(){
   closeTxEdit();
   commit('Đã cập nhật giao dịch');
 }
-/* ==== Đồng bộ: bản local không có đăng nhập, gọi thẳng API ==== */
+/* ==== Đồng bộ: gọi thẳng API, cookie thiết bị do trình duyệt tự gửi ==== */
 function apiFetch(url, opts){
   var o = {};
   var src = opts || {};
@@ -4085,7 +4078,7 @@ function apiFetch(url, opts){
   o.cache = 'no-store';
   return fetch(url, o);
 }
-/* ================= ĐỒNG BỘ D1 ================= */
+/* ================= ĐỒNG BỘ ================= */
 function cloudConflict(){
   if (conflictOpen) return Promise.resolve(false);
   conflictOpen = true;

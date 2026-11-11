@@ -20,7 +20,7 @@
  * - /auth/join có bộ đếm thử sai RIÊNG (5 lần thì khóa 15 phút); chủ có thể mở khóa,
  *   và tạo mã mời mới cũng đặt lại bộ đếm.
  *
- * Chưa có (giai đoạn 3): luồng thiết bị tự gửi yêu cầu để chủ duyệt, xử lý 401 ở client, HTTPS.
+ * Chưa có: luồng thiết bị tự gửi yêu cầu để chủ duyệt (hiện chỉ có mã mời).
  */
 
 import crypto from 'node:crypto';
@@ -71,7 +71,7 @@ function safeEqual(a, b) {
   const hb = crypto.createHash('sha256').update(String(b)).digest();
   return crypto.timingSafeEqual(ha, hb);
 }
-export function getCookie(req, name) {
+function getCookie(req, name) {
   const header = (req.headers && req.headers.cookie) || '';
   for (const part of String(header).split(';')) {
     const i = part.indexOf('=');

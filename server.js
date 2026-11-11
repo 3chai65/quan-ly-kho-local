@@ -515,7 +515,6 @@ app.put('/api/state', (req, res) => {
   res.set('Cache-Control', 'no-store');
   try {
     const text = typeof req.body === 'string' ? req.body : '';
-    if (text.length > MAX_BODY) return res.status(413).json({ success: false, error: 'Payload too large' });
     let body;
     try {
       body = JSON.parse(text);
@@ -556,9 +555,9 @@ app.put('/api/state', (req, res) => {
   }
 });
 
-// Trang chính: SSR data vào PAGE (giống worker cũ).
+// Trang chính: SSR data vào PAGE.
 app.get('/', (req, res) => {
-  let data = null;
+  let data;
   try {
     data = readState();
   } catch (e) {
