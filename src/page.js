@@ -322,6 +322,11 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .qty-host{position:relative;display:block}
 .qty-host>input{display:block}
 .qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
+/* 2.14.0 S2: hết chỗ trong ô → gợi ý lên dòng nhãn, mép phải (định vị theo td.c-qty); ngoài bảng thì ngay trên ô. Sau quy tắc gốc. */
+.qty-host.qty-host--lbl{position:static}
+.qty-hint.qty-hint--label{left:auto;right:0;top:0;transform:none;line-height:12px;background:transparent;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.qty-hint.qty-hint--above{top:-14px}
+td.c-qty{position:relative}
 /* 2.14.0 S1: không còn padding-left cố định; JS đặt padding-left (class .has-hint) chỉ khi gợi ý đang hiện và còn đủ chỗ. */
 .note__tot b{font-size:16px}
 /* 2.14.0 (giai đoạn 2a) Thuốc chén: cùng mẫu Bán lẻ – summary ẩn, thanh tiêu đề, dòng nhập trong tờ ghi, chân một hàng. */
@@ -1254,6 +1259,12 @@ function qtyHintText(v, unit){
 }
 /* 2.14.0 S1: vùng chữ tối thiểu (px) của ô số khi gợi ý đang hiện. */
 var QTY_TEXT_MIN = 56;
+var QTY_LABEL_W = 45; /* 2.14.0 S2: bề rộng nhãn "SL (KG)" (px) để gợi ý trên dòng nhãn không đè nhãn. */
+/* S2: vị trí gợi ý – 'hidden' chỉ khi không có giá trị hợp lệ/ô chưa hiển thị; đủ chỗ → 'inside'; hết chỗ → 'label' (dòng nhãn). */
+function qtyHintPlacement(clientWidth, padR, hintW, want){
+  if (!want || !(clientWidth > 0)) return 'hidden';
+  return (clientWidth - (11 + hintW) - padR >= QTY_TEXT_MIN) ? 'inside' : 'label';
+}
 /* N1: làm mới gợi ý của mọi ô số đã gắn gợi ý (sau khi mã gán value rỗng). */
 var QTY_HINT_SEQ = 0; /* N3: id mô tả duy nhất theo bộ đếm (không trùng giữa các ô). */
 function refreshAllQtyHints(){
@@ -1283,27 +1294,35 @@ function attachQtyHint(input, unit){
   host.appendChild(sr);
   input.setAttribute('aria-describedby', sr.id);
   input.classList.add('qty-hinted');
-  /* 2.14.0 S1: gợi ý chỉ chiếm chỗ (padding-left đặt bằng JS, class .has-hint) khi ĐANG HIỆN và còn ≥ QTY_TEXT_MIN px cho chữ số; hết chỗ thì ẩn. */
+  /* 2.14.0 S1: gợi ý chiếm chỗ trong ô (padding-left bằng JS, class .has-hint) khi còn ≥ QTY_TEXT_MIN px cho chữ số; 2.14.0 S2: hết chỗ thì chuyển lên dòng nhãn (mép phải), chỉ ẩn khi không có giá trị hợp lệ. */
   var fit = function(){
     input.classList.remove('has-hint');
     input.style.paddingLeft = '';
-    if (!h._want || !(input.clientWidth > 0)) { h.hidden = true; return; }
-    h.hidden = false;
-    var pad = 11 + h.offsetWidth;
+    h.className = 'qty-hint';
+    host.classList.remove('qty-host--lbl');
+    h.style.maxWidth = '';
     var padR = parseFloat(window.getComputedStyle(input).paddingRight) || 0;
-    if (input.clientWidth - pad - padR >= QTY_TEXT_MIN) {
+    var cw = input.clientWidth;
+    var place = qtyHintPlacement(cw, padR, 0, !!h._want);
+    if (place === 'hidden') { h.hidden = true; return; }
+    h.hidden = false;
+    var hw = h.offsetWidth;
+    place = qtyHintPlacement(cw, padR, hw, true);
+    if (place === 'inside') {
       input.classList.add('has-hint');
-      input.style.paddingLeft = pad + 'px';
+      input.style.paddingLeft = (11 + hw) + 'px';
     } else {
-      h.hidden = true;
+      var inTd = !!(input.closest && input.closest('td'));
+      h.className = 'qty-hint qty-hint--label' + (inTd ? '' : ' qty-hint--above');
+      if (inTd) host.classList.add('qty-host--lbl');
+      h.style.maxWidth = Math.max(0, (host.offsetWidth || cw) - QTY_LABEL_W - 6) + 'px';
     }
   };
   var upd = function(){
     var t = qtyHintText(input.value, typeof unit === 'function' ? unit() : unit);
-    var long = String(input.value || '').length > 6;
     h.textContent = t;
     sr.textContent = t ? 'Quy đổi ' + t : '';
-    h._want = !!t && !long;
+    h._want = !!t;
     fit();
   };
   input.addEventListener('input', upd);
