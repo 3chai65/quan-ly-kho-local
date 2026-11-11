@@ -10,3 +10,4 @@ kho-nhap-bi-tu-choi-*.json
 .mcp.json
 .claude/
 *.crt
+reports-claude/
