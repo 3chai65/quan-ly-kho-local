@@ -4512,3 +4512,12 @@ test('2.14.0 M3b Lịch sử điện thoại: lưới 4 cột (tên và ngày �
   assert.match(css, /table\.inv td\.c-del \.btn--icon,table\.his td\.c-act \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px cho cả hai Lịch sử');
   assert.match(css, /table\.his tr\.is-row>td\.c-act \.btn--icon::after\{content:"";position:absolute;inset:-3px\}/);
 });
+
+/* 2.14.0 (giai đoạn 4, M4): nút Gộp đơn cũ – điện thoại hiện "Gộp đơn cũ" bằng CSS; aria-label/title giữ nhãn đầy đủ; nút ở hàng 1 cùng tên mục. */
+test('2.14.0 M4 nút Gộp đơn: aria-label và title đầy đủ; điện thoại rút nhãn hiển thị bằng ::before trong @media 600px; nút đứng hàng 1', () => {
+  assert.match(PAGE, /id="mergeBtn" aria-label="Gộp đơn thuốc lẻ cũ" title="Gộp đơn thuốc lẻ cũ" hidden>Gộp đơn thuốc lẻ cũ<\/button>/);
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const m = css.match(/@media \(max-width:600px\)\{[\s\S]*?#mergeBtn::before\{content:"Gộp đơn cũ";font-size:13px\}/);
+  assert.ok(m, 'thiếu #mergeBtn::before "Gộp đơn cũ" trong khối 600px');
+  assert.match(css, /#mergeBtn\{order:1;font-size:0\}/);
+});
