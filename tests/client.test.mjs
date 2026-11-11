@@ -103,7 +103,7 @@ globalThis.__test = {
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
-  historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
+  historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
@@ -4584,7 +4584,7 @@ test('2.14.0 M8 nút + dòng đang nhập: máy tính 36×36 (nhap-add và .note
 test('2.14.0 S1 gợi ý không chiếm chỗ cố định: JS đặt .has-hint khi đủ QTY_TEXT_MIN=56px; ô chưa hiển thị (clientWidth 0) thì ẩn gợi ý, không padding', () => {
   assert.doesNotMatch(PAGE, /padding-left:50px/, 'không còn padding-left:50px cố định');
   assert.match(PAGE, /var QTY_TEXT_MIN = 56;/);
-  assert.match(PAGE, /input\.clientWidth - pad - padR >= QTY_TEXT_MIN/);
+  assert.ok(PAGE.includes("clientWidth - (11 + hintW) - padR >= QTY_TEXT_MIN"));
   const doc = trackDoc({});
   const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
   let wrap = null;
@@ -4717,4 +4717,27 @@ test('2.14.0 N2 cấu trúc: Lưu tên mới khi đang chọn đơn gọi copyPr
 /* 2.14.0 S1 lint: ResizeObserver truy cập qua window (không biến tự do); khi không có window thì bỏ qua. */
 test('2.14.0 S1 lint: gợi ý theo dõi kích thước qua window.ResizeObserver có kiểm typeof', () => {
   assert.match(PAGE, /typeof window !== 'undefined' && typeof window\.ResizeObserver === 'function'\) new window\.ResizeObserver\(fit\)\.observe\(input\);/);
+});
+
+/* 2.14.0 S2: hết chỗ trong ô thì gợi ý chuyển lên dòng nhãn, không ẩn. */
+test('2.14.0 S2 gợi ý hết chỗ: ô 107px + "(2 lạng)" → vị trí "label" (không "hidden"); đủ chỗ → "inside"; không giá trị/ô chưa hiện → "hidden"', () => {
+  const c = loadClient({ document: trackDoc({}), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  assert.equal(c.qtyHintPlacement(107 - 18, 0, 50, true), 'label', 'S2 ô hẹp 107px phải chuyển lên dòng nhãn');
+  assert.equal(c.qtyHintPlacement(107, 9, 70, true), 'label');
+  assert.equal(c.qtyHintPlacement(132, 9, 50, true), 'inside');
+  assert.equal(c.qtyHintPlacement(225, 9, 70, true), 'inside');
+  assert.equal(c.qtyHintPlacement(107, 9, 50, false), 'hidden');
+  assert.equal(c.qtyHintPlacement(0, 9, 50, true), 'hidden');
+});
+
+test('2.14.0 S2 cấu trúc: fit có nhánh chuyển lên dòng nhãn (qty-hint--label), không còn nhánh ẩn vì hết chỗ; CSS sau quy tắc gốc', () => {
+  const i = PAGE.indexOf('var fit = function(){');
+  const fitSrc = PAGE.slice(i, PAGE.indexOf('var upd = function(){', i));
+  assert.match(fitSrc, /qty-hint qty-hint--label/, 'S2 nhánh dòng nhãn');
+  assert.doesNotMatch(fitSrc, /else \{\s*h\.hidden = true;/, 'S2 không còn ẩn-vì-hết-chỗ');
+  assert.match(fitSrc, /place === 'hidden'/);
+  const a = PAGE.indexOf('.qty-hint{position:absolute'), b = PAGE.indexOf('.qty-hint.qty-hint--label{');
+  assert.ok(a > 0 && b > a, 'quy tắc label sau quy tắc gốc');
+  assert.match(PAGE, /\.qty-hint\.qty-hint--label\{left:auto;right:0;top:0;/);
+  assert.match(PAGE, /td\.c-qty\{position:relative\}/);
 });
