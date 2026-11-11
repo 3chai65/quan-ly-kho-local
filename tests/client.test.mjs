@@ -2630,7 +2630,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length, 25);
-  assert.equal(PAGE.match(/ id="/g).length, 165);
+  assert.equal(PAGE.match(/ id="/g).length, 158); // 165 - 7 symbol không dùng (vòng 17 nhóm C)
 });
 
 test('2.9.1 khối @media 901px: .main dùng align-items:start, không còn stretch (thẻ cạnh nhau không kéo dài)', () => {
