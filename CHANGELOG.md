@@ -15,6 +15,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Giảm chói cả sáng và tối: nền, thẻ, chữ và màu nhấn bớt bão hòa; chữ vẫn đạt tương phản AA.
 - Nút lưu đơn Bán lẻ đổi chữ thành “Bán đơn”.
 - Sửa: quy tắc điện thoại của hàng nút và tab được áp dụng đúng (thứ tự CSS).
+- Điện thoại: ô Vị thuốc có cả hàng riêng, Số lượng | Giá nhập | + ở hàng dưới; test có --test-timeout=120000 để treo rớt có tên ca.
 
 ### Biết, chưa sửa
 
