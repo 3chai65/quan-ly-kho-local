@@ -296,6 +296,29 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .dlg__foot{display:flex;justify-content:flex-end;gap:8px}
 /* N2: khung lỗi trong hộp thoại (role=alert), tạo bằng JS khi có toast lỗi lúc hộp thoại mở. */
 .dlg__err{margin:0 0 12px;padding:9px 12px;border-radius:10px;border:1px solid var(--red-text);background:var(--red-soft);color:var(--red-text);font-size:14px;font-weight:600;line-height:1.4}
+/* 2.14.0 (giai đoạn 1) Bán lẻ: tiêu đề là thanh (bar); summary ẩn trực quan nhưng còn tên truy cập; dòng nhập nằm trong tờ ghi. */
+#retailBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.card__bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border2)}
+.card__bar-title{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:15px;color:var(--text);margin-right:auto}
+.card__bar-title .ico{width:20px;height:20px}
+.card__bar-search{flex:1 1 220px;min-width:0;margin:0}
+.card__bar-date{flex:0 0 150px;min-width:0}
+.card__bar-date .inp{padding-right:34px}
+#retailNote table{table-layout:fixed;width:100%}
+#retailNote th:nth-child(1),#retailNote td:nth-child(1){width:36px}
+#retailNote th:nth-child(3),#retailNote td:nth-child(3){width:84px}
+#retailNote th:nth-child(4),#retailNote td:nth-child(4){width:110px}
+#retailNote th:nth-child(5),#retailNote td:nth-child(5){width:52px}
+#retailNote .note__pending thead{display:none}
+#retailNote .note__pending{margin:0}
+.note__foot{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--border2)}
+.note__tot{font-size:14px;color:var(--text2)}
+.note__tot b{font-size:16px}
+@media (max-width:600px){
+.card__bar-date{order:2;flex:0 0 140px}
+.card__bar-title{flex:1 1 auto}
+.card__bar-search{order:3;flex:1 0 100%}
+}
 /* ---------- responsive ---------- */
 @media (max-width:900px){
 .grid2{grid-template-columns:1fr}
@@ -486,40 +509,23 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 
   <div class="grid2">
     <details class="card" id="retailBox">
-      <summary class="card__head">
+      <summary class="card__head sr-summary">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>
         <h2 class="card__title">Bán lẻ</h2>
-        <span class="spacer"></span>
       </summary>
       <div class="card__body">
-        <div class="row mb-12">
-          <div class="sug">
-            <label class="lbl" for="retailSearch">Chọn vị thuốc</label>
-            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc..." role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>Bán lẻ</span>
+          <div class="sug card__bar-search">
+            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc…" aria-label="Tìm vị thuốc để bán" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
             <div class="sug__list" id="retailList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
-          <div class="field">
-            <label class="lbl" for="retailDate">Ngày bán</label>
-            <div class="datefield">
-              <input class="inp" id="retailDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" title="Ngày ghi nhận đơn, mặc định là hôm nay">
-              <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-              <input class="datefield__native" id="retailDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
-            </div>
+          <div class="datefield card__bar-date">
+            <input class="inp" id="retailDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
+            <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+            <input class="datefield__native" id="retailDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
           </div>
-        </div>
-        <div class="tw">
-          <table class="ord">
-            <caption class="sr">Các dòng trong đơn bán lẻ</caption>
-            <thead><tr>
-              <th class="c-num" scope="col">STT</th>
-              <th scope="col">Tên</th>
-              <th class="c-qty" scope="col">SL (kg)</th>
-              <th class="c-money" scope="col">Thành tiền</th>
-              <th class="c-del" scope="col"><span class="sr">Xóa</span></th>
-            </tr></thead>
-            <tbody id="retailBody"></tbody>
-          </table>
         </div>
         <div class="note" id="retailNote">
           <div class="note__head"><span>Tờ ghi đơn bán lẻ</span><span id="retailNotePg"></span></div>
@@ -533,22 +539,28 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="retailNoteBody"></tbody>
-            <tfoot><tr>
-              <td colspan="3">Tổng tiền</td>
-              <td class="num txt-green r" id="retailNoteTotal">0</td>
-              <td></td>
-            </tr></tfoot>
           </table>
-          <div class="foot" id="retailNotePager" hidden></div>
-        </div>
-        <div class="foot foot--retail">
-          <div class="total">
-            <span class="lbl lbl--flat">Thành tiền</span>
-            <span class="total__v txt-green" id="retailTotal">0</span>
+          <div class="tw note__pending">
+            <table class="ord">
+              <caption class="sr">Dòng đang nhập đơn bán lẻ</caption>
+              <thead><tr>
+                <th class="c-num" scope="col">STT</th>
+                <th scope="col">Tên</th>
+                <th class="c-qty" scope="col">SL (kg)</th>
+                <th class="c-money" scope="col">Thành tiền</th>
+                <th class="c-del" scope="col"><span class="sr">Thêm</span></th>
+              </tr></thead>
+              <tbody id="retailBody"></tbody>
+            </table>
           </div>
-          <button class="btn btn--green" type="button" data-action="save-retail" data-keep-focus>
-            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
-          </button>
+          <div class="foot" id="retailNotePager" hidden></div>
+          <div class="note__foot">
+            <span class="note__tot">Tổng <b class="txt-green" id="retailNoteTotal">0</b></span>
+            <span class="sr" id="retailTotal">0</span>
+            <button class="btn btn--green" type="button" data-action="save-retail" data-keep-focus>
+              <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
+            </button>
+          </div>
         </div>
       </div>
     </details>
@@ -2056,15 +2068,8 @@ function renderNote(){
     var i = (notePage - 1) * PAGE_SIZE + k;
     var it = retailItems[i];
     var tr = el('tr');
-    if (!it) {
-      tr.appendChild(el('td', 'c-num', ''));
-      tr.appendChild(el('td', '', ''));
-      tr.appendChild(el('td', '', ''));
-      tr.appendChild(el('td', '', ''));
-      tr.appendChild(el('td', 'c-act', ''));
-      tb.appendChild(tr);
-      continue;
-    }
+    /* 2.14.0 (giai đoạn 1): không vẽ dòng trống của tờ ghi, chỉ dòng thật. */
+    if (!it) continue;
     var p = findProduct(it.pid);
     tr.appendChild(el('td', 'c-num num muted', String(i + 1)));
     tr.appendChild(el('td', 'b', p ? p.name : 'Đã xóa'));
