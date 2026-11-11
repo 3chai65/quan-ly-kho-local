@@ -3845,6 +3845,38 @@ test('2.14.0 Nhập hàng điện thoại: dòng đang nhập là một dòng l�
   assert.match(PAGE, /\.nhap-pend__tot\{float:right/);
 });
 
+/* 2.14.0 N7: cuộn chuột không đổi số trong ô số; ô số không mũi tên. */
+test('2.14.0 N7 wheel: ô số đang focus bị blur khi cuộn, value giữ nguyên; ô không focus hoặc không phải number thì không blur; listener passive ở document', () => {
+  const base = trackDoc({});
+  const reg = [];
+  base.addEventListener = (ev, f, opt) => { reg.push({ ev: ev, f: f, opt: opt }); };
+  loadClient({ document: base, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  const w = reg.filter(x => x.ev === 'wheel');
+  assert.equal(w.length, 1, 'phải đăng ký đúng một listener wheel ở document');
+  assert.equal(w[0].opt && w[0].opt.passive, true, 'listener wheel phải passive');
+  const mk = (type, focused) => {
+    const el = { tagName: 'INPUT', type: type, value: '5', blurs: 0,
+      blur() { if (base.activeElement === this) { base.activeElement = null; this.blurs++; } },
+      focus() { base.activeElement = this; } };
+    if (focused) el.focus();
+    return el;
+  };
+  const fire = el => w[0].f({ target: el, deltaY: 1 });
+  const num = mk('number', true); fire(num);
+  assert.equal(num.blurs, 1, 'ô số đang focus phải bị blur');
+  assert.equal(num.value, '5', 'không được đổi giá trị');
+  const notFocused = mk('number', false); fire(notFocused);
+  assert.equal(notFocused.blurs, 0, 'ô không focus không bị blur');
+  const txt = mk('text', true); fire(txt);
+  assert.equal(txt.blurs, 0, 'ô không phải number không bị blur');
+});
+
+test('2.14.0 N7 CSS: ẩn hai mũi tên tăng/giảm của input[type=number] (webkit và moz)', () => {
+  assert.match(PAGE, /input\[type=number\]::-webkit-outer-spin-button,\ninput\[type=number\]::-webkit-inner-spin-button\{-webkit-appearance:none;margin:0\}/);
+  assert.match(PAGE, /input\[type=number\]\{-moz-appearance:textfield;appearance:textfield\}/);
+  assert.match(PAGE, /inputmode="decimal"/, 'bàn phím số trên điện thoại giữ nguyên');
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
