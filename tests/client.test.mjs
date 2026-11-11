@@ -47,6 +47,8 @@ globalThis.__test = {
   getRetailItems: function(){ return retailItems; },
   getNhapList: function(){ return nhapList; },
   getTxEdit: function(){ return txEditCur; },
+  getOrderCur: function(){ return orderCur; }, setOrderCur: function(v){ orderCur = v; },
+  getNhapPid: function(){ return nhapPid; }, setNhapPid: function(v){ nhapPid = v; },
   setTxEdit: function(v){ txEditCur = v; },
   getInvPage: function(){ return invPage; },
   setInvPage: function(v){ invPage = v; },
@@ -105,7 +107,7 @@ globalThis.__test = {
   setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
   setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
   normSearch: normSearch,
-  addNhapItem: addNhapItem, delOrder: delOrder, pickSuggest: pickSuggest,
+  addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -1472,7 +1474,8 @@ test('401 discard thành công (page.js thật): tải file nháp, lấy bản m
   client.renderSyncBadge();
   assert.equal(drop.hidden, false);
   assert.equal(await client.discardUnsynced(), true);
-  assert.equal(client.getDb().products[0].name, 'May Chu');
+  /* B15: renderAll không còn viết hoa tên trong db; tên lấy từ máy chủ giữ nguyên. */
+  assert.equal(client.getDb().products[0].name, 'May chu');
   assert.equal(client.isDirty(), false);
   assert.equal(client.isSyncRejected(), false);
   assert.equal(badge.hidden, true);
@@ -2980,4 +2983,152 @@ test('A7 cloudConflict chọn tải bản máy chủ: dirty tắt, cờ lỗi đ
   assert.equal(c.isDirty(), false);
   assert.equal(c.isSyncErrorShown(), false, 'huy hiệu lỗi phải được dọn sau khi tải bản máy chủ');
   assert.equal(c.hasSyncRetry(), false);
+});
+
+/* ------------------------------------------------------------------ */
+/* Vòng 16, nhóm B (B8–B15)                                           */
+/* ------------------------------------------------------------------ */
+
+/* DOM ghi lại listener: rec[id][sự kiện] = [hàm, ...] */
+function recDoc(ids) {
+  const els = {}, rec = {};
+  for (const id of ids) {
+    const e = makeEl();
+    e.addEventListener = (type, fn) => { ((rec[id] ||= {})[type] ||= []).push(fn); };
+    els['#' + id] = e;
+  }
+  const doc = limitDoc(els);
+  doc.readyState = 'complete'; /* page.js chỉ gọi init (và bindEvents) khi không còn 'loading' */
+  return { doc, els, rec };
+}
+const fire = (rec, id, type) => (rec[id]?.[type] || []).forEach(fn => fn({}));
+
+test('B8 saveNhap: giá vượt trần thì con trỏ về #nhapPrice (trước đây pi2 luôn undefined)', () => {
+  let focused = '';
+  const els = {
+    '#nhapSearch': { value: 'Cam' },
+    '#nhapQty': { value: '10', focus() {}, select() {} },
+    '#nhapPrice': { value: '2000000000', focus() { focused = 'nhapPrice'; }, select() {} },
+    '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const c = loadClient({ document: limitDoc(els) });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  const before = JSON.stringify(c.getDb());
+  c.saveNhap({ preventDefault() {} });
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(focused, 'nhapPrice');
+  assert.match(els['#toastMsg'].textContent, /Tiền vượt giới hạn/);
+});
+
+test('B9 addRemedyToNote: gram vượt trần thì không thêm dòng và con trỏ ở ô gram, không nhảy sang ô tìm', () => {
+  let focused = '';
+  const qi = { value: '1000000001', focus() { focused = 'qty'; }, select() {} };
+  const row = { getAttribute() { return 'p1'; }, querySelector(sel) { return sel === '.remedy-qty' ? qi : null; } };
+  const tb = { textContent: 'giu', querySelector() { return row; } };
+  const els = {
+    '#remedyBody': tb, '#remedyBody tr[data-pid]': row,
+    '#remedySearch': { value: '', focus() { focused = 'search'; }, select() {} },
+    '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const c = loadClient({ document: limitDoc(els) });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.addRemedyToNote();
+  assert.equal(c.getRemedyItems().length, 0);
+  assert.equal(focused, 'qty');
+  assert.match(els['#toastMsg'].textContent, /Gram vượt giới hạn/);
+});
+
+test('B11 checkLimits: số âm có chữ riêng; trần tiền hiện theo nghìn đồng có dấu chấm', () => {
+  const c = loadClient({});
+  assert.equal(c.checkLimits('money', -1), 'Tiền không được âm');
+  assert.equal(c.checkLimits('q', -0.5), 'Số lượng không được âm');
+  assert.equal(c.checkLimits('grams', -1), 'Gram không được âm');
+  assert.equal(c.checkLimits('thang', -1), 'Số thang không được âm');
+  assert.equal(c.checkLimits('money', NaN), 'Số tiền không hợp lệ');
+  assert.equal(c.checkLimits('money', 0), null);
+  assert.equal(c.checkLimits('money', 1e12), null);
+  assert.equal(c.checkLimits('money', 1e12 + 1), 'Tiền vượt giới hạn (1.000.000.000 nghìn đồng)');
+});
+
+test('B12 Esc đóng hộp thoại (sự kiện close): xóa txEditCur và orderCur', () => {
+  const { doc, rec } = recDoc(['txDlg', 'orderDlg']);
+  const c = loadClient({ document: doc, fetch: async () => { throw new Error('offline'); }, setInterval() { return 0; }, clearInterval() {} });
+  c.setTxEdit({ id: 'T1' });
+  c.setOrderCur('OD_1');
+  fire(rec, 'txDlg', 'close');
+  fire(rec, 'orderDlg', 'close');
+  assert.equal(c.getTxEdit(), null);
+  assert.equal(c.getOrderCur(), null);
+});
+
+test('B13 delTx: NHẬP làm tồn âm thì báo lỗi TRƯỚC khi hỏi xác nhận, db không đổi', () => {
+  let asked = 0;
+  const els = { '#toast': makeEl(), '#toastMsg': makeEl() };
+  const c = loadClient({ document: limitDoc(els), confirm: () => { asked++; return true; } });
+  c.setDb({
+    products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }],
+    transactions: [{ id: 'n1', date: '2026-11-08', type: 'NHAP', productId: 'p1', qty: 5, price: 1000, total: 5000, ts: 1 }],
+    prescriptions: [], updatedAt: 0, moneyUnit: 'dong'
+  });
+  const before = JSON.stringify(c.getDb());
+  c.delTx('n1');
+  assert.equal(asked, 0);
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.match(els['#toastMsg'].textContent, /Không thể xóa/);
+});
+
+test('B13 delTx: hoàn tác khi giá bán thấp hơn vốn đơn thuốc giữ đúng vị trí giao dịch và tồn', () => {
+  const els = { '#toast': makeEl(), '#toastMsg': makeEl() };
+  const c = loadClient({ document: limitDoc(els), confirm: () => true });
+  const line = (id, cost) => ({ id, date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 10, total: 10, cost, oid: 'R1', oname: 'Đơn thuốc', rx: true, ts: 1 });
+  const txs = [
+    { id: 'a', date: '2026-11-08', type: 'NHAP', productId: 'p1', qty: 1, price: 1, total: 1, ts: 0 },
+    line('t1', 100), line('t2', 100),
+    { id: 'z', date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 9, oname: 'Bán lẻ' }
+  ];
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 10, costPrice: 1 }], transactions: txs, prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  const idsBefore = JSON.stringify(c.getDb().transactions.map(t => t.id));
+  c.delTx('t1');
+  assert.equal(JSON.stringify(c.getDb().transactions.map(t => t.id)), idsBefore);
+  assert.equal(c.getDb().products[0].stock, 10);
+  assert.match(els['#toastMsg'].textContent, /Giá bán thấp hơn vốn/);
+});
+
+test('B14 db mặc định có moneyUnit "dong": sao lưu từ db mặc định khôi phục không nhân 1000', () => {
+  /* readyState complete để init chạy; không có local và không có remote nên db đi qua nhánh mặc định (4784). */
+  const doc = limitDoc({});
+  doc.readyState = 'complete';
+  const c = loadClient({ document: doc, fetch: async () => { throw new Error('offline'); }, setInterval() { return 0; }, clearInterval() {} });
+  const d = c.getDb();
+  assert.equal(d.moneyUnit, 'dong');
+  d.products.push({ id: 'p1', name: 'A', stock: 1, costPrice: 85 });
+  const parsed = c.parseBackup(JSON.stringify({ app: 'quan-ly-kho', version: 1, data: d }));
+  assert.equal(parsed.products[0].costPrice, 85);
+});
+
+test('B14 db khai báo ban đầu (trước init) có moneyUnit "dong"', () => {
+  /* readyState loading: init không chạy, db vẫn là khai báo mặc định ở đầu page.js. */
+  const c = loadClient({});
+  assert.equal(c.getDb().moneyUnit, 'dong');
+});
+
+test('B15 autoRefresh không viết hoa tên sản phẩm trong db (renderAll không còn chuẩn hóa)', async () => {
+  const remote = { products: [{ id: 'p1', name: 'cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const c = loadClient({ fetch: async () => ({ status: 200, json: async () => ({ success: true, data: remote }) }) });
+  c.setDb({ products: [{ id: 'p1', name: 'Cu', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
+  c.setBase(100);
+  c.setDirty(false);
+  assert.equal(await c.autoRefresh(), true);
+  assert.equal(c.getDb().products[0].name, 'cam thảo');
+  assert.equal(c.isDirty(), false);
+});
+
+test('B15 liên kết tên: gõ "Cam Thảo" vẫn giữ nhapPid khi tên đã lưu là "cam thảo"', () => {
+  const { doc, els, rec } = recDoc(['nhapSearch']);
+  els['#nhapSearch'].value = 'Cam Thảo';
+  const c = loadClient({ document: doc, fetch: async () => { throw new Error('offline'); }, setInterval() { return 0; }, clearInterval() {} });
+  c.setDb({ products: [{ id: 'p1', name: 'cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.setNhapPid('p1');
+  fire(rec, 'nhapSearch', 'input');
+  assert.equal(c.getNhapPid(), 'p1');
 });
