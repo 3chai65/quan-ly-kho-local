@@ -319,6 +319,20 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
 input.qty-hinted{padding-left:50px}
 .note__tot b{font-size:16px}
+/* 2.14.0 (giai đoạn 2a) Thuốc chén: cùng mẫu Bán lẻ – summary ẩn, thanh tiêu đề, dòng nhập trong tờ ghi, chân một hàng. */
+#remedyBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.card__sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border2)}
+.card__sub>select.inp{flex:0 1 170px;min-width:0}
+.card__sub>#remedyName{flex:1 1 160px;min-width:0}
+#remedyNote table{table-layout:fixed;width:100%}
+#remedyNote col.cg-num{width:36px}
+#remedyNote col.cg-qty{width:84px}
+#remedyNote col.cg-act{width:52px}
+#remedyNote .note__pending thead{display:none}
+#remedyNote .note__pending{margin:0}
+.note__pending tr.is-empty{display:none}
+#remedyNote .note__foot{flex-wrap:wrap}
+.note__lbl{font-size:13px;color:var(--text2)}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 140px}
 .card__bar-title{flex:1 1 auto}
@@ -573,56 +587,44 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     </details>
 
     <details class="card" id="remedyBox">
-      <summary class="card__head">
+      <summary class="card__head sr-summary">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>
         <h2 class="card__title">Thuốc chén</h2>
-        <span class="spacer"></span>
       </summary>
       <div class="card__body">
-        <div class="grid2 gap-12 mb-12">
-          <div class="field">
-            <label class="lbl" for="remedyPreset">Đơn có sẵn</label>
-            <select class="inp" id="remedyPreset">
-              <option value="">— Đơn mới —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="lbl" for="remedyDate">Ngày bán</label>
-            <div class="datefield">
-              <input class="inp" id="remedyDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" title="Ngày ghi nhận đơn, mặc định là hôm nay">
-              <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-              <input class="datefield__native" id="remedyDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
-            </div>
-          </div>
-        </div>
-        <div class="grid2 gap-12 mb-12">
-          <div class="sug">
-            <label class="lbl" for="remedySearch">Chọn vị thuốc</label>
-            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc..." role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>Thuốc chén</span>
+          <div class="sug card__bar-search">
+            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc…" aria-label="Tìm vị thuốc cho đơn thuốc chén" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
             <div class="sug__list" id="remedyList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
-          <div class="field">
-            <label class="lbl" for="remedyName">Tên đơn</label>
-            <input class="inp" id="remedyName" type="text" autocomplete="off" placeholder="Để trống sẽ ghi là Đơn thuốc lẻ" maxlength="200">
+          <div class="datefield card__bar-date">
+            <input class="inp" id="remedyDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
+            <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+            <input class="datefield__native" id="remedyDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
           </div>
         </div>
-        <div class="tw">
-          <table class="ord ord--r">
-            <caption class="sr">Dòng nhập vị thuốc cho đơn thuốc chén</caption>
-            <thead><tr>
-              <th class="c-num" scope="col">STT</th>
-              <th scope="col">Tên</th>
-              <th class="c-qty" scope="col">SL (gram)</th>
-              <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
-            </tr></thead>
-            <tbody id="remedyBody"></tbody>
-          </table>
+        <div class="card__sub">
+          <select class="inp" id="remedyPreset" aria-label="Đơn có sẵn">
+            <option value="">Đơn mới</option>
+          </select>
+          <input class="inp" id="remedyName" type="text" autocomplete="off" placeholder="Tên đơn (trống = Đơn thuốc lẻ)" aria-label="Tên đơn" maxlength="200">
+          <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
+            <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
+          </button>
+          <button class="btn btn--sm" type="button" data-action="copy-preset" id="remedyCopyPreset" hidden>
+            <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Sao chép đơn
+          </button>
+          <button class="btn" type="button" data-action="save-preset" id="remedySavePreset">
+            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
+          </button>
         </div>
         <div class="note" id="remedyNote">
           <div class="note__head"><span>Tờ ghi đơn thuốc chén</span><span id="remedyNotePg"></span></div>
           <table>
             <caption class="sr">Tờ ghi đơn thuốc chén</caption>
+            <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-act"></colgroup>
             <thead><tr>
               <th class="c-num" scope="col">STT</th>
               <th scope="col">Tên</th>
@@ -630,39 +632,31 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="remedyNoteBody"></tbody>
-            <tfoot><tr>
-              <td colspan="2">Tổng 1 thang</td>
-              <td class="num txt-brand" id="remedyNoteTotal">0 g</td>
-              <td>
-                <div class="inline-row"><input class="inp inp--sm inp--num w-120" id="remedyUnitPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá 1 thang" title="Giá 1 thang"></div>
-              </td>
-            </tr></tfoot>
           </table>
+          <div class="tw note__pending">
+            <table class="ord">
+              <caption class="sr">Dòng đang nhập vị thuốc cho đơn thuốc chén</caption>
+              <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-act"></colgroup>
+              <thead><tr>
+                <th class="c-num" scope="col">STT</th>
+                <th scope="col">Tên</th>
+                <th class="c-qty" scope="col">SL (gram)</th>
+                <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
+              </tr></thead>
+              <tbody id="remedyBody"></tbody>
+            </table>
+          </div>
           <div class="foot" id="remedyNotePager" hidden></div>
-        </div>
-        <div class="hintbox mt-12">
-          <div class="inline-row">
-            <label class="lbl lbl--flat" for="remedyThang">Số thang</label>
-            <input class="inp inp--sm inp--num w-70" id="remedyThang" type="number" step="1" min="1" max="10000" inputmode="numeric" value="1" aria-label="Số thang">
-          </div>
-          <span class="b txt-brand" aria-hidden="true">=</span>
-          <div class="inline-row">
-            <span class="lbl lbl--flat">Thành tiền</span>
+          <div class="note__foot">
+            <span class="note__tot">Tổng <b class="txt-brand" id="remedyNoteTotal">0 g</b></span>
+            <span class="hint" id="remedyQty">0 vị · 0 g</span>
+            <span class="inline-row">
+              <input class="inp inp--sm inp--num w-70" id="remedyThang" type="number" step="1" min="1" max="10000" inputmode="numeric" value="1" aria-label="Số thang">
+              <span class="note__lbl" aria-hidden="true">thang ×</span>
+              <input class="inp inp--sm inp--num w-120" id="remedyUnitPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá 1 thang" title="Giá 1 thang">
+            </span>
+            <span class="b txt-brand" aria-hidden="true">=</span>
             <span class="b txt-brand num" id="remedyTotal" aria-live="polite">0</span>
-          </div>
-        </div>
-        <div class="foot">
-          <span class="hint" id="remedyQty">0 vị · 0 g</span>
-          <div class="inline-row">
-            <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
-              <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
-            </button>
-            <button class="btn btn--sm" type="button" data-action="copy-preset" id="remedyCopyPreset" hidden>
-              <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Sao chép đơn
-            </button>
-            <button class="btn" type="button" data-action="save-preset" id="remedySavePreset">
-              <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
-            </button>
             <button class="btn btn--primary" type="button" data-action="save-remedy" data-keep-focus>
               <svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg>Bán đơn
             </button>
@@ -1907,7 +1901,7 @@ function commitRemedyRow(){
   remedyItems.push({ productId: row.getAttribute('data-pid'), grams: dec(g) });
   remedyNotePage = 1e9;
   tb.textContent = '';
-  orderEmpty(tb, 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+  orderEmpty(tb, 4, '');
   return true;
 }
 function addRemedyToNote(){
@@ -1937,6 +1931,9 @@ function remedyNoteSave(){
 function renderRemedyNote(){
   var tb = $('#remedyNoteBody');
   if (!tb) return;
+  /* 2.14.0: STT dòng đang nhập = số dòng tờ ghi + 1 (tuyệt đối). */
+  var pendingRb = $('#remedyBody');
+  if (pendingRb) renumber(pendingRb, remedyItems.length);
   var pages = Math.max(1, Math.ceil(remedyItems.length / PAGE_SIZE));
   if (remedyNotePage > pages) remedyNotePage = pages;
   if (remedyNotePage < 1) remedyNotePage = 1;
@@ -1947,14 +1944,8 @@ function renderRemedyNote(){
     var i = (remedyNotePage - 1) * PAGE_SIZE + k;
     var it = remedyItems[i];
     var tr = el('tr');
-    if (!it) {
-      tr.appendChild(el('td', 'c-num', ''));
-      tr.appendChild(el('td', '', ''));
-      tr.appendChild(el('td', '', ''));
-      tr.appendChild(el('td', 'c-act', ''));
-      tb.appendChild(tr);
-      continue;
-    }
+    /* 2.14.0: không vẽ dòng trống của tờ ghi, chỉ dòng thật. */
+    if (!it) continue;
     var p = findProduct(it.productId);
     tr.appendChild(el('td', 'c-num num muted', String(i + 1)));
     tr.appendChild(el('td', 'b', p ? p.name : 'Đã xóa'));
@@ -2052,7 +2043,7 @@ function addOrderRow(kind, pid){
   tr.appendChild(tdD);
 
   tb.appendChild(tr);
-  renumber(tb, isRetail ? retailItems.length : 0);
+  renumber(tb, isRetail ? retailItems.length : remedyItems.length);
 
   return tr;
 }
@@ -2060,7 +2051,7 @@ function resetRetail(){
   var tb = $('#retailBody');
   if (!tb) return;
   tb.textContent = '';
-  orderEmpty(tb, 5, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+  orderEmpty(tb, 5, '');
   retailItems = [];
   noteEditIdx = -1;
   notePage = 1;
@@ -2072,7 +2063,7 @@ function resetRemedy(){
   var tb = $('#remedyBody');
   if (!tb) return;
   tb.textContent = '';
-  orderEmpty(tb, 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+  orderEmpty(tb, 4, '');
   remedyItems = [];
   remedyEditIdx = -1;
   remedyNotePage = 1;
@@ -2209,7 +2200,7 @@ function commitRetailRow(){
   retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
   notePage = 1e9;
   tb.textContent = '';
-  orderEmpty(tb, 5, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+  orderEmpty(tb, 5, '');
   return true;
 }
 function addRetailToNote(){
@@ -2383,7 +2374,7 @@ function loadPreset(id){
   if (missing) toast('Đơn cũ có ' + missing + ' vị đã bị xóa, kiểm tra lại giá', 'error');
   remedyEditIdx = -1;
   remedyNotePage = 1;
-  orderEmpty(tb, 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+  orderEmpty(tb, 4, '');
   var nameInp = $('#remedyName');
   if (nameInp) nameInp.value = r.name;
   var thang = Math.max(1, Math.round(num(r.thang) || 1));
@@ -2402,7 +2393,7 @@ function onPresetChange(){
   var tb = $('#remedyBody');
   if (tb) {
     tb.textContent = '';
-    orderEmpty(tb, 4, 'Gõ tên vị thuốc ở trên để thêm dòng.');
+    orderEmpty(tb, 4, '');
   }
   remedyItems = [];
   remedyEditIdx = -1;
