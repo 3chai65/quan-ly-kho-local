@@ -174,8 +174,8 @@ select.inp{cursor:pointer}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
-font-weight:700;padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid var(--border2);vertical-align:middle}
+font-weight:700;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:5px 8px;border-bottom:1px solid var(--border2);vertical-align:middle}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:hover{background:var(--surface2)}
 .num{font-variant-numeric:tabular-nums}
@@ -326,7 +326,7 @@ table.ord tbody,table.inv tbody,table.his tbody{display:block}
 table.ord tr,table.inv tr,table.his tr{display:block}
 table.ord td,table.inv td,table.his td{display:block;width:auto;padding:0;border:0}
 table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid;gap:7px 10px;align-items:center;
-padding:11px 2px;border-bottom:1px solid var(--border2)}
+padding:6px 2px;border-bottom:1px solid var(--border2)}
 table.ord tr.is-row{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 46px}
 table.ord tr.is-row>td:nth-child(1){grid-area:1/1;text-align:left}
 table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/5;min-width:0;overflow-wrap:anywhere}
