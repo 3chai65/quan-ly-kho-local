@@ -3313,6 +3313,59 @@ test('2.12.0 nhãn tab: mỗi nút đúng 2 span tab__l1/tab__l2 không rỗng; 
   assert.match(PAGE, /font-size:13px;font-weight:600;line-height:1\.2;text-align:center;cursor:pointer\}/);
 });
 
+/* 2.12.0 (C): giảm chói – token màu đổi ở cả :root và html[data-theme=dark]; không nền #fff; tương phản đạt AA. */
+const C_TOKENS = ['--bg', '--surface', '--surface2', '--text', '--text2', '--muted', '--brand', '--brand-text', '--brand-soft',
+  '--green-soft', '--green-text', '--amber-soft', '--amber-text', '--red-soft', '--red-text', '--blue-soft', '--blue-text',
+  '--purple-soft', '--purple-text', '--chart-imp', '--chart-exp'];
+function tokenBlocks() {
+  const r0 = PAGE.indexOf(':root{'), d0 = PAGE.indexOf('html[data-theme=dark]{');
+  assert.ok(r0 >= 0 && d0 > r0, 'thiếu :root hoặc html[data-theme=dark]');
+  return { root: PAGE.slice(r0, PAGE.indexOf('}', r0)), dark: PAGE.slice(d0, PAGE.indexOf('}', d0)) };
+}
+function tokenVal(block, name) {
+  const m = block.match(new RegExp('(?:^|[;{\\s])' + name + ':(#[0-9a-fA-F]{3,6})'));
+  assert.ok(m, 'thiếu token ' + name + ' trong khối');
+  return m[1];
+}
+function lumC(h) {
+  h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function ratioC(a, b) { const x = lumC(a), y = lumC(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+
+test('2.12.0 token giảm chói có ở cả :root và html[data-theme=dark]; không còn --surface:#fff', () => {
+  const { root, dark } = tokenBlocks();
+  for (const t of C_TOKENS) { tokenVal(root, t); tokenVal(dark, t); }
+  assert.doesNotMatch(PAGE, /--surface:#fff[;}]/, '--surface vẫn là #fff');
+  assert.doesNotMatch(PAGE, /background:#fff(fff)?[;}"]/, 'còn nền #fff cứng');
+});
+
+test('2.12.0 không có màu cứng #fff/#000 ngoài danh sách cho phép (chữ trên nút màu, nét icon)', () => {
+  for (const m of PAGE.matchAll(/#fff(?![0-9a-fA-F])/gi)) {
+    const pre = PAGE.slice(Math.max(0, m.index - 8), m.index);
+    assert.ok(/color:$|fill="$/.test(pre), '#fff không được dùng làm nền: …' + PAGE.slice(m.index - 30, m.index + 6));
+  }
+  for (const m of PAGE.matchAll(/#000(?![0-9a-fA-F])/g)) {
+    assert.ok(/fill="$/.test(PAGE.slice(Math.max(0, m.index - 8), m.index)), '#000 chỉ cho nét icon');
+  }
+});
+
+test('2.12.0 tương phản WCAG AA: chữ ≥ 4.5:1, chữ trắng trên nút màu ≥ 4.5:1 (cả hai chế độ)', () => {
+  const { root, dark } = tokenBlocks();
+  const pairs = [['--text', '--surface'], ['--text2', '--surface'], ['--muted', '--surface'], ['--brand-text', '--brand-soft'],
+    ['--brand-text', '--surface'], ['--green-text', '--green-soft'], ['--amber-text', '--amber-soft'], ['--red-text', '--red-soft'],
+    ['--blue-text', '--blue-soft'], ['--purple-text', '--purple-soft']];
+  for (const [blockName, block] of [['root', root], ['dark', dark]]) {
+    for (const [a, b] of pairs) {
+      const r = ratioC(tokenVal(block, a), tokenVal(block, b));
+      assert.ok(r >= 4.5, blockName + ' ' + a + ' / ' + b + ' = ' + r.toFixed(2));
+    }
+    assert.ok(ratioC('#ffffff', tokenVal(block, '--brand')) >= 4.5, blockName + ' chữ trắng / --brand');
+  }
+  assert.ok(ratioC('#ffffff', '#4f46e5') >= 4.5, 'chữ trắng trên nút primary');
+});
+
 /* 2.12.0 (D): nút lưu đơn Bán lẻ đổi chữ thành "Bán đơn"; Thuốc chén giữ nguyên nút "Lưu đơn" (preset). */
 test('2.12.0 nút Bán lẻ data-action=save-retail có chữ "Bán đơn"; không còn "Lưu đơn" ở nút đó', () => {
   const btn = PAGE.match(/<button[^>]*data-action="save-retail"[^>]*>[\s\S]*?<\/button>/)[0];
