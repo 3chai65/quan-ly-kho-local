@@ -114,14 +114,14 @@ details>.card__head:hover{background:var(--surface2)}
 details[open] .chev{transform:rotate(90deg)}
 .spacer{flex:1 1 auto}
 /* ---------- stats ---------- */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);
-padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.stat__k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.stat__v{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
-.stat__ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none}
-.stat__ic .ico{width:20px;height:20px}
-.stat__sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh);
+padding:5px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
+.stat__v{font-size:17px;font-weight:800;letter-spacing:-.02em;margin-top:1px;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat__ic{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:none}
+.stat__ic .ico{width:14px;height:14px}
+.stat__sub{font-size:10px;color:var(--muted);margin-top:1px;line-height:1.3}
 .stat__sub b{color:var(--text2);font-weight:700;font-variant-numeric:tabular-nums}
 .ic-blue{background:var(--blue-soft);color:var(--blue-text)}
 .ic-green{background:var(--green-soft);color:var(--green-text)}
@@ -264,8 +264,8 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .bar{min-height:56px}
 .brand span{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
-.stat__v{font-size:19px}
-.stat__ic{width:36px;height:36px;border-radius:10px}
+.stat__v{font-size:16px}
+.stat__ic{width:22px;height:22px;border-radius:7px}
 .card__body{padding:13px}
 .row{grid-template-columns:1fr}
 .nhap-row{grid-template-columns:minmax(0,1fr) 78px 94px;gap:8px}
@@ -317,26 +317,31 @@ table.inv .c-del,table.his .c-act{width:auto}
 .note .c-act{width:76px}
 .note td,.note th{padding-left:5px;padding-right:5px}
 .note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
+.tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tab{min-height:38px;padding:4px;font-size:12px}
+.tab__ic{display:none}
+.tab__full{display:none}
+.tab__short{display:inline}
 }
 @media (min-width:601px){
 table.his th:nth-child(4),table.his th:nth-child(5),
 table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 }
-/* 2.9.0: bố cục máy tính (>900px). Đặt hàng bằng grid-area, DOM giữ nguyên; điện thoại/tablet dùng luồng DOM cũ. */
-@media (min-width:901px){
-.main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
-.main>.stats{grid-column:1/-1;grid-row:1;margin-bottom:0}
+/* 2.10.0: tab. 8 <details> giữ nguyên DOM; chỉ mục đang mở hiện (toàn chiều rộng), các mục khác ẩn. */
 .main>.grid2{display:contents}
-.main>.mt-18{margin-top:0}
-#retailBox{grid-area:2/1}
-#remedyBox{grid-area:2/2}
-#nhapBox{grid-area:3/1}
-#invBox{grid-area:3/2}
-#impBox{grid-area:4/1}
-#expBox{grid-area:4/2}
-#chartBox{grid-area:5/1}
-#backupBox{grid-area:5/2}
-}
+.main>details.card{margin-top:0}
+.main>details.card:not([open]){display:none}
+.main>details.card[open]>summary.card__head{cursor:default}
+.main>details.card>summary.card__head>.chev{display:none}
+.tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.tab{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:40px;padding:5px 6px;
+border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text2);font:inherit;
+font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
+.tab:hover{background:var(--surface2);color:var(--text)}
+.tab:focus-visible{outline:none;box-shadow:var(--ring)}
+.tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
+.tab__ic{width:16px;height:16px;flex:none}
+.tab__short{display:none}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -444,6 +449,17 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <span class="stat__ic ic-purple" aria-hidden="true"><svg class="ico"><use href="#i-warehouse"/></svg></span>
     </div>
   </section>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
+    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Bán lẻ</span></button>
+    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span>Thuốc chén</span></button>
+    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span>Nhập hàng</span></button>
+    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span>Kho tồn</span></button>
+    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__full">Lịch sử nhập hàng</span><span class="tab__short">LS nhập</span></button>
+    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__full">Lịch sử bán hàng</span><span class="tab__short">LS bán</span></button>
+    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span>Thống kê</span></button>
+    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__full">Sao lưu &amp; khôi phục</span><span class="tab__short">Sao lưu</span></button>
+  </nav>
 
   <div class="grid2">
     <details class="card" id="retailBox">
@@ -4731,6 +4747,7 @@ function bindEvents(){
   if (cb) cb.addEventListener('toggle', function(){
     if (cb.open) requestAnimationFrame(renderChart);
   });
+  initTabs();
 
   var rt = null;
   window.addEventListener('resize', function(){
@@ -4782,6 +4799,50 @@ function bindEvents(){
 }
 
 /* ================= KHỞI ĐỘNG ================= */
+/* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */
+function initTabs(){
+  var nav = $('#tabs');
+  if (!nav) return;
+  var btns = nav.querySelectorAll('.tab');
+  var ids = [];
+  var boxes = [];
+  for (var i = 0; i < btns.length; i++) {
+    var id0 = btns[i].getAttribute('data-tab');
+    ids.push(id0);
+    var bx0 = doc.getElementById(id0);
+    if (bx0) boxes.push(bx0);
+  }
+  var activate = function(id){
+    for (var j = 0; j < boxes.length; j++) {
+      if (boxes[j].id !== id && boxes[j].open) boxes[j].open = false;
+    }
+    for (var m = 0; m < btns.length; m++) {
+      var on = btns[m].getAttribute('data-tab') === id;
+      btns[m].classList.toggle('is-active', on);
+      btns[m].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    try { localStorage.setItem('qlk_tab', id); } catch (e) {}
+  };
+  boxes.forEach(function(bx){
+    bx.addEventListener('toggle', function(){ if (bx.open) activate(bx.id); });
+    var s = bx.querySelector(':scope > summary');
+    if (s) s.addEventListener('click', function(e){ e.preventDefault(); });
+  });
+  nav.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.tab') : null;
+    if (!b || !nav.contains(b)) return;
+    var bx1 = doc.getElementById(b.getAttribute('data-tab'));
+    if (!bx1) return;
+    bx1.open = true;
+    activate(bx1.id);
+  });
+  var saved = null;
+  try { saved = localStorage.getItem('qlk_tab'); } catch (e) {}
+  var start = ids.indexOf(saved) >= 0 ? saved : 'retailBox';
+  var sb = doc.getElementById(start);
+  if (sb) { sb.open = true; activate(start); }
+}
+
 function init(){
   var remote = window.__DB__ ? sanitize(window.__DB__) : null;
   var local = readLocal();
