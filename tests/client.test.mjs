@@ -107,7 +107,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: normSearch,
-  handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, chartDefaultMonth: chartDefaultMonth, renderChart: renderChart, onChartClick: onChartClick, getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
+  handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, renderNote: renderNote, chartDefaultMonth: chartDefaultMonth, renderChart: renderChart, onChartClick: onChartClick, getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -3484,6 +3484,68 @@ test('2.14.0 (2) hàng bảng gọn và quy tắc hàng điện thoại đặt s
   assert.ok(base < phone, 'hàng điện thoại phải đứng sau td gốc');
   assert.doesNotMatch(PAGE, /padding:11px 2px;border-bottom:1px solid var\(--border2\)\}/);
   assert.doesNotMatch(PAGE, /td\{padding:8px 10px;/);
+});
+
+/* 2.14.0 A/B: cùng kịch bản lưu đơn bán lẻ trên 2.13.2 (golden) và bản mới; kết quả JSON db + thông báo phải giống hệt. */
+function abRetailScenario() {
+  const mEl = makeEl();
+  const doc = trackDoc({ '#toast': makeEl(), '#toastMsg': mEl });
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({
+    products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }, { id: 'p2', name: 'Đảng sâm', stock: 50, costPrice: 5000 }],
+    transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+  });
+  c.setBase(1);
+  const out = [];
+  const snap = label => { out.push({ label: label, toast: mEl.textContent, db: c.getDb().transactions.map(t => [t.productId, t.type, t.qty, t.total]) }); };
+  c.setRetailItems([{ pid: 'p1', kg: 2.5, amount: 250000 }, { pid: 'p2', kg: 0.01, amount: 1000 }]);
+  c.saveRetail(); snap('S1 hai dòng, giá trị biên 0.01');
+  c.setRetailItems([]);
+  c.saveRetail(); snap('S2 tờ ghi rỗng');
+  c.setRetailItems([{ pid: 'p1', kg: 1e7, amount: 1 }]);
+  c.saveRetail(); snap('S3 vượt trần số lượng');
+  c.setRetailItems([{ pid: 'p1', kg: 500, amount: 1 }]);
+  c.saveRetail(); snap('S4 vượt tồn kho');
+  return JSON.stringify(out);
+}
+const AB_RETAIL_GOLDEN = "[{\"label\":\"S1 hai dòng, giá trị biên 0.01\",\"toast\":\"Đã lưu đơn bán lẻ\",\"db\":[[\"p1\",\"BAN\",2.5,250000],[\"p2\",\"BAN\",0.01,1000]]},{\"label\":\"S2 tờ ghi rỗng\",\"toast\":\"Chọn vị thuốc và nhập số lượng hợp lệ\",\"db\":[[\"p1\",\"BAN\",2.5,250000],[\"p2\",\"BAN\",0.01,1000]]},{\"label\":\"S3 vượt trần số lượng\",\"toast\":\"Tồn \\\"Cam thảo\\\" không đủ (còn 97,5 kg)\",\"db\":[[\"p1\",\"BAN\",2.5,250000],[\"p2\",\"BAN\",0.01,1000]]},{\"label\":\"S4 vượt tồn kho\",\"toast\":\"Tồn \\\"Cam thảo\\\" không đủ (còn 97,5 kg)\",\"db\":[[\"p1\",\"BAN\",2.5,250000],[\"p2\",\"BAN\",0.01,1000]]}]";
+test('2.14.0 A/B in golden (chỉ khi KHO_AB_PRINT=1)', (t) => {
+  if (process.env.KHO_AB_PRINT) t.diagnostic('ABJSON ' + abRetailScenario());
+});
+test('2.14.0 A/B bán lẻ: kết quả lưu đơn giống hệt golden 2.13.2 (db và thông báo, 4 kịch bản)', () => {
+  assert.equal(abRetailScenario(), AB_RETAIL_GOLDEN);
+});
+
+/* 2.14.0 giai đoạn 1 – Bán lẻ: thanh tiêu đề (tên + tìm vị + ngày + bấm "+" trong tờ ghi); bảng nhập nằm trong tờ ghi; không dòng trống. */
+test('2.14.0 Bán lẻ: thanh tiêu đề có retailSearch và retailDate; summary ẩn trực quan; không nhãn chữ "Chọn vị thuốc"', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  assert.ok(at('<div class="card__bar">') < at('id="retailSearch"'), 'ô tìm phải nằm trong thanh');
+  assert.ok(at('id="retailSearch"') < at('id="retailDate"') && at('id="retailDate"') < at('id="retailNote"'), 'ô ngày phải trong thanh, trước tờ ghi');
+  assert.match(PAGE, /<summary class="card__head sr-summary">\s*<svg class="ico chev"[\s\S]*?<h2 class="card__title">Bán lẻ<\/h2>\s*<\/summary>/);
+  const rb0 = PAGE.indexOf('id="retailBox"'), rb1 = PAGE.indexOf('id="remedyBox"');
+  assert.doesNotMatch(PAGE.slice(rb0, rb1), /Chọn vị thuốc<\/label>/);
+  assert.doesNotMatch(PAGE, /class="lbl" for="retailDate"/);
+});
+
+test('2.14.0 Bán lẻ: bảng nhập (retailBody) nằm trong tờ ghi, sau danh sách dòng; chân tờ ghi có một nút Bán đơn (save-retail)', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  assert.ok(at('id="retailNote"') < at('id="retailBody"') && at('id="retailBody"') < at('id="retailNotePager"'), 'retailBody phải nằm trong tờ ghi');
+  assert.ok(at('id="retailNoteBody"') < at('id="retailBody"'), 'dòng đang nhập đứng sau danh sách dòng đã thêm');
+  assert.equal(PAGE.split('data-action="save-retail"').length - 1, 1);
+  assert.match(PAGE, /<div class="note__foot">[\s\S]*?id="retailNoteTotal"[\s\S]*?Bán đơn\s*<\/button>/);
+});
+
+test('2.14.0 Bán lẻ: renderNote không vẽ dòng trống (chỉ dòng thật)', () => {
+  const mkTb = () => ({ textContent: '', children: [], appendChild(c) { this.children.push(c); return c; } });
+  const tb = mkTb();
+  const els = { '#retailNoteBody': tb, '#retailNotePg': makeEl(), '#retailNotePager': makeEl(), '#retailNote': makeEl() };
+  const doc = trackDoc(els);
+  doc.createTextNode = () => makeEl();
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  c.setRetailItems([{ pid: 'p1', kg: 2, amount: 2000 }]);
+  c.renderNote();
+  assert.equal(tb.children.length, 1, 'tờ ghi 1 dòng thật phải có đúng 1 dòng, không có dòng trống');
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
