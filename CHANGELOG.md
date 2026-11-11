@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.9.0] - 2026-11-11
+
+### Thay đổi
+
+- Bố cục máy tính (trên 900px): thẻ xếp thành hai cột. Hàng 2: Bán lẻ | Thuốc chén; hàng 3: Nhập hàng | Kho tồn; hàng 4: Lịch sử nhập | Lịch sử bán; hàng 5: Thống kê | Sao lưu & khôi phục. Thẻ số vẫn ở trên.
+- Điện thoại và tablet (900px trở xuống): một cột theo thứ tự cũ.
+- Nhãn thẻ: bỏ số đầu tên; "Đơn bán lẻ" → "Bán lẻ", "Đơn thuốc chén" → "Thuốc chén", "Thống kê nhập & bán 12 tháng" → "Thống kê", "Danh sách tồn kho" → "Kho tồn".
+- Không đổi id, data-action, dữ liệu, lưu trữ, đồng bộ và API.
+
 ## [2.8.4] - 2026-11-11
 
 ### Thêm
