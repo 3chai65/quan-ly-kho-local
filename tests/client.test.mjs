@@ -3680,7 +3680,7 @@ test('2.14.0 N6 gắn gợi ý: .qty-hint đổi theo input và chỉ nhắc (kh
   let wrap = null;
   const host = { classList: { add() {}, contains() { return false; } }, insertBefore(w) { wrap = w; return w; } };
   const input = { id: 'retailQty', value: '0.2', parentNode: host, attrs: {}, l: {},
-    classList: { add() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
+    classList: { add() {}, remove() {} }, style: {}, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
   c.attachQtyHint(input, 'kg');
   assert.ok(wrap, 'ô phải được bọc trong khung .qty-host riêng');
   assert.equal(wrap.children[0], input, 'ô nằm trong khung bọc');
@@ -3696,7 +3696,8 @@ test('2.14.0 N6 gắn gợi ý: .qty-hint đổi theo input và chỉ nhắc (kh
 });
 
 test('2.14.0 N6 gắn trên dòng đang nhập Bán lẻ, Thuốc chén, nhapQty, txEditQty, noteEditQty (qua DOM có .qty-host)', () => {
-  assert.match(PAGE, /input\.qty-hinted\{padding-left:50px\}/);
+  assert.doesNotMatch(PAGE, /input\.qty-hinted\{padding-left:50px\}/, 'S1: không còn padding-left cố định cho ô số có gợi ý');
+  assert.match(PAGE, /input\.classList\.add\('has-hint'\);/, 'S1: padding chỉ thêm khi gợi ý đang hiện (class .has-hint)');
   assert.match(PAGE, /attachQtyHint\(qi, isRetail \? 'kg' : 'g'\);/);
   assert.match(PAGE, /if \(nqHint\) attachQtyHint\(nqHint, 'kg'\);/);
   assert.match(PAGE, /attachQtyHint\(txqHint, function\(\)\{ return txEditCur && txEditCur\.rx \? 'g' : 'kg'; \}\);/);
@@ -4577,4 +4578,31 @@ test('2.14.0 M8 nút + dòng đang nhập: máy tính 36×36 (nhap-add và .note
   assert.ok(dIcon >= 0, 'thiếu .btn--icon 36px máy tính trong dòng đang nhập');
   assert.ok(mNhap >= 0, 'thiếu nhap-add 44px điện thoại');
   assert.ok(mNhap > m7 && m7 > dIcon, 'quy tắc điện thoại 44px phải nằm trong khối ≤600px, đứng SAU quy tắc máy tính');
+});
+
+/* 2.14.0 S1: ô số không có padding-left cố định; gợi ý chỉ chiếm chỗ khi đang hiện và đủ chỗ; cột SL máy tính 152px (ô 132px) đặt sau mọi quy tắc cg-qty. */
+test('2.14.0 S1 gợi ý không chiếm chỗ cố định: JS đặt .has-hint khi đủ QTY_TEXT_MIN=56px; ô chưa hiển thị (clientWidth 0) thì ẩn gợi ý, không padding', () => {
+  assert.doesNotMatch(PAGE, /padding-left:50px/, 'không còn padding-left:50px cố định');
+  assert.match(PAGE, /var QTY_TEXT_MIN = 56;/);
+  assert.match(PAGE, /input\.clientWidth - pad - padR >= QTY_TEXT_MIN/);
+  const doc = trackDoc({});
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  let wrap = null;
+  const host = { classList: { add() {}, contains() { return false; } }, insertBefore(w) { wrap = w; return w; } };
+  const input = { id: 'retailQty', value: '0.2', parentNode: host, attrs: {}, l: {}, clientWidth: 0, style: {},
+    classList: { add() {}, remove() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
+  c.attachQtyHint(input, 'kg');
+  const h = wrap.children[1];
+  assert.equal(h.hidden, true, 'ô chưa hiển thị → gợi ý ẩn (đợi ResizeObserver)');
+  assert.equal(input.style.paddingLeft, '', 'không có padding-left khi gợi ý ẩn');
+});
+
+test('2.14.0 S1 CSS: cột SL máy tính 152px (ô 132px) trong @media (min-width:601px), đặt SAU mọi quy tắc cg-qty', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const m = css.match(/@media \(min-width:601px\)\{\s*#retailNote col\.cg-qty,#remedyNote col\.cg-qty,#nhapListBox col\.cg-qty\{width:152px;min-width:152px\}/);
+  assert.ok(m, 'thiếu quy tắc cột SL 152px cho máy tính');
+  const at = css.indexOf(m[0]);
+  for (const base of ['#remedyNote col.cg-qty{width:84px}', '#nhapListBox col.cg-qty{width:84px}', '#retailNote col.cg-qty{width:104px}']) {
+    assert.ok(at > css.indexOf(base), 'quy tắc 152px phải đứng sau ' + base);
+  }
 });
