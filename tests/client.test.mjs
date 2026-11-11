@@ -39,12 +39,12 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  fmtMoney: fmtMoney, fmtNum: fmtNum, fmtQty: fmtQty, dec: dec, num: num,
-  sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates, openMerge: openMerge, mergeDo: mergeDo,
-  reconcileList: reconcileList, findProduct: findProduct, renderStats: renderStats,
-  loadPreset: loadPreset, recFix: recFix, resetDrafts: resetDrafts, checkLimits: checkLimits,
-  backupLastDate: backupLastDate, commitRetailRow: commitRetailRow,
-  commitRemedyRow: commitRemedyRow, onSuggestKey: onSuggestKey,
+  fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
+  sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null), mergeCandidates: (typeof mergeCandidates === 'function' ? mergeCandidates : null), openMerge: (typeof openMerge === 'function' ? openMerge : null), mergeDo: (typeof mergeDo === 'function' ? mergeDo : null),
+  reconcileList: (typeof reconcileList === 'function' ? reconcileList : null), findProduct: (typeof findProduct === 'function' ? findProduct : null), renderStats: (typeof renderStats === 'function' ? renderStats : null),
+  loadPreset: (typeof loadPreset === 'function' ? loadPreset : null), remedyPresetPick: typeof remedyPresetPick === 'function' ? remedyPresetPick : null, remedyNewName: typeof remedyNewName === 'function' ? remedyNewName : null, recFix: (typeof recFix === 'function' ? recFix : null), resetDrafts: (typeof resetDrafts === 'function' ? resetDrafts : null), checkLimits: (typeof checkLimits === 'function' ? checkLimits : null),
+  backupLastDate: (typeof backupLastDate === 'function' ? backupLastDate : null), commitRetailRow: (typeof commitRetailRow === 'function' ? commitRetailRow : null),
+  commitRemedyRow: (typeof commitRemedyRow === 'function' ? commitRemedyRow : null), onSuggestKey: (typeof onSuggestKey === 'function' ? onSuggestKey : null),
   getRemedyItems: function(){ return remedyItems; },
   getRetailItems: function(){ return retailItems; },
   getNhapList: function(){ return nhapList; },
@@ -54,7 +54,7 @@ globalThis.__test = {
   setTxEdit: function(v){ txEditCur = v; },
   getInvPage: function(){ return invPage; },
   setInvPage: function(v){ invPage = v; },
-  renderInventory: renderInventory,
+  renderInventory: (typeof renderInventory === 'function' ? renderInventory : null),
   wrapRenderInventory: function(fn){ var orig = renderInventory; renderInventory = function(){ fn(); return orig.apply(this, arguments); }; },
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
@@ -62,13 +62,13 @@ globalThis.__test = {
   isDirty: function(){ return dirty; },
   setBase: function(v){ cloudBase = dec(v); },
   getBase: function(){ return cloudBase; },
-  saveLocal: saveLocal, readDirty: readDirty, readBase: readBase,
-  computeStats: computeStats, allocateRemedyByCost: allocateRemedyByCost,
-  balanceRemedyMoney: balanceRemedyMoney, kToDong: kToDong,
-  applyRemedyBalance: applyRemedyBalance, scaledRemedyCost: scaledRemedyCost, remedyLineCost: remedyLineCost,
-  backupBeforeRestore: backupBeforeRestore, downloadBackup: downloadBackup,
-  pushState: pushState, pullState: pullState, cloudConflict: cloudConflict,
-  autoRefresh: autoRefresh, busyEditing: busyEditing,
+  saveLocal: (typeof saveLocal === 'function' ? saveLocal : null), readDirty: (typeof readDirty === 'function' ? readDirty : null), readBase: (typeof readBase === 'function' ? readBase : null),
+  computeStats: (typeof computeStats === 'function' ? computeStats : null), allocateRemedyByCost: (typeof allocateRemedyByCost === 'function' ? allocateRemedyByCost : null),
+  balanceRemedyMoney: (typeof balanceRemedyMoney === 'function' ? balanceRemedyMoney : null), kToDong: (typeof kToDong === 'function' ? kToDong : null),
+  applyRemedyBalance: (typeof applyRemedyBalance === 'function' ? applyRemedyBalance : null), scaledRemedyCost: (typeof scaledRemedyCost === 'function' ? scaledRemedyCost : null), remedyLineCost: (typeof remedyLineCost === 'function' ? remedyLineCost : null),
+  backupBeforeRestore: (typeof backupBeforeRestore === 'function' ? backupBeforeRestore : null), downloadBackup: (typeof downloadBackup === 'function' ? downloadBackup : null),
+  pushState: (typeof pushState === 'function' ? pushState : null), pullState: (typeof pullState === 'function' ? pullState : null), cloudConflict: (typeof cloudConflict === 'function' ? cloudConflict : null),
+  autoRefresh: (typeof autoRefresh === 'function' ? autoRefresh : null), busyEditing: (typeof busyEditing === 'function' ? busyEditing : null),
   setRetailItems: function(v){ retailItems = v; },
   setRemedyItems: function(v){ remedyItems = v; },
   setNhapList: function(v){ nhapList = v; },
@@ -86,33 +86,33 @@ globalThis.__test = {
   setDirtySince: function(v){ dirtySince = num(v); },
   isAuthLost: function(){ return authLost; },
   setAuthLost: function(v){ authLost = !!v; },
-  renderSyncBadge: renderSyncBadge,
-  discardUnsynced: discardUnsynced, restoreFromFile: restoreFromFile,
-  readLocal: readLocal,
-  saveNhap: saveNhap, saveRetail: saveRetail, saveRemedy: saveRemedy,
-  openTxEdit: openTxEdit, saveTxEdit: saveTxEdit, delTx: delTx, mergeDo: mergeDo,
+  renderSyncBadge: (typeof renderSyncBadge === 'function' ? renderSyncBadge : null),
+  discardUnsynced: (typeof discardUnsynced === 'function' ? discardUnsynced : null), restoreFromFile: (typeof restoreFromFile === 'function' ? restoreFromFile : null),
+  readLocal: (typeof readLocal === 'function' ? readLocal : null),
+  saveNhap: (typeof saveNhap === 'function' ? saveNhap : null), saveRetail: (typeof saveRetail === 'function' ? saveRetail : null), saveRemedy: (typeof saveRemedy === 'function' ? saveRemedy : null),
+  openTxEdit: (typeof openTxEdit === 'function' ? openTxEdit : null), saveTxEdit: (typeof saveTxEdit === 'function' ? saveTxEdit : null), delTx: (typeof delTx === 'function' ? delTx : null), mergeDo: (typeof mergeDo === 'function' ? mergeDo : null),
   getStockWarnText: function(){ return stockWarnText; },
-  todayISO: todayISO, thisYear: thisYear,
-  getDateInput: getDateInput, setDateInput: setDateInput,
-  bindDateInput: bindDateInput, userPickedDate: userPickedDate,
-  refreshAutoDates: refreshAutoDates, autoDateInput: autoDateInput, autoChartYear: autoChartYear,
+  todayISO: (typeof todayISO === 'function' ? todayISO : null), thisYear: (typeof thisYear === 'function' ? thisYear : null),
+  getDateInput: (typeof getDateInput === 'function' ? getDateInput : null), setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
+  bindDateInput: (typeof bindDateInput === 'function' ? bindDateInput : null), userPickedDate: (typeof userPickedDate === 'function' ? userPickedDate : null),
+  refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), autoDateInput: (typeof autoDateInput === 'function' ? autoDateInput : null), autoChartYear: (typeof autoChartYear === 'function' ? autoChartYear : null),
   getLastAuto: function(id){ return lastAuto[id]; },
   setLastAuto: function(id, v){ lastAuto[id] = v; },
   getLastChartYear: function(){ return lastChartYear; },
   setLastChartYear: function(v){ lastChartYear = v; },
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
-  latestImportMap: latestImportMap, importParen: importParen, costParen: costParen,
-  historyData: historyData, renderHistory: renderHistory, renderNote: renderNote, qtyHintText: qtyHintText, attachQtyHint: attachQtyHint, refreshAllQtyHints: refreshAllQtyHints,
+  latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
+  historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
-  normSearch: normSearch,
-  handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, renderNote: renderNote, chartDefaultMonth: chartDefaultMonth, renderChart: renderChart, onChartClick: onChartClick, getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
-  scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
-  savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit, remedyPresetPick: remedyPresetPick, remedySavePresetClick: remedySavePresetClick, remedyNewName: remedyNewName, remedyNameShow: remedyNameShow,
+  normSearch: (typeof normSearch === 'function' ? normSearch : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
+  savePreset: (typeof savePreset === 'function' ? savePreset : null), copyPreset: (typeof copyPreset === 'function' ? copyPreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNewName: (typeof remedyNewName === 'function' ? remedyNewName : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
-  recFixAll: recFixAll, initTabs: initTabs
+  recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
 };
 })();`;
   const store = new Map();
@@ -4653,4 +4653,63 @@ test('2.14.0 N3 id mô tả gợi ý duy nhất: hai ô không id tạo hai id k
   assert.notEqual(a.sr.id, b.sr.id, 'hai ô không được trùng id mô tả');
   assert.equal(a.input.attrs['aria-describedby'], a.sr.id);
   assert.equal(b.input.attrs['aria-describedby'], b.sr.id);
+});
+
+/* 2.14.0 N2 A/B: đổi tên đơn đang chọn (savePreset, xác nhận OK) và từ chối xác nhận (lưu thành đơn mới) phải cho db giống hệt 2.13.2. */
+function abRenameScenario() {
+  let ans = true;
+  const mEl = makeEl();
+  const els = { '#toast': makeEl(), '#toastMsg': mEl, '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyPreset': makeEl() };
+  const doc = trackDoc(els);
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, confirm: () => ans });
+  c.setDb({
+    products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }, { id: 'p2', name: 'Đảng sâm', stock: 50, costPrice: 5000 }],
+    transactions: [], prescriptions: [{ id: 'RX1', name: 'Đơn A', items: [{ productId: 'p1', grams: 50 }], total: 50000, thang: 1, updatedAt: 1 }],
+    updatedAt: 1, moneyUnit: 'dong'
+  });
+  c.setBase(1);
+  const out = [];
+  const snap = label => out.push({ label: label, toast: mEl.textContent, presc: c.getDb().prescriptions.map(p => [p.id === 'RX1' ? 'RX1' : 'NEW', p.name, p.thang, p.total, p.items.map(i => [i.productId, i.grams])]) });
+  els['#remedyPreset'].value = 'RX1';
+  els['#remedyThang'].value = '2'; els['#remedyUnitPrice'].value = '120'; els['#remedyName'].value = 'Đơn Z';
+  c.setRemedyItems([{ productId: 'p1', grams: 50 }, { productId: 'p2', grams: 20 }]);
+  ans = true; c.savePreset(); snap('R1 đổi tên đơn đang chọn, xác nhận OK');
+  els['#remedyPreset'].value = 'RX1'; els['#remedyName'].value = 'Đơn Y';
+  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
+  ans = false; c.savePreset(); snap('R2 đổi tên, từ chối: lưu thành đơn mới');
+  return JSON.stringify(out);
+}
+test('2.14.0 A/B in golden rename (chỉ khi KHO_AB_PRINT=1)', (t) => {
+  if (process.env.KHO_AB_PRINT) t.diagnostic('ABJSON_RENAME ' + abRenameScenario());
+});
+test('2.14.0 N2 runtime: chọn đơn có sẵn → ô tên hiện, điền tên đơn; chọn Đơn mới → ô tên ẩn', () => {
+  const mEl = makeEl();
+  const els = { '#toast': makeEl(), '#toastMsg': mEl, '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyPreset': makeEl(), '#remedyNote': makeEl() };
+  const doc = trackDoc(els);
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [],
+    prescriptions: [{ id: 'RX1', name: 'Đơn A', items: [{ productId: 'p1', grams: 50 }], total: 50000, thang: 1, updatedAt: 1 }], updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  els['#remedyPreset'].value = 'RX1';
+  c.remedyPresetPick();
+  assert.equal(els['#remedyName'].hidden, false, 'đã chọn đơn → ô tên hiện');
+  assert.equal(els['#remedyName'].value, 'Đơn A', 'ô tên điền sẵn tên đơn');
+  els['#remedyPreset'].value = '';
+  c.remedyPresetPick();
+  assert.equal(els['#remedyName'].hidden, true, 'Đơn mới → ô tên ẩn mặc định');
+});
+
+/* 2.14.0 N2 A/B golden 8ca207a: đổi tên đơn đang chọn và tách đơn; db giống hệt 2.13.2. */
+const AB_RENAME_GOLDEN = "[{\"label\":\"R1 đổi tên đơn đang chọn, xác nhận OK\",\"toast\":\"Đã cập nhật đơn \\\"Đơn Z\\\"\",\"presc\":[[\"RX1\",\"Đơn Z\",2,240000,[[\"p1\",50],[\"p2\",20]]]]},{\"label\":\"R2 đổi tên, từ chối: lưu thành đơn mới\",\"toast\":\"Đã lưu đơn \\\"Đơn Y\\\"\",\"presc\":[[\"RX1\",\"Đơn Z\",2,240000,[[\"p1\",50],[\"p2\",20]]],[\"NEW\",\"Đơn Y\",2,240000,[[\"p1\",10]]]]}]";
+test('2.14.0 A/B đổi tên đơn: db giống hệt golden 2.13.2 (R1 đổi tên OK, R2 từ chối → đơn mới)', () => {
+  assert.equal(abRenameScenario(), AB_RENAME_GOLDEN);
+});
+test('2.14.0 N2 cấu trúc: Lưu tên mới khi đang chọn đơn gọi copyPreset; remedyPresetPick hiện ô tên theo đơn đang chọn', () => {
+  const body = name => {
+    const i = PAGE.indexOf('\nfunction ' + name + '(');
+    const j = PAGE.indexOf('\n}\n', i);
+    return PAGE.slice(i, j);
+  };
+  assert.match(body('remedyNewName'), /copyPreset\(\);/);
+  assert.match(body('remedyPresetPick'), /remedyNameShow\(!!\(sel && sel\.value\)\);/);
 });
