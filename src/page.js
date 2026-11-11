@@ -353,7 +353,7 @@ input.qty-hinted{padding-left:50px}
 .nhap-pend__tot{float:right;font-size:13px}
 .nhap-hint{font-size:11px;margin:4px 0 0;text-align:left}
 #nhapListBox .note__pending tr.is-row>td{align-self:end}
-#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:44px;min-width:44px}
+#nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px;display:block;margin-left:auto}
 #nhapListBox .note__foot{margin-top:8px}
 /* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
 #invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
