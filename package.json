@@ -1,6 +1,6 @@
 {
   "name": "quan-ly-kho-local",
-  "version": "2.13.2",
+  "version": "2.14.0",
   "private": true,
   "type": "module",
   "description": "Quản Lý Kho — app một người dùng, chạy local bằng Docker và SQLite",
