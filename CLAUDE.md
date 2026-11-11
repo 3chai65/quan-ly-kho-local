@@ -27,52 +27,47 @@ Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
 Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được lỗi.
 
 ## Triển khai
-- Build một lần với `--label org.opencontainers.image.revision=<commit>`.
-- Chạy `docker compose up -d --no-build`.
-- Trước mỗi bản gắn thẻ `pre-X.Y.Z`: gắn thẻ đó vào image đang chạy.
+- Build một lần với `--label org.opencontainers.image.revision=<commit>` (hash commit).
+- Thẻ `pre-X.Y.Z` = image đang chạy trước khi bật bản mới.
+- Hệ thống chặn Claude chạy `docker tag … :latest` và `docker compose up`, nên NGƯỜI DÙNG tự chạy:
+  `docker tag quan-ly-kho:X.Y.Z quan-ly-kho-local-quan-ly-kho:latest` rồi `docker compose up -d --no-build`;
+  và ba lệnh git: `git tag vX.Y.Z <hash>`, `git push origin-local local-sqlite:main`, `git push origin-local vX.Y.Z`.
+- Sau đó Giám sát (Haiku) kiểm tra sau triển khai.
+- Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt và "bật" của người dùng.
 - Cấm `docker compose down -v` (mất chứng chỉ Caddy `caddy_data`).
-- Chỉ triển khai khi có cả "duyệt triển khai" và "bật".
 
 ## Dữ liệu
 - Không bao giờ đụng `data/`.
 - Sao lưu bằng `robocopy` (không `/MIR`) sang `E:\sao-luu-kho`, do Task Scheduler "SaoLuuKho" thực hiện.
 
-## Quy trình Duyệt → Làm
-
-- **Người duyệt** (phiên chat riêng của người dùng, không xem được repo): phân tích yêu cầu, lập kế hoạch,
-  giao việc cho subagent `worker` (Haiku, xem `.claude/agents/worker.md`).
-  Người duyệt KHÔNG tự viết code, chỉ duyệt kế hoạch và kết quả.
-- Worker làm theo từng chỉ đạo; xong mỗi bước, Người duyệt kiểm tra:
-  1. Worker dán diff/hunk và đầu ra test vào file .md; Người duyệt chỉ đọc những gì được dán.
-  2. Chạy test: `tests/client.test.mjs` trên host; `tests/server.test.mjs` trong Docker.
-  3. Đạt → duyệt tiếp bước sau; chưa đạt → viết chỉ đạo sửa lại cho worker.
-- Không merge/commit khi test chưa xanh. Thay đổi liên quan tiền/tồn kho
-  bắt buộc nêu rõ rủi ro trước khi ghi đè, ưu tiên dựa vào backup tự động của server.
-- Nhiều thiết bị cùng dùng; đồng bộ theo snapshot, `X-Base-Updated` sai thì máy chủ trả 409/428, không tự ghi đè; không mở hai phiên ghi song song.
-- Kết thúc task: Người duyệt tổng kết thay đổi + trạng thái test.
-
-### Quy trình 3 vai
-
-- Worker (Haiku) làm theo chỉ đạo; Người duyệt duyệt từng bước.
-- Khi thay đổi chạm Vùng nhạy cảm, Auditor (Opus, `.claude/agents/auditor.md`, chỉ đọc) chạy MỘT lượt cuối trước "duyệt triển khai", chỉ nhận khoảng commit và danh sách vùng cần soi.
-- Lỗi nghiêm trọng/nên sửa: Người duyệt viết chỉ đạo cho Worker sửa; Auditor chỉ duyệt lại các lỗi đã báo.
-- Không chạy Auditor cho thay đổi chỉ tài liệu hay thay đổi nhỏ ngoài vùng nhạy cảm.
-- Báo cáo Auditor ≤15 dòng; chi tiết ghi vào file .md do Người duyệt chỉ định.
+## Vai trò
+- **Giám sát** = Haiku (`.claude/agents/giam-sat.md`, chỉ đọc): chạy test/tóm tắt, kiểm sau triển khai, so số đo với ngưỡng, rút gọn log.
+- **Người làm** = Sonnet (`.claude/agents/worker.md`): sửa mã, build, viết test.
+- **Người duyệt** = phiên chính, mặc định Sonnet: phân tích, lập kế hoạch, giao việc, duyệt. KHÔNG tự viết mã.
+- **Opus** chỉ vào "cổng" qua `.claude/agents/auditor.md` (chỉ đọc) khi: (a) chạm logic cốt lõi (tiền, tồn kho, đồng bộ, xác thực);
+  (b) Sonnet không chắc; (c) lỗi lặp lại/khó. Việc chỉ giao diện/tài liệu không cần Opus.
+- Auditor chạy MỘT lượt cuối trước "duyệt triển khai", chỉ nhận khoảng commit và vùng cần soi; báo cáo ≤15 dòng; sau đó chỉ duyệt lại các lỗi đã báo.
+- Worker dán diff/hunk và đầu ra test (file .md); Người duyệt chỉ đọc phần được dán. Đạt → bước sau; chưa đạt → chỉ đạo sửa lại.
+- Duyệt giao diện: phải đo bằng số trên trình duyệt trước. Worker không được báo "đã sửa/đã thẳng hàng" khi chưa có số đo hoặc lập luận từ mã.
+- Không commit khi test chưa xanh. Thay đổi tiền/tồn kho phải nêu rủi ro trước khi ghi đè, dựa vào backup tự động của server; không mở hai phiên ghi song song.
 
 ## Tối ưu hạn mức sử dụng
+- Chat mới cho mỗi task; chỉ mang sang kết luận/diff cần thiết (dùng "Ghi chú bàn giao" bên dưới).
+- Gửi đúng ngữ cảnh: dán hàm/đoạn diff liên quan, tóm tắt yêu cầu 3–5 dòng; đặc tả dài ghi vào file .md ngoài repo rồi trỏ tới. `src/page.js` rất lớn, không đọc cả file.
+- Để Haiku tóm tắt log/test dài thành vài bullet trước khi đưa Sonnet/Opus.
+- Gộp các chỉnh sửa nhỏ liên quan vào một lượt Sonnet; cổng Opus như mục Vai trò.
+- Worker chỉ trả đoạn đổi (patch ngắn), báo cáo ≤8 dòng; không dump log, không in lại file đã sửa.
+- Không chạy lặp bộ test dài nhiều lần khi không cần.
+- Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
-- Mỗi task = một phiên/cuộc chat riêng; không nhồi cả buổi vào một phiên dài.
-  Phiên dài thì chủ động `/compact` trước khi tràn context.
-- Người duyệt chỉ đọc phần liên quan: dùng Grep/Glob tìm đúng chỗ, đọc diff thay vì
-  đọc lại cả file; đặc biệt `src/page.js` rất lớn — tuyệt đối không đọc toàn bộ nhiều lần.
-- Worker báo cáo ngắn gọn (file đổi gì, test pass/fail); không dump log dài,
-  không in lại nội dung file đã sửa.
-- Chia task thành các bước nhỏ, duyệt xong bước nào mới giao bước sau;
-  không bắt agent chạy vòng lặp không điểm dừng.
-- Việc máy móc (đổi chữ, format, rename, chạy lại build/test) luôn giao worker Haiku;
-  Sonnet chỉ dùng cho phân tích, quyết định và duyệt.
-- Không đọc lại file đã đọc trong cùng phiên khi không cần thiết;
-  tin vào diff và báo cáo thay vì xác minh lặp lại.
-- Tắt tính năng/chế độ không cần (model mạnh không cần thiết, tự động hóa dài)
-  để tránh đốt quota oan.
-- Báo cáo ≤15 dòng; nội dung dành cho Người duyệt đặt trong file .md nhỏ.
+## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
+- Đang chạy: 2.14.0, commit 07fac42, image `quan-ly-kho:2.14.0` (id ef0d8296…).
+- Đường lui: `quan-ly-kho:pre-2.14.0` = 2.13.2 (id e79c7c47…, commit 8ca207a).
+- Nhánh làm việc `local-sqlite` = `origin-local/main`.
+- Chờ/biết chưa sửa: sao lưu tự động đè lên thông báo đang hiện (G17); Dockerfile còn công cụ build và chạy bằng root.
+- Ba đường ghi máy chủ có thể từ chối số liệu ngoài thực tế: `saveRetail` không kiểm `cost`; xóa/giảm đơn bán làm tồn vượt trần; sửa gram đơn thuốc chén làm đơn giá vượt trần.
+- `applyRemedyBalance`/`allocateRemedyByCost` chưa kiểm trần đơn giá khi kg rất nhỏ.
+- Gợi ý đơn vị trong ô số lượng dùng "l" cho lạng (chỉ ở gợi ý); phần còn lại của app vẫn ghi "lạng".
+- Xem thử giao diện: sinh trang tĩnh từ `src/page.js` (placeholder như `server.js`, dữ liệu mẫu tự bịa, không dùng dữ liệu thật),
+  mở bằng `.claude/launch.json` (node phục vụ file, cổng 8899) trong trình duyệt của ứng dụng, đo bằng JavaScript (`getBoundingClientRect`) ở 320/375/800/1300px, tối và sáng.
+- Người dùng dùng chủ yếu iPhone qua https://192.168.2.46; PC chủ qua https://localhost.
