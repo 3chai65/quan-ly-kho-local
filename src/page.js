@@ -515,7 +515,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <span class="lbl lbl--flat">Thành tiền</span>
             <span class="total__v txt-green" id="retailTotal">0</span>
           </div>
-          <button class="btn btn--green" type="button" data-action="save-retail">
+          <button class="btn btn--green" type="button" data-action="save-retail" data-keep-focus>
             <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
           </button>
         </div>
@@ -616,7 +616,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <button class="btn" type="button" data-action="save-preset" id="remedySavePreset">
               <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
             </button>
-            <button class="btn btn--primary" type="button" data-action="save-remedy">
+            <button class="btn btn--primary" type="button" data-action="save-remedy" data-keep-focus>
               <svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg>Bán đơn
             </button>
           </div>
@@ -647,7 +647,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           <label class="lbl" for="nhapPrice">Giá nhập (k/kg)</label>
           <input class="inp inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0">
         </div>
-        <button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button>
       </div>
       <p class="hint mt-10" id="nhapHint" hidden></p>
       <div class="hintbox mt-12">
@@ -674,7 +674,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           </tr></tfoot>
         </table>
       </div>
-      <button class="btn btn--dark mt-12 w-full" type="submit">
+      <button class="btn btn--dark mt-12 w-full" type="submit" data-keep-focus>
         <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
       </button>
     </form>
@@ -2080,8 +2080,8 @@ function commitRetailRow(){
   var limRq = checkLimits('q', q) || checkLimits('money', kToDong(m));
   if (limRq) {
     toast(limRq, 'error');
-    var ri = $('.retail-qty', row);
-    if (ri) ri.focus();
+    var bad = checkLimits('q', q) ? $('.retail-qty', row) : $('.retail-money', row);
+    if (bad) bad.focus();
     return false;
   }
   if (q <= 0) {
@@ -3729,6 +3729,8 @@ function addNhapItem(){
   closeSuggest('nhap');
   if (inp) inp.focus();
 }
+/* N1: lỗi trần của dòng trong tờ ghi: giữ con trỏ ở ô số lượng (không có ô nào của dòng để trỏ tới). */
+function nhapFocusQty(){ var q = $('#nhapQty'); if (q) q.focus(); }
 function saveNhap(e){
   if (e) e.preventDefault();
   var date = todayISO();
@@ -3747,7 +3749,7 @@ function saveNhap(e){
     var lim2 = checkLimits('q', qty) || checkLimits('money', price);
     if (lim2) {
       toast(lim2, 'error');
-      var pPrice = $('#nhapPrice'); if (pPrice) { pPrice.focus(); pPrice.select(); }
+      var bad2 = checkLimits('q', qty) ? $('#nhapQty') : $('#nhapPrice'); if (bad2) { bad2.focus(); if (bad2.select) bad2.select(); }
       return;
     }
     if (!nhapPriceOk(cp, price)) { var pi2 = $('#nhapPrice'); if (pi2) { pi2.focus(); pi2.select(); } return; }
@@ -3758,7 +3760,7 @@ function saveNhap(e){
     if (entries[ei].qty < 0) { toast('Số lượng không được âm', 'error'); return; }
     if (entries[ei].price < 0) { toast('Giá nhập không được âm', 'error'); return; }
     var limE = checkLimits('q', entries[ei].qty) || checkLimits('money', entries[ei].price) || checkLimits('name', entries[ei].name);
-    if (limE) { toast(limE, 'error'); return; }
+    if (limE) { toast(limE, 'error'); nhapFocusQty(); return; }
   }
   /* Kiểm trần sau khi cộng dồn (theo vị, kể cả trùng trong nhapList), trước mọi ghi db. */
   var simStock = {}, limSum = null;
@@ -3768,7 +3770,7 @@ function saveNhap(e){
     simStock[sk] = (sk in simStock ? simStock[sk] : (sp ? num(sp.stock) : 0)) + entries[si].qty;
     limSum = checkLimits('q', simStock[sk]) || checkLimits('money', money(entries[si].qty * entries[si].price));
   }
-  if (limSum) { toast(limSum, 'error'); return; }
+  if (limSum) { toast(limSum, 'error'); nhapFocusQty(); return; }
 
   var savedN = 0;
   var batchId = uid('IM');
@@ -4536,6 +4538,10 @@ function renderAll(){
   if (cb && cb.open) renderChart();
 }
 
+/* N1: bấm nút có data-keep-focus không làm ô nhập đang gõ mất focus (iOS ẩn bàn phím khi nút nhận focus). */
+function keepFocusDown(e){ var t = e.target; if (t && t.closest && t.closest('[data-keep-focus]')) e.preventDefault(); }
+doc.addEventListener('pointerdown', keepFocusDown, true);
+doc.addEventListener('mousedown', keepFocusDown, true);
 /* ================= SỰ KIỆN ================= */
 function handleAction(btn){
   var a = btn.getAttribute('data-action');
