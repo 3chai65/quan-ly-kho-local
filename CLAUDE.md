@@ -51,6 +51,14 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Nhiều thiết bị cùng dùng; đồng bộ theo snapshot, `X-Base-Updated` sai thì máy chủ trả 409/428, không tự ghi đè; không mở hai phiên ghi song song.
 - Kết thúc task: Người duyệt tổng kết thay đổi + trạng thái test.
 
+### Quy trình 3 vai
+
+- Worker (Haiku) làm theo chỉ đạo; Người duyệt duyệt từng bước.
+- Khi thay đổi chạm Vùng nhạy cảm, Auditor (Opus, `.claude/agents/auditor.md`, chỉ đọc) chạy MỘT lượt cuối trước "duyệt triển khai", chỉ nhận khoảng commit và danh sách vùng cần soi.
+- Lỗi nghiêm trọng/nên sửa: Người duyệt viết chỉ đạo cho Worker sửa; Auditor chỉ duyệt lại các lỗi đã báo.
+- Không chạy Auditor cho thay đổi chỉ tài liệu hay thay đổi nhỏ ngoài vùng nhạy cảm.
+- Báo cáo Auditor ≤15 dòng; chi tiết ghi vào file .md do Người duyệt chỉ định.
+
 ## Tối ưu hạn mức sử dụng
 
 - Mỗi task = một phiên/cuộc chat riêng; không nhồi cả buổi vào một phiên dài.
