@@ -14,6 +14,8 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Thuốc chén: thanh tiêu đề có tên, chọn đơn và ngày; ô tìm vị là dòng đầu tờ ghi; “Tạo đơn mới” trong danh sách; tên đơn ẩn, mở bằng “Lưu tên mới”; chân tờ ghi hai hàng; bỏ chú thích.
 - Nhập hàng: thanh tiêu đề có tên và ô tìm vị; dòng đang nhập và tờ ghi luôn hiện trong khung; bỏ khung Thành tiền riêng; chân một hàng (Tổng + Lưu nhập hàng).
 - Gợi ý đơn vị (N6): nằm trong khung ô số lượng, cùng dòng với số gõ; có thêm cho ô sửa giao dịch và ô sửa dòng tờ ghi.
+- Điện thoại: Thuốc chén có ô chọn đơn rộng cả hàng, chân hai hàng với nút ≥44 px; Nhập hàng có dòng đang nhập gọn (nhãn SL và Giá, tên và thành tiền trong dòng, gợi ý giá trong ô giá); bỏ chữ “Tương đương”.
+- Ô số: cuộn chuột khi đang focus không đổi số (N7, blur trước khi cuộn, trang vẫn cuộn); hai mũi tên tăng/giảm ẩn ở mọi trình duyệt.
 - Chưa làm (cần quyết định): đưa ô tìm và ô ngày vào tiêu đề thẻ; đưa hàng nhập đang gõ vào tờ ghi; gộp tổng và nút Bán đơn; xóa dòng kẻ trống của tờ ghi.
 
 ### Biết, chưa sửa
