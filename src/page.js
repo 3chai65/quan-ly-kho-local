@@ -95,12 +95,14 @@ transition:background .15s,border-color .15s,color .15s}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 /* ---------- menu ---------- */
 .menu{position:relative}
-.menu__list{position:absolute;right:0;top:calc(100% + 6px);min-width:178px;background:var(--surface);
+/* 2.13.1: menu neo mép trái (nút âm dương ở bên trái header); không tràn khỏi màn hình 320–375px. */
+.menu__list{position:absolute;left:0;right:auto;top:calc(100% + 6px);min-width:178px;max-width:calc(100vw - 24px);background:var(--surface);
 border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px rgba(15,23,42,.18);padding:6px;z-index:60}
 .menu__item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;background:transparent;
 color:var(--text);border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
 .menu__item:hover{background:var(--surface2)}
 .menu__item[aria-checked=true]{background:var(--brand-soft);color:var(--brand-text);font-weight:700}
+.menu__item[aria-checked=true]::after{content:"✓";margin-left:auto;font-weight:800}
 /* ---------- row action menu (···) ---------- */
 .rowmenu{position:static;display:inline-flex}
 .rowmenu__list{position:fixed;z-index:120;min-width:180px;background:var(--surface);
@@ -255,6 +257,9 @@ box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .26s ease,opacity .2
 .toast.is-on{transform:translate(-50%,0);opacity:1;visibility:visible}
 .toast .ico{color:#34d399}
 .toast[data-kind=error] .ico{color:#fbbf24}
+.toast .toast__warn{display:none}
+.toast[data-kind=error] .toast__warn{display:inline-block}
+.toast[data-kind=error] .toast__ok{display:none}
 /* N2 (2.13.0): điện thoại – thông báo hiện ở ĐẦU màn hình, dưới thanh header (kể cả safe-area), trượt từ trên xuống. Đặt SAU quy tắc gốc. */
 @media (max-width:600px){
 .toast{top:calc(env(safe-area-inset-top,0px) + 64px);bottom:auto;transform:translate(-50%,-150%)}
@@ -400,6 +405,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></symbol>
 <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
 <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
 <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
@@ -1043,7 +1049,8 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite">
-  <svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>
+  <svg class="ico toast__ok" aria-hidden="true"><use href="#i-check"/></svg>
+  <svg class="ico toast__warn" aria-hidden="true"><use href="#i-warn"/></svg>
   <span id="toastMsg">Đã lưu</span>
 </div>
 <script>
@@ -4671,6 +4678,13 @@ function bindEvents(){
       applyTheme(b.getAttribute('data-theme-set'));
       closeThemeMenu();
     });
+  });
+  /* 2.13.1: Esc đóng menu chế độ và đưa focus về nút âm dương. */
+  doc.addEventListener('keydown', function(e){
+    var tm = $('#themeMenu');
+    if (e.key !== 'Escape' || !tm || tm.hidden) return;
+    closeThemeMenu();
+    var yb = $('#themeBtn'); if (yb) yb.focus();
   });
 
   var nf = $('#nhapForm');
