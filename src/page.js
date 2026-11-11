@@ -62,12 +62,12 @@ a{color:var(--brand-text)}
 .top{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--border)}
 .bar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;min-height:60px}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em;background:none;border:0;padding:0;font-family:inherit;cursor:pointer}
-.brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
-.brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text);cursor:pointer}
-.brand__yin .ico{width:24px;height:24px}
-.brand__yin.is-shake{animation:yinShake .4s ease-in-out}
-@keyframes yinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-@media (prefers-reduced-motion:reduce){.brand__yin.is-shake{animation:none;box-shadow:0 0 0 2px var(--red-text)}}
+.brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text);cursor:pointer}
+.brand__yin .ico{width:24px;height:24px}
+.brand__yin.is-shake{animation:yinShake .4s ease-in-out}
+@keyframes yinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.brand__yin.is-shake{animation:none;box-shadow:0 0 0 2px var(--red-text)}}
 .menu__item--sub{font-size:12px;color:var(--muted)}
 .bar__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
@@ -1755,24 +1755,24 @@ function applyTheme(mode){
   setFavicon();
   if ($('#chartBox') && $('#chartBox').open) renderChart();
 }
-/* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
-var brandBusy = false;
-function denyDevices(){
-  var yin = $('#themeBtn');
-  if (yin) { yin.classList.remove('is-shake'); void yin.offsetWidth; yin.classList.add('is-shake'); }
-  var note = $('#brandNote');
-  if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';
-}
-function brandDevicesClick(){
-  if (brandBusy) return Promise.resolve();
-  brandBusy = true;
-  return Promise.resolve().then(function(){
-    return fetch('/auth/devices', { credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'text/html' } });
-  }).then(function(r){
-    if (r && r.status === 200) location.href = '/auth/devices';
-    else denyDevices();
-  }, denyDevices).then(function(){ brandBusy = false; });
-}
+/* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
+var brandBusy = false;
+function denyDevices(){
+  var yin = $('#themeBtn');
+  if (yin) { yin.classList.remove('is-shake'); void yin.offsetWidth; yin.classList.add('is-shake'); }
+  var note = $('#brandNote');
+  if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';
+}
+function brandDevicesClick(){
+  if (brandBusy) return Promise.resolve();
+  brandBusy = true;
+  return Promise.resolve().then(function(){
+    return fetch('/auth/devices', { credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'text/html' } });
+  }).then(function(r){
+    if (r && r.status === 200) location.href = '/auth/devices';
+    else denyDevices();
+  }, denyDevices).then(function(){ brandBusy = false; });
+}
 function closeThemeMenu(){
   var m = $('#themeMenu'), b = $('#themeBtn');
   if (m) m.hidden = true;
@@ -3754,8 +3754,8 @@ function addNhapItem(){
   closeSuggest('nhap');
   if (inp) inp.focus();
 }
-/* N1: lỗi trần của dòng trong tờ ghi: giữ con trỏ ở ô số lượng (không có ô nào của dòng để trỏ tới). */
-function nhapFocusQty(){ var q = $('#nhapQty'); if (q) q.focus(); }
+/* N1: lỗi trần của dòng trong tờ ghi: giữ con trỏ ở ô số lượng (không có ô nào của dòng để trỏ tới). */
+function nhapFocusQty(){ var q = $('#nhapQty'); if (q) q.focus(); }
 function saveNhap(e){
   if (e) e.preventDefault();
   var date = todayISO();
@@ -4562,10 +4562,10 @@ function renderAll(){
   if (cb && cb.open) renderChart();
 }
 
-/* N1: bấm nút có data-keep-focus không làm ô nhập đang gõ mất focus (iOS ẩn bàn phím khi nút nhận focus). */
-function keepFocusDown(e){ var t = e.target; if (t && t.closest && t.closest('[data-keep-focus]')) e.preventDefault(); }
-doc.addEventListener('pointerdown', keepFocusDown, true);
-doc.addEventListener('mousedown', keepFocusDown, true);
+/* N1: bấm nút có data-keep-focus không làm ô nhập đang gõ mất focus (iOS ẩn bàn phím khi nút nhận focus). */
+function keepFocusDown(e){ var t = e.target; if (t && t.closest && t.closest('[data-keep-focus]')) e.preventDefault(); }
+doc.addEventListener('pointerdown', keepFocusDown, true);
+doc.addEventListener('mousedown', keepFocusDown, true);
 /* ================= SỰ KIỆN ================= */
 function handleAction(btn){
   var a = btn.getAttribute('data-action');
