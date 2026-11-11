@@ -109,7 +109,7 @@ globalThis.__test = {
   setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
   setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
   normSearch: normSearch,
-  handleAction: handleAction, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
+  handleAction: handleAction, toast: toast, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -3284,6 +3284,59 @@ test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), l�
   assert.equal(PAGE.lastIndexOf('@media', r), PAGE.lastIndexOf('@media (max-width:600px)', r), 'quy tắc ô tên phải nằm trong @media (max-width:600px)');
   assert.ok(at('.nhap-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}') > r - 200, 'lưới 1fr 1fr 44px phải nằm trong khối 600px');
   assert.match(PAGE, /<div class="field sug">\s*<label class="lbl" for="nhapSearch">/, 'ô tên phải là .field.sug');
+});
+
+/* 2.13.0 (N2): thông báo phải thấy được: lỗi 5 giây + assertive; trong hộp thoại đang mở thì có khung lỗi; phone: toast ở đầu màn hình. */
+function toastDoc(openDialog) {
+  const classes = new Set();
+  const tEl = { attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add: c => classes.add(c), remove: c => classes.delete(c) }, textContent: '' };
+  const mEl = makeEl();
+  const card = { children: [], head: { nextSibling: null }, querySelector(s) { return s === '.card__head' ? this.head : null; }, appendChild(c) { this.children.push(c); }, insertBefore(c) { this.children.push(c); } };
+  const dlg = { card, box: null, querySelector(s) { return s === '.dlg__card' ? card : s === '.dlg__err' ? this.box : null; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#toast' ? tEl : s === '#toastMsg' ? mEl : s === 'dialog[open]' ? (openDialog ? dlg : null) : null; },
+    querySelectorAll() { return []; }, createElement() { return { attrs: {}, className: '', textContent: '', setAttribute(k, v) { this.attrs[k] = v; } }; },
+    createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {}
+  };
+  return { doc, tEl, card, dlg };
+}
+
+test('2.13.0 N2 toast: lỗi giữ 5 giây và role=alert/assertive; thông báo thường 2,8 giây và role=status/polite', () => {
+  const timers = [];
+  const { doc, tEl } = toastDoc(false);
+  const c = loadClient({ document: doc, setTimeout(fn, ms) { timers.push(ms); return 1; }, clearTimeout() {} });
+  c.toast('Lỗi thử', 'error');
+  assert.equal(timers.at(-1), 5000, 'lỗi phải giữ 5000 ms');
+  assert.equal(tEl.attrs.role, 'alert');
+  assert.equal(tEl.attrs['aria-live'], 'assertive');
+  c.toast('Đã lưu', 'ok');
+  assert.equal(timers.at(-1), 2800, 'thông báo thường giữ 2800 ms');
+  assert.equal(tEl.attrs.role, 'status');
+  assert.equal(tEl.attrs['aria-live'], 'polite');
+});
+
+test('2.13.0 N2 toast lỗi khi hộp thoại đang mở: có khung lỗi role=alert trong hộp; không có hộp mở thì không tạo khung', () => {
+  const t1 = toastDoc(true);
+  const c1 = loadClient({ document: t1.doc, setTimeout() { return 1; }, clearTimeout() {} });
+  c1.toast('Số lượng quá lớn', 'error');
+  assert.equal(t1.card.children.length, 1, 'phải có khung lỗi trong hộp');
+  assert.equal(t1.card.children[0].attrs.role, 'alert');
+  assert.equal(t1.card.children[0].textContent, 'Số lượng quá lớn');
+  const t2 = toastDoc(false);
+  const c2 = loadClient({ document: t2.doc, setTimeout() { return 1; }, clearTimeout() {} });
+  c2.toast('Số lượng quá lớn', 'error');
+  assert.equal(t2.card.children.length, 0, 'không có hộp mở thì không tạo khung');
+});
+
+test('2.13.0 N2 CSS: điện thoại (≤600px) đặt .toast ở đầu màn hình (top + safe-area), sau quy tắc gốc; khung lỗi có dlg__err', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  const base = at('.toast{position:fixed');
+  const m = at('.toast{top:calc(env(safe-area-inset-top,0px) + 64px)');
+  assert.ok(base < m, 'quy tắc điện thoại .toast phải sau quy tắc gốc');
+  assert.equal(PAGE.lastIndexOf('@media', m), PAGE.lastIndexOf('@media (max-width:600px)', m), '.toast điện thoại phải trong @media (max-width:600px)');
+  assert.match(PAGE, /\.dlg__err\{/);
+  assert.match(PAGE, /d\.addEventListener\('close', function\(\)\{ clearDlgErr\(d\); \}\);/, 'khung lỗi phải xóa khi đóng hộp');
 });
 
 /* 2.13.0 (N1): sau lỗi trần, con trỏ ở ĐÚNG ô sai và ô đó không bị blur. DOM giả theo dõi activeElement và số lần blur. */
