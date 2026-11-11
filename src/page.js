@@ -185,6 +185,8 @@ tbody tr:hover{background:var(--surface2)}
 .c-act .inline-row{justify-content:center;gap:4px}
 .c-qty{width:110px}
 .c-money{width:130px}
+/* 2.14.0 (giai đoạn 4, M3a): nút … Kho tồn 32px (hàng máy tính ≈43px); điện thoại 34px, vùng bấm ≥40 (::after). */
+table.inv td.c-del .btn--icon{width:32px;min-width:32px;height:32px;min-height:32px;padding:0}
 table.ord,table.inv,table.his{min-width:0}
 .muted{color:var(--muted)}
 .small{font-size:12px}
@@ -432,12 +434,16 @@ table.inv tr.is-row>td:nth-child(4)::before,
 table.his tr.is-row>td:nth-child(3)::before,table.his tr.is-row>td:nth-child(4)::before,
 table.his tr.is-row>td:nth-child(5)::before{content:attr(data-label);display:block;font-size:10px;font-weight:700;
 letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-table.inv tr.is-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
-table.inv tr.is-row>td:nth-child(1){grid-area:1/1/2/3;min-width:0;overflow-wrap:anywhere}
-table.inv tr.is-row>td:nth-child(5){grid-area:1/3/3/4;justify-self:end;align-self:center}
+/* 2.14.0 (giai đoạn 4, M3a): Kho tồn điện thoại – hàng 1 tên + nút …; hàng 2 ba số liệu một dòng có nhãn nhỏ. Ước tính ≈52px (≤60). */
+table.inv tr.is-row{grid-template-columns:minmax(0,1fr) auto auto auto;column-gap:10px;row-gap:2px;padding:4px 2px}
+table.inv tr.is-row>td:nth-child(1){grid-area:1/1/2/4;min-width:0;overflow-wrap:anywhere}
+table.inv tr.is-row>td:nth-child(5){grid-area:1/4/3/5;justify-self:end;align-self:center}
 table.inv tr.is-row>td:nth-child(2){grid-area:2/1}
 table.inv tr.is-row>td:nth-child(3){grid-area:2/2}
-table.inv tr.is-row>td:nth-child(4){grid-area:2/3;text-align:right}
+table.inv tr.is-row>td:nth-child(4){grid-area:2/3;text-align:left}
+table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,table.inv tr.is-row>td:nth-child(4)::before{display:inline;margin:0 4px 0 0;font-size:10px;letter-spacing:0;text-transform:none}
+table.inv tr.is-row>td.c-del .btn--icon{width:34px;min-width:34px;height:34px;min-height:34px;padding:0;position:relative}
+table.inv tr.is-row>td.c-del .btn--icon::after{content:"";position:absolute;inset:-3px}
 table.his tr.is-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
 table.his tr.is-row>td:nth-child(1){grid-area:2/1/3/3;font-size:12px}
 table.his tr.is-row>td:nth-child(2){grid-area:1/1/2/3;min-width:0;overflow-wrap:anywhere}
