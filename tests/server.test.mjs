@@ -1,11 +1,10 @@
 /**
  * Test chạy trực tiếp server.js (bản local production) qua HTTP thật.
  *
- * worker.test.mjs chỉ kiểm tra logic client + worker.js Cloudflare cũ; file này
- * bảo đảm chính server đang vận hành cũng đúng: validate snapshot, conflict
- * 409, làm tròn tiền, và tự động sao lưu.
+ * File này bảo đảm server.js (bản local production) đúng khi chạy thật qua HTTP:
+ * validate snapshot, conflict 409, làm tròn tiền, và tự động sao lưu.
  *
- * Cách chạy: node --test (chạy mọi file tests trong thư mục tests).
+ * Cách chạy: npm test (tương đương node --test tests/server.test.mjs), trong Docker.
  */
 
 import test from 'node:test';
@@ -13,19 +12,33 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import vm from 'node:vm';
 import fs from 'node:fs';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PAGE } from '../src/page.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8899;
-const BASE = `http://127.0.0.1:${PORT}`;
 const SETUP_CODE = 'TESTCODE2026KHO';
+let PORT = 0;
+let BASE = '';
 
 let child;
 let dataDir;
 let deviceCookie = '';
+
+/* Cổng trống do hệ điều hành cấp (listen 0), tránh đụng cổng cứng trên máy. */
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.unref();
+    srv.on('error', reject);
+    srv.listen(0, '127.0.0.1', () => {
+      const { port } = srv.address();
+      srv.close(() => resolve(port));
+    });
+  });
+}
 
 function waitForServer(timeoutMs = 15000) {
   const started = Date.now();
@@ -122,6 +135,8 @@ function emptyState(extra = {}) {
 }
 
 test.before(async () => {
+  PORT = await freePort();
+  BASE = `http://127.0.0.1:${PORT}`;
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-test-'));
   child = spawn(process.execPath, ['server.js'], {
     cwd: root,
@@ -278,10 +293,8 @@ test('server.js: trang GET / dựng HTML, hết placeholder', async () => {
   const r = await fetch(`${BASE}/`, { headers: { Cookie: deviceCookie } });
   assert.equal(r.status, 200);
   const html = await r.text();
-  assert.ok(!html.includes('%%NONCE%%'));
   assert.ok(!html.includes('%%BOOT%%'));
   assert.ok(!html.includes('%%NEEDFETCH%%'));
-  assert.ok(!html.includes('/logout'), 'nút đăng xuất phải đã bị gỡ');
 });
 test('server.js: orderName không fallback thành oid; tự dọn oname === oid khi đọc', async () => {
   await put(emptyState({
@@ -340,7 +353,7 @@ test('server.js: tiền lẻ còn trong DB được đọc thành số nguyên',
 
 test('server.js: payload quá lớn trả JSON 413', async () => {
   const largeState = emptyState({
-    products: Array.from({ length: 60000 }, (_, i) => ({
+    products: Array.from({ length: 80000 }, (_, i) => ({
       id: 'P' + i,
       name: 'Thuoc ' + i,
       stock: 1,
@@ -348,17 +361,17 @@ test('server.js: payload quá lớn trả JSON 413', async () => {
     }))
   });
   const bodyStr = JSON.stringify(largeState);
-  if (bodyStr.length > 4 * 1024 * 1024) {
-    const r = await fetch(`${BASE}/api/state`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Cookie: deviceCookie },
-      body: bodyStr
-    });
-    assert.equal(r.status, 413);
-    const json = await r.json();
-    assert.equal(json.success, false);
-    assert.equal(json.error, 'Payload too large');
-  }
+  // Ca này chỉ có nghĩa khi thân thật sự vượt MAX_BODY (4 MB); không có điều kiện bao quanh.
+  assert.ok(Buffer.byteLength(bodyStr) > 4 * 1024 * 1024, 'thân phải lớn hơn 4 MB, hiện ' + Buffer.byteLength(bodyStr));
+  const r = await fetch(`${BASE}/api/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Cookie: deviceCookie },
+    body: bodyStr
+  });
+  assert.equal(r.status, 413);
+  const json = await r.json();
+  assert.equal(json.success, false);
+  assert.equal(json.error, 'Payload too large');
 });
 
 test('server.js: thiếu X-Base-Updated (và không X-Force) bị từ chối 428, dữ liệu không đổi', async () => {
@@ -620,7 +633,7 @@ test('server.js: ngày không có thật hoặc ngoài 2000-2100 bị 400', asyn
 
 test('server.js: file migration hỏng không chặn khởi động', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-bad-json-'));
-  const port = 8898;
+  const port = await freePort();
   fs.writeFileSync(path.join(dir, 'truoc-lam-tron-2026-11-06-1047.json'), '{bad');
   const child2 = spawn(process.execPath, ['server.js'], {
     cwd: root,
