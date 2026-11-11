@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import vm from 'node:vm';
 
 import { PAGE } from '../src/page.js';
@@ -52,6 +51,7 @@ globalThis.__test = {
   getInvPage: function(){ return invPage; },
   setInvPage: function(v){ invPage = v; },
   renderInventory: renderInventory,
+  wrapRenderInventory: function(fn){ var orig = renderInventory; renderInventory = function(){ fn(); return orig.apply(this, arguments); }; },
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
   setDirty: function(v){ dirty = !!v; },
@@ -640,13 +640,14 @@ test('parseBackup không có vị thuốc thì không bịa giá nhập', () => 
   assert.equal(out._moneyNote.includes('Giá nhập'), false);
 });
 
-test('file nghìn thật nhân A Giao từ 85 thành 85000', (t) => {
-  const nghinPath = 'G:/quan-ly-kho-local/data/luu-tru/kho-backup-2026-11-06.json';
-  if (!fs.existsSync(nghinPath)) {
-    t.skip('không có kho-backup-2026-11-06.json');
-    return;
-  }
-  const nghin = app.parseBackup(fs.readFileSync(nghinPath, 'utf8'));
+/* Mẫu nhỏ thay cho file sao lưu thật: không phụ thuộc máy, không bị skip. */
+const SAMPLE_GIAO = [{ id: 'PGIAO', name: 'A Giao', stock: 1, costPrice: 85 }];
+
+test('file nghìn (không có moneyUnit) nhân A Giao từ 85 thành 85000', () => {
+  const nghin = app.parseBackup(JSON.stringify({
+    app: 'quan-ly-kho',
+    data: { products: SAMPLE_GIAO, transactions: [], prescriptions: [] }
+  }));
   const giao = nghin.products.find(p => p.name === 'A Giao');
   assert.equal(giao.costPrice, 85000);
   assert.equal(nghin.moneyUnit, 'dong');
@@ -654,13 +655,12 @@ test('file nghìn thật nhân A Giao từ 85 thành 85000', (t) => {
   assert.ok(nghin._moneyNote.includes('→ ' + app.fmtNum(nghin.products[0].costPrice)));
 });
 
-test('file đồng thật giữ A Giao ở 85000', (t) => {
-  const dongPath = 'G:/Quản Lý Kho/kho-backup/kho-backup-2026-11-07.json';
-  if (!fs.existsSync(dongPath)) {
-    t.skip('không có kho-backup-2026-11-07.json');
-    return;
-  }
-  const dong = app.parseBackup(fs.readFileSync(dongPath, 'utf8'));
+test('file đồng (moneyUnit dong) giữ A Giao ở 85000', () => {
+  const dong = app.parseBackup(JSON.stringify({
+    app: 'quan-ly-kho',
+    moneyUnit: 'dong',
+    data: { products: [{ id: 'PGIAO', name: 'A Giao', stock: 1, costPrice: 85000 }], transactions: [], prescriptions: [] }
+  }));
   const giao = dong.products.find(p => p.name === 'A Giao');
   assert.equal(giao.costPrice, 85000);
   assert.equal(dong.moneyUnit, 'dong');
@@ -944,11 +944,29 @@ test('autoRefresh: không render lại khi server không có gì mới', async (
   const remote = { products: [], transactions: [], prescriptions: [], updatedAt: 100 };
   const fetchStub = async () => ({ status: 200, json: async () => ({ success: true, data: remote }) });
   const client = loadClient({ fetch: fetchStub });
+  client.wrapRenderInventory(() => { renderCalls++; });
   client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100 });
   client.setBase(100);
   client.setDirty(false);
-  await client.autoRefresh();
+  const changed = await client.autoRefresh();
+  assert.equal(changed, false);
+  assert.equal(renderCalls, 0, 'server không mới thì không được render lại');
   assert.equal(client.getBase(), 100, 'base không đổi khi server bằng nhau');
+});
+
+test('autoRefresh: có bản server mới thì render đúng 1 lần (đối chứng cho bộ đếm render)', async () => {
+  let renderCalls = 0;
+  const remote = { products: [], transactions: [], prescriptions: [], updatedAt: 200 };
+  const fetchStub = async () => ({ status: 200, json: async () => ({ success: true, data: remote }) });
+  const client = loadClient({ fetch: fetchStub });
+  client.wrapRenderInventory(() => { renderCalls++; });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100 });
+  client.setBase(100);
+  client.setDirty(false);
+  const changed = await client.autoRefresh();
+  assert.equal(changed, true);
+  assert.equal(renderCalls, 1, 'bản mới phải render đúng 1 lần');
+  assert.equal(client.getBase(), 200);
 });
 
 test('busyEditing: nhận biết ô nhập và hộp thoại đang mở', () => {
@@ -1038,7 +1056,7 @@ test('autoRefresh: không ghi đè nếu máy bắt đầu sửa trong lúc đan
 
 
 /*
-  Chưa phủ, cố ý:
+  Fuzz này cố ý KHÔNG dựng các mục sau (các mục này có ca test riêng trong file, tìm theo tên hàm):
   - khôi phục từ file JSON
   - màn đối soát recFix / recFixAll
   - sửa hoặc xóa vị thuốc
@@ -1757,7 +1775,7 @@ test('giá vốn lịch sử: cost chia qty theo nghìn, không có vốn thì �
   assert.equal(client.costParen(13500, 0), '');
 });
 
-test('lịch sử bán: mặc định 10 đơn gần nhất, 11 ẩn, đơn 12 dòng đếm 1, dòng không oid đếm 1, Xem thêm mở thêm', () => {
+test('lịch sử bán: mặc định trang 1 đúng 10 đơn gần nhất, đơn thứ 11 nằm sau, đơn 12 dòng gộp thành 1, dòng không oid là single', () => {
   const client = loadClient({ Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
   const mk = (n, date, ts) => ({ id: 't' + n, date, type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts, oid: 'OD_' + n, oname: 'Bán lẻ' });
   const txs = [];
@@ -1774,18 +1792,27 @@ test('lịch sử bán: mặc định 10 đơn gần nhất, 11 ẩn, đơn 12 d
   txs.push({ id: 'rx1', date: '2026-11-04', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 901, rx: true });
   client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
   const data = client.historyData('exp', null, true);
-  // 2 hôm nay + 5 hôm qua + 3 trước nữa = 10 đơn gần nhất, còn lại ẩn ở trang sau
-  assert.ok(data.rows.length > 10);
-  const firstPage = data.rows.slice(0, 10);
-  assert.equal(firstPage.length, 10);
+  // 17 dòng: 14 đơn OD_1..OD_14, 1 đơn gộp OD_big (12 dòng), 2 dòng không oid (single, rx1)
+  assert.equal(data.rows.length, 17);
+  // Trang 1 = 10 dòng mới nhất: 2 hôm nay + 5 hôm qua + 3 hôm kia
+  const firstPage = data.rows.slice(0, 10).map(r => r.group ? r.oid : r.tx.id);
+  // Mảng từ vm khác realm nên so bằng JSON, không dùng deepStrictEqual.
+  assert.equal(JSON.stringify(firstPage), JSON.stringify(['OD_2', 'OD_1', 'OD_7', 'OD_6', 'OD_5', 'OD_4', 'OD_3', 'OD_10', 'OD_9', 'OD_8']));
+  // Đơn thứ 11 (ngày 05) không nằm trong trang 1
+  assert.equal(data.rows[10].oid, 'OD_14');
   assert.equal(data.rows[10].date, '2026-11-05');
-  const bigTotal = data.rows.filter(r => r.group && r.oid === 'OD_big').length + data.rows.filter(r => r.oid === 'OD_big').length;
-  assert.ok(bigTotal >= 1);
-  const singles = data.rows.filter(r => r.single && r.tx && !r.tx.oid);
-  assert.ok(singles.length >= 1);
+  assert.equal(firstPage.includes('OD_14'), false);
+  // Đơn 12 dòng cùng oid gộp thành đúng 1 dòng, n = 12
+  const big = data.rows.filter(r => r.oid === 'OD_big');
+  assert.equal(big.length, 1);
+  assert.equal(big[0].group, true);
+  assert.equal(big[0].n, 12);
+  // Dòng không oid: mỗi dòng là một single, không gộp
+  const singles = data.rows.filter(r => r.single).map(r => r.tx.id).sort();
+  assert.equal(JSON.stringify(singles), JSON.stringify(['rx1', 'single']));
 });
 
-test('lịch sử bán: trang 1 chỉ hiện 10 dòng (giới hạn 10)', () => {
+test('lịch sử bán: trang 1 chỉ hiện 10 dòng, bấm sang trang 2 (nút Sau) hiện 5 dòng còn lại', () => {
   const els = new Map();
   function ensure(id) {
     if (!els.has(id)) els.set(id, { id, value: '', textContent: '', hidden: false, style: {}, dataset: {}, children: [], classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } }, setAttribute(){}, getAttribute(){ return null; }, removeAttribute(){}, hasAttribute(){ return false; }, appendChild(c){ els.get(id).children.push(c); return c; }, remove(){}, focus(){}, select(){}, click(){}, addEventListener(){}, removeEventListener(){}, querySelector(){ return null; }, querySelectorAll(){ return []; } });
@@ -1810,6 +1837,11 @@ test('lịch sử bán: trang 1 chỉ hiện 10 dòng (giới hạn 10)', () => 
   client.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], transactions: txs, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
   client.renderHistory('exp');
   assert.equal(body.children.length, 10, 'trang 1 chỉ 10 dòng');
+  // Nút "Sau" (data-action=page, kind=exp, page=2) chạy: expPage = 2; renderHistory('exp')
+  body.children.length = 0;
+  client.setExpPage(2);
+  client.renderHistory('exp');
+  assert.equal(body.children.length, 5, 'trang 2 hiện 5 dòng còn lại (15 đơn - 10)');
 });
 
 test('lịch sử nhập: tìm "cam" ra Cam Thảo không dấu, xóa ô về 10 gần nhất, gợi ý đúng', () => {
