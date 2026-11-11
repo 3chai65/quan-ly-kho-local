@@ -4498,6 +4498,17 @@ test('2.14.0 M3a Kho tồn điện thoại: lưới 4 cột (tên + nút … ở
   assert.doesNotMatch(css, /table\.inv tr\.is-row\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) auto\}/);
   assert.match(css, /table\.inv tr\.is-row>td:nth-child\(5\)\{grid-area:1\/4\/3\/5;justify-self:end;align-self:center\}/);
   assert.match(css, /table\.inv tr\.is-row>td:nth-child\(2\)::before,table\.inv tr\.is-row>td:nth-child\(3\)::before,table\.inv tr\.is-row>td:nth-child\(4\)::before\{display:inline;/);
-  assert.match(css, /table\.inv td\.c-del \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px');
+  assert.match(css, /table\.inv td\.c-del \.btn--icon,table\.his td\.c-act \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px (gộp cho Kho và Lịch sử)');
   assert.match(css, /table\.inv tr\.is-row>td\.c-del \.btn--icon::after\{content:"";position:absolute;inset:-3px\}/, 'điện thoại: vùng bấm 40px qua ::after');
+});
+
+/* 2.14.0 (giai đoạn 4, M3b): Lịch sử nhập/bán điện thoại – hàng 1 tên + ngày + …, hàng 2 SL/đơn giá/thành tiền (không nhãn chữ); nút … 32px máy tính, 34px điện thoại. */
+test('2.14.0 M3b Lịch sử điện thoại: lưới 4 cột (tên và ngày ở hàng 1, SL/đơn giá/thành tiền ở hàng 2), không nhãn chữ; nút … 32px máy tính', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /table\.his tr\.is-row\{grid-template-columns:minmax\(0,1fr\) auto auto auto;column-gap:10px;row-gap:2px;padding:4px 2px\}/);
+  assert.doesNotMatch(css, /table\.his tr\.is-row\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) auto\}/);
+  assert.match(css, /table\.his tr\.is-row>td:nth-child\(6\)\{grid-area:1\/4\/3\/5;justify-self:end;align-self:center\}/);
+  assert.match(css, /table\.his tr\.is-row>td:nth-child\(3\)::before,table\.his tr\.is-row>td:nth-child\(4\)::before,table\.his tr\.is-row>td:nth-child\(5\)::before\{content:none\}/);
+  assert.match(css, /table\.inv td\.c-del \.btn--icon,table\.his td\.c-act \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px cho cả hai Lịch sử');
+  assert.match(css, /table\.his tr\.is-row>td\.c-act \.btn--icon::after\{content:"";position:absolute;inset:-3px\}/);
 });
