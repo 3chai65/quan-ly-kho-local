@@ -33,6 +33,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Gợi ý đơn vị làm mới sau mọi lần xóa ô số bằng mã (Nhập, Bán lẻ, Thuốc chén, lưu nhập, dòng tờ ghi); không còn “(12,5 kg)” trên ô trống (N1).
 - Đổi tên đơn thuốc chén có sẵn được khôi phục: chọn đơn thì hiện ô tên; “Lưu đơn” đổi tên có xác nhận như 2.13.2; “Lưu tên mới” khi đang chọn đơn = sao chép (N2).
 - Id mô tả gợi ý của các ô số không còn trùng (N3).
+- Gợi ý đơn vị viết tắt "lạng" thành "l" (ví dụ "(2 l)"); kg, g giữ nguyên; chỗ khác trong app vẫn ghi "lạng".
 - Gợi ý đơn vị khi ô hẹp (điện thoại, Bán lẻ/Nhập hàng) chuyển lên dòng nhãn, mép phải, thay vì ẩn (S2).
 - Nút “+” Nhập hàng cao 44 px bằng ô nhập và thẳng đáy (trước đó 36 px, lệch đáy).
 - Lịch sử nhập điện thoại: ô tìm bị co còn vài chục px; nay rộng cả hàng.
