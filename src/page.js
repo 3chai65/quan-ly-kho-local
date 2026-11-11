@@ -292,14 +292,16 @@ table.ord tr,table.inv tr,table.his tr{display:block}
 table.ord td,table.inv td,table.his td{display:block;width:auto;padding:0;border:0}
 table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid;gap:7px 10px;align-items:center;
 padding:11px 2px;border-bottom:1px solid var(--border2)}
-table.ord tr.is-row{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 40px}
+table.ord tr.is-row{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 46px}
 table.ord tr.is-row>td:nth-child(1){grid-area:1/1;text-align:left}
-table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/4;min-width:0;overflow-wrap:anywhere}
+table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/5;min-width:0;overflow-wrap:anywhere}
 table.ord tr.is-row>td:nth-child(3){grid-area:2/2}
 table.ord tr.is-row>td:nth-child(4){grid-area:2/3}
-table.ord tr.is-row>td:nth-child(5){grid-area:1/4/3/5;justify-self:end;align-self:center}
+table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}
 table.ord--r tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
-table.ord--r tr.is-row>td:nth-child(4){grid-area:1/4/3/5;justify-self:end;align-self:center}
+table.ord--r tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
+/* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
+table.ord tr.is-row>td:nth-child(5) .btn,table.ord--r tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
 table.ord tr.is-row>td.c-qty::before,table.ord tr.is-row>td.c-money::before,
 table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,
 table.inv tr.is-row>td:nth-child(4)::before,
