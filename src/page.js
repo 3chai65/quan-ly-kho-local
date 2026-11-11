@@ -355,6 +355,23 @@ input.qty-hinted{padding-left:50px}
 #nhapListBox .note__pending tr.is-row>td{align-self:end}
 #nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:44px;min-width:44px}
 #nhapListBox .note__foot{margin-top:8px}
+/* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
+#invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.card__bar-sort{flex:0 0 170px;min-width:0}
+.card__bar-month{flex:0 0 130px;min-width:0}
+.card__bar-search.is-inline{flex:1 1 220px}
+.card__bar-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.card__bar-btn{flex:0 0 auto}
+.card__bar>.inp.card__bar-search{flex:1 1 220px;min-width:0}
+@media (max-width:600px){
+.card__bar-sort{order:2;flex:0 0 150px}
+.card__bar-month{order:2}
+.card__bar-btn{order:2}
+.card__bar-lbl{display:none}
+.card__bar-search.is-inline{order:0;flex:1 1 0;min-width:0}
+.card__bar>.inp.card__bar-search{order:3;flex:1 0 100%}
+.card__bar-count{order:4;margin-left:0}
+}
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
@@ -784,34 +801,28 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     </details>
 
     <details class="card" id="invBox">
-      <summary class="card__head">
+      <summary class="card__head sr-summary">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>
         <h2 class="card__title">Kho tồn</h2>
-        <span class="spacer"></span>
-        <span class="hint" id="invCount"></span>
       </summary>
       <div class="card__body">
-        <div class="row mb-12">
-          <div class="sug">
-            <label class="lbl" for="invSearch">Tìm vị thuốc</label>
-            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc để lọc..." role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>Kho tồn</span>
+          <div class="sug card__bar-search">
+            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Tìm vị thuốc…" aria-label="Tìm vị thuốc để lọc kho" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
             <div class="sug__list" id="invList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
-          <div class="field">
-            <label class="lbl" for="invSort">Sắp xếp</label>
-            <select class="inp" id="invSort">
-              <option value="sold_desc" selected>Bán chạy nhất (nhiều → ít)</option>
-              <option value="name_asc">Tên (A → Z)</option>
-              <option value="stock_desc">Số lượng (nhiều → ít)</option>
-              <option value="stock_asc">Số lượng (ít → nhiều)</option>
-            </select>
-          </div>
-        </div>
-        <div class="foot foot--rec mb-12">
-          <button class="btn btn--sm" type="button" data-action="reconcile">
-            <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Đối chiếu tồn kho
+          <select class="inp card__bar-sort" id="invSort" aria-label="Sắp xếp kho">
+            <option value="sold_desc" selected>Bán chạy nhất (nhiều → ít)</option>
+            <option value="name_asc">Tên (A → Z)</option>
+            <option value="stock_desc">Số lượng (nhiều → ít)</option>
+            <option value="stock_asc">Số lượng (ít → nhiều)</option>
+          </select>
+          <button class="btn btn--sm card__bar-btn" type="button" data-action="reconcile" aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho">
+            <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span class="card__bar-lbl">Đối chiếu tồn kho</span>
           </button>
+          <span class="hint card__bar-count" id="invCount"></span>
         </div>
         <div class="tw">
           <table class="inv">
@@ -833,20 +844,19 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 
   <div class="grid2 mt-18">
     <details class="card" id="impBox">
-      <summary class="card__head">
+      <summary class="card__head sr-summary">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
         <h2 class="card__title">Lịch sử nhập hàng</h2>
-        <span class="spacer"></span>
-        <span class="hint" id="impCount"></span>
       </summary>
       <div class="card__body">
-        <div class="row mb-12">
-          <div class="field sug">
-            <label class="lbl" for="impSearch">Tìm kiếm</label>
-            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm kiếm">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>Lịch sử nhập</span>
+          <div class="sug card__bar-search is-inline">
+            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tìm vị thuốc…" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm tên vị thuốc trong lịch sử nhập">
             <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
+          <span class="hint card__bar-count" id="impCount"></span>
         </div>
         <div class="tw">
           <table class="his">
@@ -867,30 +877,22 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     </details>
 
     <details class="card" id="expBox">
-      <summary class="card__head">
+      <summary class="card__head sr-summary">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-green" aria-hidden="true"><use href="#i-cash"/></svg>
         <h2 class="card__title">Lịch sử bán hàng</h2>
-        <span class="spacer"></span>
-        <span class="hint" id="expCount"></span>
       </summary>
       <div class="card__body">
-        <div class="row mb-12">
-          <div class="field">
-            <label class="lbl" for="expMonth">Lọc theo tháng (mm/yyyy)</label>
-            <div class="monthfield">
-              <input class="inp inp--sm" id="expMonth" type="text" inputmode="numeric" autocomplete="off" placeholder="mm/yyyy" maxlength="7" aria-label="Lọc theo tháng (mm/yyyy)">
-              <svg class="ico monthfield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-              <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
-            </div>
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-green" aria-hidden="true"><use href="#i-cash"/></svg>Lịch sử bán</span>
+          <div class="monthfield card__bar-month">
+            <input class="inp inp--sm" id="expMonth" type="text" inputmode="numeric" autocomplete="off" placeholder="mm/yyyy" maxlength="7" aria-label="Lọc theo tháng (mm/yyyy)">
+            <svg class="ico monthfield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+            <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
           </div>
-          <div class="field">
-            <label class="lbl" for="expSearch">Tên vị thuốc</label>
-            <input class="inp inp--sm" id="expSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" maxlength="200" aria-label="Tìm theo tên vị thuốc">
-          </div>
-          <div class="inline-row">
-            <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" hidden>Gộp đơn thuốc lẻ cũ</button>
-          </div>
+          <input class="inp inp--sm card__bar-search" id="expSearch" type="text" autocomplete="off" placeholder="Tìm vị thuốc…" maxlength="200" aria-label="Tìm theo tên vị thuốc">
+          <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" hidden>Gộp đơn thuốc lẻ cũ</button>
+          <span class="hint card__bar-count" id="expCount"></span>
         </div>
         <div class="tw">
           <table class="his">
