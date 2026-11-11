@@ -17,6 +17,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Điện thoại: nút + và ô Vị thuốc thẳng hàng, ô tên rộng hết hàng; nút + vuông 44 px.
 - Giảm chói và nhãn tab hai hàng (gộp từ 2.12.x).
 - Test: thời gian chờ 120 giây cho các bộ test; treo thì rớt có tên ca.
+- Menu Sáng/Tối neo mép trái và có dấu tick; toast lỗi dùng biểu tượng cảnh báo; Esc đóng menu.
 - Test: bỏ console.log trong bộ test ngẫu nhiên (gây lỗi chạy ngẫu nhiên "Unable to deserialize").
 
 ### Biết, chưa sửa
