@@ -14,10 +14,17 @@ cd "G:\quan-ly-kho-local"
 docker compose up -d --build
 ```
 
-Mở trên máy tính: **http://localhost:8787**
+Mở trên máy tính: **https://localhost** (hoặc dự phòng `http://localhost:8787`)
 
-Mở trên điện thoại: **http://<IP-máy-tính>:8787**
-- Xem IP máy tính: `ipconfig` → dòng `IPv4 Address` của card WiFi (dạng `192.168.x.x`).
+Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
+- Xem IP máy tính: `ipconfig` → dòng `IPv4 Address` của card WiFi. Cổng 443 mở ra LAN; cổng 8787 chỉ lắng nghe `127.0.0.1` trên PC.
+
+## Chế độ HTTPS
+
+- Sau khi bật HTTPS (`docker compose up`), thiết bị cần cài CA nội bộ của Caddy (`caddy-root.crt`). Sổ cài ở mục “Xác thực thiết bị” bên dưới và có hướng dẫn chi tiết riêng.
+- **Không chạy `docker compose down -v`** — sẽ xóa volume `caddy_data` và mất CA nội bộ. Dùng `docker compose down` (không `-v`) khi cần.
+- Cổng 80 đóng; chỉ cổng 443 mở ra LAN; `default_sni` đảm bảo cert khớp khi vào bằng IP.
+- Chỉ truy cập LAN; không dùng cho truy cập từ ngoài nhà. IP phải cố định (DHCP reservation).
 
 ## Dữ liệu nằm ở đâu
 - File SQLite: `G:\quan-ly-kho-local\data\app.db`
@@ -73,7 +80,7 @@ Bản `kho-backup-2026-11-06.json` trong `data/luu-tru/` xuất lúc 19:48, mu�
 node --test tests/client.test.mjs
 
 # Test server thật (cần better-sqlite3 → chạy trong container):
-docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test
+docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho-local-quan-ly-kho npm test
 # hoặc nếu chưa build: docker build -t quan-ly-kho:latest .  rồi chạy lệnh trên
 ```
 
@@ -162,5 +169,4 @@ Huy hiệu “Chưa đồng bộ” hiện cạnh nút “Bỏ thay đổi chưa
 - Từ 2.8.0 có **xác thực thiết bị** (xem mục “Xác thực thiết bị” ở trên); vẫn chỉ nên dùng trong mạng nhà.
 - Khi dùng Caddy HTTPS: **không bao giờ chạy `docker compose down -v`** trong thư mục kho thật, vì lệnh này xóa volume `caddy_data` chứa CA nội bộ; mất CA là phải cài lại trên cả 3 thiết bị. Dùng `docker compose down` (không `-v`) khi cần.
 - Cổng đổi được trong `docker-compose.yml` (mục `ports`, ví dụ `"9000:8787"`).
-- Muốn dùng ngoài WiFi sau này: cài Tailscale trên PC + điện thoại rồi mở
-  `http://<tên-tailscale-PC>:8787`.
+- Muốn dùng ngoài WiFi: cài Tailscale trên PC + điện thoại, mở `https://<tên-tailscale-PC>`; nhớ bật cổng 443 trong tường lửa và thêm subnet Tailscale vào quy tắc Caddy. Hiện tại chỉ LAN; cổng 8787 chỉ lắng nghe `127.0.0.1` (dự phòng PC).
