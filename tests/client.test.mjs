@@ -4713,3 +4713,8 @@ test('2.14.0 N2 cấu trúc: Lưu tên mới khi đang chọn đơn gọi copyPr
   assert.match(body('remedyNewName'), /copyPreset\(\);/);
   assert.match(body('remedyPresetPick'), /remedyNameShow\(!!\(sel && sel\.value\)\);/);
 });
+
+/* 2.14.0 S1 lint: ResizeObserver truy cập qua window (không biến tự do); khi không có window thì bỏ qua. */
+test('2.14.0 S1 lint: gợi ý theo dõi kích thước qua window.ResizeObserver có kiểm typeof', () => {
+  assert.match(PAGE, /typeof window !== 'undefined' && typeof window\.ResizeObserver === 'function'\) new window\.ResizeObserver\(fit\)\.observe\(input\);/);
+});
