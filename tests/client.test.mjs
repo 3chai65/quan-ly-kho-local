@@ -3313,6 +3313,14 @@ test('2.12.0 nhãn tab: mỗi nút đúng 2 span tab__l1/tab__l2 không rỗng; 
   assert.match(PAGE, /font-size:13px;font-weight:600;line-height:1\.2;text-align:center;cursor:pointer\}/);
 });
 
+/* 2.12.0 (D): nút lưu đơn Bán lẻ đổi chữ thành "Bán đơn"; Thuốc chén giữ nguyên nút "Lưu đơn" (preset). */
+test('2.12.0 nút Bán lẻ data-action=save-retail có chữ "Bán đơn"; không còn "Lưu đơn" ở nút đó', () => {
+  const btn = PAGE.match(/<button[^>]*data-action="save-retail"[^>]*>[\s\S]*?<\/button>/)[0];
+  assert.match(btn, /<\/svg>Bán đơn\s*<\/button>/);
+  assert.doesNotMatch(btn, /Lưu đơn/);
+  assert.equal(PAGE.split('data-action="save-retail"').length - 1, 1);
+});
+
 /* 2.11.0: dải số liệu mỏng (Bán/Lợi nhuận) trên cùng; Nhập/Tồn kho chuyển vào Thống kê. Chỉ giao diện. */
 const STAT_IDS = ['statImport', 'statExport', 'statExportDay', 'statExportYear', 'statProfit', 'statProfitDay', 'statProfitYear', 'statStock'];
 
