@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.13.2] - 2026-11-11
+
+- Thống kê: “Nhập trong tháng” và “Tổng tồn kho” lên đầu thẻ; ô năm một khung; bỏ chú giải và gợi ý cũ; dòng tháng với hai ô màu; mặc định tháng hiện tại (năm khác: tháng cuối có dữ liệu).
+
 ## [2.13.0] - 2026-11-11
 
 ### Giao diện
