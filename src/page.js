@@ -3130,12 +3130,8 @@ function mergeCandidates(){
     g.total += num(t.total);
   });
   list = list.filter(function(g){ return g.items.length >= 2 && g.price > 0; });
-  list.forEach(function(g){
-    var q = g.price / 5;
-    g.likely = Math.abs(q - Math.round(q)) > 0.002;
-  });
+  /* 2.13.0 (N3): không đoán đơn nào là đơn thuốc chén; không tick sẵn. Sắp theo ngày mới nhất. */
   list.sort(function(a, b){
-    if (a.likely !== b.likely) return a.likely ? -1 : 1;
     return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
   });
   return list;
@@ -3151,14 +3147,13 @@ function openMerge(){
   box.textContent = '';
   var hint = $('#mergeHint');
   if (hint) hint.textContent = list.length
-    ? 'Các dòng bán chưa có tên đơn, cùng ngày và cùng đơn giá/kg có thể là một đơn thuốc chén bán không đặt tên. Đơn giá lẻ do chia đều (rất giống đơn thuốc chén) được tick sẵn; đơn giá tròn có thể là bán lẻ nên chưa tick. Chỉ tick những đơn bạn chắc chắn.'
+    ? 'Các dòng bán chưa có tên đơn, cùng ngày và cùng đơn giá/kg có thể là một đơn thuốc chén bán không đặt tên. Không đơn nào được tick sẵn; chỉ tick những đơn bạn chắc chắn.'
     : 'Không còn đơn nào cần gộp.';
   list.forEach(function(g){
     var lab = el('label', 'mrow');
     var cb = el('input');
     cb.type = 'checkbox';
     cb.setAttribute('data-key', g.key);
-    cb.checked = g.likely;
     lab.appendChild(cb);
     var d = el('div');
     d.appendChild(el('div', 'b', dateVN(g.date) + ' · ' + g.items.length + ' vị · ' + fmtMoney(g.total) + ' · giá ' + fmtUnitPrice(g.price)));
