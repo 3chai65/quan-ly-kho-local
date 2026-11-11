@@ -48,7 +48,7 @@ let total = 0, viaTs = 0, viaId = 0, unknown = 0;
 function scan(kind, rows) {
   for (const t of Array.isArray(rows) ? rows : []) {
     if (!t) continue;
-    // Ngày ghi: ưu tiên date; đơn thuốc không có date thì dùng ngày của updatedAt.
+    // Ngày ghi: ưu tiên date; thiếu date thì dùng ngày của updatedAt (nếu có).
     let ghi = (typeof t.date === 'string' && t.date) ? t.date : null;
     if (!ghi && t.updatedAt != null && Number.isFinite(Number(t.updatedAt))) ghi = vnDay(Number(t.updatedAt));
     if (!ghi) { total++; unknown++; console.log(`không xác định được: ${kind} id=${t.id} (thiếu date)`); continue; }
