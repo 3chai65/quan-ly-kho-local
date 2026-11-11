@@ -348,6 +348,17 @@ input.qty-hinted{padding-left:50px}
 #nhapListBox .note__pending thead{display:none}
 #nhapListBox .note__pending{margin:0}
 #nhapListBox .note__foot{padding:10px 12px}
+.nhap-pend__name{font-weight:600;overflow-wrap:anywhere}
+.nhap-pend__name.is-muted{color:var(--muted);font-weight:400}
+.nhap-pend__tot{float:right;font-size:13px}
+.nhap-hint{font-size:11px;margin:2px 0 0;text-align:left}
+#remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
+#remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
+#remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
+@media (max-width:600px){
+#remedyBox .card__bar-preset{order:3;flex:1 0 100%}
+#remedyNote .note__row--btns .btn{flex:1 1 auto;min-height:44px}
+}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 140px}
 .card__bar-title{flex:1 1 auto}
@@ -663,14 +674,14 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
               <span class="b txt-brand" aria-hidden="true">=</span>
               <span class="b txt-brand num" id="remedyTotal" aria-live="polite">0</span>
             </div>
-            <div class="note__row">
+            <input class="inp inp--sm note__name" id="remedyName" type="text" autocomplete="off" placeholder="Tên đơn mới" aria-label="Tên đơn mới" maxlength="200" hidden>
+            <div class="note__row note__row--btns">
               <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
                 <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
               </button>
               <button class="btn btn--sm" type="button" data-action="copy-preset" id="remedyCopyPreset" hidden>
                 <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Sao chép đơn
               </button>
-              <input class="inp inp--sm note__name" id="remedyName" type="text" autocomplete="off" placeholder="Tên đơn mới" aria-label="Tên đơn mới" maxlength="200" hidden>
               <button class="btn btn--sm" type="button" data-action="save-preset" id="remedySavePreset">
                 <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
               </button>
@@ -723,16 +734,15 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
               <th class="c-money" scope="col">Giá nhập (k/kg)</th>
               <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
             </tr></thead>
-            <tbody id="nhapPendingBody"><tr>
+            <tbody id="nhapPendingBody"><tr class="is-row">
               <td class="c-num num muted"></td>
-              <td><span class="note__tot">Thành tiền <b class="txt-blue num" id="nhapTotal">0</b></span></td>
-              <td class="c-qty"><input class="inp inp--sm inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0" aria-label="Số lượng (kg)"></td>
-              <td class="c-money"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"></td>
+              <td><span id="nhapPendName" class="nhap-pend__name is-muted">Chọn vị thuốc ở ô trên</span> <span class="note__tot nhap-pend__tot">Thành tiền <b class="txt-blue num" id="nhapTotal">0</b></span></td>
+              <td class="c-qty" data-label="SL (kg)"><input class="inp inp--sm inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0" aria-label="Số lượng (kg)"></td>
+              <td class="c-money" data-label="Giá nhập (k/kg)"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"><p class="hint nhap-hint" id="nhapHint" hidden></p></td>
               <td class="c-del"><button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button></td>
             </tr></tbody>
           </table>
         </div>
-        <p class="hint" id="nhapHint" hidden></p>
         <div class="note__foot">
           <span class="note__tot">Tổng <b class="txt-blue" id="nhapListTotal">0</b></span>
           <button class="btn btn--dark" type="submit" data-keep-focus>
@@ -1228,7 +1238,7 @@ function attachQtyHint(input, unit){
     var t = qtyHintText(input.value, typeof unit === 'function' ? unit() : unit);
     var long = String(input.value || '').length > 6;
     h.textContent = t;
-    sr.textContent = t ? 'Tương đương ' + t : '';
+    sr.textContent = t ? 'Quy đổi ' + t : '';
     h.hidden = !t || long;
   };
   input.addEventListener('input', upd);
@@ -3799,6 +3809,8 @@ function calcNhap(){
   var p = num(($('#nhapPrice') || {}).value);
   var out = $('#nhapTotal');
   if (out) out.textContent = fmtMoney(kToDong(q * p));
+  var pn = $('#nhapPendName');
+  if (pn) { var nm = String(($('#nhapSearch') || {}).value || '').trim(); pn.textContent = nm || 'Chọn vị thuốc ở ô trên'; pn.className = nm ? 'nhap-pend__name' : 'nhap-pend__name is-muted'; }
 }
 var nhapList = [];
 function nhapPriceOk(p, price){
@@ -4829,6 +4841,8 @@ function bindEvents(){
     var n = $('#' + id);
     if (n) n.addEventListener('input', calcNhap);
   });
+  var nsName = $('#nhapSearch');
+  if (nsName) nsName.addEventListener('input', calcNhap);
   var nqHint = $('#nhapQty');
   if (nqHint) attachQtyHint(nqHint, 'kg');
   var txqHint = $('#txEditQty');
