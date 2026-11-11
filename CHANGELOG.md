@@ -19,7 +19,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 - Bán lẻ, Thuốc chén, Nhập hàng: dòng đang nhập nằm trong tờ ghi; không còn dòng trống; chân tờ ghi một hàng (Tổng và nút lưu).
 - Thuốc chén: “Tạo đơn mới” nằm trong danh sách; tên đơn ẩn, mở bằng “Lưu tên mới”; ô tìm vị là dòng đầu tờ ghi. “Lưu đơn” là đơn mẫu, cần tên.
-- Bán lẻ: “Bán đơn” mặc định tên đơn “Đơn thuốc lẻ”.
+- Thuốc chén: “Bán đơn” mặc định tên đơn “Đơn thuốc lẻ”. Bán lẻ: “Bán đơn” ghi đơn tên “Bán lẻ”.
 - Nhập hàng: gợi ý giá nằm trong dòng đang nhập; bỏ khung Thành tiền riêng và chữ “Tương đương”.
 
 ### Gợi ý đơn vị và ô số
@@ -29,6 +29,10 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 ### Sửa lỗi
 
+- Ô số có gợi ý đơn vị không còn padding cố định 50 px: vùng chữ luôn ≥ 56 px khi gợi ý hiện; gợi ý ẩn khi hết chỗ; cột SL máy tính rộng 152 px (S1).
+- Gợi ý đơn vị làm mới sau mọi lần xóa ô số bằng mã (Nhập, Bán lẻ, Thuốc chén, lưu nhập, dòng tờ ghi); không còn “(12,5 kg)” trên ô trống (N1).
+- Đổi tên đơn thuốc chén có sẵn được khôi phục: chọn đơn thì hiện ô tên; “Lưu đơn” đổi tên có xác nhận như 2.13.2; “Lưu tên mới” khi đang chọn đơn = sao chép (N2).
+- Id mô tả gợi ý của các ô số không còn trùng (N3).
 - Nút “+” Nhập hàng cao 44 px bằng ô nhập và thẳng đáy (trước đó 36 px, lệch đáy).
 - Lịch sử nhập điện thoại: ô tìm bị co còn vài chục px; nay rộng cả hàng.
 - STT dòng đang nhập = số dòng tờ ghi + 1; hai bảng Bán lẻ dùng chung độ rộng cột.
