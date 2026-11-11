@@ -5,6 +5,17 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.8.4] - 2026-11-11
+
+### Thêm
+
+- `checkLimits(kind, v)` kiểm trần ngay tại chỗ nhập (số lượng, gram, thang, tiền, tên) trước khi đụng `db`. Sai thì báo lỗi, giữ nguyên tờ ghi, không `commit`, không đặt `dirty`. Áp cho `commitRetailRow`, `commitRemedyRow`, `saveNhap`, `saveRemedy`, `saveTxEdit`; vốn sau nhân (thang × giá, đơn thuốc) cũng được kiểm.
+- Thuộc tính `max` trên ô số lượng, giá, đơn giá, thang, gram và tiền dòng bán lẻ, khớp các hằng `QTY_MAX`, `GRAMS_MAX`, `THANG_MAX`, `MONEY_MAX`.
+
+### Biết, chưa sửa
+
+- saveNhap không focus ô giá khi vượt trần (biến `pi2` dùng trước khi khai báo).
+
 ## [2.8.3] - 2026-11-10
 
 ### Sửa
