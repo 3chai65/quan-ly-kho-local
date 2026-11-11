@@ -1255,6 +1255,7 @@ function qtyHintText(v, unit){
 /* 2.14.0 S1: vùng chữ tối thiểu (px) của ô số khi gợi ý đang hiện. */
 var QTY_TEXT_MIN = 56;
 /* N1: làm mới gợi ý của mọi ô số đã gắn gợi ý (sau khi mã gán value rỗng). */
+var QTY_HINT_SEQ = 0; /* N3: id mô tả duy nhất theo bộ đếm (không trùng giữa các ô). */
 function refreshAllQtyHints(){
   var list = doc.querySelectorAll('input.qty-hinted');
   for (var i = 0; i < list.length; i++) {
@@ -1278,7 +1279,7 @@ function attachQtyHint(input, unit){
   host.appendChild(h);
   var sr = doc.createElement('span');
   sr.className = 'sr';
-  sr.id = (input.id || 'qty') + '-hintsr';
+  sr.id = 'qty-hintsr-' + (++QTY_HINT_SEQ);
   host.appendChild(sr);
   input.setAttribute('aria-describedby', sr.id);
   input.classList.add('qty-hinted');
