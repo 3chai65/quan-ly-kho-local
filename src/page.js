@@ -3871,12 +3871,13 @@ function remedyMates(t){
     return x.rx && x.oid && String(x.oid) === String(t.oid);
   });
 }
-/* Sau khi xóa lần nhập: giá vốn theo lần nhập có giá còn lại mới nhất (theo ts, cùng latestImportMap).
+/* Sau khi xóa lần nhập: giá vốn theo lần nhập có giá còn lại gần nhất theo lastImport
+   (theo ngày, hòa thì theo ts), cùng tiêu chí với saveTxEdit và refPrice.
    Không còn lần nhập có giá thì giữ nguyên. */
 function resetCostFromImports(p){
   if (!p) return;
-  var m = latestImportMap();
-  if (String(p.id) in m) p.costPrice = money(m[String(p.id)]);
+  var l = lastImport(p.id);
+  if (l) p.costPrice = money(l.price);
 }
 function delTx(id){
   var t = null;
