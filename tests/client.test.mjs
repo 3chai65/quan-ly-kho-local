@@ -41,7 +41,7 @@ globalThis.__test = {
   fmtMoney: fmtMoney, fmtNum: fmtNum, fmtQty: fmtQty, dec: dec, num: num,
   sanitize: sanitize, parseBackup: parseBackup, mergeCandidates: mergeCandidates,
   reconcileList: reconcileList, findProduct: findProduct, renderStats: renderStats,
-  loadPreset: loadPreset, recFix: recFix, resetDrafts: resetDrafts,
+  loadPreset: loadPreset, recFix: recFix, resetDrafts: resetDrafts, checkLimits: checkLimits,
   backupLastDate: backupLastDate, commitRetailRow: commitRetailRow,
   commitRemedyRow: commitRemedyRow, onSuggestKey: onSuggestKey,
   getRemedyItems: function(){ return remedyItems; },
@@ -2364,4 +2364,82 @@ test('Enter vị khớp chính xác không có trong gợi ý hiển thị: khô
   c.onSuggestKey({ key: 'Enter', preventDefault() { prevented++; } }, 'nhap');
   assert.equal(prevented, 0);
   assert.equal(buttons[0].hit, undefined);
+});
+
+
+test('checkLimits: commitRetailRow trả false khi kg vượt trần', () => {
+  const row = {
+    getAttribute() { return 'p1'; },
+    querySelector(sel) {
+      if (sel === '.retail-qty') return { value: '10000000', focus() {}, select() {} };
+      if (sel === '.retail-money') return { value: '11', focus() {}, select() {} };
+      return { value: '0', focus() {}, select() {} };
+    }
+  };
+  const tb = { textContent: 'giu', querySelector() { return row; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#retailBody' ? tb : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  assert.equal(c.commitRetailRow(), false);
+  assert.equal(c.getDb().transactions.length, 0);
+});
+
+test('checkLimits: commitRemedyRow trả false khi gram vượt trần', () => {
+  const row = {
+    getAttribute() { return 'p1'; },
+    querySelector(sel) {
+      if (sel === '.remedy-qty') return { value: '2000000000', focus() {}, select() {} };
+      return { value: '0', focus() {}, select() {} };
+    }
+  };
+  const tb = { textContent: 'giu', querySelector() { return row; } };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#remedyBody' ? tb : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  assert.equal(c.commitRemedyRow(), false);
+  assert.equal(c.getRemedyItems().length, 0);
+});
+
+test('checkLimits: saveNhap trả false khi nhập lượng vượt trần', () => {
+  const nq = { value: '10000000', focus() {}, select() {} };
+  const np = { value: '14', focus() {}, select() {} };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#nhapSearch' ? { value: 'Cam' } : s === '#nhapQty' ? nq : s === '#nhapPrice' ? np : null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.saveNhap({ preventDefault() {} });
+  assert.equal(c.getDb().transactions.length, 0);
+});
+
+
+test('checkLimits: q/gram/thang/money ngoài trần bị từ chối; trần hợp lệ', () => {
+  const c = loadClient({ setTimeout() { return 0; }, clearTimeout() {} });
+  assert.equal(c.checkLimits('q', 1e6), null);
+  assert.ok(c.checkLimits('q', 1e6 + 1));
+  assert.equal(c.checkLimits('grams', 1e9), null);
+  assert.ok(c.checkLimits('grams', 1e9 + 1));
+  assert.equal(c.checkLimits('thang', 1), null);
+  assert.equal(c.checkLimits('thang', 10000), null);
+  assert.ok(c.checkLimits('thang', 10001));
+  assert.equal(c.checkLimits('money', 1e12), null);
+  assert.ok(c.checkLimits('money', 1e12 + 1));
+  assert.equal(c.checkLimits('name', 'A'.repeat(200)), null);
+  assert.ok(c.checkLimits('name', 'A'.repeat(201)));
 });

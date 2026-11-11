@@ -1065,6 +1065,18 @@ var GRAMS_MAX = 1e9;
 var THANG_MAX = 1e4;
 var MONEY_MAX = 1e12;
 function inRange(v, min, max){ var n = Number(v); return isFinite(n) && n >= min && n <= max; }
+
+  /* Kiểm trần giới hạn, dùng đúng hằng hiện có. Trả về null (hợp lệ) hoặc chuỗi lỗi. */
+  function checkLimits(kind, v){
+    switch (kind) {
+      case 'q': return inRange(v, 0, QTY_MAX) ? null : 'Số lượng vượt giới hạn (' + QTY_MAX + ')';
+      case 'grams': return inRange(v, 0, GRAMS_MAX) ? null : 'Gram vượt giới hạn (' + GRAMS_MAX + ')';
+      case 'thang': return inRange(v, 1, THANG_MAX) ? null : 'Số thang vượt giới hạn (' + THANG_MAX + ')';
+      case 'money': return inRange(v, 0, MONEY_MAX) ? null : 'Tiền vượt giới hạn (' + MONEY_MAX + ')';
+      case 'name': return String(v || '').length <= NAME_MAX ? null : 'Tên vượt giới hạn (' + NAME_MAX + ' ký tự)';
+      default: return null;
+    }
+  }
 function isRealDateISO(s){ s = String(s || ''); return parseDateVN(s) === s; }
 function money(v){ return Math.round(num(v)); }
 function kToDong(k){ return Math.round(num(k) * DONG_PER_K); }
@@ -1732,6 +1744,13 @@ function commitRemedyRow(){
   var row = tb.querySelector('tr[data-pid]');
   if (!row) return true;
   var g = num($('.remedy-qty', row).value);
+  var limG = checkLimits('grams', g);
+  if (limG) {
+    toast(limG, 'error');
+    var qi = $('.remedy-qty', row);
+    if (qi) qi.focus();
+    return false;
+  }
   if (g <= 0) {
     var p = findProduct(row.getAttribute('data-pid'));
     toast('Dòng "' + (p ? p.name : '?') + '" thiếu gram', 'error');
@@ -2018,6 +2037,13 @@ function commitRetailRow(){
   if (!row) return true;
   var q = num($('.retail-qty', row).value);
   var m = num($('.retail-money', row).value);
+  var limRq = checkLimits('q', q) || checkLimits('money', kToDong(m));
+  if (limRq) {
+    toast(limRq, 'error');
+    var ri = $('.retail-qty', row);
+    if (ri) ri.focus();
+    return false;
+  }
   if (q <= 0) {
     var p = findProduct(row.getAttribute('data-pid'));
     toast('Dòng "' + (p ? p.name : '?') + '" thiếu số lượng', 'error');
@@ -2396,6 +2422,12 @@ function saveRemedy(){
       toast('Tồn "' + p.name + '" không đủ (còn ' + fmtQty(p.stock) + ')', 'error');
       return;
     }
+  }
+  var lim3 = checkLimits('thang', thang) || checkLimits('money', grand);
+  if (lim3) {
+    toast(lim3, 'error');
+    var th = $('#remedyThang'); if (th) th.focus();
+    return;
   }
   var priced = items.map(function(it){
     var p = findProduct(it.pid);
@@ -3647,6 +3679,12 @@ function saveNhap(e){
       var q0 = $('#nhapQty'); if (q0) q0.focus();
       return;
     }
+    var lim2 = checkLimits('q', qty) || checkLimits('money', price);
+    if (lim2) {
+      toast(lim2, 'error');
+      if (pi2) { pi2.focus(); pi2.select(); }
+      return;
+    }
     if (!nhapPriceOk(cp, price)) { var pi2 = $('#nhapPrice'); if (pi2) { pi2.focus(); pi2.select(); } return; }
     entries.push({ pid: cp ? cp.id : null, name: name, qty: dec(qty), price: price });
   }
@@ -3894,6 +3932,12 @@ function saveTxEdit(){
   if (qRaw <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
   var isRx = !!t.rx;
   var q = txEditKg(t, qRaw);
+  var limTx = checkLimits('q', q) || checkLimits('money', price);
+  if (limTx) {
+    toast(limTx, 'error');
+    var ep = $('#txEditPrice'); if (ep) ep.focus();
+    return;
+  }
   if (!isRx && price < 0) { toast('Đơn giá không được âm', 'error'); var ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
 
   var p = findProduct(t.productId);
