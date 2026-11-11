@@ -2236,7 +2236,7 @@ test('dòng bán lẻ/đơn thuốc/nhập thiếu số lượng bị giữ lạ
 test('Enter gợi ý chỉ chọn exact hoặc một ứng viên, không chọn bừa item đầu', () => {
   function suggestDoc() {
     const input = { value: 'Cam thảo' };
-    const buttons = [{ dispatchEvent() { this.hit = true; } }, { dispatchEvent() { this.hit = true; } }];
+    const buttons = [{ getAttribute(k) { return k === 'data-pid' ? 'p1' : null; }, dispatchEvent() { this.hit = true; } }, { getAttribute(k) { return k === 'data-pid' ? 'p2' : null; }, dispatchEvent() { this.hit = true; } }];
     const list = { hidden: false, querySelectorAll(sel) { return sel === '.sug__item' ? buttons : []; } };
     const doc = {
       readyState: 'loading', hidden: false, activeElement: null,

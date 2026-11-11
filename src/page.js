@@ -3475,21 +3475,17 @@ function onSuggestKey(e, key){
     if (!pick) {
       var inp = $('#' + cfg.input);
       var raw = String(inp && inp.value || '').trim();
-      var prods = matchProducts(raw);
-      var exactIdx = -1;
-      if (raw) {
-        for (var pi = 0; pi < prods.length; pi++) {
-          if (normSearch(prods[pi].name) === normSearch(raw)) { exactIdx = pi; break; }
+      var prods = raw ? matchProducts(raw) : [];
+      var wantId = null;
+      for (var pi = 0; pi < prods.length; pi++) {
+        if (normSearch(prods[pi].name) === normSearch(raw)) { wantId = String(prods[pi].id); break; }
+      }
+      if (wantId === null && prods.length === 1) wantId = String(prods[0].id);
+      if (wantId !== null) {
+        for (var bi = 0; bi < items2.length; bi++) {
+          if (items2[bi] && items2[bi].getAttribute && items2[bi].getAttribute('data-pid') === wantId) { pick = items2[bi]; break; }
         }
       }
-      if (exactIdx >= 0) {
-        var exactId = String(prods[exactIdx].id);
-        for (var bi = 0; bi < items2.length; bi++) {
-          var attr = items2[bi] && items2[bi].getAttribute ? items2[bi].getAttribute('data-pid') : null;
-          if (attr === exactId) { pick = items2[bi]; break; }
-        }
-        if (!pick) pick = items2[exactIdx] || null;
-      } else if (items2.length === 1) pick = items2[0];
     }
     if (pick) {
       e.preventDefault();
