@@ -27,7 +27,7 @@ color-scheme:light;
 --purple-soft:#ece9f8;--purple-text:#6d28d9;
 --r:14px;--r-sm:10px;
 --sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.05);
---chart-imp:#5b5fd0;--chart-exp:#2f9e76;
+--chart-imp:#5b5fd0;--chart-exp:#2f9e76;--chart-imp-ink:#ffffff;--chart-exp-ink:#0f172a;
 --ring:0 0 0 3px rgba(79,70,229,.30);
 }
 html[data-theme=dark]{
@@ -41,7 +41,7 @@ color-scheme:dark;
 --blue-soft:#14233a;--blue-text:#a7c7ea;
 --purple-soft:#2a2341;--purple-text:#cabff0;
 --sh:0 1px 2px rgba(0,0,0,.35);
---chart-imp:#7f83e0;--chart-exp:#4fb991;
+--chart-imp:#7f83e0;--chart-exp:#4fb991;--chart-imp-ink:#0b1220;--chart-exp-ink:#0b1220;
 --ring:0 0 0 3px rgba(129,140,248,.35);
 }
 html{-webkit-text-size-adjust:100%}
@@ -127,7 +127,6 @@ details[open] .chev{transform:rotate(90deg)}
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--surface);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
-.stats--chart{box-shadow:none}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
@@ -242,12 +241,30 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .foot--retail{display:grid;grid-template-columns:1fr 104px;gap:0;padding-left:13px}
 .foot--retail .total{padding-right:10px}
 .foot--retail .btn{width:100%;padding-left:6px;padding-right:6px}
-.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center}
-.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.dot--imp{background:var(--chart-imp)}
-.dot--exp{background:var(--chart-exp)}
 .chart{display:block;width:100%;height:300px;cursor:pointer}
-.chart-tip{margin-top:8px;min-height:18px}
+/* 2.13.2: đầu thẻ Thống kê có số liệu; ô năm một khung; dòng dữ liệu tháng + hai ô màu (màu = màu cột). */
+#chartBox>summary.chart-head{flex-wrap:wrap;row-gap:6px}
+.chart-head__stats{display:flex;gap:14px;margin-left:auto;align-items:center}
+.chart-head__c{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
+.chart-head__c>span{display:block}
+.chart-head__c .stat__v{font-size:15px;margin-top:0}
+.chart-year{display:flex;justify-content:flex-end}
+.chart-year__box{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);cursor:text}
+.chart-year__box:focus-within{box-shadow:var(--ring)}
+.chart-year__k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.chart-year__in{width:88px;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:700;padding:2px 0;text-align:right;font-variant-numeric:tabular-nums}
+.chart-year__in:focus{outline:none}
+.chart-tip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;min-height:28px;font-size:13px;color:var(--text2)}
+.chart-tip__m{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.chart-chip{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.chart-chip--imp{background:var(--chart-imp);color:var(--chart-imp-ink)}
+.chart-chip--exp{background:var(--chart-exp);color:var(--chart-exp-ink)}
+@media (max-width:600px){
+#chartBox>summary.chart-head .chart-head__stats{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chart-head__c{align-items:flex-start}
+.chart-tip{gap:6px}
+.chart-chip{padding:3px 8px;font-size:12px}
+}
 /* ---------- toast ---------- */
 .toast{position:fixed;z-index:120;left:50%;bottom:22px;transform:translate(-50%,150%);
 opacity:0;visibility:hidden;
@@ -698,36 +715,29 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   </details>
   <div class="grid2 mt-18">
     <details class="card" id="chartBox">
-      <summary class="card__head">
+      <summary class="card__head chart-head">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg>
         <h2 class="card__title">Thống kê</h2>
-        <span class="spacer"></span>
-        <span class="hint">Năm</span>
+        <span class="chart-head__stats">
+          <span class="chart-head__c"><span class="stat__k">Nhập trong tháng</span><span class="stat__v" id="statImport">0</span></span>
+          <span class="chart-head__c"><span class="stat__k">Tổng tồn kho</span><span class="stat__v" id="statStock">0g</span></span>
+        </span>
       </summary>
       <div class="card__body">
-        <section class="stats stats--chart" aria-label="Nhập và tồn kho">
-          <div class="stats__c">
-            <p class="stat__k">Nhập trong tháng</p>
-            <p class="stat__v" id="statImport">0</p>
-          </div>
-          <div class="stats__c">
-            <p class="stat__k">Tổng tồn kho</p>
-            <p class="stat__v" id="statStock">0g</p>
-          </div>
-        </section>
-        <div class="row mb-12">
-          <div class="legend" aria-hidden="true">
-            <span><i class="dot dot--imp"></i>Nhập</span>
-            <span><i class="dot dot--exp"></i>Bán</span>
-          </div>
-          <div class="field">
-            <label class="lbl" for="chartYear">Năm</label>
-            <input class="inp inp--sm" id="chartYear" type="number" min="2000" max="2100" step="1">
-          </div>
+        <div class="chart-year mb-12">
+          <label class="chart-year__box">
+            <span class="chart-year__k">Năm</span>
+            <input class="chart-year__in" id="chartYear" type="number" min="2000" max="2100" step="1" aria-label="Năm">
+          </label>
         </div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
-        <p class="hint chart-tip" id="chartTip" aria-live="polite">Bấm vào cột để xem số liệu tháng.</p>
+        <div class="chart-tip" id="chartTip" aria-live="polite">
+          <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
+          <span class="chart-chip chart-chip--imp" id="chartImpChip" aria-hidden="true">0</span>
+          <span class="chart-chip chart-chip--exp" id="chartExpChip" aria-hidden="true">0</span>
+          <span class="sr" id="chartTipSr"></span>
+        </div>
       </div>
     </details>
 
@@ -1251,6 +1261,7 @@ function autoChartYear(){
   if (cur && cur !== (lastChartYear || '')) return;
   if (cur === t) { lastChartYear = t; return; }
   if (doc.activeElement && (doc.activeElement === n || (doc.activeElement.id && doc.activeElement.id === 'chartYear'))) return;
+  chartSel = -1;
   n.value = t;
   lastChartYear = t;
 }
@@ -3313,6 +3324,12 @@ function chartData(){
   }
   return { imp: imp, exp: exp, impK: impK, expK: expK, year: year };
 }
+/* 2.13.2: tháng mặc định. Năm hiện tại → tháng hiện tại; năm khác → tháng cuối có dữ liệu; không có → 12 (index 11). */
+function chartDefaultMonth(year, nowYear, nowMonth0, hasData){
+  if (String(year) === String(nowYear)) return nowMonth0;
+  for (var m = 11; m >= 0; m--) if (hasData[m]) return m;
+  return 11;
+}
 function niceMax(v){
   if (v <= 0) return 1;
   var e = Math.pow(10, Math.floor(Math.log10(v)));
@@ -3362,6 +3379,9 @@ function renderChart(){
   data.imp.forEach(function(v){ if (v > max) max = v; });
   data.exp.forEach(function(v){ if (v > max) max = v; });
   max = niceMax(max);
+  var hasData = [];
+  for (var hm = 0; hm < 12; hm++) hasData.push(data.impK[hm] + data.expK[hm] > 0);
+  var shown = chartSel >= 0 && chartSel < 12 ? chartSel : chartDefaultMonth(data.year, thisYear(), parseInt(todayISO().slice(5, 7), 10) - 1, hasData);
 
   var padL = 44, padR = 8, padT = 12, padB = 26;
   var W = Math.max(10, cssW - padL - padR);
@@ -3389,7 +3409,7 @@ function renderChart(){
 
   for (var i = 0; i < 12; i++) {
     var cx = padL + groupW * i + groupW / 2;
-    if (i === chartSel) {
+    if (i === shown) {
       ctx.fillStyle = 'rgba(99,102,241,.14)';
       ctx.fillRect(padL + groupW * i, padT, groupW, H);
     }
@@ -3403,16 +3423,13 @@ function renderChart(){
   }
 
   chartGeo = { padL: padL, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
-  var tip = $('#chartTip');
-  if (tip) {
-    if (chartSel >= 0 && chartSel < 12) {
-      tip.textContent = 'Tháng ' + (chartSel + 1) + '/' + data.year +
-        ' — Nhập: ' + fmtMoney(data.impK[chartSel]) +
-        ' · Bán: ' + fmtMoney(data.expK[chartSel]);
-    } else {
-      tip.textContent = 'Bấm vào cột để xem số liệu tháng.';
-    }
-  }
+  var mmStr = pad2(shown + 1) + '/' + data.year;
+  var impTxt = fmtMoney(data.impK[shown]), expTxt = fmtMoney(data.expK[shown]);
+  var mEl = $('#chartMonth'), iEl = $('#chartImpChip'), eEl = $('#chartExpChip'), sEl = $('#chartTipSr');
+  if (mEl) mEl.textContent = mmStr;
+  if (iEl) iEl.textContent = impTxt;
+  if (eEl) eEl.textContent = expTxt;
+  if (sEl) sEl.textContent = 'Tháng ' + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
 }
 function onChartClick(e){
   var cv = $('#statsChart');
