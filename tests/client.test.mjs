@@ -3132,3 +3132,28 @@ test('B15 liên kết tên: gõ "Cam Thảo" vẫn giữ nhapPid khi tên đã l
   fire(rec, 'nhapSearch', 'input');
   assert.equal(c.getNhapPid(), 'p1');
 });
+
+test('F8 #syncBadge là <div role="status">, không còn <button> bọc liên kết', () => {
+  assert.match(PAGE, /<div class="sync-badge" id="syncBadge" role="status" hidden>/);
+  assert.doesNotMatch(PAGE, /<button[^>]*id="syncBadge"/);
+});
+
+test('F13 recDlg, mergeDlg: bấm ra nền thì đóng đúng như nút Đóng; bấm vào nội dung thì không đóng', () => {
+  const { doc, els, rec } = recDoc(['recDlg', 'mergeDlg']);
+  let closedRec = 0, closedMerge = 0;
+  els['#recDlg'].close = () => { closedRec++; };
+  els['#mergeDlg'].close = () => { closedMerge++; };
+  loadClient({ document: doc, fetch: async () => { throw new Error('offline'); }, setInterval() { return 0; }, clearInterval() {} });
+  const inner = {};
+  const fire2 = (id, target) => (rec[id]?.click || []).forEach(fn => fn({ target }));
+  fire2('recDlg', inner); fire2('mergeDlg', inner);
+  assert.equal(closedRec, 0);
+  assert.equal(closedMerge, 0);
+  fire2('recDlg', els['#recDlg']); fire2('mergeDlg', els['#mergeDlg']);
+  assert.equal(closedRec, 1);
+  assert.equal(closedMerge, 1);
+});
+
+test('F14 bỏ class không dùng .stack, .hide-sm và thuộc tính data-sug', () => {
+  assert.doesNotMatch(PAGE, /\.stack\{|\.hide-sm\{|data-sug=/);
+});
