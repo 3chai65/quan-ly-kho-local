@@ -2551,3 +2551,21 @@ test('checkLimits: q/gram/thang/money ngoài trần bị từ chối; trần h�
   assert.equal(c.checkLimits('name', 'A'.repeat(200)), null);
   assert.ok(c.checkLimits('name', 'A'.repeat(201)));
 });
+
+test('max ô nhập tĩnh khớp hằng: nhapQty 1e6, giá và đơn giá 1e9 (nghìn đ), remedyThang 1e4', () => {
+  const tagOf = id => {
+    const m = PAGE.match(new RegExp('<input[^>]*id="' + id + '"[^>]*>'));
+    assert.ok(m, 'không thấy ô ' + id);
+    return m[0];
+  };
+  assert.match(tagOf('nhapQty'), /\smax="1000000"/);
+  assert.match(tagOf('nhapPrice'), /\smax="1000000000"/);
+  assert.match(tagOf('txEditPrice'), /\smax="1000000000"/);
+  assert.match(tagOf('remedyUnitPrice'), /\smax="1000000000"/);
+  assert.match(tagOf('remedyThang'), /\smax="10000"/);
+});
+
+test('max ô động: qty bán lẻ 1e6 kg, gram đơn thuốc 1e9, tiền dòng bán lẻ 1e9 nghìn đ', () => {
+  assert.match(PAGE, /qi\.max = isRetail \? '1000000' : '1000000000';/);
+  assert.match(PAGE, /mi\.max = '1000000000';/);
+});
