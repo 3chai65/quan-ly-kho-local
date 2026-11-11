@@ -377,6 +377,9 @@ input.qty-hinted{padding-left:50px}
 /* 2.14.0 (giai đoạn 4, M4): điện thoại – nhãn nút Gộp rút còn "Gộp đơn cũ" (aria-label/title giữ đầy đủ); nút nằm hàng 1 cạnh tên nếu còn chỗ. */
 #mergeBtn{order:1;font-size:0}
 #mergeBtn::before{content:"Gộp đơn cũ";font-size:13px}
+/* 2.14.0 (giai đoạn 4, M3c): phân trang điện thoại gọn – nút cao 36px (vùng bấm do khoảng cách), khoảng cách 4px. */
+.pager{gap:4px}
+.pager .btn--sm{min-height:36px}
 }
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
