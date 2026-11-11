@@ -338,6 +338,16 @@ input.qty-hinted{padding-left:50px}
 .note__row:first-child{justify-content:flex-start}
 .note__name{flex:1 1 160px;min-width:0}
 .note__lbl{font-size:13px;color:var(--text2)}
+/* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
+#nhapBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+#nhapListBox table{table-layout:fixed;width:100%}
+#nhapListBox col.cg-num{width:36px}
+#nhapListBox col.cg-qty{width:84px}
+#nhapListBox col.cg-money{width:110px}
+#nhapListBox col.cg-act{width:52px}
+#nhapListBox .note__pending thead{display:none}
+#nhapListBox .note__pending{margin:0}
+#nhapListBox .note__foot{padding:10px 12px}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 140px}
 .card__bar-title{flex:1 1 auto}
@@ -675,56 +685,61 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     </details>
   </div>
   <details class="card mt-18" id="nhapBox">
-    <summary class="card__head">
+    <summary class="card__head sr-summary">
       <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
       <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
       <h2 class="card__title">Nhập hàng</h2>
-      <span class="spacer"></span>
     </summary>
     <form class="card__body" id="nhapForm" novalidate>
-      <div class="nhap-row">
-        <div class="field sug">
-          <label class="lbl" for="nhapSearch">Vị thuốc</label>
-          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc..." maxlength="200" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
+      <div class="card__bar">
+        <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>Nhập hàng</span>
+        <div class="sug card__bar-search">
+          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc…" aria-label="Tìm vị thuốc để nhập" maxlength="200" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
           <div class="sug__list" id="nhapList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
         </div>
-        <div class="field">
-          <label class="lbl" for="nhapQty">Số lượng (kg)</label>
-          <input class="inp inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0">
-        </div>
-        <div class="field">
-          <label class="lbl" for="nhapPrice">Giá nhập (k/kg)</label>
-          <input class="inp inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0">
-        </div>
-        <button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button>
       </div>
-      <p class="hint mt-10" id="nhapHint" hidden></p>
-      <div class="hintbox mt-12">
-        <span class="lbl lbl--flat">Thành tiền</span>
-        <span class="b txt-blue num" id="nhapTotal">0</span>
-      </div>
-      <div class="note mt-12" id="nhapListBox" hidden>
+      <div class="note" id="nhapListBox">
         <div class="note__head"><span>Tờ ghi nhập hàng</span><span id="nhapListCount"></span></div>
         <table>
           <caption class="sr">Danh sách vị thuốc chờ nhập</caption>
+          <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
           <thead><tr>
             <th class="c-num" scope="col">STT</th>
             <th scope="col">Tên</th>
-            <th scope="col">SL</th>
-            <th class="r" scope="col">Giá nhập</th>
+            <th class="c-qty" scope="col">SL (kg)</th>
+            <th class="c-money r" scope="col">Giá nhập</th>
             <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
           </tr></thead>
           <tbody id="nhapListBody"></tbody>
-          <tfoot><tr>
-            <td colspan="3">Tổng tiền</td>
-            <td class="num txt-blue r" id="nhapListTotal">0</td>
-            <td></td>
-          </tr></tfoot>
         </table>
+        <div class="tw note__pending">
+          <table class="ord">
+            <caption class="sr">Dòng đang nhập hàng</caption>
+            <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
+            <thead><tr>
+              <th class="c-num" scope="col">STT</th>
+              <th scope="col">Tên</th>
+              <th class="c-qty" scope="col">SL (kg)</th>
+              <th class="c-money" scope="col">Giá nhập (k/kg)</th>
+              <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
+            </tr></thead>
+            <tbody id="nhapPendingBody"><tr>
+              <td class="c-num num muted"></td>
+              <td><span class="note__tot">Thành tiền <b class="txt-blue num" id="nhapTotal">0</b></span></td>
+              <td class="c-qty"><input class="inp inp--sm inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0" aria-label="Số lượng (kg)"></td>
+              <td class="c-money"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"></td>
+              <td class="c-del"><button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button></td>
+            </tr></tbody>
+          </table>
+        </div>
+        <p class="hint" id="nhapHint" hidden></p>
+        <div class="note__foot">
+          <span class="note__tot">Tổng <b class="txt-blue" id="nhapListTotal">0</b></span>
+          <button class="btn btn--dark" type="submit" data-keep-focus>
+            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
+          </button>
+        </div>
       </div>
-      <button class="btn btn--dark mt-12 w-full" type="submit" data-keep-focus>
-        <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
-      </button>
     </form>
   </details>
   <div class="grid2 mt-18">
@@ -3801,7 +3816,9 @@ function renderNhapList(){
   var tb = $('#nhapListBody');
   if (!box || !tb) return;
   tb.textContent = '';
-  box.hidden = !nhapList.length;
+  box.hidden = false;
+  var pendTb = $('#nhapPendingBody');
+  if (pendTb) renumber(pendTb, nhapList.length);
   var sum = 0;
   nhapList.forEach(function(it, i){
     sum += num(it.qty) * num(it.price);
