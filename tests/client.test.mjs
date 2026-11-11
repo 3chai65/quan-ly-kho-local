@@ -4521,3 +4521,11 @@ test('2.14.0 M4 nút Gộp đơn: aria-label và title đầy đủ; điện tho
   assert.ok(m, 'thiếu #mergeBtn::before "Gộp đơn cũ" trong khối 600px');
   assert.match(css, /#mergeBtn\{order:1;font-size:0\}/);
 });
+
+/* 2.14.0 (giai đoạn 4, M3c): phân trang điện thoại – nút cao 36px, khoảng cách 4px (trong khối 600px). */
+test('2.14.0 M3c phân trang điện thoại: .pager .btn--sm cao 36px và gap 4px trong khối 600px', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const m = css.match(/@media \(max-width:600px\)\{[\s\S]*?\.pager \.btn--sm\{min-height:36px\}/);
+  assert.ok(m, 'thiếu .pager .btn--sm{min-height:36px} trong khối 600px');
+  assert.match(css, /@media \(max-width:600px\)\{[\s\S]*?\.pager\{gap:4px\}/);
+});
