@@ -5,10 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
-## [2.10.1] - 2026-11-11
+## [2.11.0] - 2026-11-11
 
-- Nút tab rút gọn một nhãn: “L.s nhập”, “L.s bán”, “Sao lưu”; điện thoại cỡ chữ 11px.
-- Sửa: quy tắc điện thoại của hàng nút bị ghi đè (thứ tự CSS), nay 4 cột × 2 hàng.
+### Giao diện
+
+- Dải số liệu mỏng trên cùng: “Bán trong tháng” và “Lợi nhuận tháng” chia 2 nửa, bỏ 4 thẻ số và biểu tượng cũ; “Nhập trong tháng” và “Tổng tồn kho” chuyển vào thẻ Thống kê.
+- Nút tab rút gọn một nhãn: “L.s nhập”, “L.s bán”, “Sao lưu”; điện thoại 4 cột × 2 hàng, chữ 11px.
+- Sửa: quy tắc điện thoại của hàng nút bị quy tắc gốc ghi đè (thứ tự CSS), nay áp dụng đúng.
 
 ## [2.10.0] - 2026-11-11
 
