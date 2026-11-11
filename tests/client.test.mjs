@@ -3359,7 +3359,7 @@ test('2.13.0 N5 tìm tên ở Lịch sử bán: "dang sam" khớp "Đảng sâm"
   const none = client.historyData('exp', null, 'khong co');
   assert.equal(none.rows.length, 0);
   assert.equal(client.historyData('exp', null, '').rows.length, 17, 'xóa ô tìm trả về đủ mọi đơn');
-  const html = PAGE.match(/<input class="inp inp--sm" id="expSearch"[^>]*>/);
+  const html = PAGE.match(/<input class="inp inp--sm[^"]*" id="expSearch"[^>]*>/);
   assert.ok(html, 'thiếu ô expSearch');
   assert.match(PAGE, /expS\.addEventListener\('input', function\(\)\{ expPage = 1; renderHistory\('exp'\); \}\);/, 'gõ phải đặt trang 1');
 });
@@ -3879,6 +3879,32 @@ test('2.14.0 N7 CSS: ẩn hai mũi tên tăng/giảm của input[type=number] (w
   assert.match(PAGE, /input\[type=number\]::-webkit-outer-spin-button,\ninput\[type=number\]::-webkit-inner-spin-button\{-webkit-appearance:none;margin:0\}/);
   assert.match(PAGE, /input\[type=number\]\{-moz-appearance:textfield;appearance:textfield\}/);
   assert.match(PAGE, /inputmode="decimal"/, 'bàn phím số trên điện thoại giữ nguyên');
+});
+
+/* 2.14.0 giai đoạn 3: Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng; không nhãn chữ; số liệu trong thanh. */
+test('2.14.0 Kho/Nhập/Bán: thanh card__bar có tên mục, ô tìm/lọc, số liệu; summary ẩn trực quan; không nhãn chữ phía trên ô', () => {
+  for (const box of ['invBox', 'impBox', 'expBox']) {
+    const i = PAGE.indexOf('id="' + box + '"');
+    const seg = PAGE.slice(i, PAGE.indexOf('<div class="tw">', i));
+    assert.match(seg, /<summary class="card__head sr-summary">/, box + ': summary phải ẩn trực quan');
+    assert.match(seg, /<div class="card__bar">/, box + ': thiếu thanh card__bar');
+    assert.doesNotMatch(seg, /<label class="lbl"/, box + ': còn nhãn chữ phía trên ô');
+    assert.doesNotMatch(seg, /Đối chiếu tồn hiện tại/, box + ': còn chú thích dài');
+  }
+  const inv = PAGE.slice(PAGE.indexOf('id="invBox"'), PAGE.indexOf('<div class="tw">', PAGE.indexOf('id="invBox"')));
+  assert.match(inv, /data-action="reconcile"/);
+  assert.match(inv, /id="invCount"/);
+  for (const id of ['invSearch', 'invSort', 'impSearch', 'expMonth', 'expSearch', 'mergeBtn', 'invCount', 'impCount', 'expCount', 'invList', 'impSearchList']) {
+    assert.equal((PAGE.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1, 'id ' + id + ' phải đúng 1 lần');
+  }
+  assert.match(PAGE, /data-action="merge-old"/);
+});
+
+test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu tượng; ô tìm lịch sử nhập cùng hàng với tên; ô tìm/lọc khác xuống hàng 2', () => {
+  assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.card__bar-lbl\{display:none\}/);
+  assert.match(PAGE, /\.card__bar-search\.is-inline\{order:0;flex:1 1 0;min-width:0\}/);
+  assert.match(PAGE, /\.card__bar>\.inp\.card__bar-search\{order:3;flex:1 0 100%\}/);
+  assert.match(PAGE, /aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho"/);
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
