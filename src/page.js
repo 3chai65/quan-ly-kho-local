@@ -1309,7 +1309,7 @@ function attachQtyHint(input, unit){
   input.addEventListener('input', upd);
   input.addEventListener('change', upd);
   input.qtyHintRefresh = upd;
-  if (typeof ResizeObserver === 'function') new ResizeObserver(fit).observe(input);
+  if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'function') new window.ResizeObserver(fit).observe(input);
   upd();
   return h;
 }
