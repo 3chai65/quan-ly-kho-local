@@ -5,6 +5,63 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.9.2] - 2026-11-11
+
+### Sửa lỗi
+
+- Trần tiền và tồn: kiểm đủ mọi đường lưu và kiểm lại sau mỗi phép cộng/nhân (nhóm A1–A7).
+- Hẹn gửi lại không bị đứt khi người dùng đang gõ ở ô nhập.
+- Giá vốn sau khi xóa một lần nhập quay về giá của lần nhập còn lại (theo ngày nhập, hòa thì theo thời điểm ghi).
+- Đơn thuốc chén không mất dòng khi chọn gợi ý thuốc.
+- Huy hiệu “Chưa đồng bộ” hết kẹt sau khi xử lý xung đột 409.
+
+### Lỗi nhỏ
+
+- B8: focus về ô giá sau khi chạm trần.
+- B9: không nhảy sang ô tìm kiếm khi số gram vượt giới hạn.
+- B11: thông báo số âm và trần tiền hiển thị theo nghìn đồng.
+- B12: Esc xóa trạng thái của hộp thoại.
+- B13: kiểm tồn trước khi xác nhận; hoàn tác đúng vị trí.
+- B14: `moneyUnit` mặc định đúng.
+- B15: `renderAll` không chuẩn hóa lại tên.
+
+### Giao diện
+
+- Huy hiệu đồng bộ là `div role="status"`.
+- Hộp thoại `mergeDlg` và `recDlg` đóng khi bấm ra nền.
+- Bỏ CSS `.stack`, `.hide-sm` và `data-sug` không còn dùng.
+
+### Thay đổi
+
+- Chuỗi log khởi động (`auth.announce`, `server.js`) chỉ đúng địa chỉ: PC dùng `https://localhost`, thiết bị khác dùng `https://<IP-máy-tính>/auth/setup` hoặc `/auth/join`.
+- Thêm script `test:auth` và bước CI chạy test xác thực trong container.
+
+### Test
+
+- Test server gửi body 413 thật khi vượt 4 MB; không còn ca `skip` nào; các assert được viết lại để không xanh giả.
+- Ca test cho từng mục nhóm A và B, có phá thử cho các mục chính.
+
+### Dọn mã
+
+- Bỏ 7 symbol không dùng (không đổi hành vi).
+- `tools/kiem-tra-ngay.mjs`: bỏ scan đơn thuốc, vì đơn thuốc không có ts/date riêng nên so sánh luôn trùng.
+
+### Tài liệu
+
+- README và README-LOCAL: nhiều thiết bị cùng dùng; địa chỉ `/auth/join` qua HTTPS; bỏ ví dụ PowerShell `PUT /api/state`; lệnh test dùng tên service compose; bảng API thêm `/healthz` và `/auth/*`.
+- CLAUDE.md ghi phiên bản 2.9.2.
+
+### Biết, chưa sửa
+
+- Đơn giá khi sửa đơn thuốc chén (`applyRemedyBalance`) chưa kiểm trần khi kg rất nhỏ.
+- B10: phép đoán tick sẵn ở hộp gộp.
+- F9: toast hiện dưới hộp thoại.
+- F10: nút “Thiết bị” hiện cho thành viên.
+- F12: nhãn “Gần nhất” / “Tất cả”.
+- G17: sao lưu tự động có thể đè lên toast.
+- Dockerfile còn công cụ build (`python3 make g++`) và chạy bằng root.
+- Các nhánh thừa trong `saveNhap` và `saveRemedy` được giữ nguyên.
+
 ## [2.9.1] - 2026-11-11
 
 ### Sửa
