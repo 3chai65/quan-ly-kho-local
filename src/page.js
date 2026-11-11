@@ -437,6 +437,10 @@ table.ord--r tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
 table.ord--r tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
 /* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
 table.ord tr.is-row>td:nth-child(5) .btn,table.ord--r tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
+/* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập chỉ 4 ô (STT, tên, gram, +): gram chiếm 2 cột 1fr (2/2–3/4), nút + ở cột 46px cuối (2/4), đáy căn theo hàng, 44×44. Đặt SAU quy tắc chung table.ord. */
+#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
+#remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
+#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
 table.ord tr.is-row>td.c-qty::before,table.ord tr.is-row>td.c-money::before,
 table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,
 table.inv tr.is-row>td:nth-child(4)::before,
