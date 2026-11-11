@@ -3475,6 +3475,17 @@ test('2.14.0 (1) bỏ chú thích/chữ đơn vị tĩnh; các id dữ liệu v�
   }
 });
 
+/* 2.14.0 (2): hàng bảng gọn (td 5/8 px, th 6/8 px; hàng điện thoại 6/2 px); quy tắc điện thoại đặt SAU quy tắc gốc. */
+test('2.14.0 (2) hàng bảng gọn và quy tắc hàng điện thoại đặt sau quy tắc gốc', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  const base = at('td{padding:5px 8px;border-bottom:1px solid var(--border2)');
+  assert.ok(at('font-weight:700;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}') < base + 1000, 'th gọn');
+  const phone = at('padding:6px 2px;border-bottom:1px solid var(--border2)}');
+  assert.ok(base < phone, 'hàng điện thoại phải đứng sau td gốc');
+  assert.doesNotMatch(PAGE, /padding:11px 2px;border-bottom:1px solid var\(--border2\)\}/);
+  assert.doesNotMatch(PAGE, /td\{padding:8px 10px;/);
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
