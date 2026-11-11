@@ -358,7 +358,7 @@ input.qty-hinted{padding-left:50px}
 #nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px;display:block;margin-left:auto}
 #nhapListBox .note__foot{margin-top:8px}
 /* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
-#invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+#invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary,#backupBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
 .card__bar-sort{flex:0 0 170px;min-width:0}
 .card__bar-month{flex:0 0 130px;min-width:0}
 .card__bar-search.is-inline{flex:1 1 220px}
@@ -931,13 +931,15 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   </div>
 
   <details class="card mt-18" id="backupBox">
-    <summary class="card__head">
+    <summary class="card__head sr-summary">
       <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
       <svg class="ico txt-brand" aria-hidden="true"><use href="#i-save"/></svg>
       <h2 class="card__title">Sao lưu &amp; khôi phục</h2>
-      <span class="spacer"></span>
-      <span class="hint" id="backupHint">Chưa sao lưu</span>
     </summary>
+    <div class="card__bar">
+      <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-save"/></svg>Sao lưu &amp; khôi phục</span>
+      <span class="hint card__bar-count" id="backupHint">Chưa sao lưu</span>
+    </div>
     <div class="card__body">
       <div class="bak-actions mt-12">
         <button class="btn btn--primary" type="button" data-action="backup-now">
