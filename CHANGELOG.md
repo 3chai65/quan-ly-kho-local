@@ -5,6 +5,18 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.14.0] - 2026-11-11
+
+### Giao diện
+
+- Gọn khung hình (1): bỏ chú thích tĩnh và chữ đơn vị ở tiêu đề (kg · k, Gram · k, các dòng hướng dẫn Enter, Ngày bán, Đối chiếu, Sao lưu).
+- Gọn khung hình (2): hàng bảng thấp hơn (ô 5/8 px, tiêu đề 6/8 px; điện thoại 6/2 px).
+- Chưa làm (cần quyết định): đưa ô tìm và ô ngày vào tiêu đề thẻ; đưa hàng nhập đang gõ vào tờ ghi; gộp tổng và nút Bán đơn; xóa dòng kẻ trống của tờ ghi.
+
+### Biết, chưa sửa
+
+- Chưa có mục nào.
+
 ## [2.13.2] - 2026-11-11
 
 - Thống kê: “Nhập trong tháng” và “Tổng tồn kho” lên đầu thẻ; ô năm một khung; bỏ chú giải và gợi ý cũ; dòng tháng với hai ô màu; mặc định tháng hiện tại (năm khác: tháng cuối có dữ liệu).
