@@ -3237,15 +3237,31 @@ test('2.10.0 nav tab: sau thẻ số, trước các thẻ; 8 nút đúng thứ t
   assert.match(nav, /<span class="tab__short">Sao lưu<\/span>/);
 });
 
+/* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
+const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
+  'copy-preset', 'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
+  'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
+/* Trên host có git: đối chiếu thêm với 1023b40; trong image (không có git) chỉ dùng danh sách chốt sẵn. */
+function oldPageFromGit() {
+  try {
+    return execFileSync('git', ['-C', REPO_ROOT, 'show', '1023b40:src/page.js'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  } catch (e) {
+    if (e && e.code === 'ENOENT') return null;
+    throw e;
+  }
+}
+
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
-  const old = execFileSync('git', ['-C', REPO_ROOT, 'show', '1023b40:src/page.js'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const old = oldPageFromGit();
   const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).sort();
-  assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi');
+  assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS, 'data-action đã đổi so với 1023b40');
+  if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
-  for (const id of ids(old)) assert.ok(newIds.has(id), 'mất id ' + id);
+  for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
+  if (old !== null) for (const id of ids(old)) assert.ok(newIds.has(id), 'mất id ' + id);
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
-  assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
+  if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
 });
 
