@@ -11,6 +11,9 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 - Gọn khung hình (1): bỏ chú thích tĩnh và chữ đơn vị ở tiêu đề (kg · k, Gram · k, các dòng hướng dẫn Enter, Ngày bán, Đối chiếu, Sao lưu).
 - Gọn khung hình (2): hàng bảng thấp hơn (ô 5/8 px, tiêu đề 6/8 px; điện thoại 6/2 px).
+- Thuốc chén: thanh tiêu đề có tên, chọn đơn và ngày; ô tìm vị là dòng đầu tờ ghi; “Tạo đơn mới” trong danh sách; tên đơn ẩn, mở bằng “Lưu tên mới”; chân tờ ghi hai hàng; bỏ chú thích.
+- Nhập hàng: thanh tiêu đề có tên và ô tìm vị; dòng đang nhập và tờ ghi luôn hiện trong khung; bỏ khung Thành tiền riêng; chân một hàng (Tổng + Lưu nhập hàng).
+- Gợi ý đơn vị (N6): nằm trong khung ô số lượng, cùng dòng với số gõ; có thêm cho ô sửa giao dịch và ô sửa dòng tờ ghi.
 - Chưa làm (cần quyết định): đưa ô tìm và ô ngày vào tiêu đề thẻ; đưa hàng nhập đang gõ vào tờ ghi; gộp tổng và nút Bán đơn; xóa dòng kẻ trống của tờ ghi.
 
 ### Biết, chưa sửa
