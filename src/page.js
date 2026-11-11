@@ -278,6 +278,11 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .inp{min-height:44px;font-size:16px}
 .chart{height:260px}
 }
+/* 2.12.1: điện thoại – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +. Đặt SAU quy tắc gốc và khối 640px. */
+@media (max-width:600px){
+.nhap-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}
+.nhap-row>.field.sug{grid-column:1/-1}
+}
 @media (max-width:600px){
 .tw{overflow-x:visible}
 table.ord,table.inv,table.his{display:block;min-width:0}
