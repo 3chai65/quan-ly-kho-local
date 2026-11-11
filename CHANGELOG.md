@@ -7,20 +7,38 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 ## [2.14.0] - 2026-11-11
 
-### Giao diện
+### Giao diện thu gọn từng mục
 
-- Gọn khung hình (1): bỏ chú thích tĩnh và chữ đơn vị ở tiêu đề (kg · k, Gram · k, các dòng hướng dẫn Enter, Ngày bán, Đối chiếu, Sao lưu).
-- Gọn khung hình (2): hàng bảng thấp hơn (ô 5/8 px, tiêu đề 6/8 px; điện thoại 6/2 px).
-- Thuốc chén: thanh tiêu đề có tên, chọn đơn và ngày; ô tìm vị là dòng đầu tờ ghi; “Tạo đơn mới” trong danh sách; tên đơn ẩn, mở bằng “Lưu tên mới”; chân tờ ghi hai hàng; bỏ chú thích.
-- Nhập hàng: thanh tiêu đề có tên và ô tìm vị; dòng đang nhập và tờ ghi luôn hiện trong khung; bỏ khung Thành tiền riêng; chân một hàng (Tổng + Lưu nhập hàng).
-- Gợi ý đơn vị (N6): nằm trong khung ô số lượng, cùng dòng với số gõ; có thêm cho ô sửa giao dịch và ô sửa dòng tờ ghi.
-- Điện thoại: Thuốc chén có ô chọn đơn rộng cả hàng, chân hai hàng với nút ≥44 px; Nhập hàng có dòng đang nhập gọn (nhãn SL và Giá, tên và thành tiền trong dòng, gợi ý giá trong ô giá); bỏ chữ “Tương đương”.
-- Ô số: cuộn chuột khi đang focus không đổi số (N7, blur trước khi cuộn, trang vẫn cuộn); hai mũi tên tăng/giảm ẩn ở mọi trình duyệt.
-- Chưa làm (cần quyết định): đưa ô tìm và ô ngày vào tiêu đề thẻ; đưa hàng nhập đang gõ vào tờ ghi; gộp tổng và nút Bán đơn; xóa dòng kẻ trống của tờ ghi.
+- Bảy mục (Bán lẻ, Thuốc chén, Nhập hàng, Kho tồn, Lịch sử nhập, Lịch sử bán, Sao lưu) có thanh tiêu đề: tên mục, ô tìm/lọc và số liệu ở một hàng; điện thoại xuống hai hàng (tên + số liệu, rồi ô tìm rộng cả hàng).
+- Bỏ chú thích tĩnh và chữ đơn vị ở tiêu đề (kg · k, Gram · k, các hướng dẫn Enter, Ngày bán, Đối chiếu, Sao lưu).
+- Hàng bảng gọn: ô 5/8 px, tiêu đề 6/8 px; điện thoại 6/2 px.
+- Kho tồn và Lịch sử điện thoại: hàng 1 là tên và nút “…”, hàng 2 là số liệu một dòng. Kho tồn có nhãn nhỏ; Lịch sử không nhãn chữ. Nút “…” 32 px trên máy tính, 34 px trên điện thoại (vùng bấm 40 px).
+- Điện thoại: nút “Gộp đơn cũ” (nhãn rút gọn, aria-label và title vẫn đủ); phân trang nút 36 px; Sao lưu có thanh tiêu đề.
+
+### Tờ ghi và dòng đang nhập
+
+- Bán lẻ, Thuốc chén, Nhập hàng: dòng đang nhập nằm trong tờ ghi; không còn dòng trống; chân tờ ghi một hàng (Tổng và nút lưu).
+- Thuốc chén: “Tạo đơn mới” nằm trong danh sách; tên đơn ẩn, mở bằng “Lưu tên mới”; ô tìm vị là dòng đầu tờ ghi. “Lưu đơn” là đơn mẫu, cần tên.
+- Bán lẻ: “Bán đơn” mặc định tên đơn “Đơn thuốc lẻ”.
+- Nhập hàng: gợi ý giá nằm trong dòng đang nhập; bỏ khung Thành tiền riêng và chữ “Tương đương”.
+
+### Gợi ý đơn vị và ô số
+
+- Gợi ý đơn vị (lạng/kg/g) nằm trong ô số lượng, theo cách hiển thị số lượng hiện có; chỉ hiển thị, không đổi giá trị; có cho ô sửa giao dịch và ô sửa dòng tờ ghi.
+- Cuộn chuột khi đang focus ô số không đổi số: ô đang focus bị blur trước khi cuộn, trang vẫn cuộn; hai mũi tên tăng/giảm ẩn.
+
+### Sửa lỗi
+
+- Nút “+” Nhập hàng cao 44 px bằng ô nhập và thẳng đáy (trước đó 36 px, lệch đáy).
+- Lịch sử nhập điện thoại: ô tìm bị co còn vài chục px; nay rộng cả hàng.
+- STT dòng đang nhập = số dòng tờ ghi + 1; hai bảng Bán lẻ dùng chung độ rộng cột.
 
 ### Biết, chưa sửa
 
-- Chưa có mục nào.
+- Bố cục điện thoại mới kiểm bằng CSS và test tự động; chưa đo trên trình duyệt thật ở 375 px và 1300 px.
+- Lịch sử điện thoại bỏ nhãn chữ SL, Đơn giá, Thành tiền (thứ tự cột giữ nguyên).
+- Sao lưu còn hai dòng trạng thái gần nghĩa (“Chưa sao lưu” và “Chưa có bản sao lưu nào.”), chưa gộp.
+- Thống kê giữ bố cục 2.13.2, không đổi.
 
 ## [2.13.2] - 2026-11-11
 
