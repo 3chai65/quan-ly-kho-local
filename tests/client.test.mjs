@@ -3261,6 +3261,21 @@ test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng T
   assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
 });
 
+/* 2.12.1 (bản căn nút +): nút cột cuối điện thoại đứng hàng 2, align-self:end; không còn grid-area 1/4/3/5. */
+test('2.12.1 căn nút + điện thoại: table.ord và table.ord--r đặt nút ở 2/4, align-self:end, trong @media (max-width:600px), sau quy tắc gốc', () => {
+  assert.doesNotMatch(PAGE, /table\.ord tr\.is-row>td:nth-child\(5\)\{grid-area:1\/4\/3\/5/, 'còn 1/4/3/5 ở table.ord');
+  assert.doesNotMatch(PAGE, /table\.ord--r tr\.is-row>td:nth-child\(4\)\{grid-area:1\/4\/3\/5/, 'còn 1/4/3/5 ở table.ord--r');
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  const base = at('table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid');
+  const ro = at('table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}');
+  const rr = at('table.ord--r tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}');
+  assert.ok(base < ro && base < rr, 'quy tắc nút phải sau quy tắc gốc');
+  assert.equal(PAGE.lastIndexOf('@media', ro), PAGE.lastIndexOf('@media (max-width:600px)', ro), 'table.ord phải trong @media (max-width:600px)');
+  assert.equal(PAGE.lastIndexOf('@media', rr), PAGE.lastIndexOf('@media (max-width:600px)', rr), 'table.ord--r phải trong @media (max-width:600px)');
+  assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(5\) \.btn,table\.ord--r tr\.is-row>td:nth-child\(4\) \.btn\{width:44px;min-width:44px;height:44px;min-height:44px/, 'nút phải vuông 44px');
+  assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(2\)\{grid-area:1\/2\/2\/5;/, 'tên hàng 1 phải rộng hết hàng (1/2/2/5)');
+});
+
 /* 2.12.1: điện thoại (≤600px) – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +; đặt SAU quy tắc gốc và khối 640px. */
 test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), lưới 1fr 1fr 44px trong @media (max-width:600px), sau quy tắc gốc', () => {
   const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
