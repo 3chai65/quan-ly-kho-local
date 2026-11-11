@@ -1257,7 +1257,8 @@ function qtyHintText(v, unit){
   var n = num(v);
   if (!isFinite(n) || !(n > 0)) return '';
   var kg = unit === 'g' ? n / 1000 : n;
-  return '(' + fmtQty(kg) + ')';
+  /* Chỉ trong gợi ý: "lạng" viết tắt "l" cho gọn; fmtQty (toàn app) giữ nguyên. */
+  return '(' + fmtQty(kg).replace(' lạng', ' l') + ')';
 }
 /* 2.14.0 S1: vùng chữ tối thiểu (px) của ô số khi gợi ý đang hiện. */
 var QTY_TEXT_MIN = 56;
