@@ -3844,7 +3844,7 @@ test('2.14.0 Nhập hàng điện thoại: dòng đang nhập là một dòng l�
   const rowEnd = PAGE.indexOf('</tr>', rowStart);
   const iHint = PAGE.indexOf('id="nhapHint"');
   assert.ok(iHint > rowStart && iHint < rowEnd, '#nhapHint phải là hậu duệ của tr.is-row (dòng đang nhập), không tràn ra ngoài');
-  assert.match(PAGE, /#nhapListBox \.note__pending \.nhap-add\{height:36px;min-height:36px;width:44px;min-width:44px\}/, 'nút + cao bằng ô nhập');
+  assert.match(PAGE, /#nhapListBox \.note__pending \.nhap-add\{height:44px;min-height:44px;width:44px;min-width:44px;display:block;margin-left:auto\}/, 'nút + cao 44px bằng ô nhập, là khối (không khoảng đệm baseline)');
   assert.doesNotMatch(PAGE, /Tương đương/);
   assert.match(PAGE, /\.nhap-pend__tot\{float:right/);
 });
