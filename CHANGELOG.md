@@ -5,9 +5,23 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
-## [2.12.1] - 2026-11-11
+## [2.13.0] - 2026-11-11
 
-- Điện thoại: nút + ở hàng nhập bán lẻ và thuốc chén thẳng hàng đáy ô nhập, 44px; tên hàng 1 rộng hết hàng.
+### Giao diện
+
+- Header: icon âm dương mở menu Sáng / Tối / Theo máy; “Quản Lý Kho” là nút vào Thiết bị (chỉ thiết bị chủ; thành viên thấy icon rung và thông báo chỉ đọc).
+- Nhập hàng: khi vượt trần, con trỏ giữ ở đúng ô sai (số lượng, giá, thành tiền); nút + và Lưu không làm bàn phím đóng.
+- Thông báo lỗi giữ 5 giây và được đọc ngay (assertive); trên điện thoại hiện ở đầu màn hình; lỗi cũng hiện trong hộp thoại đang mở.
+- Gộp giao dịch: không đơn nào được tick sẵn.
+- Lịch sử nhập và bán luôn mới nhất trước; bỏ nút Gần nhất/Tất cả; Lịch sử bán có ô tìm tên vị thuốc.
+- Điện thoại: nút + và ô Vị thuốc thẳng hàng, ô tên rộng hết hàng; nút + vuông 44 px.
+- Giảm chói và nhãn tab hai hàng (gộp từ 2.12.x).
+- Test: thời gian chờ 120 giây cho các bộ test; treo thì rớt có tên ca.
+
+### Biết, chưa sửa
+
+- Chưa có mục nào.
+
 ## [2.12.0] - 2026-11-11
 
 ### Giao diện
