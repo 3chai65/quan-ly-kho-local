@@ -2668,7 +2668,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - NEW_213.reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 162); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
+  assert.equal(PAGE.match(/ id="/g).length, 163); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3361,6 +3361,29 @@ test('2.13.0 N5 tìm tên ở Lịch sử bán: "dang sam" khớp "Đảng sâm"
   const html = PAGE.match(/<input class="inp inp--sm" id="expSearch"[^>]*>/);
   assert.ok(html, 'thiếu ô expSearch');
   assert.match(PAGE, /expS\.addEventListener\('input', function\(\)\{ expPage = 1; renderHistory\('exp'\); \}\);/, 'gõ phải đặt trang 1');
+});
+
+/* 2.13.1: menu chế độ neo mép trái nút âm dương (không tràn 320–375px); tick cho lựa chọn; toast lỗi có biểu tượng cảnh báo; Esc đóng menu. */
+test('2.13.1 menu chế độ neo mép trái: .menu__list có left:0 và right:auto, không còn right:0', () => {
+  assert.match(PAGE, /\.menu__list\{position:absolute;left:0;right:auto;/, 'thiếu left:0');
+  assert.doesNotMatch(PAGE, /\.menu__list\{[^}]*right:0[;}]/, 'còn right:0 ở .menu__list');
+  assert.match(PAGE, /\.menu__list\{[^}]*max-width:calc\(100vw - 24px\)/, 'thiếu giới hạn chiều rộng theo khung nhìn');
+});
+
+test('2.13.1 lựa chọn hiện tại có dấu tick (aria-checked=true)', () => {
+  assert.match(PAGE, /\.menu__item\[aria-checked=true\]::after\{content:"✓"/);
+});
+
+test('2.13.1 toast lỗi dùng biểu tượng cảnh báo; thông báo thường vẫn dấu ✓', () => {
+  assert.match(PAGE, /<symbol id="i-warn"/);
+  assert.match(PAGE, /<svg class="ico toast__warn" aria-hidden="true"><use href="#i-warn"\/><\/svg>/);
+  assert.match(PAGE, /<svg class="ico toast__ok" aria-hidden="true"><use href="#i-check"\/><\/svg>/);
+  assert.match(PAGE, /\.toast\[data-kind=error\] \.toast__warn\{display:inline-block\}/);
+  assert.match(PAGE, /\.toast\[data-kind=error\] \.toast__ok\{display:none\}/);
+});
+
+test('2.13.1 Esc đóng menu chế độ khi đang mở và đưa focus về nút âm dương', () => {
+  assert.match(PAGE, /if \(e\.key !== 'Escape' \|\| !tm \|\| tm\.hidden\) return;\n    closeThemeMenu\(\);\n    var yb = \$\('#themeBtn'\); if \(yb\) yb\.focus\(\);/);
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
