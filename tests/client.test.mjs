@@ -4490,3 +4490,14 @@ test('2.10.0 summary của thẻ đang mở trong chế độ tab không đổi 
   assert.match(css, /\.main>\.grid2\{display:contents\}/);
   assert.doesNotMatch(css, /(^|[},\s])\.grid2\{display:contents\}/, '.grid2 không được có display:contents ngoài .main>.grid2');
 });
+
+/* 2.14.0 (giai đoạn 4, M3a): Kho tồn điện thoại – hàng 1 tên + nút …, hàng 2 số liệu một dòng (nhãn nội tuyến); nút … 32px máy tính, 34px điện thoại có vùng bấm qua ::after. */
+test('2.14.0 M3a Kho tồn điện thoại: lưới 4 cột (tên + nút … ở hàng 1, ba số liệu ở hàng 2), nhãn nội tuyến, không còn lưới 3 cột cũ', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /table\.inv tr\.is-row\{grid-template-columns:minmax\(0,1fr\) auto auto auto;column-gap:10px;row-gap:2px;padding:4px 2px\}/);
+  assert.doesNotMatch(css, /table\.inv tr\.is-row\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) auto\}/);
+  assert.match(css, /table\.inv tr\.is-row>td:nth-child\(5\)\{grid-area:1\/4\/3\/5;justify-self:end;align-self:center\}/);
+  assert.match(css, /table\.inv tr\.is-row>td:nth-child\(2\)::before,table\.inv tr\.is-row>td:nth-child\(3\)::before,table\.inv tr\.is-row>td:nth-child\(4\)::before\{display:inline;/);
+  assert.match(css, /table\.inv td\.c-del \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px');
+  assert.match(css, /table\.inv tr\.is-row>td\.c-del \.btn--icon::after\{content:"";position:absolute;inset:-3px\}/, 'điện thoại: vùng bấm 40px qua ::after');
+});
