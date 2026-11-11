@@ -11,7 +11,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 - Trần tiền và tồn: kiểm đủ mọi đường lưu và kiểm lại sau mỗi phép cộng/nhân (nhóm A1–A7).
 - Hẹn gửi lại không bị đứt khi người dùng đang gõ ở ô nhập.
-- Giá vốn sau khi xóa một lần nhập quay về giá của lần nhập còn lại (theo ngày nhập, hòa thì theo thời điểm ghi).
+- Giá vốn sau khi xóa đúng lần nhập mới nhất quay về giá của lần nhập còn lại (theo ngày nhập, hòa thì theo thời điểm ghi); xóa lần nhập cũ thì giữ nguyên giá vốn đã sửa tay.
 - Đơn thuốc chén không mất dòng khi chọn gợi ý thuốc.
 - Huy hiệu “Chưa đồng bộ” hết kẹt sau khi xử lý xung đột 409.
 
@@ -54,6 +54,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 ### Biết, chưa sửa
 
 - Đơn giá khi sửa đơn thuốc chén (`applyRemedyBalance`) chưa kiểm trần khi kg rất nhỏ.
+- Còn 3 đường có thể bị máy chủ từ chối (400) với số liệu ngoài thực tế: (1) lưu đơn bán lẻ không kiểm `cost` (kg × giá vốn); (2) xóa hoặc giảm đơn bán làm tồn vượt giới hạn; (3) sửa gram đơn thuốc chén làm đơn giá vượt giới hạn. Đều có từ 2.9.1.
 - B10: phép đoán tick sẵn ở hộp gộp.
 - F9: toast hiện dưới hộp thoại.
 - F10: nút “Thiết bị” hiện cho thành viên.
