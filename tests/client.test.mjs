@@ -3209,7 +3209,8 @@ test('F14 bỏ class không dùng .stack, .hide-sm và thuộc tính data-sug', 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TAB_IDS = ['retailBox', 'remedyBox', 'nhapBox', 'invBox', 'impBox', 'expBox', 'chartBox', 'backupBox'];
 const TAB_ORDER_DOM = ['retailBox', 'remedyBox', 'nhapBox', 'chartBox', 'invBox', 'impBox', 'expBox', 'backupBox'];
-const TAB_LABELS = ['Bán lẻ', 'Thuốc chén', 'Nhập hàng', 'Kho tồn', 'Lịch sử nhập hàng', 'Lịch sử bán hàng', 'Thống kê', 'Sao lưu & khôi phục'];
+const TAB_LABELS = ['Bán lẻ', 'Thuốc chén', 'Nhập hàng', 'Kho tồn', 'L.s nhập', 'L.s bán', 'Thống kê', 'Sao lưu'];
+const TAB_ARIA = { impBox: 'Lịch sử nhập hàng', expBox: 'Lịch sử bán hàng', backupBox: 'Sao lưu & khôi phục' };
 
 test('2.10.0 nav tab: sau thẻ số, trước các thẻ; 8 nút đúng thứ tự, data-tab và aria-controls trỏ tới thẻ tồn tại, nhãn đúng', () => {
   const navAt = PAGE.indexOf('<nav class="tabs"');
@@ -3226,15 +3227,22 @@ test('2.10.0 nav tab: sau thẻ số, trước các thẻ; 8 nút đúng thứ t
     assert.match(b, new RegExp('aria-controls="' + id + '"'));
     assert.match(PAGE, new RegExp('<details class="card[^"]*" id="' + id + '"'));
   }
-  const labels = btns.map(b => {
-    const a = b.match(/aria-label="([^"]+)"/);
-    const t = a ? a[1] : [...b.matchAll(/<span[^>]*>([^<]*)<\/span>/g)][0][1];
-    return t.replace(/&amp;/g, '&');
-  });
+  const labels = btns.map(b => [...b.matchAll(/<span[^>]*>([^<]*)<\/span>/g)].map(m => m[1]).join('').replace(/&amp;/g, '&'));
   assert.deepEqual(labels, TAB_LABELS);
-  assert.match(nav, /<span class="tab__short">LS nhập<\/span>/);
-  assert.match(nav, /<span class="tab__short">LS bán<\/span>/);
-  assert.match(nav, /<span class="tab__short">Sao lưu<\/span>/);
+});
+
+test('2.10.1 nav tab: một nhãn duy nhất (không còn tab__full/tab__short); ba nút có aria-label đầy đủ; data-tab không đổi', () => {
+  const nav = PAGE.match(/<nav class="tabs"[\s\S]*?<\/nav>/)[0];
+  assert.doesNotMatch(PAGE, /tab__full|tab__short/);
+  const btns = [...nav.matchAll(/<button [^>]*>[\s\S]*?<\/button>/g)].map(m => m[0]);
+  assert.equal(btns.length, 8);
+  assert.deepEqual(btns.map(b => b.match(/data-tab="([^"]+)"/)[1]), TAB_IDS);
+  for (const b of btns) {
+    const id = b.match(/data-tab="([^"]+)"/)[1];
+    const a = b.match(/aria-label="([^"]+)"/);
+    if (TAB_ARIA[id]) assert.equal(a && a[1].replace(/&amp;/g, '&'), TAB_ARIA[id], id + ' aria-label');
+    else assert.equal(a, null, id + ' không được có aria-label');
+  }
 });
 
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
