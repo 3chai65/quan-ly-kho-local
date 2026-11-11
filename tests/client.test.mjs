@@ -3209,7 +3209,7 @@ test('F14 bỏ class không dùng .stack, .hide-sm và thuộc tính data-sug', 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TAB_IDS = ['retailBox', 'remedyBox', 'nhapBox', 'invBox', 'impBox', 'expBox', 'chartBox', 'backupBox'];
 const TAB_ORDER_DOM = ['retailBox', 'remedyBox', 'nhapBox', 'chartBox', 'invBox', 'impBox', 'expBox', 'backupBox'];
-const TAB_LABELS = ['Bán lẻ', 'Thuốc chén', 'Nhập hàng', 'Kho tồn', 'L.s nhập', 'L.s bán', 'Thống kê', 'Sao lưu'];
+const TAB_LABELS = ['Bán lẻ', 'Thuốc chén', 'Nhập hàng', 'Kho tồn', 'Lịch sử nhập', 'Lịch sử bán', 'Thống kê', 'Sao lưu khôi phục'];
 const TAB_ARIA = { impBox: 'Lịch sử nhập hàng', expBox: 'Lịch sử bán hàng', backupBox: 'Sao lưu & khôi phục' };
 
 test('2.10.0 nav tab: sau thẻ số, trước các thẻ; 8 nút đúng thứ tự, data-tab và aria-controls trỏ tới thẻ tồn tại, nhãn đúng', () => {
@@ -3227,7 +3227,7 @@ test('2.10.0 nav tab: sau thẻ số, trước các thẻ; 8 nút đúng thứ t
     assert.match(b, new RegExp('aria-controls="' + id + '"'));
     assert.match(PAGE, new RegExp('<details class="card[^"]*" id="' + id + '"'));
   }
-  const labels = btns.map(b => [...b.matchAll(/<span[^>]*>([^<]*)<\/span>/g)].map(m => m[1]).join('').replace(/&amp;/g, '&'));
+  const labels = btns.map(b => [...b.matchAll(/<span[^>]*>([^<]*)<\/span>/g)].map(m => m[1]).join(' ').replace(/&amp;/g, '&'));
   assert.deepEqual(labels, TAB_LABELS);
 });
 
@@ -3240,8 +3240,9 @@ test('2.10.1 nav tab: một nhãn duy nhất (không còn tab__full/tab__short);
   for (const b of btns) {
     const id = b.match(/data-tab="([^"]+)"/)[1];
     const a = b.match(/aria-label="([^"]+)"/);
-    if (TAB_ARIA[id]) assert.equal(a && a[1].replace(/&amp;/g, '&'), TAB_ARIA[id], id + ' aria-label');
-    else assert.equal(a, null, id + ' không được có aria-label');
+    const want = TAB_ARIA[id] || TAB_LABELS[TAB_IDS.indexOf(id)];
+    assert.equal(a && a[1].replace(/&amp;/g, '&'), want, id + ' aria-label');
+
   }
 });
 
@@ -3251,9 +3252,8 @@ test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng T
   // .tabs: gốc (8 cột) trước khối 600px (4 cột)
   assert.ok(at('.tabs{display:grid') < at('repeat(4,minmax(0,1fr))'), '.tabs gốc phải đứng trước quy tắc 4 cột điện thoại');
   // .tab: gốc (display:flex) trước khối 600px (11px)
-  assert.ok(at('.tab{display:flex') < at('.tab{min-height:38px;padding:4px;font-size:11px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
-  // .tab__ic: gốc (width:16px) trước khối 600px (ẩn)
-  assert.ok(at('.tab__ic{width:16px') < at('.tab__ic{display:none}'), '.tab__ic gốc phải đứng trước quy tắc ẩn điện thoại');
+  assert.ok(at('.tab{display:flex') < at('.tab{min-height:44px;padding:4px 2px;font-size:12px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
+
   // quy tắc điện thoại của tab phải nằm trong @media (max-width:600px)
   const m = PAGE.lastIndexOf('@media (max-width:600px)', at('repeat(4,minmax(0,1fr))'));
   assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
@@ -3295,6 +3295,22 @@ test('2.12.0 nút + nhập hàng: đúng một nút data-action=nhap-add; bấm 
   assert.equal(c.getNhapList().length, 2, 'thêm liên tiếp phải có 2 dòng');
   c.saveNhap();
   assert.equal(c.getDb().transactions.filter(t => t.type === 'NHAP').length, 2, 'saveNhap phải lưu cả 2 dòng');
+});
+
+/* 2.12.0 (B): nhãn tab hai hàng (tab__l1/tab__l2), không biểu tượng, cỡ chữ 13px máy tính / 12px điện thoại. */
+test('2.12.0 nhãn tab: mỗi nút đúng 2 span tab__l1/tab__l2 không rỗng; không biểu tượng trong nav; cỡ chữ đúng', () => {
+  const nav = PAGE.match(/<nav class="tabs"[\s\S]*?<\/nav>/)[0];
+  assert.doesNotMatch(nav, /<svg/, 'nav không được có biểu tượng');
+  const btns = [...nav.matchAll(/<button [^>]*>[\s\S]*?<\/button>/g)].map(m => m[0]);
+  assert.equal(btns.length, 8);
+  for (const b of btns) {
+    const l1 = b.match(/<span class="tab__l1">([^<]+)<\/span>/), l2 = b.match(/<span class="tab__l2">([^<]+)<\/span>/);
+    assert.ok(l1 && l2 && l1[1].trim() && l2[1].trim(), 'mỗi nút phải có đúng hai hàng không rỗng: ' + b.slice(0, 80));
+    assert.equal(b.split('<span').length - 1, 2, 'đúng 2 span');
+  }
+  assert.match(PAGE, /\.tab\{display:flex;flex-direction:column;[^}]*min-height:44px/);
+  assert.match(PAGE, /\.tab\{min-height:44px;padding:4px 2px;font-size:12px\}/);
+  assert.match(PAGE, /font-size:13px;font-weight:600;line-height:1\.2;text-align:center;cursor:pointer\}/);
 });
 
 /* 2.11.0: dải số liệu mỏng (Bán/Lợi nhuận) trên cùng; Nhập/Tồn kho chuyển vào Thống kê. Chỉ giao diện. */
