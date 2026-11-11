@@ -351,7 +351,10 @@ input.qty-hinted{padding-left:50px}
 .nhap-pend__name{font-weight:600;overflow-wrap:anywhere}
 .nhap-pend__name.is-muted{color:var(--muted);font-weight:400}
 .nhap-pend__tot{float:right;font-size:13px}
-.nhap-hint{font-size:11px;margin:2px 0 0;text-align:left}
+.nhap-hint{font-size:11px;margin:4px 0 0;text-align:left}
+#nhapListBox .note__pending tr.is-row>td{align-self:end}
+#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:44px;min-width:44px}
+#nhapListBox .note__foot{margin-top:8px}
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
@@ -736,9 +739,9 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             </tr></thead>
             <tbody id="nhapPendingBody"><tr class="is-row">
               <td class="c-num num muted"></td>
-              <td><span id="nhapPendName" class="nhap-pend__name is-muted">Chọn vị thuốc ở ô trên</span> <span class="note__tot nhap-pend__tot">Thành tiền <b class="txt-blue num" id="nhapTotal">0</b></span></td>
+              <td><span id="nhapPendName" class="nhap-pend__name is-muted">Chọn vị thuốc ở ô trên</span> <span class="note__tot nhap-pend__tot">Thành tiền <b class="txt-blue num" id="nhapTotal">0</b></span><p class="hint nhap-hint" id="nhapHint" hidden></p></td>
               <td class="c-qty" data-label="SL (kg)"><input class="inp inp--sm inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0" aria-label="Số lượng (kg)"></td>
-              <td class="c-money" data-label="Giá nhập (k/kg)"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"><p class="hint nhap-hint" id="nhapHint" hidden></p></td>
+              <td class="c-money" data-label="Giá nhập (k/kg)"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"></td>
               <td class="c-del"><button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button></td>
             </tr></tbody>
           </table>

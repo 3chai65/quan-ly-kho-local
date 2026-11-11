@@ -3834,13 +3834,17 @@ test('2.14.0 Thuốc chén điện thoại: ô chọn đơn rộng cả hàng 2 
 });
 
 test('2.14.0 Nhập hàng điện thoại: dòng đang nhập là một dòng lưới (is-row) có nhãn SL/Giá; thành tiền và gợi ý giá nằm trong khung; không còn "Tương đương"', () => {
-  const pend = PAGE.slice(PAGE.indexOf('id="nhapPendingBody"'), PAGE.indexOf('<p class="hint nhap-hint"'));
+  const pend = PAGE.slice(PAGE.indexOf('id="nhapPendingBody"'), PAGE.indexOf('</tr>', PAGE.indexOf('id="nhapPendingBody"')));
   assert.match(pend, /<tr class="is-row">/);
   assert.match(pend, /data-label="SL \(kg\)"/);
   assert.match(pend, /data-label="Giá nhập \(k\/kg\)"/);
   assert.match(pend, /id="nhapPendName"/);
   assert.match(pend, /id="nhapTotal"/);
-  assert.match(PAGE, /<p class="hint nhap-hint" id="nhapHint" hidden><\/p><\/td>/, 'gợi ý giá phải nằm trong ô giá');
+  const rowStart = PAGE.indexOf('<tr class="is-row">', PAGE.indexOf('id="nhapPendingBody"'));
+  const rowEnd = PAGE.indexOf('</tr>', rowStart);
+  const iHint = PAGE.indexOf('id="nhapHint"');
+  assert.ok(iHint > rowStart && iHint < rowEnd, '#nhapHint phải là hậu duệ của tr.is-row (dòng đang nhập), không tràn ra ngoài');
+  assert.match(PAGE, /#nhapListBox \.note__pending \.nhap-add\{height:36px;min-height:36px;width:44px;min-width:44px\}/, 'nút + cao bằng ô nhập');
   assert.doesNotMatch(PAGE, /Tương đương/);
   assert.match(PAGE, /\.nhap-pend__tot\{float:right/);
 });
