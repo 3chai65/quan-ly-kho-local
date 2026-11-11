@@ -29,7 +29,10 @@ dữ liệu là **file SQLite trên ổ cứng** — không phụ thuộc cloud.
 Máy tính (máy chủ)                          Điện thoại / PC khác (cùng WiFi)
 ┌──────────────────────────────┐
 │ Docker Desktop               │
-│  └─ container "quan-ly-kho"  │  ◄── http://<IP-máy-tính>:8787
+│  └─ container "quan-ly-kho-caddy"
+│      Caddy (HTTPS, :443)     │  ◄── https://<IP-máy-tính>
+│      ↓ reverse_proxy         │
+│  └─ container "quan-ly-kho"  │
 │      Node + Express + SQLite │
 │      ↓ đọc/ghi               │
 │  data/app.db (file SQLite)   │
@@ -38,9 +41,18 @@ Máy tính (máy chủ)                          Điện thoại / PC khác (cù
 ```
 
 - **Server**: Node + Express + better-sqlite3, chạy trong Docker (`server.js`).
+- **Caddy (HTTPS)**: reverse proxy lắng nghe cổng 443, cấp chứng chỉ internal qua `Caddyfile`.
 - **Client**: toàn bộ HTML + CSS + JS nằm trong `src/page.js`, nhúng inline khi trả trang.
 - **Dữ liệu**: file SQLite `data/app.db` trên ổ cứng PC.
-- **Truy cập**: PC qua `localhost`, thiết bị khác qua IP máy tính trong cùng WiFi.
+- **Truy cập**: PC qua `https://localhost` (hoặc `http://localhost:8787` làm dự phòng); điện thoại/Mac qua `https://<IP-máy-tính>` (LAN).
+
+## Chế độ HTTPS
+
+- Sau khi bật HTTPS, thiết bị phải có CA nội bộ của Caddy (`caddy-root.crt`). Sổ `README-LOCAL.md` có cách cài.
+- **Không chạy `docker compose down -v`** — sẽ xóa volume `caddy_data`, mất CA nội bộ, phải cài lại trên mọi thiết bị.
+- Cổng 80 đóng; chỉ cổng 443 mở ra LAN; `default_sni` đảm bảo cert khớp khi vào bằng IP.
+- IP máy tính phải cố định (DHCP reservation). Đổi IP = cert không khớp, phải cài lại.
+- IP này chỉ truy cập trong LAN; không dùng cho truy cập từ ngoài nhà.
 
 ## Cấu trúc
 
@@ -50,7 +62,10 @@ Máy tính (máy chủ)                          Điện thoại / PC khác (cù
 | `src/page.js` | `PAGE`: toàn bộ HTML + CSS + JS client (nhúng inline) |
 | `tests/client.test.mjs` | Test logic client (tiền, tồn kho, đồng bộ) — chạy trên host |
 | `tests/server.test.mjs` | Test `server.js` thật qua HTTP — chạy trong Docker |
-| `Dockerfile`, `docker-compose.yml` | Đóng gói và chạy server |
+| `auth.js` | Xác thực thiết bị |
+| `Caddyfile`, `docker-compose.yml` | HTTPS reverse proxy + chạy |
+| `scripts/auth-reset.mjs` | Đặt lại danh sách thiết bị |
+| `tests/auth.*.mjs` | Test xác thực thiết bị |
 | `data/` | Dữ liệu SQLite + backup — **không commit** (gitignore) |
 | `README-LOCAL.md` | Hướng dẫn vận hành chi tiết (chạy, backup, khôi phục) |
 | `CHANGELOG.md` | Lịch sử thay đổi (Keep a Changelog + SemVer) |
@@ -62,8 +77,9 @@ cd "G:\quan-ly-kho-local"
 docker compose up -d --build
 ```
 
-- **PC**: mở `http://localhost:8787`
-- **Điện thoại**: mở `http://<IP-máy-tính>:8787` (cùng WiFi). Xem IP: `ipconfig`.
+- **PC**: mở `https://localhost` (hoặc `http://localhost:8787` làm dự phòng)
+- **Điện thoại/Mac**: mở `https://<IP-máy-tính>` (cùng WiFi; IP có DHCP reservation)
+- Xem IP: `ipconfig`. Cổng 443 mở ra LAN; cổng 8787 chỉ lắng nghe `127.0.0.1` trên PC.
 
 Docker Desktop tự khởi động cùng Windows; container có `restart: unless-stopped` nên
 tự chạy lại. Không cần chạy lệnh gì sau khi bật máy.
@@ -74,7 +90,7 @@ Xem `README-LOCAL.md` để biết chi tiết (backup, khôi phục, nạp dữ 
 
 ```powershell
 node --test tests/client.test.mjs                 # test client (trên máy)
-docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho:latest npm test   # test server (trong Docker)
+docker run --rm -e DATA_DIR=/tmp/qlk quan-ly-kho-local-quan-ly-kho npm test   # test server (trong Docker)
 ```
 
 ## Logic cốt lõi — KHÔNG được phá vỡ khi sửa
