@@ -306,13 +306,17 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .card__bar-date .inp{padding-right:34px}
 #retailNote table{table-layout:fixed;width:100%}
 #retailNote col.cg-num{width:36px}
-#retailNote col.cg-qty{width:84px}
+#retailNote col.cg-qty{width:104px}
 #retailNote col.cg-money{width:110px}
 #retailNote col.cg-act{width:52px}
 #retailNote .note__pending thead{display:none}
 #retailNote .note__pending{margin:0}
 .note__foot{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--border2)}
 .note__tot{font-size:14px;color:var(--text2)}
+/* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (chỉ hiển thị; không đổi giá trị). */
+.qty-host{position:relative}
+.qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
+input.qty-hinted{padding-left:50px}
 .note__tot b{font-size:16px}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 140px}
@@ -1173,6 +1177,39 @@ function fmtQty(kg){
   if (Math.abs(lang) >= 1) return fmtNum(lang) + ' lạng';
   return fmtNum(dec(n * 1000)) + ' g';
 }
+/* 2.14.0 N6: gợi ý đơn vị trong ô số lượng – cùng hàm fmtQty như khi hiển thị sau lưu; không đổi value. */
+function qtyHintText(v, unit){
+  var n = num(v);
+  if (!isFinite(n) || !(n > 0)) return '';
+  var kg = unit === 'g' ? n / 1000 : n;
+  return '(' + fmtQty(kg) + ')';
+}
+function attachQtyHint(input, unit){
+  if (!input || !input.parentNode) return null;
+  var host = input.parentNode;
+  host.classList.add('qty-host');
+  var h = doc.createElement('span');
+  h.className = 'qty-hint';
+  h.setAttribute('aria-hidden', 'true');
+  host.appendChild(h);
+  var sr = doc.createElement('span');
+  sr.className = 'sr';
+  sr.id = (input.id || 'qty') + '-hintsr';
+  host.appendChild(sr);
+  input.setAttribute('aria-describedby', sr.id);
+  input.classList.add('qty-hinted');
+  var upd = function(){
+    var t = qtyHintText(input.value, unit);
+    var long = String(input.value || '').length > 6;
+    h.textContent = t;
+    sr.textContent = t ? 'Tương đương ' + t : '';
+    h.hidden = !t || long;
+  };
+  input.addEventListener('input', upd);
+  input.addEventListener('change', upd);
+  upd();
+  return h;
+}
 function fmtMoney(dong){
   /* Hiển thị nghìn đồng, giữ tới 3 số lẻ để thấy từng đồng (0,4 nghĩa là 400 đồng). */
   var v = num(dong) / DONG_PER_K;
@@ -1970,6 +2007,7 @@ function addOrderRow(kind, pid){
   qi.max = isRetail ? '1000000' : '1000000000';
   qi.setAttribute('aria-label', isRetail ? 'Số lượng (kg)' : 'Số lượng (gram)');
   tdQ.appendChild(qi);
+  attachQtyHint(qi, isRetail ? 'kg' : 'g');
   tr.appendChild(tdQ);
 
   if (isRetail) {
@@ -4723,6 +4761,8 @@ function bindEvents(){
     var n = $('#' + id);
     if (n) n.addEventListener('input', calcNhap);
   });
+  var nqHint = $('#nhapQty');
+  if (nqHint) attachQtyHint(nqHint, 'kg');
   var ns = $('#nhapSearch');
   if (ns) ns.addEventListener('input', function(){
     if (nhapPid) {
