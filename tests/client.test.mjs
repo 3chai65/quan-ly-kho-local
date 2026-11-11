@@ -109,7 +109,7 @@ globalThis.__test = {
   normSearch: normSearch,
   handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, renderNote: renderNote, chartDefaultMonth: chartDefaultMonth, renderChart: renderChart, onChartClick: onChartClick, getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
-  savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
+  savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit, remedyPresetPick: remedyPresetPick, remedySavePresetClick: remedySavePresetClick, remedyNewName: remedyNewName, remedyNameShow: remedyNameShow,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
   recFixAll: recFixAll, initTabs: initTabs
@@ -2667,8 +2667,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - NEW_213.reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 167); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
+  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
+  assert.equal(PAGE.match(/ id="/g).length, 168); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3529,7 +3529,7 @@ function abRemedyScenario() {
   c.setBase(1);
   const out = [];
   const set = (thang, unit, name) => { els['#remedyThang'].value = thang; els['#remedyUnitPrice'].value = unit; els['#remedyName'].value = name || ''; };
-  const snap = label => { out.push({ label: label, toast: mEl.textContent, stock: c.getDb().products.map(p => [p.id, p.stock]), db: c.getDb().transactions.map(t => [t.productId, t.type, t.qty, t.total, t.g || null, t.thang || null]) }); };
+  const snap = label => { out.push({ label: label, toast: mEl.textContent, stock: c.getDb().products.map(p => [p.id, p.stock]), db: c.getDb().transactions.map(t => [t.productId, t.type, t.qty, t.total, t.g || null, t.thang || null]), rx: c.getDb().prescriptions.map(r => [r.name, r.thang, r.total, r.items.map(i => [i.productId, i.grams])]) }); };
   c.setRemedyItems([{ productId: 'p1', grams: 150 }, { productId: 'p2', grams: 30 }]);
   set('3', '120', 'Đơn A'); c.saveRemedy(); snap('S1 nhiều vị, thang 3, tên đơn');
   c.setRemedyItems([{ productId: 'p1', grams: 1 }]);
@@ -3544,14 +3544,60 @@ function abRemedyScenario() {
   set('1', '0.001', ''); c.saveRemedy(); snap('S6 giá bán thấp hơn vốn');
   c.setRemedyItems([]);
   set('1', '100', ''); c.saveRemedy(); snap('S7 đơn rỗng');
+  c.setRemedyItems([{ productId: 'p1', grams: 50 }, { productId: 'p2', grams: 20 }]);
+  set('2', '100', 'Đơn A'); c.savePreset(); snap('S8 savePreset tên mới, nhiều vị, thang 2');
+  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
+  set('1', '100', ''); c.savePreset(); snap('S9 savePreset không tên');
   return JSON.stringify(out);
 }
 test('2.14.0 A/B in golden remedy/nhap (chỉ khi KHO_AB_PRINT=1)', (t) => {
   if (process.env.KHO_AB_PRINT) t.diagnostic('ABJSON_REMEDY ' + abRemedyScenario());
 });
-const AB_REMEDY_GOLDEN = "[{\"label\":\"S1 nhiều vị, thang 3, tên đơn\",\"toast\":\"Đã bán đơn thuốc chén\",\"stock\":[[\"p1\",99.55],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3]]},{\"label\":\"S2 giá biên 0.01 nghìn\",\"toast\":\"Đã bán đơn thuốc chén\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S3 gram rất lớn, tồn chặn trước\",\"toast\":\"Tồn \\\"Cam thảo\\\" không đủ (còn 99,549 kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S4 đơn giá vượt trần tiền\",\"toast\":\"Đơn giá vượt giới hạn (1.000.000.000 nghìn đồng/kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S5 tồn không đủ\",\"toast\":\"Tồn \\\"Bạch truật\\\" không đủ (còn 2 kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S6 giá bán thấp hơn vốn\",\"toast\":\"Giá bán thấp hơn vốn của đơn\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S7 đơn rỗng\",\"toast\":\"Chọn ít nhất 1 vị thuốc và nhập số gram\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]}]";
-test('2.14.0 A/B Thuốc chén: kết quả lưu đơn giống hệt golden 2.13.2 (db, tồn và thông báo, 7 kịch bản)', () => {
+const AB_REMEDY_GOLDEN = "[{\"label\":\"S1 nhiều vị, thang 3, tên đơn\",\"toast\":\"Đã bán đơn thuốc chén\",\"stock\":[[\"p1\",99.55],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3]],\"rx\":[]},{\"label\":\"S2 giá biên 0.01 nghìn\",\"toast\":\"Đã bán đơn thuốc chén\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[]},{\"label\":\"S3 gram rất lớn, tồn chặn trước\",\"toast\":\"Tồn \\\"Cam thảo\\\" không đủ (còn 99,549 kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[]},{\"label\":\"S4 đơn giá vượt trần tiền\",\"toast\":\"Đơn giá vượt giới hạn (1.000.000.000 nghìn đồng/kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[]},{\"label\":\"S5 tồn không đủ\",\"toast\":\"Tồn \\\"Bạch truật\\\" không đủ (còn 2 kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[]},{\"label\":\"S6 giá bán thấp hơn vốn\",\"toast\":\"Giá bán thấp hơn vốn của đơn\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[]},{\"label\":\"S7 đơn rỗng\",\"toast\":\"Chọn ít nhất 1 vị thuốc và nhập số gram\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[]},{\"label\":\"S8 savePreset tên mới, nhiều vị, thang 2\",\"toast\":\"Đã lưu đơn \\\"Đơn A\\\"\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[[\"Đơn A\",2,200000,[[\"p1\",50],[\"p2\",20]]]]},{\"label\":\"S9 savePreset không tên\",\"toast\":\"Nhập tên đơn\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]],\"rx\":[[\"Đơn A\",2,200000,[[\"p1\",50],[\"p2\",20]]]]}]";
+test('2.14.0 A/B Thuốc chén: kết quả lưu đơn giống hệt golden 2.13.2 (db, tồn, đơn đã lưu và thông báo, 9 kịch bản)', () => {
   assert.equal(abRemedyScenario(), AB_REMEDY_GOLDEN);
+});
+
+/* 2.14.0 A/B Nhập hàng: cùng kịch bản lưu nhập trên 2.13.2 (golden) và bản mới; db (theo tên vị) và thông báo phải giống hệt. */
+function abNhapScenario() {
+  const mEl = makeEl();
+  const els = { '#toast': makeEl(), '#toastMsg': mEl, '#nhapSearch': makeEl(), '#nhapQty': makeEl(), '#nhapPrice': makeEl() };
+  const doc = trackDoc(els);
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({
+    products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }, { id: 'p2', name: 'Đảng sâm', stock: 50, costPrice: 5000 }, { id: 'p3', name: 'Bạch truật', stock: 2, costPrice: 300 }],
+    transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+  });
+  c.setBase(1);
+  const out = [];
+  const nameOf = id => { const p = c.getDb().products.find(x => x.id === id); return p ? p.name : null; };
+  const snap = label => { out.push({ label: label, toast: mEl.textContent, stock: c.getDb().products.map(p => [p.name, p.stock, p.costPrice]), db: c.getDb().transactions.map(t => [nameOf(t.productId), t.type, t.qty, t.price, t.total]) }); };
+  const clearLine = () => { els['#nhapSearch'].value = ''; els['#nhapQty'].value = ''; els['#nhapPrice'].value = ''; c.setNhapPid(null); };
+  c.setNhapList([{ pid: 'p1', name: 'Cam thảo', qty: 2.5, price: 120000 }, { pid: 'p1', name: 'Cam thảo', qty: 1, price: 130000 }]);
+  clearLine(); c.saveNhap(); snap('S1 nhiều dòng cùng vị');
+  c.setNhapList([{ pid: 'p1', name: 'Cam thảo', qty: 1e7, price: 1000 }]);
+  clearLine(); c.saveNhap(); snap('S2 vượt trần số lượng');
+  c.setNhapList([{ pid: 'p1', name: 'Cam thảo', qty: 600000, price: 1000 }, { pid: 'p1', name: 'Cam thảo', qty: 600000, price: 1000 }]);
+  clearLine(); c.saveNhap(); snap('S3 tồn cộng dồn vượt trần');
+  c.setNhapList([{ pid: null, name: 'Thạch cao', qty: 3, price: 50000 }]);
+  clearLine(); c.saveNhap(); snap('S4 vị mới (Tạo mới)');
+  c.setNhapList([{ pid: 'p2', name: 'Đảng sâm', qty: 1, price: 0 }]);
+  clearLine(); c.saveNhap(); snap('S5 giá 0');
+  c.setNhapList([{ pid: 'p2', name: 'Đảng sâm', qty: 1, price: 5000 }]);
+  els['#nhapSearch'].value = 'Bạch truật'; els['#nhapQty'].value = '2'; els['#nhapPrice'].value = '3'; c.setNhapPid('p3');
+  c.saveNhap(); snap('S6 dòng đang nhập cộng với tờ ghi');
+  c.setNhapList([]);
+  clearLine(); c.saveNhap(); snap('S7 rỗng');
+  c.setNhapList([{ pid: 'p1', name: 'Cam thảo', qty: 1, price: -5 }]);
+  clearLine(); c.saveNhap(); snap('S8 giá âm');
+  return JSON.stringify(out);
+}
+test('2.14.0 A/B in golden nhập (chỉ khi KHO_AB_PRINT=1)', (t) => {
+  if (process.env.KHO_AB_PRINT) t.diagnostic('ABJSON_NHAP ' + abNhapScenario());
+});
+const AB_NHAP_GOLDEN = "[{\"label\":\"S1 nhiều dòng cùng vị\",\"toast\":\"Đã lưu nhập 2 vị thuốc\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",50,5000],[\"Bạch truật\",2,300]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000]]},{\"label\":\"S2 vượt trần số lượng\",\"toast\":\"Số lượng vượt giới hạn (1000000)\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",50,5000],[\"Bạch truật\",2,300]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000]]},{\"label\":\"S3 tồn cộng dồn vượt trần\",\"toast\":\"Số lượng vượt giới hạn (1000000)\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",50,5000],[\"Bạch truật\",2,300]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000]]},{\"label\":\"S4 vị mới (Tạo mới)\",\"toast\":\"Đã lưu nhập hàng\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",50,5000],[\"Bạch truật\",2,300],[\"Thạch cao\",3,50000]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000],[\"Thạch cao\",\"NHAP\",3,50000,150000]]},{\"label\":\"S5 giá 0\",\"toast\":\"Đã lưu nhập hàng\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",51,5000],[\"Bạch truật\",2,300],[\"Thạch cao\",3,50000]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000],[\"Thạch cao\",\"NHAP\",3,50000,150000],[\"Đảng sâm\",\"NHAP\",1,0,0]]},{\"label\":\"S6 dòng đang nhập cộng với tờ ghi\",\"toast\":\"Đã lưu nhập 2 vị thuốc\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",52,5000],[\"Bạch truật\",4,3000],[\"Thạch cao\",3,50000]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000],[\"Thạch cao\",\"NHAP\",3,50000,150000],[\"Đảng sâm\",\"NHAP\",1,0,0],[\"Đảng sâm\",\"NHAP\",1,5000,5000],[\"Bạch truật\",\"NHAP\",2,3000,6000]]},{\"label\":\"S7 rỗng\",\"toast\":\"Nhập tên vị thuốc\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",52,5000],[\"Bạch truật\",4,3000],[\"Thạch cao\",3,50000]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000],[\"Thạch cao\",\"NHAP\",3,50000,150000],[\"Đảng sâm\",\"NHAP\",1,0,0],[\"Đảng sâm\",\"NHAP\",1,5000,5000],[\"Bạch truật\",\"NHAP\",2,3000,6000]]},{\"label\":\"S8 giá âm\",\"toast\":\"Giá nhập không được âm\",\"stock\":[[\"Cam thảo\",103.5,130000],[\"Đảng sâm\",52,5000],[\"Bạch truật\",4,3000],[\"Thạch cao\",3,50000]],\"db\":[[\"Cam thảo\",\"NHAP\",2.5,120000,300000],[\"Cam thảo\",\"NHAP\",1,130000,130000],[\"Thạch cao\",\"NHAP\",3,50000,150000],[\"Đảng sâm\",\"NHAP\",1,0,0],[\"Đảng sâm\",\"NHAP\",1,5000,5000],[\"Bạch truật\",\"NHAP\",2,3000,6000]]}]";
+test('2.14.0 A/B Nhập hàng: kết quả lưu nhập giống hệt golden 2.13.2 (db theo tên, tồn và thông báo, 8 kịch bản)', () => {
+  assert.equal(abNhapScenario(), AB_NHAP_GOLDEN);
 });
 
 /* 2.14.0 giai đoạn 1 – Bán lẻ: thanh tiêu đề (tên + tìm vị + ngày + bấm "+" trong tờ ghi); bảng nhập nằm trong tờ ghi; không dòng trống. */
@@ -3664,42 +3710,90 @@ test('2.14.0 N6 CSS: gợi ý căn giữa theo khung ô (không theo .field/td c
   assert.doesNotMatch(PAGE, /\.qty-hint\{[^}]*top:-/);
 });
 
-/* 2.14.0 giai đoạn 2a – Thuốc chén: cùng mẫu Bán lẻ (thanh tiêu đề, đơn có sẵn/tên đơn không nhãn, dòng nhập trong tờ ghi, chân một hàng). */
-test('2.14.0 Thuốc chén: thanh tiêu đề có remedySearch và remedyDate không nhãn; summary ẩn trực quan; không "Chọn vị thuốc"/"Gõ tên vị thuốc"', () => {
-  const box = PAGE.slice(PAGE.indexOf('id="remedyBox"'), PAGE.indexOf('id="nhapBox"'));
-  const bar = box.match(/<div class="card__bar">[\s\S]*?<\/div>\s*<div class="card__sub">/);
-  assert.ok(bar, 'thiếu thanh card__bar');
-  assert.match(bar[0], /id="remedySearch"/);
+/* 2.14.0 giai đoạn 2a – Thuốc chén (bản cập nhật): thanh = [tên][chọn đơn][ngày]; tìm vị ở đầu tờ ghi; tên đơn ẩn ở chân; chân gọn 2 hàng. */
+test('2.14.0 Thuốc chén: thanh chỉ có tên mục, #remedyPreset và #remedyDate; không chữ "ĐƠN CÓ SẴN"/"NGÀY BÁN" hiển thị', () => {
+  const bar = PAGE.match(/<div class="card__bar">[\s\S]*?<div class="note" id="remedyNote">/);
+  assert.ok(bar, 'thiếu thanh card__bar của Thuốc chén');
+  assert.match(bar[0], /id="remedyPreset"/);
   assert.match(bar[0], /id="remedyDate"/);
-  assert.match(bar[0], /card__bar-title/);
-  assert.match(box, /<summary class="card__head sr-summary">/);
-  assert.doesNotMatch(box, /<label[^>]*for="remedy(Search|Date|Preset|Name)"/, 'còn nhãn chữ phía trên ô');
-  assert.doesNotMatch(box, /Chọn vị thuốc|Gõ tên vị thuốc|Tên đơn<\/label>/);
-  assert.doesNotMatch(box, /hintbox/, 'còn khung Số thang = Thành tiền riêng');
-  assert.match(box, /<option value="">Đơn mới<\/option>/);
+  assert.match(bar[0], /aria-label="Đơn có sẵn"/);
+  assert.match(bar[0], /aria-label="Ngày bán"/);
+  assert.doesNotMatch(bar[0], /id="remedySearch"|id="remedyName"/, 'thanh không được chứa tìm vị hay tên đơn');
+  assert.doesNotMatch(PAGE, />\s*ĐƠN CÓ SẴN\s*</);
+  assert.doesNotMatch(PAGE, />\s*NGÀY BÁN\s*</);
 });
 
-test('2.14.0 Thuốc chén: dòng đang nhập (remedyBody) nằm trong tờ ghi remedyNote; chân note__foot có Tổng, số thang, giá, Bán đơn', () => {
+test('2.14.0 Thuốc chén: #remedySearch nằm trong khung tờ ghi .note, trước các dòng; không nhãn chữ; không chú thích dài', () => {
   const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
-  const iBody = note.indexOf('id="remedyBody"'), iFoot = note.indexOf('class="note__foot"');
-  assert.ok(iBody > 0 && iFoot > iBody, 'dòng nhập phải nằm trước chân tờ ghi, trong tờ ghi');
-  const foot = note.slice(iFoot);
-  for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal']) assert.ok(foot.includes('id="' + id + '"'), 'chân thiếu ' + id);
+  const iSearch = note.indexOf('id="remedySearch"'), iBody = note.indexOf('id="remedyBody"');
+  assert.ok(iSearch > 0 && iSearch < iBody, 'ô tìm vị phải là dòng đầu, trước dòng nhập');
+  assert.match(note, /placeholder="Nhập tên vị thuốc…"/);
+  const box = PAGE.slice(PAGE.indexOf('id="remedyBox"'), PAGE.indexOf('id="nhapBox"'));
+  assert.doesNotMatch(box, /<label[^>]*for="remedy(Search|Date|Preset|Name)"/, 'còn nhãn chữ phía trên ô');
+  assert.doesNotMatch(box, /Chọn vị thuốc|Gõ tên vị thuốc|hintbox/);
+  assert.match(box, /<option value="__new__">Tạo đơn mới<\/option>\s*<option value="">— Đơn mới —<\/option>/, 'dòng đầu là Tạo đơn mới, rồi "— Đơn mới —"');
+});
+
+test('2.14.0 Thuốc chén: chân tờ ghi hai hàng (note__row); tên đơn ẩn mặc định; Lưu đơn, Lưu tên mới, Bán đơn; id/data-action giữ nguyên', () => {
+  const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
+  const foot = note.slice(note.indexOf('class="note__foot"'));
+  assert.equal((foot.match(/class="note__row"/g) || []).length, 2, 'chân phải đúng 2 hàng');
+  assert.match(foot, /<input[^>]*id="remedyName"[^>]*\shidden[^>]*>/, 'ô tên đơn phải ẩn mặc định');
+  assert.match(foot, /data-action="preset-newname" id="remedyNewName"|id="remedyNewName"[^>]*data-action="preset-newname"/);
+  assert.match(foot, /data-action="save-preset"/);
   assert.match(foot, /data-action="save-remedy"/);
-  assert.equal((note.match(/class="note__foot"/g) || []).length, 1, 'chân phải là một hàng (một note__foot)');
+  for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedySavePreset', 'remedySaveLabel', 'remedyDelPreset', 'remedyCopyPreset']) assert.match(foot, new RegExp('id="' + id + '"'), 'chân thiếu ' + id);
+  assert.equal((PAGE.match(/id="remedyPreset"/g) || []).length, 1);
+  assert.equal((PAGE.match(/id="remedySearch"/g) || []).length, 1);
+  assert.equal((PAGE.match(/id="remedyName"/g) || []).length, 1);
   assert.match(PAGE, /#remedyNote \.note__pending thead\{display:none\}/);
   assert.match(PAGE, /\.note__pending tr\.is-empty\{display:none\}/);
-  assert.match(PAGE, /#remedyNote col\.cg-num\{width:36px\}/);
-});
-
-test('2.14.0 Thuốc chén: id và data-action giữ nguyên; STT dòng nhập = số dòng tờ ghi + 1; không vẽ dòng trống của tờ ghi', () => {
-  for (const id of ['remedySearch', 'remedyList', 'remedyDate', 'remedyDateNative', 'remedyPreset', 'remedyName', 'remedyBody', 'remedyNoteBody', 'remedyNotePg', 'remedyNotePager', 'remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedyQty', 'remedyDelPreset', 'remedyCopyPreset', 'remedySavePreset', 'remedySaveLabel']) {
-    assert.equal((PAGE.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1, 'id ' + id + ' phải đúng 1 lần');
-  }
-  for (const a of ['save-remedy', 'save-preset', 'copy-preset', 'del-preset']) assert.match(PAGE, new RegExp('data-action="' + a + '"'));
   assert.match(PAGE, /renumber\(tb, isRetail \? retailItems\.length : remedyItems\.length\);/);
   assert.match(PAGE, /renumber\(pendingRb, remedyItems\.length\);/);
   assert.match(PAGE, /if \(!it\) continue;\n    var p = findProduct\(it\.productId\);/);
+});
+
+test('2.14.0 Thuốc chén hành vi: "Tạo đơn mới" gọi đường đơn mới, trả select về "", focus #remedySearch, không lưu', () => {
+  const focusN = { n: 0 };
+  const els = {
+    '#remedyPreset': makeEl(), '#remedySearch': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(),
+    '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  els['#remedyPreset'].value = '__new__';
+  const doc = trackDoc(els);
+  els['#remedySearch'].focus = function () { focusN.n++; };
+  els['#remedyName'].hidden = false;
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [{ id: 'RX1', name: 'Đơn cũ', items: [], total: 0, thang: 1 }], updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  c.setRemedyItems([{ productId: 'p1', grams: 5 }]);
+  const rxBefore = JSON.stringify(c.getDb().prescriptions);
+  c.remedyPresetPick();
+  assert.equal(els['#remedyPreset'].value, '', 'select phải trả về ""');
+  assert.equal(c.getRemedyItems().length, 0, 'đi đường đơn mới: tờ ghi được đặt lại như "— Đơn mới —"');
+  assert.equal(focusN.n, 1, 'phải focus #remedySearch');
+  assert.equal(els['#remedyName'].hidden, true, 'chọn đơn khác/đơn mới thì ô tên ẩn');
+  assert.equal(JSON.stringify(c.getDb().prescriptions), rxBefore, 'không được lưu hay sửa đơn');
+});
+
+test('2.14.0 Thuốc chén hành vi: "Lưu tên mới" mở ô tên đơn mới; chưa có tên và chưa chọn đơn thì chỉ mở ô tên', () => {
+  const els = {
+    '#remedyPreset': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(),
+    '#remedySearch': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  els['#remedyName'].hidden = true;
+  const doc = trackDoc(els);
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  c.remedyNewName();
+  assert.equal(els['#remedyName'].hidden, false, 'Lưu tên mới phải hiện ô tên');
+  assert.equal(els['#remedyName'].value, '');
+  c.remedySavePresetClick();
+  assert.equal(c.getDb().prescriptions.length, 0, 'chưa có tên thì không lưu đơn');
+  els['#remedyName'].value = 'Đơn B';
+  c.remedySavePresetClick();
+  assert.equal(c.getDb().prescriptions.length, 0, 'tờ ghi rỗng: savePreset báo lỗi, không lưu');
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
@@ -4069,6 +4163,8 @@ test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc g�
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
 /* 2.12.0 thêm nhap-add; 2.13.0 thêm brand-devices (không tính khi so với danh sách 1023b40). */
 const NEW_213 = ['nhap-add', 'brand-devices'];
+/* 2.14.0 (Thuốc chén): nút "Lưu tên mới" mở ô tên đơn mới. */
+const NEW_214 = ['preset-newname'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -4086,7 +4182,7 @@ function oldPageFromGit() {
 
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
   const old = oldPageFromGit();
-  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !REMOVED_213.includes(a)).sort();
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !NEW_214.includes(a) && !REMOVED_213.includes(a)).sort();
   assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS.filter(a => !REMOVED_213.includes(a)), 'data-action đã đổi so với 1023b40');
   if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
