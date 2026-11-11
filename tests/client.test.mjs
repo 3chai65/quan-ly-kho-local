@@ -1165,7 +1165,7 @@ function stockDom(){
   };
 }
 
-test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', () => {
+test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', (t) => {
   const SEED = Number(process.env.KHO_FUZZ_SEED || 20261107);
   const SEQUENCES = 2000;
   const dom = stockDom();
@@ -1324,10 +1324,11 @@ test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', () 
     }
   }
 
-  console.log('Độ phủ seed ' + SEED);
-  console.log('loại\tchạy\tchặn\tkhông đổi');
+  /* 2.13.0: không console.log trong test – stdout xen với kênh báo cáo của node --test gây lỗi "Unable to deserialize" (ngẫu nhiên). Dùng t.diagnostic. */
+  t.diagnostic('Độ phủ seed ' + SEED);
+  t.diagnostic('loại\tchạy\tchặn\tkhông đổi');
   for (const k of ['nhap', 'retail', 'remedy', 'edit', 'delete', 'merge']) {
-    console.log(k + '\t' + ran[k] + '\t' + blocked[k] + '\t' + idle[k]);
+    t.diagnostic(k + '\t' + ran[k] + '\t' + blocked[k] + '\t' + idle[k]);
   }
   for (const k of Object.keys(ran)) assert.ok(ran[k] > 0, k + ' không chạy lần nào');
   assert.ok(ran.edit > blocked.edit + idle.edit, 'sửa bị bỏ qua nhiều hơn số lần chạy');
