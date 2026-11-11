@@ -305,10 +305,10 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .card__bar-date{flex:0 0 150px;min-width:0}
 .card__bar-date .inp{padding-right:34px}
 #retailNote table{table-layout:fixed;width:100%}
-#retailNote th:nth-child(1),#retailNote td:nth-child(1){width:36px}
-#retailNote th:nth-child(3),#retailNote td:nth-child(3){width:84px}
-#retailNote th:nth-child(4),#retailNote td:nth-child(4){width:110px}
-#retailNote th:nth-child(5),#retailNote td:nth-child(5){width:52px}
+#retailNote col.cg-num{width:36px}
+#retailNote col.cg-qty{width:84px}
+#retailNote col.cg-money{width:110px}
+#retailNote col.cg-act{width:52px}
 #retailNote .note__pending thead{display:none}
 #retailNote .note__pending{margin:0}
 .note__foot{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--border2)}
@@ -531,6 +531,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           <div class="note__head"><span>Tờ ghi đơn bán lẻ</span><span id="retailNotePg"></span></div>
           <table>
             <caption class="sr">Tờ ghi đơn bán lẻ</caption>
+            <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
             <thead><tr>
               <th class="c-num" scope="col">STT</th>
               <th scope="col">Tên</th>
@@ -543,6 +544,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           <div class="tw note__pending">
             <table class="ord">
               <caption class="sr">Dòng đang nhập đơn bán lẻ</caption>
+              <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
               <thead><tr>
                 <th class="c-num" scope="col">STT</th>
                 <th scope="col">Tên</th>
@@ -1798,8 +1800,8 @@ function closeThemeMenu(){
   if (b) b.setAttribute('aria-expanded', 'false');
 }
 /* ================= DÒNG ĐƠN HÀNG ================= */
-function renumber(tbody){
-  var n = 0;
+function renumber(tbody, base){
+  var n = base || 0;
   Array.prototype.forEach.call(tbody.children, function(tr){
     if (tr.getAttribute('data-empty') === '1') return;
     n++;
@@ -2002,7 +2004,7 @@ function addOrderRow(kind, pid){
   tr.appendChild(tdD);
 
   tb.appendChild(tr);
-  renumber(tb);
+  renumber(tb, isRetail ? retailItems.length : 0);
 
   return tr;
 }
@@ -2057,6 +2059,9 @@ var noteEditIdx = -1;
 function renderNote(){
   var tb = $('#retailNoteBody');
   if (!tb) return;
+  /* 2.14.0: STT dòng đang nhập = số dòng tờ ghi + 1 (tuyệt đối). */
+  var pendingTb = $('#retailBody');
+  if (pendingTb) renumber(pendingTb, retailItems.length);
   var impMap = latestImportMap();
   var pages = Math.max(1, Math.ceil(retailItems.length / PAGE_SIZE));
   if (notePage > pages) notePage = pages;
