@@ -156,7 +156,9 @@ select.inp{cursor:pointer}
 .datefield__native{width:42px}
 .monthfield__native{width:30px}
 .row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
-.nhap-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 128px;gap:10px;align-items:end}
+.nhap-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 128px 44px;gap:10px;align-items:end}
+/* 2.12.0: nút + thêm vào tờ ghi (cạnh Giá nhập), vùng bấm ≥ 44×44. */
+.nhap-add{width:44px;min-width:44px;min-height:44px;height:44px;padding:0}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .grid2+.grid2,.stats+.grid2{margin-top:18px}
 /* ---------- table ---------- */
@@ -268,7 +270,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
 .card__body{padding:13px}
 .row{grid-template-columns:1fr}
-.nhap-row{grid-template-columns:minmax(0,1fr) 78px 94px;gap:8px}
+.nhap-row{grid-template-columns:minmax(0,1fr) 78px 94px 44px;gap:8px}
 .btn{min-height:44px}
 .btn--sm{min-height:38px}
 .inp{min-height:44px;font-size:16px}
@@ -638,13 +640,14 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           <label class="lbl" for="nhapPrice">Giá nhập (k/kg)</label>
           <input class="inp inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0">
         </div>
+        <button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button>
       </div>
       <p class="hint mt-10" id="nhapHint" hidden></p>
       <div class="hintbox mt-12">
         <span class="lbl lbl--flat">Thành tiền</span>
         <span class="b txt-blue num" id="nhapTotal">0</span>
       </div>
-      <p class="hint mt-10">Nhập số lượng, giá rồi nhấn Enter để thêm vào tờ ghi. Nhấn Enter xong sẽ quay về ô tên vị thuốc.</p>
+      <p class="hint mt-10">Nhập số lượng, giá rồi bấm + (hoặc Enter) để thêm vào tờ ghi. Thêm xong sẽ quay về ô tên vị thuốc.</p>
       <div class="note mt-12" id="nhapListBox" hidden>
         <div class="note__head"><span>Tờ ghi nhập hàng</span><span id="nhapListCount"></span></div>
         <table>
@@ -4538,6 +4541,7 @@ function handleAction(btn){
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       break;
     }
+    case 'nhap-add': addNhapItem(); break;
     case 'save-retail': saveRetail(); break;
     case 'save-remedy': saveRemedy(); break;
     case 'save-preset': savePreset(); break;
