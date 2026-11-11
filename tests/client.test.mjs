@@ -2842,7 +2842,7 @@ test('A3 saveRetail: đơn giá amount/kg vượt MONEY_MAX bị chặn trước
   c.saveRetail();
   assert.equal(JSON.stringify(c.getDb()), before);
   assert.equal(c.isDirty(), false);
-  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+  assert.match(toastText(dom), /Đơn giá vượt giới hạn \(1\.000\.000\.000 nghìn đồng\/kg\)/);
 });
 
 test('A3 saveRemedy: đơn giá sau chia kg vượt MONEY_MAX bị chặn trước khi trừ tồn', () => {
@@ -2854,7 +2854,7 @@ test('A3 saveRemedy: đơn giá sau chia kg vượt MONEY_MAX bị chặn trư�
   c.saveRemedy();
   assert.equal(JSON.stringify(c.getDb()), before);
   assert.equal(c.isDirty(), false);
-  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+  assert.match(toastText(dom), /Đơn giá vượt giới hạn \(1\.000\.000\.000 nghìn đồng\/kg\)/);
 });
 
 test('A4 scheduleSyncRetry: đang ở ô nhập thì hẹn lại bằng timer mới, không pushState; hết bận thì đẩy được', async () => {
@@ -2902,9 +2902,10 @@ test('A5 delTx: lần có NGÀY mới hơn nhưng ts cũ hơn thắng (theo last
     { id: 'n_b', date: '2026-11-03', type: 'NHAP', productId: 'p1', qty: 1, price: 170000, total: 170000, ts: 1000 },
     { id: 'n_del', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }
   ];
-  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 3, costPrice: 200000 }], txs);
-  c.delTx('n_del');
-  assert.equal(c.getDb().products[0].costPrice, 170000, 'ngày 11-03 mới hơn 11-01 phải thắng dù ts cũ hơn');
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 3, costPrice: 999 }], txs);
+  /* n_b (11-03, ts 1000) là lastImport: xóa nó thì lần còn lại mới nhất theo NGÀY là n_del (11-02, ts 2000) */
+  c.delTx('n_b');
+  assert.equal(c.getDb().products[0].costPrice, 200000, 'ngày 11-02 mới hơn 11-01 phải thắng dù ts cũ hơn (n_a ts 3000)');
 });
 
 test('A5 delOrder: xóa đơn nhập mới nhất → costPrice theo lần nhập còn lại', () => {
@@ -2924,6 +2925,28 @@ test('A5 delTx: không còn lần nhập có giá thì costPrice giữ nguyên',
   const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 1, costPrice: 777 }], txs);
   c.delTx('n_new');
   assert.equal(c.getDb().products[0].costPrice, 777);
+});
+
+test('A5 delTx: xóa NHAP cũ (không phải lastImport) thì costPrice sửa tay giữ nguyên', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n_old', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 1000 },
+    { id: 'n_new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 300000 }], txs);
+  c.delTx('n_old');
+  assert.equal(c.getDb().products[0].costPrice, 300000);
+});
+
+test('A5 delOrder: đơn nhập cũ không chứa lastImport thì costPrice giữ nguyên', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n_old', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 1000, oid: 'IM_OLD' },
+    { id: 'n_new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000, oid: 'IM_NEW' }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 300000 }], txs);
+  c.delOrder('IM_OLD');
+  assert.equal(c.getDb().products[0].costPrice, 300000);
 });
 
 test('A5 delTx: xóa không thành công (tồn âm) thì db và costPrice không đổi', () => {
@@ -2973,16 +2996,35 @@ test('A6 pickSuggest remedy: dòng đang gõ vượt GRAMS_MAX thì không thêm
 });
 
 test('A7 cloudConflict chọn tải bản máy chủ: dirty tắt, cờ lỗi đồng bộ và hẹn lại được dọn', async () => {
+  const timers = [];
   const c = loadClient({
     Blob: class { constructor() {} }, confirm: () => true,
+    setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {},
     fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) })
   });
   c.setDb(A_DB([{ id: 'old', name: 'Old', stock: 1, costPrice: 1 }]));
   c.setBase(1); c.setDirty(true); c.setSyncErrorShown(true);
+  c.scheduleSyncRetry();
+  assert.equal(c.hasSyncRetry(), true, 'phải có timer hẹn lại trước khi tải bản máy chủ');
   await c.cloudConflict();
   assert.equal(c.isDirty(), false);
   assert.equal(c.isSyncErrorShown(), false, 'huy hiệu lỗi phải được dọn sau khi tải bản máy chủ');
-  assert.equal(c.hasSyncRetry(), false);
+  assert.equal(c.hasSyncRetry(), false, 'timer hẹn lại phải bị xóa');
+});
+
+test('A8 addNhapItem: giá vượt trần thì con trỏ về #nhapPrice, không về #nhapQty', () => {
+  let focused = '';
+  const els = {
+    '#nhapSearch': { value: 'Cam', focus() { focused = 'nhapSearch'; }, select() {} },
+    '#nhapQty': { value: '10', focus() { focused = 'nhapQty'; }, select() {} },
+    '#nhapPrice': { value: '2000000000', focus() { focused = 'nhapPrice'; }, select() {} },
+    '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const c = loadClient({ document: limitDoc(els) });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.addNhapItem();
+  assert.equal(focused, 'nhapPrice');
+  assert.match(els['#toastMsg'].textContent, /Tiền vượt giới hạn/);
 });
 
 /* ------------------------------------------------------------------ */
