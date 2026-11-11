@@ -2590,3 +2590,12 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(PAGE.match(/data-action="/g).length, 25);
   assert.equal(PAGE.match(/ id="/g).length, 165);
 });
+
+test('2.9.1 khối @media 901px: .main dùng align-items:start, không còn stretch (thẻ cạnh nhau không kéo dài)', () => {
+  const i = PAGE.indexOf('@media (min-width:901px){');
+  assert.ok(i >= 0, 'thiếu khối @media (min-width:901px)');
+  const end = PAGE.indexOf('\n}\n', i);
+  const block = PAGE.slice(i, end);
+  assert.match(block, /\.main\{[^}]*align-items:start[^}]*\}/);
+  assert.doesNotMatch(block, /stretch/);
+});
