@@ -2521,7 +2521,7 @@ function remedyPresetPick(){
   var isNew = sel && sel.value === '__new__';
   if (isNew) sel.value = '';
   onPresetChange();
-  remedyNameShow(false);
+  remedyNameShow(!!(sel && sel.value));
   if (isNew) {
     var s = $('#remedySearch');
     if (s) { s.focus(); if (s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }
@@ -2534,6 +2534,8 @@ function remedyNameShow(show){
 /* 2.14.0: "Lưu tên mới" = đơn mới (bỏ chọn đơn có sẵn), hiện ô tên ở chân tờ ghi. */
 function remedyNewName(){
   var sel = $('#remedyPreset');
+  /* N2: đang chọn đơn có sẵn → sao chép sang tên mới (copyPreset), giữ đơn đang chọn. */
+  if (sel && sel.value) { copyPreset(); return; }
   if (sel) sel.value = '';
   var n = $('#remedyName');
   if (n) n.value = '';
@@ -2547,7 +2549,7 @@ function remedySavePresetClick(){
   var n = $('#remedyName');
   if (!(sel && sel.value) && n && !capWords(n.value)) { remedyNameShow(true); n.focus(); return; }
   savePreset();
-  if (sel && sel.value) remedyNameShow(false);
+  remedyNameShow(!!(sel && sel.value));
 }
 function savePreset(){
   var nameInp = $('#remedyName');
