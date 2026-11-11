@@ -3516,6 +3516,44 @@ test('2.14.0 A/B bán lẻ: kết quả lưu đơn giống hệt golden 2.13.2 (
   assert.equal(abRetailScenario(), AB_RETAIL_GOLDEN);
 });
 
+/* 2.14.0 A/B Thuốc chén: cùng kịch bản lưu đơn thuốc chén trên 2.13.2 (golden) và bản mới; db, tồn và thông báo phải giống hệt. */
+function abRemedyScenario() {
+  const mEl = makeEl();
+  const els = { '#toast': makeEl(), '#toastMsg': mEl, '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyPreset': makeEl() };
+  const doc = trackDoc(els);
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({
+    products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }, { id: 'p2', name: 'Đảng sâm', stock: 50, costPrice: 5000 }, { id: 'p3', name: 'Bạch truật', stock: 2, costPrice: 300 }],
+    transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+  });
+  c.setBase(1);
+  const out = [];
+  const set = (thang, unit, name) => { els['#remedyThang'].value = thang; els['#remedyUnitPrice'].value = unit; els['#remedyName'].value = name || ''; };
+  const snap = label => { out.push({ label: label, toast: mEl.textContent, stock: c.getDb().products.map(p => [p.id, p.stock]), db: c.getDb().transactions.map(t => [t.productId, t.type, t.qty, t.total, t.g || null, t.thang || null]) }); };
+  c.setRemedyItems([{ productId: 'p1', grams: 150 }, { productId: 'p2', grams: 30 }]);
+  set('3', '120', 'Đơn A'); c.saveRemedy(); snap('S1 nhiều vị, thang 3, tên đơn');
+  c.setRemedyItems([{ productId: 'p1', grams: 1 }]);
+  set('1', '0.01', ''); c.saveRemedy(); snap('S2 giá biên 0.01 nghìn');
+  c.setRemedyItems([{ productId: 'p1', grams: 1e10 }]);
+  set('1', '100', ''); c.saveRemedy(); snap('S3 gram rất lớn, tồn chặn trước');
+  c.setRemedyItems([{ productId: 'p1', grams: 1 }]);
+  set('1', '1000000000', ''); c.saveRemedy(); snap('S4 đơn giá vượt trần tiền');
+  c.setRemedyItems([{ productId: 'p3', grams: 3000 }]);
+  set('1', '100', ''); c.saveRemedy(); snap('S5 tồn không đủ');
+  c.setRemedyItems([{ productId: 'p2', grams: 1000 }]);
+  set('1', '0.001', ''); c.saveRemedy(); snap('S6 giá bán thấp hơn vốn');
+  c.setRemedyItems([]);
+  set('1', '100', ''); c.saveRemedy(); snap('S7 đơn rỗng');
+  return JSON.stringify(out);
+}
+test('2.14.0 A/B in golden remedy/nhap (chỉ khi KHO_AB_PRINT=1)', (t) => {
+  if (process.env.KHO_AB_PRINT) t.diagnostic('ABJSON_REMEDY ' + abRemedyScenario());
+});
+const AB_REMEDY_GOLDEN = "[{\"label\":\"S1 nhiều vị, thang 3, tên đơn\",\"toast\":\"Đã bán đơn thuốc chén\",\"stock\":[[\"p1\",99.55],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3]]},{\"label\":\"S2 giá biên 0.01 nghìn\",\"toast\":\"Đã bán đơn thuốc chén\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S3 gram rất lớn, tồn chặn trước\",\"toast\":\"Tồn \\\"Cam thảo\\\" không đủ (còn 99,549 kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S4 đơn giá vượt trần tiền\",\"toast\":\"Đơn giá vượt giới hạn (1.000.000.000 nghìn đồng/kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S5 tồn không đủ\",\"toast\":\"Tồn \\\"Bạch truật\\\" không đủ (còn 2 kg)\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S6 giá bán thấp hơn vốn\",\"toast\":\"Giá bán thấp hơn vốn của đơn\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]},{\"label\":\"S7 đơn rỗng\",\"toast\":\"Chọn ít nhất 1 vị thuốc và nhập số gram\",\"stock\":[[\"p1\",99.549],[\"p2\",49.91],[\"p3\",2]],\"db\":[[\"p1\",\"BAN\",0.45,180000,150,3],[\"p2\",\"BAN\",0.09,180000,30,3],[\"p1\",\"BAN\",0.001,10,1,1]]}]";
+test('2.14.0 A/B Thuốc chén: kết quả lưu đơn giống hệt golden 2.13.2 (db, tồn và thông báo, 7 kịch bản)', () => {
+  assert.equal(abRemedyScenario(), AB_REMEDY_GOLDEN);
+});
+
 /* 2.14.0 giai đoạn 1 – Bán lẻ: thanh tiêu đề (tên + tìm vị + ngày + bấm "+" trong tờ ghi); bảng nhập nằm trong tờ ghi; không dòng trống. */
 test('2.14.0 Bán lẻ: thanh tiêu đề có retailSearch và retailDate; summary ẩn trực quan; không nhãn chữ "Chọn vị thuốc"', () => {
   const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
@@ -3624,6 +3662,44 @@ test('2.14.0 N6 CSS: gợi ý căn giữa theo khung ô (không theo .field/td c
   assert.match(PAGE, /\.qty-host\{position:relative;display:block\}/);
   assert.match(PAGE, /\.qty-hint\{position:absolute;left:7px;top:50%;transform:translateY\(-50%\)/);
   assert.doesNotMatch(PAGE, /\.qty-hint\{[^}]*top:-/);
+});
+
+/* 2.14.0 giai đoạn 2a – Thuốc chén: cùng mẫu Bán lẻ (thanh tiêu đề, đơn có sẵn/tên đơn không nhãn, dòng nhập trong tờ ghi, chân một hàng). */
+test('2.14.0 Thuốc chén: thanh tiêu đề có remedySearch và remedyDate không nhãn; summary ẩn trực quan; không "Chọn vị thuốc"/"Gõ tên vị thuốc"', () => {
+  const box = PAGE.slice(PAGE.indexOf('id="remedyBox"'), PAGE.indexOf('id="nhapBox"'));
+  const bar = box.match(/<div class="card__bar">[\s\S]*?<\/div>\s*<div class="card__sub">/);
+  assert.ok(bar, 'thiếu thanh card__bar');
+  assert.match(bar[0], /id="remedySearch"/);
+  assert.match(bar[0], /id="remedyDate"/);
+  assert.match(bar[0], /card__bar-title/);
+  assert.match(box, /<summary class="card__head sr-summary">/);
+  assert.doesNotMatch(box, /<label[^>]*for="remedy(Search|Date|Preset|Name)"/, 'còn nhãn chữ phía trên ô');
+  assert.doesNotMatch(box, /Chọn vị thuốc|Gõ tên vị thuốc|Tên đơn<\/label>/);
+  assert.doesNotMatch(box, /hintbox/, 'còn khung Số thang = Thành tiền riêng');
+  assert.match(box, /<option value="">Đơn mới<\/option>/);
+});
+
+test('2.14.0 Thuốc chén: dòng đang nhập (remedyBody) nằm trong tờ ghi remedyNote; chân note__foot có Tổng, số thang, giá, Bán đơn', () => {
+  const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
+  const iBody = note.indexOf('id="remedyBody"'), iFoot = note.indexOf('class="note__foot"');
+  assert.ok(iBody > 0 && iFoot > iBody, 'dòng nhập phải nằm trước chân tờ ghi, trong tờ ghi');
+  const foot = note.slice(iFoot);
+  for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal']) assert.ok(foot.includes('id="' + id + '"'), 'chân thiếu ' + id);
+  assert.match(foot, /data-action="save-remedy"/);
+  assert.equal((note.match(/class="note__foot"/g) || []).length, 1, 'chân phải là một hàng (một note__foot)');
+  assert.match(PAGE, /#remedyNote \.note__pending thead\{display:none\}/);
+  assert.match(PAGE, /\.note__pending tr\.is-empty\{display:none\}/);
+  assert.match(PAGE, /#remedyNote col\.cg-num\{width:36px\}/);
+});
+
+test('2.14.0 Thuốc chén: id và data-action giữ nguyên; STT dòng nhập = số dòng tờ ghi + 1; không vẽ dòng trống của tờ ghi', () => {
+  for (const id of ['remedySearch', 'remedyList', 'remedyDate', 'remedyDateNative', 'remedyPreset', 'remedyName', 'remedyBody', 'remedyNoteBody', 'remedyNotePg', 'remedyNotePager', 'remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedyQty', 'remedyDelPreset', 'remedyCopyPreset', 'remedySavePreset', 'remedySaveLabel']) {
+    assert.equal((PAGE.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1, 'id ' + id + ' phải đúng 1 lần');
+  }
+  for (const a of ['save-remedy', 'save-preset', 'copy-preset', 'del-preset']) assert.match(PAGE, new RegExp('data-action="' + a + '"'));
+  assert.match(PAGE, /renumber\(tb, isRetail \? retailItems\.length : remedyItems\.length\);/);
+  assert.match(PAGE, /renumber\(pendingRb, remedyItems\.length\);/);
+  assert.match(PAGE, /if \(!it\) continue;\n    var p = findProduct\(it\.productId\);/);
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
