@@ -104,7 +104,13 @@ globalThis.__test = {
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
   setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
-  normSearch: normSearch
+  normSearch: normSearch,
+  addNhapItem: addNhapItem, delOrder: delOrder, pickSuggest: pickSuggest,
+  scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
+  savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
+  setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
+  getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
+  recFixAll: recFixAll
 };
 })();`;
   const store = new Map();
@@ -2475,7 +2481,7 @@ test('checkLimits: saveRemedy vốn sau nhân vượt trần (1 thang × giá 1e
 
 test('checkLimits: saveRemedy sát trần (1e6 kg, 1e12 đồng) vẫn lưu được', () => {
   const dom = limitStock();
-  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 2000000, costPrice: 1 }]);
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1000000, costPrice: 1 }]);
   dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1000000000');
   c.setRemedyItems([{ productId: 'p1', grams: 1000000000 }]);
   const before = JSON.stringify(c.getDb());
@@ -2524,12 +2530,13 @@ test('checkLimits: saveTxEdit đơn thuốc sau nhân vượt trần (1e6 g × 1
   assert.match(toastText(dom), /Số lượng vượt giới hạn/);
 });
 
-test('checkLimits: saveTxEdit sát trần (1e6 kg, 1e12 đồng) vẫn lưu được', () => {
+test('checkLimits: saveTxEdit sát trần (tồn 1e6 kg, thành tiền 1e12 đồng) vẫn lưu được', () => {
   const dom = limitStock();
   const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
-  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 1, costPrice: 200000 }], [tx]);
   c.openTxEdit('n1');
-  dom.set('txEditQty', '1000000'); dom.set('txEditPrice', '1000000000');
+  /* Tồn sau sửa = 1 + (1e6 - 1) = 1e6 (đúng trần); thành tiền = 1e6 kg × 1e6 đồng = 1e12 (đúng trần). */
+  dom.set('txEditQty', '1000000'); dom.set('txEditPrice', '1000');
   const before = JSON.stringify(c.getDb());
   c.saveTxEdit();
   assert.notEqual(JSON.stringify(c.getDb()), before);
@@ -2598,4 +2605,335 @@ test('2.9.1 khối @media 901px: .main dùng align-items:start, không còn stre
   const block = PAGE.slice(i, end);
   assert.match(block, /\.main\{[^}]*align-items:start[^}]*\}/);
   assert.doesNotMatch(block, /stretch/);
+});
+
+/* ===== Vòng 16, nhóm A (kiểm trần đủ đường lưu, hẹn gửi lại, giá vốn, gợi ý, huy hiệu) ===== */
+const A_DB = (products, transactions = [], prescriptions = []) => ({ products, transactions, prescriptions, updatedAt: 1, moneyUnit: 'dong' });
+
+test('A1 addNhapItem: qty 1e7 không được đẩy vào nhapList; db không đổi; không dirty; có toast', () => {
+  const dom = limitStock();
+  dom.set('nhapSearch', 'Cam'); dom.set('nhapQty', '10000000'); dom.set('nhapPrice', '14');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]);
+  const before = JSON.stringify(c.getDb());
+  c.addNhapItem();
+  assert.equal(c.getNhapList().length, 0);
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('A1 saveNhap: nhapList có dòng vượt trần bị chặn cả lô, dòng hợp lệ đứng trước không được ghi', () => {
+  const dom = limitStock();
+  dom.set('nhapSearch', '');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]);
+  c.setNhapList([{ pid: null, name: 'Ca', qty: 5, price: 14000 }, { pid: null, name: 'Ca2', qty: 10000000, price: 14000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveNhap();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('A1 saveNhap: tên dòng trong nhapList > 200 ký tự bị chặn (vòng kiểm lại), db không đổi', () => {
+  const dom = limitStock();
+  dom.set('nhapSearch', '');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]);
+  c.setNhapList([{ pid: null, name: 'A'.repeat(201), qty: 1, price: 14000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveNhap();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tên vượt giới hạn/);
+});
+
+test('A3 saveNhap: hai dòng cùng vị (khác hoa/thường) cộng dồn vượt QTY_MAX bị chặn trước khi ghi', () => {
+  const dom = limitStock();
+  dom.set('nhapSearch', '');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 0, costPrice: 1 }]);
+  c.setNhapList([{ pid: 'p1', name: 'Cam', qty: 600000, price: 14000 }, { pid: null, name: 'cam', qty: 600000, price: 14000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveNhap();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('A3 saveNhap: thành tiền qty×price vượt MONEY_MAX bị chặn trước khi ghi', () => {
+  const dom = limitStock();
+  dom.set('nhapSearch', '');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 0, costPrice: 1 }]);
+  c.setNhapList([{ pid: null, name: 'Cam', qty: 1000000, price: 2000000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveNhap();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('A2 noteSave: thành tiền vượt trần bị chặn, dòng tờ ghi không đổi', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }]);
+  c.setRetailItems([{ pid: 'p1', kg: 1, amount: 1000 }]);
+  c.setNoteEditIdx(0);
+  dom.set('noteEditQty', '1'); dom.set('noteEditMoney', '2000000000');
+  const before = JSON.stringify(c.getRetailItems());
+  c.noteSave();
+  assert.equal(JSON.stringify(c.getRetailItems()), before);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('A2 remedyNoteSave: gram vượt GRAMS_MAX bị chặn, dòng đơn thuốc không đổi', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }]);
+  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
+  c.setRemedyEditIdx(0);
+  dom.set('remedyNoteEditQty', '2000000000');
+  const before = JSON.stringify(c.getRemedyItems());
+  c.remedyNoteSave();
+  assert.equal(JSON.stringify(c.getRemedyItems()), before);
+  assert.match(toastText(dom), /Gram vượt giới hạn/);
+});
+
+test('A2 savePreset: tên 201 ký tự bị chặn, không ghi đơn', () => {
+  const dom = limitStock();
+  dom.set('remedyName', 'A'.repeat(201)); dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }]);
+  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
+  const before = JSON.stringify(c.getDb());
+  c.savePreset();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tên vượt giới hạn/);
+});
+
+test('A2 savePreset: gram một vị vượt GRAMS_MAX bị chặn, không ghi đơn', () => {
+  const dom = limitStock();
+  dom.set('remedyName', 'Đơn A'); dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }]);
+  c.setRemedyItems([{ productId: 'p1', grams: 2000000000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.savePreset();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Gram vượt giới hạn/);
+});
+
+test('A2 copyPreset: tên bản sao từ prompt 201 ký tự bị chặn, không thêm đơn', () => {
+  const dom = limitStock();
+  dom.set('remedyPreset', 'RX1'); dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1');
+  const prescriptions = [{ id: 'RX1', name: 'Cũ', items: [{ productId: 'p1', grams: 10 }], total: 1, thang: 1, updatedAt: 1 }];
+  const c = loadClient({ document: dom.document, confirm: () => true, prompt: () => 'B'.repeat(201),
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  c.setDb(A_DB([{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }], [], prescriptions));
+  c.setBase(1);
+  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
+  const before = JSON.stringify(c.getDb());
+  c.copyPreset();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tên vượt giới hạn/);
+});
+
+test('A2 saveEdit: giá vượt trần (2e9 nghìn = 2e12 đồng) bị chặn, db không đổi', () => {
+  const dom = limitStock();
+  dom.set('editId', 'p1'); dom.set('editName', 'Cam'); dom.set('editPrice', '2000000000');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('A3 saveTxEdit: tồn sau tăng vượt QTY_MAX bị chặn, db không đổi', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  dom.set('txEditQty', '1000000'); dom.set('txEditPrice', '1');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('A3 saveTxEdit: thành tiền qty×price vượt MONEY_MAX bị chặn, db không đổi', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 1, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  dom.set('txEditQty', '1000000'); dom.set('txEditPrice', '2000000');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('A3 recFix: số lịch sử vượt QTY_MAX bị chặn, tồn không đổi', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1000000, price: 1000, total: 1000000000, ts: 1000 },
+    { id: 'n2', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1000000, price: 1000, total: 1000000000, ts: 2000 }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 0, costPrice: 1000 }], txs);
+  const before = JSON.stringify(c.getDb());
+  c.recFix('p1');
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('A3 recFixAll: vị vượt trần bị bỏ qua, vị hợp lệ vẫn áp dụng', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1000000, price: 1000, total: 1000000000, ts: 1000 },
+    { id: 'n2', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1000000, price: 1000, total: 1000000000, ts: 2000 },
+    { id: 'n3', date: '2026-11-02', type: 'NHAP', productId: 'p2', qty: 5, price: 1000, total: 5000, ts: 3000 }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 0, costPrice: 1000 }, { id: 'p2', name: 'Nghệ', stock: 0, costPrice: 1000 }], txs);
+  c.recFixAll();
+  const db = c.getDb();
+  assert.equal(db.products[0].stock, 0, 'vị vượt trần không được đặt tồn');
+  assert.equal(db.products[1].stock, 5, 'vị hợp lệ vẫn được áp dụng');
+});
+
+test('A3 saveRetail: đơn giá amount/kg vượt MONEY_MAX bị chặn trước khi trừ tồn', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]);
+  c.setRetailItems([{ pid: 'p1', kg: 0.001, amount: 1000000000000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveRetail();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('A3 saveRemedy: đơn giá sau chia kg vượt MONEY_MAX bị chặn trước khi trừ tồn', () => {
+  const dom = limitStock();
+  dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1000000000');
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]);
+  c.setRemedyItems([{ productId: 'p1', grams: 1 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveRemedy();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('A4 scheduleSyncRetry: đang ở ô nhập thì hẹn lại bằng timer mới, không pushState; hết bận thì đẩy được', async () => {
+  const dom = limitStock();
+  const timers = []; let fetches = 0;
+  const c = loadClient({
+    document: dom.document,
+    setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {},
+    fetch: async () => { fetches++; return { status: 200, json: async () => ({ success: true, updatedAt: 1 }) }; }
+  });
+  c.setDb(A_DB([{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]));
+  c.setBase(1); c.setDirty(true);
+  dom.document.activeElement = { tagName: 'INPUT' };
+  c.scheduleSyncRetry();
+  assert.equal(timers.length, 1);
+  timers[0]();
+  assert.equal(timers.length, 2, 'đang ở ô nhập phải hẹn lại bằng timer mới');
+  assert.equal(c.hasSyncRetry(), true);
+  assert.equal(fetches, 0, 'đang bận thì không pushState');
+  assert.equal(c.isDirty(), true);
+  dom.document.activeElement = null;
+  timers[1]();
+  await new Promise(r => setImmediate(r));
+  assert.ok(fetches >= 1, 'hết bận thì phải đẩy được');
+});
+
+test('A5 delTx: xóa NHAP mới nhất → costPrice về giá lần nhập còn lại (theo ts)', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n_old', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 1000 },
+    { id: 'n_new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], txs);
+  c.delTx('n_new');
+  const p = c.getDb().products[0];
+  assert.equal(p.stock, 1);
+  assert.equal(p.costPrice, 150000);
+  assert.equal(c.isDirty(), true);
+});
+
+test('A5 delOrder: xóa đơn nhập mới nhất → costPrice theo lần nhập còn lại', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n_old', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 1000, oid: 'IM_OLD' },
+    { id: 'n_new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000, oid: 'IM_NEW' }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], txs);
+  c.delOrder('IM_NEW');
+  assert.equal(c.getDb().products[0].costPrice, 150000);
+});
+
+test('A5 delTx: không còn lần nhập có giá thì costPrice giữ nguyên', () => {
+  const dom = limitStock();
+  const txs = [{ id: 'n_new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 1, costPrice: 777 }], txs);
+  c.delTx('n_new');
+  assert.equal(c.getDb().products[0].costPrice, 777);
+});
+
+test('A5 delTx: xóa không thành công (tồn âm) thì db và costPrice không đổi', () => {
+  const dom = limitStock();
+  const txs = [{ id: 'n_new', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 0, costPrice: 999 }], txs);
+  const before = JSON.stringify(c.getDb());
+  c.delTx('n_new');
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Không thể xóa/);
+});
+
+function remedyPickDoc(dom, appended, gramsValue) {
+  const row = {
+    getAttribute() { return 'p1'; },
+    querySelector(s) { return s === '.remedy-qty' ? { value: gramsValue, focus() {}, select() {} } : null; },
+    querySelectorAll() { return []; }, remove() {}
+  };
+  const tbody = makeEl();
+  tbody.querySelector = s => (s === 'tr[data-pid]' ? row : null);
+  tbody.appendChild = c => { appended.push(c); return c; };
+  const doc = dom.document;
+  const base = doc.querySelector;
+  doc.querySelector = s => (s === '#remedyBody' ? tbody : base(s));
+  doc.querySelectorAll = s => (s === '#remedyBody tr[data-pid]' ? [row] : []);
+  return row;
+}
+test('A6 pickSuggest remedy: dòng đang gõ thiếu gram thì không thêm dòng vị khác', () => {
+  const dom = limitStock();
+  const appended = [];
+  remedyPickDoc(dom, appended, '0');
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }, { id: 'p2', name: 'B', stock: 5, costPrice: 1 }]);
+  c.pickSuggest('remedy', 'p2');
+  assert.equal(appended.length, 0, 'không được thêm dòng B khi dòng A chưa commit');
+  assert.equal(c.getRemedyItems().length, 0);
+  assert.equal(c.isDirty(), false);
+});
+test('A6 pickSuggest remedy: dòng đang gõ vượt GRAMS_MAX thì không thêm dòng vị khác', () => {
+  const dom = limitStock();
+  const appended = [];
+  remedyPickDoc(dom, appended, '2000000000');
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }, { id: 'p2', name: 'B', stock: 5, costPrice: 1 }]);
+  c.pickSuggest('remedy', 'p2');
+  assert.equal(appended.length, 0);
+  assert.match(toastText(dom), /Gram vượt giới hạn/);
+});
+
+test('A7 cloudConflict chọn tải bản máy chủ: dirty tắt, cờ lỗi đồng bộ và hẹn lại được dọn', async () => {
+  const c = loadClient({
+    Blob: class { constructor() {} }, confirm: () => true,
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) })
+  });
+  c.setDb(A_DB([{ id: 'old', name: 'Old', stock: 1, costPrice: 1 }]));
+  c.setBase(1); c.setDirty(true); c.setSyncErrorShown(true);
+  await c.cloudConflict();
+  assert.equal(c.isDirty(), false);
+  assert.equal(c.isSyncErrorShown(), false, 'huy hiệu lỗi phải được dọn sau khi tải bản máy chủ');
+  assert.equal(c.hasSyncRetry(), false);
 });
