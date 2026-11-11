@@ -2639,7 +2639,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
 test('2.10.0 (thay ca 2.9.1 đã bỏ) không còn lưới 2 cột: không @media 901px, .grid2 bọc ngoài là display:contents, thẻ không grid-area', () => {
   assert.ok(!PAGE.includes('@media (min-width:901px)'), 'còn khối 901px của 2.9.x');
   assert.match(PAGE, /\.main>\.grid2\{display:contents\}/);
-  assert.match(PAGE, /\.main>details\.card:not\(\[open\]\)\{display:none\}/);
+  assert.match(PAGE, /\.main>details\.card:not\(\[open\]\),\.main>\.grid2>details\.card:not\(\[open\]\)\{display:none\}/);
   assert.doesNotMatch(PAGE, /\.main\{[^}]*grid-template-columns/);
   for (const id of ['retailBox', 'remedyBox', 'nhapBox', 'invBox', 'impBox', 'expBox', 'chartBox', 'backupBox']) {
     assert.doesNotMatch(PAGE, new RegExp('#' + id + '\\{grid-area'));
@@ -3387,4 +3387,64 @@ test('2.10.0 chuyển tab không đổi db và không bật dirty', () => {
   assert.equal(c.getDb(), dbObj, 'db bị thay thế');
   assert.equal(JSON.stringify(c.getDb()), JSON.stringify(dbObj), 'db bị đổi nội dung');
   assert.equal(c.isDirty(), false, 'chuyển tab làm bật dirty');
+});
+
+/* Đường đi cha của từng thẻ trong <main>: 'main>details' (con trực tiếp) hoặc 'main>.grid2>details' (con của .grid2 là con trực tiếp của main). */
+function cardParentPaths() {
+  const start = PAGE.indexOf('<main id="main"');
+  const end = PAGE.indexOf('</main>', start);
+  assert.ok(start >= 0 && end > start, 'thiếu <main id="main">');
+  const body = PAGE.slice(start, end);
+  const VOID = new Set(['input', 'img', 'br', 'hr', 'meta', 'link', 'col', 'source', 'area', 'wbr', 'embed', 'param', 'track', 'use']);
+  const stack = [];
+  const paths = {};
+  const re = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+  let m;
+  while ((m = re.exec(body))) {
+    const closing = m[1] === '/';
+    const tag = m[2].toLowerCase();
+    const attrs = m[3];
+    if (closing) {
+      for (let k = stack.length - 1; k >= 0; k--) {
+        if (stack[k].tag === tag) { stack.length = k; break; }
+      }
+      continue;
+    }
+    if (m[4] === '/' || VOID.has(tag)) continue;
+    const idm = attrs.match(/ id="([^"]+)"/);
+    const clm = attrs.match(/class="([^"]*)"/);
+    const cls = clm ? clm[1] : '';
+    if (tag === 'details' && idm) {
+      const parent = stack[stack.length - 1];
+      const grand = stack[stack.length - 2];
+      let path = 'other';
+      if (parent && parent.tag === 'main') path = 'main>details';
+      else if (parent && parent.tag === 'div' && parent.cls.split(/\s+/).includes('grid2') && grand && grand.tag === 'main') path = 'main>.grid2>details';
+      paths[idm[1]] = path;
+    }
+    stack.push({ tag, cls });
+  }
+  return paths;
+}
+
+test('2.10.0 mỗi thẻ có quy tắc ẩn đúng với đường đi cha của nó (con trực tiếp .main, hoặc con của .grid2 là con trực tiếp .main)', () => {
+  const paths = cardParentPaths();
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const hiddenSel = [];
+  for (const m of css.matchAll(/([^{}]+)\{display:none\}/g)) {
+    for (const s of m[1].split(',')) hiddenSel.push(s.trim());
+  }
+  for (const id of TAB_IDS) {
+    const p = paths[id];
+    assert.ok(p === 'main>details' || p === 'main>.grid2>details', id + ' nằm ngoài cấu trúc tab (đường đi: ' + p + ')');
+    const want = p === 'main>details' ? '.main>details.card:not([open])' : '.main>.grid2>details.card:not([open])';
+    assert.ok(hiddenSel.includes(want), id + ' thiếu quy tắc ẩn ' + want);
+  }
+});
+
+test('2.10.0 summary của thẻ đang mở trong chế độ tab không đổi nền khi rê chuột; .grid2 lồng trong thẻ không bị display:contents', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /\.main>\.grid2>details\.card\[open\]>summary\.card__head:hover\{[^}]*background:var\(--surface\)[^}]*\}/);
+  assert.match(css, /\.main>\.grid2\{display:contents\}/);
+  assert.doesNotMatch(css, /(^|[},\s])\.grid2\{display:contents\}/, '.grid2 không được có display:contents ngoài .main>.grid2');
 });
