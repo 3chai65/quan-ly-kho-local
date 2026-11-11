@@ -103,7 +103,7 @@ globalThis.__test = {
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
-  historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
+  historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
@@ -4740,4 +4740,39 @@ test('2.14.0 S2 cấu trúc: fit có nhánh chuyển lên dòng nhãn (qty-hint-
   assert.ok(a > 0 && b > a, 'quy tắc label sau quy tắc gốc');
   assert.match(PAGE, /\.qty-hint\.qty-hint--label\{left:auto;right:0;top:0;/);
   assert.match(PAGE, /td\.c-qty\{position:relative\}/);
+});
+
+/* 2.14.0 M1: bề rộng ô đo bằng getBoundingClientRect (không dùng clientWidth: Edge/Chrome không gồm padding). */
+test('2.14.0 M1 ô 132px (clientWidth 112 vì trừ padding) + gợi ý 50px → "inside" (padding-left 61px), không rơi vào dòng nhãn', () => {
+  const doc = trackDoc({});
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  let wrap = null;
+  const host = { classList: { add() {}, contains() { return false; } }, insertBefore(w) { wrap = w; return w; } };
+  const input = { id: 'x', value: '1.25', parentNode: host, attrs: {}, l: {}, clientWidth: 112, style: {},
+    getBoundingClientRect() { return { width: 132 }; },
+    classList: { add() {}, remove() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
+  c.attachQtyHint(input, 'kg');
+  const h = wrap.children[1];
+  Object.defineProperty(h, 'offsetWidth', { value: 50, configurable: true });
+  input.qtyHintRefresh();
+  assert.equal(input.style.paddingLeft, '61px', 'M1 đủ chỗ trong ô 132px → inside');
+  assert.doesNotMatch(String(h.className), /--label/);
+  const i = PAGE.indexOf('var fit = function(){');
+  assert.doesNotMatch(PAGE.slice(i, PAGE.indexOf('var upd = function(){', i)), /input\.clientWidth/, 'M1 fit không dùng clientWidth');
+});
+
+test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn vị', () => {
+  const c = loadClient({ document: trackDoc({}), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
+  assert.equal(JSON.stringify(c.qtyHintCandidates('(2 lạng)')), JSON.stringify(['(2 lạng)', '2 lạng', 'lạng']));
+  assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
+  assert.doesNotMatch(PAGE, /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý');
+});
+
+test('2.14.0 M4 điện thoại ẩn tiêu đề cột tờ ghi (.note>table>thead) trong khối ≤600px', () => {
+  const k = PAGE.indexOf('.note>table>thead{display:none}');
+  assert.ok(k > 0);
+  const m = PAGE.lastIndexOf('@media (max-width:600px){', k);
+  const e = PAGE.indexOf('\n}\n', m);
+  assert.ok(m > 0 && k < e, 'quy tắc nằm trong khối ≤600px');
 });
