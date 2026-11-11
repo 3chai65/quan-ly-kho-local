@@ -3286,6 +3286,90 @@ test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), l�
   assert.match(PAGE, /<div class="field sug">\s*<label class="lbl" for="nhapSearch">/, 'ô tên phải là .field.sug');
 });
 
+/* 2.13.0 (N1): sau lỗi trần, con trỏ ở ĐÚNG ô sai và ô đó không bị blur. DOM giả theo dõi activeElement và số lần blur. */
+function trackDoc(ids) {
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return ids[s] || null; }, querySelectorAll() { return []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {},
+    track(el) {
+      el.blurs = 0;
+      el.focus = function () { if (doc.activeElement && doc.activeElement !== this) doc.activeElement.blur(); doc.activeElement = this; };
+      el.blur = function () { if (doc.activeElement === this) { doc.activeElement = null; this.blurs++; } };
+      el.select = function () {};
+      return el;
+    }
+  };
+  for (const k of Object.keys(ids)) doc.track(ids[k]);
+  return doc;
+}
+const N1_FAKE_FETCH = async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) });
+
+test('2.13.0 N1 addNhapItem: số lượng vượt trần giữ con trỏ ở #nhapQty, không blur', () => {
+  const ids = { '#nhapSearch': { value: 'Cam thảo' }, '#nhapQty': { value: '10000000' }, '#nhapPrice': { value: '10' }, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const doc = trackDoc(ids);
+  doc.activeElement = ids['#nhapQty'];
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 0, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.setBase(1);
+  c.addNhapItem();
+  assert.equal(doc.activeElement, ids['#nhapQty'], 'con trỏ phải ở ô số lượng');
+  assert.equal(ids['#nhapQty'].blurs, 0, 'ô số lượng không được bị blur');
+});
+
+test('2.13.0 N1 saveNhap (Lưu nhập hàng): số lượng vượt trần giữ con trỏ ở #nhapQty (không nhảy sang giá)', () => {
+  const ids = { '#nhapSearch': { value: 'Cam thảo' }, '#nhapQty': { value: '10000000' }, '#nhapPrice': { value: '10' }, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const doc = trackDoc(ids);
+  doc.activeElement = ids['#nhapQty'];
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 0, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.setBase(1);
+  c.saveNhap();
+  assert.equal(doc.activeElement, ids['#nhapQty'], 'con trỏ phải ở ô số lượng');
+  assert.equal(ids['#nhapQty'].blurs, 0);
+  assert.equal(c.getDb().transactions.length, 0, 'không ghi db khi vượt trần');
+});
+
+test('2.13.0 N1 saveNhap với tờ ghi có dòng vượt trần: con trỏ về #nhapQty, không về #nhapSearch', () => {
+  const ids = { '#nhapSearch': { value: '' }, '#nhapQty': { value: '' }, '#nhapPrice': { value: '' }, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const doc = trackDoc(ids);
+  doc.activeElement = ids['#nhapPrice'];
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 0, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.setBase(1);
+  c.setNhapList([{ pid: 'p1', name: 'Cam thảo', qty: 10000000, price: 10000 }]);
+  c.saveNhap();
+  assert.equal(doc.activeElement, ids['#nhapQty'], 'con trỏ phải về ô số lượng');
+  assert.equal(ids['#nhapSearch'].blurs, 0, 'không được nhảy sang ô tên vị thuốc');
+});
+
+test('2.13.0 N1 commitRetailRow: thành tiền vượt trần giữ con trỏ ở ô thành tiền', () => {
+  const qEl = { value: '1' }, mEl = { value: '99999999999' };
+  const row = { getAttribute() { return 'p1'; }, querySelector(sel) { return sel === '.retail-qty' ? qEl : sel === '.retail-money' ? mEl : { value: '0' }; } };
+  const ids = { '#retailBody': { querySelector() { return row; } }, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const doc = trackDoc(ids);
+  doc.track(qEl); doc.track(mEl);
+  doc.activeElement = mEl;
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  assert.equal(c.commitRetailRow(), false);
+  assert.equal(doc.activeElement, mEl, 'con trỏ phải ở ô thành tiền');
+  assert.equal(mEl.blurs, 0);
+});
+
+test('2.13.0 N1 nút + / Lưu nhập / Lưu bán lẻ / Lưu thuốc chén có data-keep-focus; JS chặn mousedown và pointerdown trên nút đó', () => {
+  for (const sel of ['data-action="nhap-add"', 'data-action="save-retail"', 'data-action="save-remedy"']) {
+    const tag = PAGE.match(new RegExp('<button[^>]*' + sel + '[^>]*>'))[0];
+    assert.match(tag, /data-keep-focus/, sel + ' thiếu data-keep-focus');
+  }
+  const submit = PAGE.match(/<button class="btn btn--dark mt-12 w-full" type="submit"[^>]*>/)[0];
+  assert.match(submit, /data-keep-focus/, 'nút Lưu nhập hàng thiếu data-keep-focus');
+  assert.match(PAGE, /doc\.addEventListener\('pointerdown', keepFocusDown, true\);/);
+  assert.match(PAGE, /doc\.addEventListener\('mousedown', keepFocusDown, true\);/);
+  assert.match(PAGE, /function keepFocusDown\(e\)\{[^}]*closest\('\[data-keep-focus\]'\)[^}]*preventDefault/);
+});
+
 /* 2.12.0 (A): nút + ở Nhập hàng bấm CHÍNH addNhapItem (cùng đường với Enter). */
 test('2.12.0 nút + nhập hàng: đúng một nút data-action=nhap-add; bấm thêm đúng một dòng, db không đổi, không dirty; 1e7 không thêm và có toast; 2 dòng rồi saveNhap lưu cả 2', () => {
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'phải đúng một nút nhap-add');
