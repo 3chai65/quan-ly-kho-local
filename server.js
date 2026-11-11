@@ -679,8 +679,8 @@ migrateMoneyToDong();
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('Quản Lý Kho (local) đang chạy:');
-  console.log('  PC    : http://localhost:' + PORT);
-  console.log('  Mobile: http://<IP-máy-tính>:' + PORT);
+  console.log('  PC    : https://localhost (dự phòng http://localhost:' + PORT + ')');
+  console.log('  Khác  : https://<IP-máy-tính> (cổng ' + PORT + ' chỉ nghe 127.0.0.1)');
   console.log('  DB    : ' + DB_FILE);
   console.log('  Backup: ' + BACKUP_DIR + ' (giữ ' + BACKUP_KEEP_DAYS + ' ngày)');
   auth.announce(PORT);
