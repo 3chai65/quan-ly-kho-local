@@ -327,7 +327,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 }
 /* 2.9.0: bố cục máy tính (>900px). Đặt hàng bằng grid-area, DOM giữ nguyên; điện thoại/tablet dùng luồng DOM cũ. */
 @media (min-width:901px){
-.main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch}
+.main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
 .main>.stats{grid-column:1/-1;grid-row:1;margin-bottom:0}
 .main>.grid2{display:contents}
 .main>.mt-18{margin-top:0}
