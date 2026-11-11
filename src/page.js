@@ -61,8 +61,14 @@ a{color:var(--brand-text)}
 .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
 .top{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--border)}
 .bar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;min-height:60px}
-.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em}
-.brand .ico{width:22px;height:22px;color:var(--brand)}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em;background:none;border:0;padding:0;font-family:inherit;cursor:pointer}
+.brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text);cursor:pointer}
+.brand__yin .ico{width:24px;height:24px}
+.brand__yin.is-shake{animation:yinShake .4s ease-in-out}
+@keyframes yinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.brand__yin.is-shake{animation:none;box-shadow:0 0 0 2px var(--red-text)}}
+.menu__item--sub{font-size:12px;color:var(--muted)}
 .bar__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
 border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber-text);
@@ -275,7 +281,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 @media (max-width:640px){
 .wrap{padding:0 12px}
 .bar{min-height:56px}
-.brand span{font-size:15px}
+.brand{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
 .card__body{padding:13px}
 .row{grid-template-columns:1fr}
@@ -402,32 +408,30 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 </svg>
 <header class="top">
   <div class="wrap bar">
-    <a class="brand" href="#main">
-      <svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg>
-      <span>Quản Lý Kho</span>
-    </a>
-    <div class="bar__actions">
-      <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
-      <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
-      <a class="btn btn--sm" href="/auth/devices" title="Quản lý thiết bị">Thiết bị</a>
+    <div class="brand-wrap">
       <div class="menu">
-        <button class="btn btn--sm" type="button" id="themeBtn" data-action="theme-menu" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu">
-          <svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg><span id="themeLabel">Hệ thống</span>
+        <button class="brand__yin" type="button" id="themeBtn" data-action="theme-menu" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu" aria-label="Đổi giao diện sáng hoặc tối" title="Sáng / Tối">
+          <svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg>
         </button>
+        <span class="sr" id="themeLabel">Theo máy</span>
         <div class="menu__list" id="themeMenu" role="menu" aria-labelledby="themeBtn" hidden>
-          <button class="menu__item" type="button" role="menuitemradio" data-theme-set="system" aria-checked="true">
-            <svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg>Hệ thống
-          </button>
           <button class="menu__item" type="button" role="menuitemradio" data-theme-set="light" aria-checked="false">
             <svg class="ico" aria-hidden="true"><use href="#i-sun"/></svg>Sáng
           </button>
           <button class="menu__item" type="button" role="menuitemradio" data-theme-set="dark" aria-checked="false">
             <svg class="ico" aria-hidden="true"><use href="#i-moon"/></svg>Tối
           </button>
+          <button class="menu__item menu__item--sub" type="button" role="menuitemradio" data-theme-set="system" aria-checked="true">Theo máy</button>
         </div>
       </div>
+      <button class="brand" type="button" id="brandBtn" data-action="brand-devices" aria-describedby="brandNote">Quản Lý Kho</button>
+    </div>
+    <div class="bar__actions">
+      <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
+      <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
     </div>
   </div>
+  <p class="sr" id="brandNote" role="status" aria-live="polite"></p>
 </header>
 
 <main id="main" class="wrap main">
@@ -1745,7 +1749,7 @@ function applyTheme(mode){
   doc.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   try { localStorage.setItem('theme_mode', mode); } catch (e) {}
   var lbl = $('#themeLabel');
-  if (lbl) lbl.textContent = mode === 'dark' ? 'Tối' : mode === 'light' ? 'Sáng' : 'Hệ thống';
+  if (lbl) lbl.textContent = mode === 'dark' ? 'Tối' : mode === 'light' ? 'Sáng' : 'Theo máy';
   $$('#themeMenu [data-theme-set]').forEach(function(b){
     b.setAttribute('aria-checked', b.getAttribute('data-theme-set') === mode ? 'true' : 'false');
   });
@@ -1754,6 +1758,24 @@ function applyTheme(mode){
   setFavicon();
   if ($('#chartBox') && $('#chartBox').open) renderChart();
 }
+/* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
+var brandBusy = false;
+function denyDevices(){
+  var yin = $('#themeBtn');
+  if (yin) { yin.classList.remove('is-shake'); void yin.offsetWidth; yin.classList.add('is-shake'); }
+  var note = $('#brandNote');
+  if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';
+}
+function brandDevicesClick(){
+  if (brandBusy) return Promise.resolve();
+  brandBusy = true;
+  return Promise.resolve().then(function(){
+    return fetch('/auth/devices', { credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'text/html' } });
+  }).then(function(r){
+    if (r && r.status === 200) location.href = '/auth/devices';
+    else denyDevices();
+  }, denyDevices).then(function(){ brandBusy = false; });
+}
 function closeThemeMenu(){
   var m = $('#themeMenu'), b = $('#themeBtn');
   if (m) m.hidden = true;
@@ -4625,6 +4647,7 @@ function handleAction(btn){
     case 'save-tx': saveTxEdit(); break;
     case 'save-edit': saveEdit(); break;
     case 'sync-discard': discardUnsynced(); break;
+    case 'brand-devices': brandDevicesClick(); break;
     case 'close-edit': closeEdit(); break;
     case 'clear-imp': { var _s1 = $('#impSearch'); if (_s1) _s1.value = ''; impAll = true; impPage = 1; renderHistory('imp'); break; }
     case 'clear-exp': setMonthInput('expMonth', ''); expAll = true; expPage = 1; renderHistory('exp'); break;
