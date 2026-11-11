@@ -5,6 +5,21 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.0] - 2026-11-11
+
+### Giao diện điện thoại
+
+- Bán lẻ và Thuốc chén (màn hình tối đa 640 px): chân tờ ghi (Tổng, Bán đơn; Thuốc chén thêm thang, giá, nút lưu đơn) dính đáy màn hình, có chừa vùng an toàn (safe-area), nằm dưới thanh trên, gợi ý, thông báo và hộp thoại. Máy tính giữ nguyên.
+- Nút "Tải lại" trên thanh trên, chỉ hiện khi chạy từ màn hình chính (iPhone không có nút tải lại). Còn thay đổi chưa gửi hoặc đơn nháp thì hỏi xác nhận trước khi tải lại.
+- Thêm viewport-fit=cover để vùng an toàn có giá trị trên iPhone.
+- Thanh tiêu đề các mục: ô tìm vị thuốc (và ô chọn đơn của Thuốc chén) nằm cùng hàng tiêu đề, giữa tên mục và ô ngày/tháng; placeholder rút gọn "Nhập tên" (aria-label giữ đầy đủ); hết chỗ ở 320 px thì ô ngày/tháng xuống hàng dưới.
+- Thuốc chén: nhãn "— Đơn mới —" thành "Đơn mới" (value vẫn rỗng). Kho tồn: bỏ ô sắp xếp (mặc định bán chạy nhất, rồi theo tên). Thống kê: ô năm lên hàng tiêu đề; chú giải tháng thành "[ô màu] Nhập số tiền" / "[ô màu] Bán số tiền".
+- Chân đơn thuốc chén trên điện thoại: Lưu đơn | Tên mới | Bán đơn đúng một hàng, Xóa/Sao chép đơn ở hàng phụ riêng (chỉ hiện khi có nút), dòng tổng gọn còn 2 dòng; chiều cao chân dính ở 320 px giảm 221 xuống 139 px.
+
+### Removed
+
+- Chức năng "Gộp đơn thuốc lẻ cũ" (nút trong Lịch sử bán, hộp thoại, hàm gộp, CSS). Giao dịch cũ đã có oid/oname vẫn được đọc và hiển thị như trước; sanitize, validateState và máy chủ không đổi.
+
 ## [2.14.0] - 2026-11-11
 
 ### Giao diện thu gọn từng mục

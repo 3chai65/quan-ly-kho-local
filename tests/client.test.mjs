@@ -40,7 +40,7 @@ function loadClient(extra = {}) {
   js = js.slice(0, end) + `
 globalThis.__test = {
   fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
-  sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null), mergeCandidates: (typeof mergeCandidates === 'function' ? mergeCandidates : null), openMerge: (typeof openMerge === 'function' ? openMerge : null), mergeDo: (typeof mergeDo === 'function' ? mergeDo : null),
+  sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
   reconcileList: (typeof reconcileList === 'function' ? reconcileList : null), findProduct: (typeof findProduct === 'function' ? findProduct : null), renderStats: (typeof renderStats === 'function' ? renderStats : null),
   loadPreset: (typeof loadPreset === 'function' ? loadPreset : null), remedyPresetPick: typeof remedyPresetPick === 'function' ? remedyPresetPick : null, remedyNewName: typeof remedyNewName === 'function' ? remedyNewName : null, recFix: (typeof recFix === 'function' ? recFix : null), resetDrafts: (typeof resetDrafts === 'function' ? resetDrafts : null), checkLimits: (typeof checkLimits === 'function' ? checkLimits : null),
   backupLastDate: (typeof backupLastDate === 'function' ? backupLastDate : null), commitRetailRow: (typeof commitRetailRow === 'function' ? commitRetailRow : null),
@@ -54,6 +54,7 @@ globalThis.__test = {
   setTxEdit: function(v){ txEditCur = v; },
   getInvPage: function(){ return invPage; },
   setInvPage: function(v){ invPage = v; },
+  renderPresetOptions: (typeof renderPresetOptions === 'function' ? renderPresetOptions : null),
   renderInventory: (typeof renderInventory === 'function' ? renderInventory : null),
   wrapRenderInventory: function(fn){ var orig = renderInventory; renderInventory = function(){ fn(); return orig.apply(this, arguments); }; },
   setDb: function(v){ db = v; },
@@ -90,7 +91,7 @@ globalThis.__test = {
   discardUnsynced: (typeof discardUnsynced === 'function' ? discardUnsynced : null), restoreFromFile: (typeof restoreFromFile === 'function' ? restoreFromFile : null),
   readLocal: (typeof readLocal === 'function' ? readLocal : null),
   saveNhap: (typeof saveNhap === 'function' ? saveNhap : null), saveRetail: (typeof saveRetail === 'function' ? saveRetail : null), saveRemedy: (typeof saveRemedy === 'function' ? saveRemedy : null),
-  openTxEdit: (typeof openTxEdit === 'function' ? openTxEdit : null), saveTxEdit: (typeof saveTxEdit === 'function' ? saveTxEdit : null), delTx: (typeof delTx === 'function' ? delTx : null), mergeDo: (typeof mergeDo === 'function' ? mergeDo : null),
+  openTxEdit: (typeof openTxEdit === 'function' ? openTxEdit : null), saveTxEdit: (typeof saveTxEdit === 'function' ? saveTxEdit : null), delTx: (typeof delTx === 'function' ? delTx : null),
   getStockWarnText: function(){ return stockWarnText; },
   todayISO: (typeof todayISO === 'function' ? todayISO : null), thisYear: (typeof thisYear === 'function' ? thisYear : null),
   getDateInput: (typeof getDateInput === 'function' ? getDateInput : null), setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
@@ -112,6 +113,7 @@ globalThis.__test = {
   savePreset: (typeof savePreset === 'function' ? savePreset : null), copyPreset: (typeof copyPreset === 'function' ? copyPreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNewName: (typeof remedyNewName === 'function' ? remedyNewName : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
+  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
 };
 })();`;
@@ -299,71 +301,6 @@ test('reconcileList tính đúng chênh lệch và phát hiện tồn lịch s�
   assert.equal(p1.calc, -8);
   assert.equal(p1.diff, 9);
   assert.equal(list.find(r => r.id === 'p2'), undefined);
-});
-
-test('mergeCandidates bỏ qua giao dịch bán lẻ, kể cả dữ liệu cũ', () => {
-  app.setDb({
-    products: [],
-    transactions: [
-      { id: 't1', date: '2026-01-01', type: 'BAN', productId: 'p1', qty: 1, price: 100, total: 100, retail: true },
-      { id: 't2', date: '2026-01-01', type: 'BAN', productId: 'p2', qty: 1, price: 100, total: 100 },
-      { id: 't3', date: '2026-01-02', type: 'BAN', productId: 'p3', qty: 1, price: 200, total: 200, oname: 'Bán lẻ' },
-      { id: 't4', date: '2026-01-02', type: 'BAN', productId: 'p4', qty: 1, price: 200, total: 200 }
-    ],
-    prescriptions: [], updatedAt: 0
-  });
-  assert.equal(app.mergeCandidates().length, 0);
-});
-
-test('mergeCandidates vẫn gộp các dòng bán rời không có cờ retail', () => {
-  app.setDb({
-    products: [],
-    transactions: [
-      { id: 't1', date: '2026-01-01', type: 'BAN', productId: 'p1', qty: 1, price: 100, total: 100 },
-      { id: 't2', date: '2026-01-01', type: 'BAN', productId: 'p2', qty: 1, price: 100, total: 100 }
-    ],
-    prescriptions: [], updatedAt: 0
-  });
-  const list = app.mergeCandidates();
-  assert.equal(list.length, 1);
-  assert.equal(list[0].items.length, 2);
-});
-
-/* 2.13.0 (N3): hộp gộp không tick sẵn bất kỳ đơn nào (kể cả đơn giá lẻ); sắp theo ngày; không chọn gì thì gộp không đổi db. */
-test('2.13.0 N3 mergeDlg: không checkbox nào checked (có cả giá tròn và giá lẻ); sắp theo ngày mới nhất; không chọn thì mergeDo không đổi db', () => {
-  const mk = tag => ({ tag, type: '', checked: false, hidden: false, textContent: '', children: [], attrs: {}, className: '',
-    setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; },
-    appendChild(c) { this.children.push(c); return c; }, showModal() { this.open = true; },
-    classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } }, style: {}, dataset: {},
-    addEventListener() {}, removeEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, focus() {}, select() {} });
-  const box = mk('div'), hint = mk('p'), dlg = mk('dialog'), go = mk('button');
-  const doc = {
-    readyState: 'loading', hidden: false, activeElement: null, documentElement: mk('html'), body: mk('body'),
-    querySelector(s) { return s === '#mergeList' ? box : s === '#mergeHint' ? hint : s === '#mergeDlg' ? dlg : s === '[data-action="merge-do"]' ? go : null; },
-    querySelectorAll() { return []; }, createElement(t) { return mk(t); }, createElementNS(t) { return mk(t); },
-    addEventListener() {}, removeEventListener() {}
-  };
-  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, confirm() { return false; } });
-  c.setDb({
-    products: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong',
-    transactions: [
-      { id: 'a1', date: '2026-01-01', type: 'BAN', productId: 'p1', qty: 1, price: 101, total: 101 },
-      { id: 'a2', date: '2026-01-01', type: 'BAN', productId: 'p2', qty: 1, price: 101, total: 101 },
-      { id: 'b1', date: '2026-01-05', type: 'BAN', productId: 'p1', qty: 1, price: 100, total: 100 },
-      { id: 'b2', date: '2026-01-05', type: 'BAN', productId: 'p2', qty: 1, price: 100, total: 100 }
-    ]
-  });
-  const before = JSON.stringify(c.getDb());
-  c.openMerge();
-  const boxes = [];
-  const walk = n => { for (const k of n.children) { if (k.tag === 'input') boxes.push(k); walk(k); } };
-  walk(box);
-  assert.equal(boxes.length, 2, 'phải có 2 nhóm');
-  assert.ok(boxes.every(b => b.checked === false), 'không checkbox nào được tick sẵn');
-  assert.equal(boxes[0].attrs['data-key'], '2026-01-05|100', 'sắp theo ngày mới nhất');
-  assert.equal(c.isDirty(), false);
-  c.mergeDo();
-  assert.equal(JSON.stringify(c.getDb()), before, 'không chọn nhóm nào thì gộp không đổi db');
 });
 
 test('allocateRemedyByCost: vốn cộng lãi chia đều, dòng cuối nhận phần dư', () => {
@@ -1178,9 +1115,9 @@ test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', (t)
     })
   });
   const rng = rng32(SEED);
-  const ran = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0, merge: 0 };
-  const blocked = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0, merge: 0 };
-  const idle = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0, merge: 0 };
+  const ran = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0 };
+  const blocked = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0 };
+  const idle = { nhap: 0, retail: 0, remedy: 0, edit: 0, delete: 0 };
 
   function snap(){
     const db = fuzz.getDb();
@@ -1216,7 +1153,6 @@ test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', (t)
       if (db.products.some(p => p.stock >= 0.01)) bag.push('retail', 'retail');
       if (db.products.some(p => p.stock >= 0.05)) bag.push('remedy');
       if (db.transactions.length) bag.push('edit', 'edit', 'delete');
-      if (db.products.some(p => p.stock >= 0.04)) bag.push('merge');
       const kind = bag[irand(rng, bag.length)];
 
       if (kind === 'nhap') {
@@ -1294,32 +1230,6 @@ test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', (t)
         if (!ok.length) { blocked.delete += 1; log.push({ op: 'delete-bo-qua', ly: 'tranh ton am' }); continue; }
         const t = ok[irand(rng, ok.length)];
         run('delete', { op: 'delete', id: t.id, type: t.type, qty: t.qty }, log, () => fuzz.delTx(t.id));
-      } else {
-        const ps = db.products.filter(p => p.stock >= 0.04);
-        const p = ps[irand(rng, ps.length)];
-        const kg1 = qtyStep(rng, 0.01, Math.min(0.5, p.stock / 2), 0.01);
-        run('retail', { op: 'merge-ban-1', pid: p.id, kg: kg1 }, log, () => {
-          fuzz.setRetailItems([{ pid: p.id, kg: kg1, amount: Math.round(kg1 * 100000) }]);
-          fuzz.saveRetail();
-          const t = fuzz.getDb().transactions.at(-1);
-          if (t && t.productId === p.id && t.type === 'BAN') delete t.retail;
-        });
-        const left = fuzz.getDb().products.find(x => x.id === p.id);
-        if (!left || left.stock < 0.01) { blocked.merge += 1; log.push({ op: 'merge-bo-qua', ly: 'khong du ton' }); continue; }
-        const kg2 = qtyStep(rng, 0.01, Math.min(0.5, left.stock), 0.01);
-        run('retail', { op: 'merge-ban-2', pid: p.id, kg: kg2 }, log, () => {
-          fuzz.setRetailItems([{ pid: p.id, kg: kg2, amount: Math.round(kg2 * 100000) }]);
-          fuzz.saveRetail();
-          const t = fuzz.getDb().transactions.at(-1);
-          if (t && t.productId === p.id && t.type === 'BAN') delete t.retail;
-        });
-        run('merge', { op: 'merge' }, log, () => {
-          dom.checks.length = 0;
-          for (const g of fuzz.mergeCandidates()) {
-            dom.checks.push({ checked: true, getAttribute(name){ return name === 'data-key' ? g.key : null; } });
-          }
-          fuzz.mergeDo();
-        });
       }
     }
   }
@@ -1327,12 +1237,11 @@ test('chuỗi thao tác ngẫu nhiên giữ tồn bằng nhập trừ bán', (t)
   /* 2.13.0: không console.log trong test – stdout xen với kênh báo cáo của node --test gây lỗi "Unable to deserialize" (ngẫu nhiên). Dùng t.diagnostic. */
   t.diagnostic('Độ phủ seed ' + SEED);
   t.diagnostic('loại\tchạy\tchặn\tkhông đổi');
-  for (const k of ['nhap', 'retail', 'remedy', 'edit', 'delete', 'merge']) {
+  for (const k of ['nhap', 'retail', 'remedy', 'edit', 'delete']) {
     t.diagnostic(k + '\t' + ran[k] + '\t' + blocked[k] + '\t' + idle[k]);
   }
   for (const k of Object.keys(ran)) assert.ok(ran[k] > 0, k + ' không chạy lần nào');
   assert.ok(ran.edit > blocked.edit + idle.edit, 'sửa bị bỏ qua nhiều hơn số lần chạy');
-  assert.ok(ran.merge > blocked.merge + idle.merge, 'gộp bị bỏ qua nhiều hơn số lần chạy');
   assert.ok(ran.remedy > blocked.remedy + idle.remedy, 'đơn thuốc chén bị bỏ qua nhiều hơn số lần chạy');
 });
 
@@ -2351,26 +2260,6 @@ test('recFix không đổi tồn khi người dùng hủy xác nhận', () => {
   assert.equal(client.getDb().products[0].stock, 5);
 });
 
-test('mergeDo hủy xác nhận cuối thì không gộp', () => {
-  const checks = [{ checked: true, getAttribute() { return '2026-11-07|1'; } }];
-  const doc = {
-    readyState: 'loading', hidden: false, activeElement: null,
-    documentElement: makeEl(), body: makeEl(),
-    querySelector() { return null; }, querySelectorAll(sel) { return sel === '#mergeList input[type=checkbox]' ? checks : []; },
-    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {}
-  };
-  const client = loadClient({ document: doc, confirm: () => false });
-  client.setDb({
-    products: [{ id: 'p1', name: 'A', stock: 2, costPrice: 1 }],
-    transactions: [
-      { id: 'a', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, cost: 0 },
-      { id: 'b', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, cost: 0 }
-    ], prescriptions: [], updatedAt: 0, moneyUnit: 'dong'
-  });
-  client.mergeDo();
-  assert.ok(client.getDb().transactions.every(t => !t.oid));
-});
-
 test('sanitize giữ id/tên constructor, toString, __proto__', () => {
   const client = loadClient();
   const out = client.sanitize({
@@ -2667,8 +2556,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 170); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 17, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
+  assert.equal(PAGE.match(/ id="/g).length, 167); // 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3221,20 +3110,17 @@ test('F8 #syncBadge là <div role="status">, không còn <button> bọc liên k�
   assert.doesNotMatch(PAGE, /<button[^>]*id="syncBadge"/);
 });
 
-test('F13 recDlg, mergeDlg: bấm ra nền thì đóng đúng như nút Đóng; bấm vào nội dung thì không đóng', () => {
-  const { doc, els, rec } = recDoc(['recDlg', 'mergeDlg']);
-  let closedRec = 0, closedMerge = 0;
+test('F13 recDlg: bấm ra nền thì đóng đúng như nút Đóng; bấm vào nội dung thì không đóng', () => {
+  const { doc, els, rec } = recDoc(['recDlg']);
+  let closedRec = 0;
   els['#recDlg'].close = () => { closedRec++; };
-  els['#mergeDlg'].close = () => { closedMerge++; };
   loadClient({ document: doc, fetch: async () => { throw new Error('offline'); }, setInterval() { return 0; }, clearInterval() {} });
   const inner = {};
   const fire2 = (id, target) => (rec[id]?.click || []).forEach(fn => fn({ target }));
-  fire2('recDlg', inner); fire2('mergeDlg', inner);
+  fire2('recDlg', inner);
   assert.equal(closedRec, 0);
-  assert.equal(closedMerge, 0);
-  fire2('recDlg', els['#recDlg']); fire2('mergeDlg', els['#mergeDlg']);
+  fire2('recDlg', els['#recDlg']);
   assert.equal(closedRec, 1);
-  assert.equal(closedMerge, 1);
 });
 
 test('F14 bỏ class không dùng .stack, .hide-sm và thuộc tính data-sug', () => {
@@ -3410,8 +3296,8 @@ test('2.13.2 ô năm: #chartYear có aria-label "Năm" và nằm trong khung .ch
 });
 
 test('2.13.2 hai ô màu dùng đúng biến màu của cột và chữ tương phản token; canvas cũng đọc cùng biến', () => {
-  assert.match(PAGE, /\.chart-chip--imp\{background:var\(--chart-imp\);color:var\(--chart-imp-ink\)\}/);
-  assert.match(PAGE, /\.chart-chip--exp\{background:var\(--chart-exp\);color:var\(--chart-exp-ink\)\}/);
+  assert.match(PAGE, /\.chart-chip--imp \.chart-chip__sw\{background:var\(--chart-imp\)\}/);
+  assert.match(PAGE, /\.chart-chip--exp \.chart-chip__sw\{background:var\(--chart-exp\)\}/);
   assert.match(PAGE, /<span class="chart-chip chart-chip--imp" id="chartImpChip"/);
   assert.match(PAGE, /<span class="chart-chip chart-chip--exp" id="chartExpChip"/);
   assert.match(PAGE, /getPropertyValue\('--chart-imp'\)/);
@@ -3430,7 +3316,7 @@ test('2.13.2 dòng dữ liệu: mặc định tháng 7 (năm khác); bấm cột
   const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => ({ width: 0 })), set: (t, k, v) => { t[k] = v; return true; } });
   const mk = () => ({ value: '', textContent: '', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; } }, focus() {}, select() {} });
   const cv = { offsetParent: {}, clientWidth: 300, clientHeight: 200, parentNode: { clientWidth: 300 }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: 300, height: 200 }) };
-  const els = { '#statsChart': cv, '#chartYear': Object.assign(mk(), { value: '2025' }), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartTipSr': mk() };
+  const els = { '#statsChart': cv, '#chartYear': Object.assign(mk(), { value: '2025' }), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartTipSr': mk() };
   const doc = {
     readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
     querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; },
@@ -3446,13 +3332,13 @@ test('2.13.2 dòng dữ liệu: mặc định tháng 7 (năm khác); bấm cột
   });
   c.renderChart();
   assert.equal(els['#chartMonth'].textContent, '07/2025', 'mặc định: tháng 7 (tháng cuối có dữ liệu của năm khác)');
-  assert.equal(els['#chartExpChip'].textContent, c.fmtMoney(7000000));
+  assert.equal(els['#chartExpVal'].textContent, c.fmtMoney(7000000));
   const cx = i => 44 + ((300 - 44 - 8) / 12) * (i + 0.5);
   const click = i => c.onChartClick({ clientX: cx(i), clientY: 100 });
   click(2);
   assert.equal(els['#chartMonth'].textContent, '03/2025', 'bấm cột tháng 3 → hiện tháng 3');
-  assert.equal(els['#chartImpChip'].textContent, c.fmtMoney(3000000));
-  assert.equal(els['#chartExpChip'].textContent, c.fmtMoney(0));
+  assert.equal(els['#chartImpVal'].textContent, c.fmtMoney(3000000));
+  assert.equal(els['#chartExpVal'].textContent, c.fmtMoney(0));
   assert.match(els['#chartTipSr'].textContent, /^Tháng 03\/2025 — Nhập: /);
   click(2);
   assert.equal(els['#chartMonth'].textContent, '07/2025', 'bấm lại cột đang chọn → về tháng mặc định');
@@ -3462,8 +3348,8 @@ test('2.13.2 dòng dữ liệu: mặc định tháng 7 (năm khác); bấm cột
 test('2.13.2 CSS: quy tắc điện thoại của đầu thẻ và dòng dữ liệu đặt SAU quy tắc gốc cùng bộ chọn', () => {
   const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
   assert.ok(at('.chart-head__stats{display:flex') < at('#chartBox>summary.chart-head .chart-head__stats{width:100%'), 'đầu thẻ điện thoại phải sau gốc');
-  assert.ok(at('.chart-tip{display:flex') < at('.chart-tip{gap:6px}'), 'dòng dữ liệu điện thoại phải sau gốc');
-  assert.ok(at('.chart-chip{display:inline-block') < at('.chart-chip{padding:3px 8px'), 'chip điện thoại phải sau gốc');
+  assert.ok(at('.chart-tip{display:flex') < at('.chart-tip{gap:4px}'), 'dòng dữ liệu điện thoại phải sau gốc');
+  assert.ok(at('.chart-chip{display:inline-flex') < at('.chart-chip{font-size:13px}'), 'chip điện thoại phải sau gốc');
 });
 
 /* 2.14.0 (1): bỏ chú thích và chữ đơn vị tĩnh; id và hook dữ liệu còn nguyên. */
@@ -3729,17 +3615,17 @@ test('2.14.0 Thuốc chén: #remedySearch nằm trong khung tờ ghi .note, trư
   const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
   const iSearch = note.indexOf('id="remedySearch"'), iBody = note.indexOf('id="remedyBody"');
   assert.ok(iSearch > 0 && iSearch < iBody, 'ô tìm vị phải là dòng đầu, trước dòng nhập');
-  assert.match(note, /placeholder="Nhập tên vị thuốc…"/);
+  assert.match(note, /placeholder="Nhập tên"/);
   const box = PAGE.slice(PAGE.indexOf('id="remedyBox"'), PAGE.indexOf('id="nhapBox"'));
   assert.doesNotMatch(box, /<label[^>]*for="remedy(Search|Date|Preset|Name)"/, 'còn nhãn chữ phía trên ô');
   assert.doesNotMatch(box, /Chọn vị thuốc|Gõ tên vị thuốc|hintbox/);
-  assert.match(box, /<option value="__new__">Tạo đơn mới<\/option>\s*<option value="">— Đơn mới —<\/option>/, 'dòng đầu là Tạo đơn mới, rồi "— Đơn mới —"');
+  assert.match(box, /<option value="__new__">Tạo đơn mới<\/option>\s*<option value="">Đơn mới<\/option>/, 'dòng đầu là Tạo đơn mới, rồi "Đơn mới" (value giữ "")');
 });
 
-test('2.14.0 Thuốc chén: chân tờ ghi hai hàng (note__row); tên đơn ẩn mặc định; Lưu đơn, Lưu tên mới, Bán đơn; id/data-action giữ nguyên', () => {
+test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, nút); tên đơn ẩn mặc định; Lưu đơn, Lưu tên mới, Bán đơn; id/data-action giữ nguyên', () => {
   const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
   const foot = note.slice(note.indexOf('class="note__foot"'));
-  assert.equal((foot.match(/class="note__row/g) || []).length, 2, 'chân phải đúng 2 hàng');
+  assert.equal((foot.match(/class="note__row/g) || []).length, 3, 'chân phải đúng 3 hàng (tổng, Xóa/Sao chép, nút chính)');
   assert.ok(foot.indexOf('id="remedyName"') < foot.indexOf('note__row--btns'), 'ô tên nằm trên hàng nút');
   assert.match(foot, /<input[^>]*id="remedyName"[^>]*\shidden[^>]*>/, 'ô tên đơn phải ẩn mặc định');
   assert.match(foot, /data-action="preset-newname" id="remedyNewName"|id="remedyNewName"[^>]*data-action="preset-newname"/);
@@ -3828,8 +3714,8 @@ test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) n�
 
 /* 2.14.0 (T1–T3, Nhập hàng điện thoại): bố cục gọn theo ảnh duyệt. */
 test('2.14.0 Thuốc chén điện thoại: ô chọn đơn rộng cả hàng 2 của thanh; nút chân ≥44px; tiêu đề cột ẩn khi tờ ghi rỗng', () => {
-  assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:3;flex:1 0 100%\}/);
-  assert.match(PAGE, /#remedyNote \.note__row--btns \.btn\{flex:1 1 auto;min-height:44px\}/);
+  assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:1;flex:1 1 80px\}/);
+  assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
   assert.match(PAGE, /#remedyNote>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/);
   assert.match(PAGE, /#remedyNote:has\(#remedyBody tr\[data-pid\]\)>table>thead\{display:table-header-group\}/);
 });
@@ -3895,17 +3781,16 @@ test('2.14.0 Kho/Nhập/Bán: thanh card__bar có tên mục, ô tìm/lọc, s�
   const inv = PAGE.slice(PAGE.indexOf('id="invBox"'), PAGE.indexOf('<div class="tw">', PAGE.indexOf('id="invBox"')));
   assert.match(inv, /data-action="reconcile"/);
   assert.match(inv, /id="invCount"/);
-  for (const id of ['invSearch', 'invSort', 'impSearch', 'expMonth', 'expSearch', 'mergeBtn', 'invCount', 'impCount', 'expCount', 'invList', 'impSearchList']) {
+  for (const id of ['invSearch', 'impSearch', 'expMonth', 'expSearch', 'invCount', 'impCount', 'expCount', 'invList', 'impSearchList']) {
     assert.equal((PAGE.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1, 'id ' + id + ' phải đúng 1 lần');
   }
-  assert.match(PAGE, /data-action="merge-old"/);
 });
 
 test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu tượng; ô tìm lịch sử nhập xuống hàng 2 cả hàng; số liệu Lịch sử nhập ở hàng 1 cùng tên', () => {
   assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.card__bar-lbl\{display:none\}/);
-  assert.match(PAGE, /\.card__bar-search\.is-inline\{order:3;flex:1 0 100%;min-width:0\}/, 'ô tìm Lịch sử nhập: hàng 2, rộng 100%');
-  assert.match(PAGE, /#impBox \.card__bar-count\{order:1\}/, 'số liệu Lịch sử nhập: hàng 1 (sau tên, order 1 < ô tìm 3)');
-  assert.match(PAGE, /\.card__bar>\.inp\.card__bar-search\{order:3;flex:1 0 100%\}/);
+  assert.match(PAGE, /\.card__bar-search\.is-inline,\.card__bar>\.inp\.card__bar-search\{order:1;flex:1 1 80px;min-width:0\}/, 'ô tìm cùng hàng tiêu đề (2.15.0)');
+  assert.match(PAGE, /\.card__bar-count\{order:4;margin-left:0\}/, 'số liệu xuống hàng cuối nếu hết chỗ');
+  
   assert.match(PAGE, /aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho"/);
 });
 
@@ -4278,8 +4163,10 @@ test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc g�
 const NEW_213 = ['nhap-add', 'brand-devices'];
 /* 2.14.0 (Thuốc chén): nút "Lưu tên mới" mở ô tên đơn mới. */
 const NEW_214 = ['preset-newname'];
+/* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
+const NEW_215 = ['reload-app'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
-const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp'];
+const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
   'copy-preset', 'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
   'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
@@ -4295,14 +4182,14 @@ function oldPageFromGit() {
 
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
   const old = oldPageFromGit();
-  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !NEW_214.includes(a) && !REMOVED_213.includes(a)).sort();
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !NEW_214.includes(a) && !NEW_215.includes(a) && !REMOVED_213.includes(a)).sort();
   assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS.filter(a => !REMOVED_213.includes(a)), 'data-action đã đổi so với 1023b40');
   if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) assert.ok(newIds.has(id), 'mất id ' + id);
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id)) assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
@@ -4512,15 +4399,6 @@ test('2.14.0 M3b Lịch sử điện thoại: lưới 4 cột (tên và ngày �
   assert.match(css, /table\.his tr\.is-row>td:nth-child\(3\)::before,table\.his tr\.is-row>td:nth-child\(4\)::before,table\.his tr\.is-row>td:nth-child\(5\)::before\{content:none\}/);
   assert.match(css, /table\.inv td\.c-del \.btn--icon,table\.his td\.c-act \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px cho cả hai Lịch sử');
   assert.match(css, /table\.his tr\.is-row>td\.c-act \.btn--icon::after\{content:"";position:absolute;inset:-3px\}/);
-});
-
-/* 2.14.0 (giai đoạn 4, M4): nút Gộp đơn cũ – điện thoại hiện "Gộp đơn cũ" bằng CSS; aria-label/title giữ nhãn đầy đủ; nút ở hàng 1 cùng tên mục. */
-test('2.14.0 M4 nút Gộp đơn: aria-label và title đầy đủ; điện thoại rút nhãn hiển thị bằng ::before trong @media 600px; nút đứng hàng 1', () => {
-  assert.match(PAGE, /id="mergeBtn" aria-label="Gộp đơn thuốc lẻ cũ" title="Gộp đơn thuốc lẻ cũ" hidden>Gộp đơn thuốc lẻ cũ<\/button>/);
-  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
-  const m = css.match(/@media \(max-width:600px\)\{[\s\S]*?#mergeBtn::before\{content:"Gộp đơn cũ";font-size:13px\}/);
-  assert.ok(m, 'thiếu #mergeBtn::before "Gộp đơn cũ" trong khối 600px');
-  assert.match(css, /#mergeBtn\{order:1;font-size:0\}/);
 });
 
 /* 2.14.0 (giai đoạn 4, M3c): phân trang điện thoại – nút cao 36px, khoảng cách 4px (trong khối 600px). */
@@ -4785,4 +4663,148 @@ test('2.14.0 gợi ý viết tắt "l": không còn chữ "lạng" trong gợi �
   assert.equal(c.qtyHintText('0.05', 'kg'), '(50 g)');
   for (const v of ['0.2', '0.25', '150']) assert.doesNotMatch(c.qtyHintText(v, v === '150' ? 'g' : 'kg'), /lạng/);
   assert.ok(typeof c.fmtQty === 'function' ? c.fmtQty(0.2) === '2 lạng' : /return fmtNum\(lang\) \+ ' lạng'/.test(PAGE), 'fmtQty vẫn ghi lạng');
+});
+
+test('2.15.0 nút Tải lại: chỉ hiện ở màn hình chính; có nháp/dirty thì hỏi trước, không thì tải lại ngay', () => {
+  const mk = (extra) => {
+    const btn = { hidden: true };
+    const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+      querySelector(s) { return s === '#reloadBtn' ? btn : null; }, querySelectorAll() { return []; },
+      createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
+    return { btn, doc, c: loadClient({ document: doc, ...extra }) };
+  };
+  /* trình duyệt thường: ẩn */
+  let r = mk({ navigator: {}, matchMedia: () => ({ matches: false, addEventListener() {} }) });
+  r.c.renderReloadBtn();
+  assert.equal(r.btn.hidden, true, 'trình duyệt thường phải ẩn');
+  /* iOS navigator.standalone */
+  r = mk({ navigator: { standalone: true } });
+  r.c.renderReloadBtn();
+  assert.equal(r.btn.hidden, false, 'navigator.standalone phải hiện');
+  /* display-mode: standalone */
+  r = mk({ navigator: {}, matchMedia: (q) => ({ matches: q.includes('display-mode: standalone'), addEventListener() {} }) });
+  r.c.renderReloadBtn();
+  assert.equal(r.btn.hidden, false, 'display-mode standalone phải hiện');
+  /* bấm: sạch → tải lại không hỏi */
+  let reloads = 0, confirms = 0, answer = true;
+  r = mk({ location: { href: 'x', reload() { reloads++; } }, confirm() { confirms++; return answer; } });
+  r.c.setDirty(false); r.c.setRetailItems([]); r.c.setRemedyItems([]); r.c.setNhapList([]);
+  r.c.reloadAppClick();
+  assert.equal(reloads, 1); assert.equal(confirms, 0, 'không nháp thì không hỏi');
+  /* dirty / nháp: hỏi; từ chối thì không tải lại */
+  answer = false;
+  r.c.setDirty(true);
+  r.c.reloadAppClick();
+  assert.equal(confirms, 1); assert.equal(reloads, 1, 'từ chối thì không tải lại');
+  r.c.setDirty(false); r.c.setRetailItems([{ id: 1 }]);
+  r.c.reloadAppClick();
+  assert.equal(confirms, 2); assert.equal(reloads, 1);
+  r.c.setRetailItems([]); r.c.setNhapList([{ id: 1 }]);
+  r.c.reloadAppClick();
+  assert.equal(confirms, 3); assert.equal(reloads, 1);
+  answer = true;
+  r.c.reloadAppClick();
+  assert.equal(confirms, 4); assert.equal(reloads, 2, 'đồng ý thì tải lại');
+  /* CSS + markup */
+  assert.match(PAGE, /id="reloadBtn"[^>]*data-action="reload-app"[^>]*aria-label="Tải lại ứng dụng"[^>]*hidden/);
+  assert.ok(PAGE.includes("case 'reload-app': reloadAppClick()"));
+  assert.ok(PAGE.includes('#retailNote .note__foot,#remedyNote .note__foot{position:sticky;bottom:0;'));
+  assert.ok(PAGE.includes('env(safe-area-inset-bottom'));
+});
+
+/* 2.15.0 giao diện thanh tiêu đề: ô tìm cùng hàng tiêu đề, chữ rút gọn, bỏ ô sắp xếp kho, ô năm trong tiêu đề Thống kê, chú giải "[ô màu] Nhập số tiền", chân Thuốc chén gọn. */
+test('2.15.0 placeholder rút gọn "Nhập tên" cho mọi ô tìm vị thuốc; aria-label đầy đủ còn nguyên', () => {
+  assert.doesNotMatch(PAGE, /placeholder="(Nhập tên vị thuốc…|Tìm vị thuốc…)"/);
+  for (const id of ['retailSearch', 'remedySearch', 'nhapSearch', 'invSearch', 'impSearch', 'expSearch']) {
+    const m = PAGE.match(new RegExp('<input[^>]*id="' + id + '"[^>]*>'));
+    assert.ok(m, 'thiếu ' + id);
+    assert.match(m[0], /placeholder="Nhập tên"/, id + ' chưa rút gọn');
+    assert.match(m[0], /aria-label="[^"]{8,}"/, id + ' mất aria-label');
+  }
+});
+
+test('2.15.0 Thuốc chén: option "Đơn mới" giữ value rỗng; "Tạo đơn mới" vẫn là __new__; chỉ đổi chữ hiển thị', () => {
+  const opts = [];
+  const sel = makeEl();
+  sel.appendChild = o => { opts.push(o); return o; };
+  const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#remedyPreset' ? sel : null; }, querySelectorAll() { return []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, createTextNode(t) { return { textContent: String(t) }; },
+    addEventListener() {}, removeEventListener() {} };
+  const c = loadClient({ document: doc });
+  c.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.renderPresetOptions();
+  assert.deepEqual(opts.map(o => [o.value, o.textContent]), [['__new__', 'Tạo đơn mới'], ['', 'Đơn mới']]);
+});
+
+test('2.15.0 Kho tồn: không còn ô #invSort; thiếu ô thì vẫn sắp theo bán chạy nhất (rồi theo tên)', () => {
+  assert.doesNotMatch(PAGE, /id="invSort"|Bán chạy nhất \(nhiều/);
+  const body = makeEl();
+  const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#invBody' ? body : null; }, querySelectorAll() { return []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, createTextNode(t) { return { textContent: String(t) }; },
+    addEventListener() {}, removeEventListener() {} };
+  const c = loadClient({ document: doc });
+  c.setDb({
+    products: [{ id: 'a', name: 'Atiso', stock: 9, costPrice: 1 }, { id: 'b', name: 'Bạch chỉ', stock: 5, costPrice: 1 }, { id: 'c', name: 'Cam thảo', stock: 7, costPrice: 1 }],
+    transactions: [
+      { id: 't1', date: '2026-01-01', type: 'BAN', productId: 'c', qty: 3, price: 1, total: 3 },
+      { id: 't2', date: '2026-01-01', type: 'BAN', productId: 'b', qty: 1, price: 1, total: 1 }
+    ], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.renderInventory();
+  assert.deepEqual(body.children.map(tr => tr.children[0].textContent), ['Cam thảo', 'Bạch chỉ', 'Atiso']);
+});
+
+test('2.15.0 Thống kê: #chartYear nằm trong summary tiêu đề; chú giải tháng "[ô màu] Nhập số tiền" rồi "[ô màu] Bán số tiền"', () => {
+  const sum = PAGE.match(/<summary class="card__head chart-head">[\s\S]*?<\/summary>/)[0];
+  assert.match(sum, /id="chartYear"/);
+  assert.ok(sum.indexOf('Thống kê') < sum.indexOf('id="chartYear"'));
+  const after = PAGE.slice(PAGE.indexOf('</summary>', PAGE.indexOf('id="chartBox"')));
+  assert.doesNotMatch(after.slice(0, after.indexOf('id="statsChart"')), /id="chartYear"/);
+  assert.match(PAGE, /id="chartImpChip"[^>]*><i class="chart-chip__sw"><\/i><span class="chart-chip__k">Nhập<\/span><b class="chart-chip__v" id="chartImpVal">/);
+  assert.match(PAGE, /id="chartExpChip"[^>]*><i class="chart-chip__sw"><\/i><span class="chart-chip__k">Bán<\/span><b class="chart-chip__v" id="chartExpVal">/);
+  assert.ok(PAGE.indexOf('id="chartImpChip"') < PAGE.indexOf('id="chartExpChip"'));
+});
+
+test('2.15.0 thanh tiêu đề điện thoại: ô tìm/ô chọn đơn không chiếm cả hàng riêng (flex 100%)', () => {
+  assert.doesNotMatch(PAGE, /\.card__bar-search\{order:3;flex:1 0 100%\}/);
+  assert.doesNotMatch(PAGE, /#remedyBox \.card__bar-preset\{order:3;flex:1 0 100%\}/);
+  assert.match(PAGE, /\.card__bar>\.inp\.card__bar-search\{order:1;flex:1 1 80px;min-width:0\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 80px\}/);
+});
+
+test('2.15.0 chân Thuốc chén: Lưu đơn | Tên mới | Bán đơn một hàng không xuống dòng; Xóa/Sao chép ở hàng phụ riêng; id/action/aria-label giữ', () => {
+  assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
+  const foot = PAGE.slice(PAGE.indexOf('<div class="note__row note__row--aux">'), PAGE.indexOf('id="remedyBox"') > 0 ? PAGE.indexOf('id="nhapBox"') : undefined);
+  const aux = foot.slice(0, foot.indexOf('note__row--btns'));
+  assert.match(aux, /id="remedyDelPreset" hidden/);
+  assert.match(aux, /id="remedyCopyPreset" hidden/);
+  assert.doesNotMatch(aux, /save-preset|save-remedy|preset-newname/);
+  const btns = foot.slice(foot.indexOf('note__row--btns'));
+  assert.match(btns, /data-action="save-preset" id="remedySavePreset"/);
+  assert.match(btns, /data-action="preset-newname" id="remedyNewName" aria-label="Lưu tên mới"/);
+  assert.match(btns, /data-action="save-remedy"/);
+  assert.match(PAGE, /\.note__row--aux:not\(:has\(\.btn:not\(\[hidden\]\)\)\)\{display:none\}/);
+});
+
+/* 2.15.0 (Removed): bỏ hẳn chức năng Gộp đơn thuốc lẻ cũ; dữ liệu cũ có oid/oname vẫn được đọc và hiển thị. */
+test('2.15.0 Gộp đơn thuốc lẻ cũ đã bỏ: không còn #mergeBtn/#mergeDlg/merge-old/merge-do/close-merge và không còn hàm gộp', () => {
+  assert.doesNotMatch(PAGE, /id="merge|data-action="(merge-old|merge-do|close-merge)"|mergeDo|openMerge|mergeCandidates|updateMergeBtn|closeMerge/);
+  const c = loadClient({ document: { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(), querySelector() { return null; }, querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} } });
+  assert.equal(c.mergeDo, undefined);
+});
+
+test('2.15.0 dữ liệu cũ có oid/oname (đã gộp trước đây) vẫn qua sanitize và gom nhóm hiển thị với đúng tên đơn', () => {
+  const raw = { products: [{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }], prescriptions: [], updatedAt: 0, moneyUnit: 'dong',
+    transactions: [
+      { id: 'a', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 100, total: 100, cost: 1, oid: 'OD1', oname: 'Đơn thuốc lẻ' },
+      { id: 'b', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 100, total: 100, cost: 1, oid: 'OD1', oname: 'Đơn thuốc lẻ' }
+    ] };
+  const out = app.sanitize(raw);
+  assert.ok(out.transactions.every(t => t.oid === 'OD1' && t.oname === 'Đơn thuốc lẻ'), 'sanitize làm mất oid/oname');
+  app.setDb(out);
+  const rows = app.historyData('exp', null).rows;
+  const g = rows.filter(r => r.group);
+  assert.equal(g.length, 1, 'hai dòng cùng oid phải gom một đơn');
+  assert.equal(g[0].oname, 'Đơn thuốc lẻ');
 });

@@ -6,7 +6,7 @@ export const PAGE = String.raw`<!doctype html>
 <html lang="vi" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quản Lý Kho — Sổ kho, đơn bán và doanh thu</title>
 <meta name="description" content="Quản lý kho dược liệu: đơn bán lẻ, đơn thuốc chén, nhập hàng, tồn kho, lịch sử giao dịch và thống kê doanh thu 12 tháng. Đồng bộ mạng nội bộ (LAN).">
 <meta name="color-scheme" content="light dark">
@@ -261,14 +261,21 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .chart-year__in:focus{outline:none}
 .chart-tip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;min-height:28px;font-size:13px;color:var(--text2)}
 .chart-tip__m{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
-.chart-chip{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
-.chart-chip--imp{background:var(--chart-imp);color:var(--chart-imp-ink)}
-.chart-chip--exp{background:var(--chart-exp);color:var(--chart-exp-ink)}
+.chart-chip{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text)}
+.chart-chip__sw{display:inline-block;width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+.chart-chip--imp .chart-chip__sw{background:var(--chart-imp)}
+.chart-chip--exp .chart-chip__sw{background:var(--chart-exp)}
+.chart-chip__k{font-weight:600;color:var(--text2);min-width:2.2em}
+/* 2.15.0: chú giải tháng – mỗi dòng "[ô màu] Nhập  số tiền"; ô năm nằm cùng hàng tiêu đề Thống kê. */
+.chart-tip{flex-direction:column;align-items:flex-start;gap:4px}
+#chartBox>summary.chart-head .chart-year{margin-left:auto}
+#chartBox>summary.chart-head .chart-head__stats{margin-left:0}
+.chart-year__box{cursor:text}
 @media (max-width:600px){
 #chartBox>summary.chart-head .chart-head__stats{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chart-head__c{align-items:flex-start}
-.chart-tip{gap:6px}
-.chart-chip{padding:3px 8px;font-size:12px}
+.chart-tip{gap:4px}
+.chart-chip{font-size:13px}
 }
 /* ---------- toast ---------- */
 .toast{position:fixed;z-index:120;left:50%;bottom:22px;transform:translate(-50%,150%);
@@ -294,9 +301,6 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .dlg__card{width:100%}
 .dlg--wide{max-width:min(640px,calc(100% - 24px))}
 .foot--rec{margin-top:0;padding-top:0;border-top:0}
-.mrow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--border);cursor:pointer}
-.mrow:last-child{border-bottom:0}
-.mrow input{margin-top:3px;width:18px;height:18px;flex:none}
 .note td.num{white-space:nowrap}
 .dlg__foot{display:flex;justify-content:flex-end;gap:8px}
 /* N2: khung lỗi trong hộp thoại (role=alert), tạo bằng JS khi có toast lỗi lúc hộp thoại mở. */
@@ -346,6 +350,9 @@ td.c-qty{position:relative}
 .note__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end}
 .note__row+.note__row{margin-top:8px}
 .note__row:first-child{justify-content:flex-start}
+.nm-short{display:none}
+.note__row--aux:not(:has(.btn:not([hidden]))){display:none}
+.note__row--aux{margin-top:8px}
 .note__name{flex:1 1 160px;min-width:0}
 .note__lbl{font-size:13px;color:var(--text2)}
 /* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
@@ -369,24 +376,20 @@ td.c-qty{position:relative}
 #nhapListBox .note__foot{margin-top:8px}
 /* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
 #invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary,#backupBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
-.card__bar-sort{flex:0 0 170px;min-width:0}
 .card__bar-month{flex:0 0 130px;min-width:0}
 .card__bar-search.is-inline{flex:1 1 220px}
 .card__bar-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
 .card__bar-btn{flex:0 0 auto}
 .card__bar>.inp.card__bar-search{flex:1 1 220px;min-width:0}
 @media (max-width:600px){
-.card__bar-sort{order:2;flex:0 0 150px}
 .card__bar-month{order:2}
 .card__bar-btn{order:2}
 .card__bar-lbl{display:none}
-.card__bar-search.is-inline{order:3;flex:1 0 100%;min-width:0}
-.card__bar>.inp.card__bar-search{order:3;flex:1 0 100%}
+/* 2.15.0: điện thoại – ô tìm nằm cùng hàng tiêu đề (giữa tên mục và ô ngày/tháng); không đủ chỗ thì ô ngày/tháng xuống hàng dưới. */
+.card__bar{gap:6px}
+.card__bar-search,.card__bar-search.is-inline,.card__bar>.inp.card__bar-search{order:1;flex:1 1 80px;min-width:0}
+.card__bar-title{margin-right:0;flex:0 0 auto}
 .card__bar-count{order:4;margin-left:0}
-#impBox .card__bar-count{order:1}
-/* 2.14.0 (giai đoạn 4, M4): điện thoại – nhãn nút Gộp rút còn "Gộp đơn cũ" (aria-label/title giữ đầy đủ); nút nằm hàng 1 cạnh tên nếu còn chỗ. */
-#mergeBtn{order:1;font-size:0}
-#mergeBtn::before{content:"Gộp đơn cũ";font-size:13px}
 /* 2.14.0 (giai đoạn 4, M3c): phân trang điện thoại gọn – nút cao 36px (vùng bấm do khoảng cách), khoảng cách 4px. */
 .pager{gap:4px}
 .pager .btn--sm{min-height:36px}
@@ -395,13 +398,36 @@ td.c-qty{position:relative}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
 @media (max-width:600px){
-#remedyBox .card__bar-preset{order:3;flex:1 0 100%}
-#remedyNote .note__row--btns .btn{flex:1 1 auto;min-height:44px}
+#remedyBox .card__bar-preset{order:1;flex:1 1 80px}
+/* 2.15.0: điện thoại – Lưu đơn | Tên mới | Bán đơn đúng một hàng; Xóa/Sao chép đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
+#remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
+#remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:44px;padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
+#remedyNote .note__row--btns #remedyNewName{flex:0 0 auto}
+#remedyNote .note__row--btns .btn .ico{display:none}
+#remedyNote .note__row--btns #remedySaveLabel{overflow:hidden;min-width:0}
+#remedyNote .note__row--btns .nm-full{display:none}
+#remedyNote .note__row--btns .nm-short{display:inline}
+#remedyNote .note__row--aux .btn{flex:1 1 0;min-height:34px}
+#remedyNote .note__row--aux{margin-top:6px}
+#remedyNote .note__row--aux .btn{white-space:nowrap;padding-left:8px;padding-right:8px}
+#remedyNote .note__row--aux .btn .ico{display:none}
+#remedyNote .note__row--btns{margin-top:3px}
+/* dòng 1 của chân: [Tổng · vị]  [= tiền]; dòng 2: thang × giá (tối đa 2 dòng thay vì 3). */
+#remedyNote .note__row:first-child{gap:6px 8px}
+#remedyNote .note__row:first-child .note__tot{order:1}
+#remedyNote .note__row:first-child #remedyQty{order:2}
+#remedyNote .note__row:first-child .note__eq{order:3;margin-left:auto}
+#remedyNote .note__row:first-child #remedyTotal{order:4}
+#remedyNote .note__row:first-child .inline-row{order:5;flex:1 0 100%}
 }
 @media (max-width:600px){
-.card__bar-date{order:2;flex:0 0 140px}
-.card__bar-title{flex:1 1 auto}
-.card__bar-search{order:3;flex:1 0 100%}
+.card__bar-date{order:2;flex:0 0 122px;margin-left:auto}
+.card__bar-date .inp{padding-left:8px;padding-right:26px}
+.card__bar-date .datefield__ico{right:6px;width:16px;height:16px}
+.card__bar-month .inp{padding-left:8px}
+}
+@media (max-width:400px){
+.card__bar-title .ico{display:none}
 }
 /* ---------- responsive ---------- */
 @media (max-width:900px){
@@ -418,6 +444,12 @@ td.c-qty{position:relative}
 .btn{min-height:44px}
 .btn--sm{min-height:38px}
 .inp{min-height:44px;font-size:16px}
+/* 2.15.0: chân tờ ghi (Tổng + Bán đơn) dính đáy màn hình điện thoại. Bỏ overflow cắt của thẻ/tờ ghi để sticky chạy theo cửa sổ; z-index thấp hơn .top (30), gợi ý (40), toast/hộp thoại. */
+#retailBox,#remedyBox{overflow:visible}
+#retailNote{overflow:visible}
+#retailNote .note__foot,#remedyNote .note__foot{position:sticky;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--border);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+html{scroll-padding-bottom:230px}
 .chart{height:260px}
 }
 /* 2.12.1: điện thoại – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +. Đặt SAU quy tắc gốc và khối 640px. */
@@ -578,6 +610,9 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     </div>
     <div class="bar__actions">
       <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
+      <button class="btn btn--sm" id="reloadBtn" type="button" data-action="reload-app" aria-label="Tải lại ứng dụng" title="Tải lại" hidden>
+        <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Tải lại
+      </button>
       <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
     </div>
   </div>
@@ -622,7 +657,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <div class="card__bar">
           <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>Bán lẻ</span>
           <div class="sug card__bar-search">
-            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc…" aria-label="Tìm vị thuốc để bán" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
+            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để bán" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
             <div class="sug__list" id="retailList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="datefield card__bar-date">
@@ -682,7 +717,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>Thuốc chén</span>
           <select class="inp card__bar-preset" id="remedyPreset" aria-label="Đơn có sẵn">
             <option value="__new__">Tạo đơn mới</option>
-            <option value="">— Đơn mới —</option>
+            <option value="">Đơn mới</option>
           </select>
           <div class="datefield card__bar-date">
             <input class="inp" id="remedyDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
@@ -693,7 +728,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <div class="note" id="remedyNote">
           <div class="note__head"><span>Tờ ghi đơn thuốc chén</span><span id="remedyNotePg"></span></div>
           <div class="sug note__search">
-            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc…" aria-label="Tìm vị thuốc cho đơn thuốc chén" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
+            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
             <div class="sug__list" id="remedyList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <table>
@@ -730,21 +765,23 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
                 <span class="note__lbl" aria-hidden="true">thang ×</span>
                 <input class="inp inp--sm inp--num w-120" id="remedyUnitPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá 1 thang" title="Giá 1 thang">
               </span>
-              <span class="b txt-brand" aria-hidden="true">=</span>
+              <span class="b txt-brand note__eq" aria-hidden="true">=</span>
               <span class="b txt-brand num" id="remedyTotal" aria-live="polite">0</span>
             </div>
             <input class="inp inp--sm note__name" id="remedyName" type="text" autocomplete="off" placeholder="Tên đơn mới" aria-label="Tên đơn mới" maxlength="200" hidden>
-            <div class="note__row note__row--btns">
+            <div class="note__row note__row--aux">
               <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
                 <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
               </button>
               <button class="btn btn--sm" type="button" data-action="copy-preset" id="remedyCopyPreset" hidden>
                 <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Sao chép đơn
               </button>
+            </div>
+            <div class="note__row note__row--btns">
               <button class="btn btn--sm" type="button" data-action="save-preset" id="remedySavePreset">
                 <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
               </button>
-              <button class="btn btn--sm" type="button" data-action="preset-newname" id="remedyNewName">Lưu tên mới</button>
+              <button class="btn btn--sm" type="button" data-action="preset-newname" id="remedyNewName" aria-label="Lưu tên mới" title="Lưu tên mới"><span class="nm-full">Lưu tên mới</span><span class="nm-short" aria-hidden="true">Tên mới</span></button>
               <button class="btn btn--primary" type="button" data-action="save-remedy" data-keep-focus>
                 <svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg>Bán đơn
               </button>
@@ -764,7 +801,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
       <div class="card__bar">
         <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>Nhập hàng</span>
         <div class="sug card__bar-search">
-          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc…" aria-label="Tìm vị thuốc để nhập" maxlength="200" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
+          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để nhập" maxlength="200" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
           <div class="sug__list" id="nhapList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
         </div>
       </div>
@@ -817,23 +854,23 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg>
         <h2 class="card__title">Thống kê</h2>
+        <div class="chart-year">
+          <label class="chart-year__box">
+            <span class="chart-year__k">Năm</span>
+            <input class="chart-year__in" id="chartYear" type="number" min="2000" max="2100" step="1" aria-label="Năm">
+          </label>
+        </div>
         <span class="chart-head__stats">
           <span class="chart-head__c"><span class="stat__k">Nhập trong tháng</span><span class="stat__v" id="statImport">0</span></span>
           <span class="chart-head__c"><span class="stat__k">Tổng tồn kho</span><span class="stat__v" id="statStock">0g</span></span>
         </span>
       </summary>
       <div class="card__body">
-        <div class="chart-year mb-12">
-          <label class="chart-year__box">
-            <span class="chart-year__k">Năm</span>
-            <input class="chart-year__in" id="chartYear" type="number" min="2000" max="2100" step="1" aria-label="Năm">
-          </label>
-        </div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
-          <span class="chart-chip chart-chip--imp" id="chartImpChip" aria-hidden="true">0</span>
-          <span class="chart-chip chart-chip--exp" id="chartExpChip" aria-hidden="true">0</span>
+          <span class="chart-chip chart-chip--imp" id="chartImpChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Nhập</span><b class="chart-chip__v" id="chartImpVal">0</b></span>
+          <span class="chart-chip chart-chip--exp" id="chartExpChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Bán</span><b class="chart-chip__v" id="chartExpVal">0</b></span>
           <span class="sr" id="chartTipSr"></span>
         </div>
       </div>
@@ -849,15 +886,9 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <div class="card__bar">
           <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>Kho tồn</span>
           <div class="sug card__bar-search">
-            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Tìm vị thuốc…" aria-label="Tìm vị thuốc để lọc kho" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
+            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để lọc kho" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
             <div class="sug__list" id="invList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
-          <select class="inp card__bar-sort" id="invSort" aria-label="Sắp xếp kho">
-            <option value="sold_desc" selected>Bán chạy nhất (nhiều → ít)</option>
-            <option value="name_asc">Tên (A → Z)</option>
-            <option value="stock_desc">Số lượng (nhiều → ít)</option>
-            <option value="stock_asc">Số lượng (ít → nhiều)</option>
-          </select>
           <button class="btn btn--sm card__bar-btn" type="button" data-action="reconcile" aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho">
             <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span class="card__bar-lbl">Đối chiếu tồn kho</span>
           </button>
@@ -892,7 +923,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <div class="card__bar">
           <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>Lịch sử nhập</span>
           <div class="sug card__bar-search is-inline">
-            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tìm vị thuốc…" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm tên vị thuốc trong lịch sử nhập">
+            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Nhập tên" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm tên vị thuốc trong lịch sử nhập">
             <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <span class="hint card__bar-count" id="impCount"></span>
@@ -929,8 +960,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <svg class="ico monthfield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
             <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
           </div>
-          <input class="inp inp--sm card__bar-search" id="expSearch" type="text" autocomplete="off" placeholder="Tìm vị thuốc…" maxlength="200" aria-label="Tìm theo tên vị thuốc">
-          <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" aria-label="Gộp đơn thuốc lẻ cũ" title="Gộp đơn thuốc lẻ cũ" hidden>Gộp đơn thuốc lẻ cũ</button>
+          <input class="inp inp--sm card__bar-search" id="expSearch" type="text" autocomplete="off" placeholder="Nhập tên" maxlength="200" aria-label="Tìm theo tên vị thuốc">
           <span class="hint card__bar-count" id="expCount"></span>
         </div>
         <div class="tw">
@@ -1030,23 +1060,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     <div class="card__foot dlg__foot">
       <button class="btn" type="button" data-action="close-rec">Đóng</button>
       <button class="btn btn--primary" type="button" data-action="rec-fix-all" id="recFixAll">Áp dụng tất cả</button>
-    </div>
-  </div>
-</dialog>
-
-<dialog class="dlg dlg--wide" id="mergeDlg" aria-labelledby="mergeTitle">
-  <div class="card dlg__card">
-    <div class="card__head">
-      <svg class="ico txt-green" aria-hidden="true"><use href="#i-cash"/></svg>
-      <h2 class="card__title" id="mergeTitle">Gộp đơn thuốc lẻ cũ</h2>
-    </div>
-    <div class="card__body">
-      <p class="hint" id="mergeHint"></p>
-      <div class="mt-12" id="mergeList"></div>
-    </div>
-    <div class="card__foot dlg__foot">
-      <button class="btn" type="button" data-action="close-merge">Đóng</button>
-      <button class="btn btn--primary" type="button" data-action="merge-do">Gộp các đơn đã chọn</button>
     </div>
   </div>
 </dialog>
@@ -1857,6 +1870,23 @@ function noteSyncFailure(detail, retry){
   if (retry) scheduleSyncRetry();
   else if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
 }
+/* 2.15.0: nút "Tải lại" chỉ hiện khi chạy từ màn hình chính (iPhone không có nút tải lại). */
+function isStandaloneMode(){
+  try {
+    if (navigator && navigator.standalone === true) return true;
+    return !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  } catch (e) { return false; }
+}
+function renderReloadBtn(){
+  var b = $('#reloadBtn');
+  if (b) b.hidden = !isStandaloneMode();
+}
+function reloadAppClick(){
+  var pending = dirty || (retailItems && retailItems.length) || (remedyItems && remedyItems.length) || (nhapList && nhapList.length);
+  if (pending && !confirm('Còn thay đổi hoặc đơn nháp chưa lưu. Tải lại sẽ mất đơn nháp chưa lưu.\n\nVẫn tải lại?')) return false;
+  location.reload();
+  return true;
+}
 function discardUnsynced(){
   if (authLost) {
     toast('Thiết bị chưa được duyệt nên chưa lấy được bản máy chủ. Dữ liệu vẫn giữ trên máy này.', 'error');
@@ -2477,7 +2507,7 @@ function renderPresetOptions(){
   var oNew = el('option', null, 'Tạo đơn mới');
   oNew.value = '__new__';
   sel.appendChild(oNew);
-  var o0 = el('option', null, '— Đơn mới —');
+  var o0 = el('option', null, 'Đơn mới');
   o0.value = '';
   sel.appendChild(o0);
   db.prescriptions.slice().sort(function(a, b){
@@ -3297,7 +3327,6 @@ function historyData(kind, month, q){
 }
 function renderHistory(kind){
   var isImp = kind === 'imp';
-  if (!isImp) updateMergeBtn();
   var tbody = $('#' + kind + 'Body');
   if (!tbody) return;
   var month = isImp ? '' : getMonthInput('expMonth');
@@ -3364,84 +3393,6 @@ function renderHistory(kind){
   });
   renderPager($('#' + kind + 'Pager'), page, totalPages, kind);
 }
-/* ================= GỘP ĐƠN THUỐC LẺ CŨ ================= */
-function mergeCandidates(){
-  var map = {}, list = [];
-  db.transactions.forEach(function(t){
-    if (t.type !== 'BAN' || t.oid) return;
-    /* Không gộp đơn bán lẻ (kể cả dữ liệu cũ chưa có cờ retail). */
-    if (t.retail) return;
-    if (String(t.oname || '').toLowerCase() === 'bán lẻ') return;
-    var price = dec(num(t.price));
-    var key = t.date + '|' + String(dec(price));
-    var g = map[key];
-    if (!g) { g = map[key] = { key: key, date: String(t.date || ''), price: price, items: [], total: 0 }; list.push(g); }
-    g.items.push(t);
-    g.total += num(t.total);
-  });
-  list = list.filter(function(g){ return g.items.length >= 2 && g.price > 0; });
-  /* 2.13.0 (N3): không đoán đơn nào là đơn thuốc chén; không tick sẵn. Sắp theo ngày mới nhất. */
-  list.sort(function(a, b){
-    return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
-  });
-  return list;
-}
-function updateMergeBtn(){
-  var b = $('#mergeBtn');
-  if (b) b.hidden = !mergeCandidates().length;
-}
-function openMerge(){
-  var list = mergeCandidates();
-  var box = $('#mergeList');
-  if (!box) return;
-  box.textContent = '';
-  var hint = $('#mergeHint');
-  if (hint) hint.textContent = list.length
-    ? 'Các dòng bán chưa có tên đơn, cùng ngày và cùng đơn giá/kg có thể là một đơn thuốc chén bán không đặt tên. Không đơn nào được tick sẵn; chỉ tick những đơn bạn chắc chắn.'
-    : 'Không còn đơn nào cần gộp.';
-  list.forEach(function(g){
-    var lab = el('label', 'mrow');
-    var cb = el('input');
-    cb.type = 'checkbox';
-    cb.setAttribute('data-key', g.key);
-    lab.appendChild(cb);
-    var d = el('div');
-    d.appendChild(el('div', 'b', dateVN(g.date) + ' · ' + g.items.length + ' vị · ' + fmtMoney(g.total) + ' · giá ' + fmtUnitPrice(g.price)));
-    var names = g.items.slice(0, 6).map(function(t){ return txName(t) || 'Đã xóa'; }).join(', ');
-    d.appendChild(el('div', 'muted small', names + (g.items.length > 6 ? '…' : '')));
-    lab.appendChild(d);
-    box.appendChild(lab);
-  });
-  var go = document.querySelector('[data-action="merge-do"]');
-  if (go) go.hidden = !list.length;
-  var dlg = $('#mergeDlg');
-  if (dlg && dlg.showModal) dlg.showModal(); else if (dlg) dlg.setAttribute('open', '');
-}
-function closeMerge(){
-  var dlg = $('#mergeDlg');
-  if (dlg && dlg.close) dlg.close(); else if (dlg) dlg.removeAttribute('open');
-}
-function mergeDo(){
-  var keys = {};
-  $$('#mergeList input[type=checkbox]').forEach(function(cb){
-    if (cb.checked) keys[cb.getAttribute('data-key')] = true;
-  });
-  var groups = [], nTx = 0;
-  mergeCandidates().forEach(function(g){
-    if (!keys[g.key]) return;
-    groups.push(g);
-    nTx += g.items.length;
-  });
-  if (!nTx) { toast('Chưa chọn đơn nào để gộp', 'error'); return; }
-  if (!confirm('Gộp ' + nTx + ' giao dịch thành đơn thuốc lẻ?')) return;
-  groups.forEach(function(g){
-    var oid = uid('OD');
-    g.items.forEach(function(t){ t.oid = oid; t.oname = 'Đơn thuốc lẻ'; });
-  });
-  closeMerge();
-  commit('Đã gộp ' + nTx + ' giao dịch thành đơn thuốc lẻ');
-}
-
 /* ================= ĐỐI CHIẾU TỒN KHO ================= */
 function reconcileList(){
   var inn = {}, out = {};
@@ -3653,8 +3604,10 @@ function renderChart(){
   var impTxt = fmtMoney(data.impK[shown]), expTxt = fmtMoney(data.expK[shown]);
   var mEl = $('#chartMonth'), iEl = $('#chartImpChip'), eEl = $('#chartExpChip'), sEl = $('#chartTipSr');
   if (mEl) mEl.textContent = mmStr;
-  if (iEl) iEl.textContent = impTxt;
-  if (eEl) eEl.textContent = expTxt;
+  /* 2.15.0: chú giải "[ô màu] Nhập số tiền"; số tiền nằm trong phần tử con (chip còn nhãn + ô màu). */
+  var iV = $('#chartImpVal') || iEl, eV = $('#chartExpVal') || eEl;
+  if (iV) iV.textContent = impTxt;
+  if (eV) eV.textContent = expTxt;
   if (sEl) sEl.textContent = 'Tháng ' + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
 }
 function onChartClick(e){
@@ -4893,12 +4846,10 @@ function handleAction(btn){
     case 'save-tx': saveTxEdit(); break;
     case 'save-edit': saveEdit(); break;
     case 'sync-discard': discardUnsynced(); break;
+    case 'reload-app': reloadAppClick(); break;
     case 'brand-devices': brandDevicesClick(); break;
     case 'close-edit': closeEdit(); break;
     case 'reconcile': openRec(); break;
-    case 'merge-old': openMerge(); break;
-    case 'close-merge': closeMerge(); break;
-    case 'merge-do': mergeDo(); break;
     case 'close-rec': closeRec(); break;
     case 'rec-fix': recFix(id); break;
     case 'rec-fix-all': recFixAll(); break;
@@ -5077,8 +5028,6 @@ function bindEvents(){
   if (dlg) dlg.addEventListener('click', function(e){ if (e.target === dlg) closeEdit(); });
   var recD = $('#recDlg');
   if (recD) recD.addEventListener('click', function(e){ if (e.target === recD) closeRec(); });
-  var mergeD = $('#mergeDlg');
-  if (mergeD) mergeD.addEventListener('click', function(e){ if (e.target === mergeD) closeMerge(); });
   var txd = $('#txDlg');
   if (txd) txd.addEventListener('click', function(e){ if (e.target === txd) closeTxEdit(); });
   /* Esc/cancel đóng dialog native mà không qua closeTxEdit: chỉ xóa đúng biến mà closeTxEdit dọn. */
@@ -5205,6 +5154,7 @@ function init(){
   renderAll();
   renderBackupInfo();
   renderSyncBadge();
+  renderReloadBtn();
   if (dropLegacy) toast('Đã bỏ thay đổi chưa gửi (nâng cấp dữ liệu)');
 
   if (dirty) {
