@@ -491,7 +491,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>
         <h2 class="card__title">Bán lẻ</h2>
         <span class="spacer"></span>
-        <span class="hint">kg · k</span>
       </summary>
       <div class="card__body">
         <div class="row mb-12">
@@ -509,7 +508,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             </div>
           </div>
         </div>
-        <p class="hint mt-10">Ô “Ngày bán” dùng để ghi ngày vào lịch sử; mặc định là hôm nay.</p>
         <div class="tw">
           <table class="ord">
             <caption class="sr">Các dòng trong đơn bán lẻ</caption>
@@ -523,7 +521,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <tbody id="retailBody"></tbody>
           </table>
         </div>
-        <p class="hint mt-10">Nhập SL và thành tiền rồi nhấn <b>Enter</b> — vị thuốc sẽ được đưa ngay vào tờ ghi bên dưới.</p>
         <div class="note" id="retailNote">
           <div class="note__head"><span>Tờ ghi đơn bán lẻ</span><span id="retailNotePg"></span></div>
           <table>
@@ -562,7 +559,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>
         <h2 class="card__title">Thuốc chén</h2>
         <span class="spacer"></span>
-        <span class="hint">Gram · k</span>
       </summary>
       <div class="card__body">
         <div class="grid2 gap-12 mb-12">
@@ -581,7 +577,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             </div>
           </div>
         </div>
-        <p class="hint mt-10">Ô “Ngày bán” dùng để ghi ngày vào lịch sử; mặc định là hôm nay.</p>
         <div class="grid2 gap-12 mb-12">
           <div class="sug">
             <label class="lbl" for="remedySearch">Chọn vị thuốc</label>
@@ -605,7 +600,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <tbody id="remedyBody"></tbody>
           </table>
         </div>
-        <p class="hint mt-10">Nhập số gram rồi nhấn <b>Enter</b> — vị thuốc sẽ được đưa ngay vào tờ ghi bên dưới.</p>
         <div class="note" id="remedyNote">
           <div class="note__head"><span>Tờ ghi đơn thuốc chén</span><span id="remedyNotePg"></span></div>
           <table>
@@ -664,7 +658,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
       <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
       <h2 class="card__title">Nhập hàng</h2>
       <span class="spacer"></span>
-      <span class="hint">Gõ tên mới để tạo vị thuốc</span>
     </summary>
     <form class="card__body" id="nhapForm" novalidate>
       <div class="nhap-row">
@@ -688,7 +681,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <span class="lbl lbl--flat">Thành tiền</span>
         <span class="b txt-blue num" id="nhapTotal">0</span>
       </div>
-      <p class="hint mt-10">Nhập số lượng, giá rồi bấm + (hoặc Enter) để thêm vào tờ ghi. Thêm xong sẽ quay về ô tên vị thuốc.</p>
       <div class="note mt-12" id="nhapListBox" hidden>
         <div class="note__head"><span>Tờ ghi nhập hàng</span><span id="nhapListCount"></span></div>
         <table>
@@ -767,7 +759,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           </div>
         </div>
         <div class="foot foot--rec mb-12">
-          <span class="hint">Đối chiếu tồn hiện tại với tổng nhập − tổng bán trong lịch sử.</span>
           <button class="btn btn--sm" type="button" data-action="reconcile">
             <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Đối chiếu tồn kho
           </button>
@@ -879,7 +870,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
       <span class="hint" id="backupHint">Chưa sao lưu</span>
     </summary>
     <div class="card__body">
-      <p class="hint">Bản sao lưu là file JSON lưu trên máy bạn. Nên giữ nhiều bản theo ngày để khôi phục khi cần.</p>
       <div class="bak-actions mt-12">
         <button class="btn btn--primary" type="button" data-action="backup-now">
           <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Sao lưu ngay
@@ -894,7 +884,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <span>Tự sao lưu mỗi ngày khi mở trang</span>
       </label>
       <p class="hint mt-10" id="backupLast">Chưa có bản sao lưu nào.</p>
-      <p class="hint mt-10">Nếu trình duyệt chặn tải tự động, hãy cho phép tải xuống cho trang này hoặc bấm “Sao lưu ngay”.</p>
     </div>
   </details>
 </main>
