@@ -103,7 +103,7 @@ globalThis.__test = {
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
   latestImportMap: latestImportMap, importParen: importParen, costParen: costParen,
-  historyData: historyData, renderHistory: renderHistory, renderNote: renderNote,
+  historyData: historyData, renderHistory: renderHistory, renderNote: renderNote, qtyHintText: qtyHintText, attachQtyHint: attachQtyHint,
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: normSearch,
@@ -3573,6 +3573,45 @@ test('2.14.0 Bán lẻ: hai bảng (tờ ghi và dòng đang nhập) dùng chung
   assert.equal(block.split('<colgroup>').length - 1, 2, 'phải có 2 colgroup trong thẻ Bán lẻ');
   assert.equal(block.split('class="cg-num"').length - 1, 2);
   for (const k of ['cg-num', 'cg-qty', 'cg-money', 'cg-act']) assert.match(PAGE, new RegExp('#retailNote col\\.' + k + '\\{width:\\d+px\\}'), k);
+});
+
+/* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (lạng/kg/g) theo đúng fmtQty; chỉ hiển thị, không đổi giá trị. */
+test('2.14.0 N6 hàm gợi ý: 0.2→(2 lạng), 0.25→(2,5 lạng), 2→(2 kg), 1.5→(1,5 kg); gram 200→(2 lạng), 1500→(1,5 kg); rỗng/0/âm/không hợp lệ → ""', () => {
+  const c = loadClient();
+  assert.equal(c.qtyHintText('0.2', 'kg'), '(2 lạng)');
+  assert.equal(c.qtyHintText('0.25', 'kg'), '(2,5 lạng)');
+  assert.equal(c.qtyHintText('2', 'kg'), '(2 kg)');
+  assert.equal(c.qtyHintText('1.5', 'kg'), '(1,5 kg)');
+  assert.equal(c.qtyHintText('200', 'g'), '(2 lạng)');
+  assert.equal(c.qtyHintText('1500', 'g'), '(1,5 kg)');
+  // 0,05 kg: fmtQty chuyển sang gram dưới 0,1 kg → "(50 g)" (theo đúng quy ước hiển thị, không tự đặt quy ước riêng)
+  assert.equal(c.qtyHintText('0.05', 'kg'), '(50 g)');
+  for (const v of ['', '0', 'abc', '-1']) assert.equal(c.qtyHintText(v, 'kg'), '', 'phải rỗng: ' + JSON.stringify(v));
+});
+
+test('2.14.0 N6 gắn gợi ý: .qty-hint đổi theo input và chỉ nhắc (không đổi value); ẩn khi trống; có aria-describedby', () => {
+  const doc = trackDoc({});
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  const kids = [];
+  const host = { classList: { add() {} }, appendChild(x) { kids.push(x); return x; } };
+  const input = { id: 'retailQty', value: '0.2', parentNode: host, attrs: {}, l: {},
+    classList: { add() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
+  c.attachQtyHint(input, 'kg');
+  const h = kids[0];
+  assert.equal(h.textContent, '(2 lạng)');
+  assert.equal(input.attrs['aria-describedby'], kids[1].id, 'phải có mô tả cho trình đọc màn hình');
+  input.value = '2'; input.l.input();
+  assert.equal(h.textContent, '(2 kg)', 'đổi theo sự kiện input');
+  assert.equal(input.value, '2', 'không được đổi giá trị ô');
+  input.value = ''; input.l.input();
+  assert.equal(h.hidden, true, 'ô trống → ẩn gợi ý');
+  assert.equal(input.value, '', 'giá trị ô vẫn trống');
+});
+
+test('2.14.0 N6 gắn trên dòng đang nhập Bán lẻ, Thuốc chén và nhapQty (qua DOM có .qty-host)', () => {
+  assert.match(PAGE, /input\.qty-hinted\{padding-left:50px\}/);
+  assert.match(PAGE, /attachQtyHint\(qi, isRetail \? 'kg' : 'g'\);/);
+  assert.match(PAGE, /if \(nqHint\) attachQtyHint\(nqHint, 'kg'\);|attachQtyHint\(nqHint, 'kg'\)/);
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
