@@ -329,10 +329,11 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 }
 /* 2.10.0: tab. 8 <details> giữ nguyên DOM; chỉ mục đang mở hiện (toàn chiều rộng), các mục khác ẩn. */
 .main>.grid2{display:contents}
-.main>details.card{margin-top:0}
-.main>details.card:not([open]){display:none}
-.main>details.card[open]>summary.card__head{cursor:default}
-.main>details.card>summary.card__head>.chev{display:none}
+.main>details.card,.main>.grid2>details.card{margin-top:0}
+.main>details.card:not([open]),.main>.grid2>details.card:not([open]){display:none}
+.main>details.card[open]>summary.card__head,.main>.grid2>details.card[open]>summary.card__head{cursor:default}
+.main>details.card[open]>summary.card__head:hover,.main>.grid2>details.card[open]>summary.card__head:hover{background:var(--surface)}
+.main>details.card>summary.card__head>.chev,.main>.grid2>details.card>summary.card__head>.chev{display:none}
 .tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .tab{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:40px;padding:5px 6px;
 border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text2);font:inherit;
