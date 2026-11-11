@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.9.1] - 2026-11-11
+
+### Sửa
+
+- Bố cục máy tính: mở một thẻ không còn kéo dài thẻ cạnh nó (`.main` dùng `align-items:start`).
+
 ## [2.9.0] - 2026-11-11
 
 ### Thay đổi
