@@ -314,7 +314,8 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .note__foot{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--border2)}
 .note__tot{font-size:14px;color:var(--text2)}
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (chỉ hiển thị; không đổi giá trị). */
-.qty-host{position:relative}
+.qty-host{position:relative;display:block}
+.qty-host>input{display:block}
 .qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
 input.qty-hinted{padding-left:50px}
 .note__tot b{font-size:16px}
@@ -1187,7 +1188,14 @@ function qtyHintText(v, unit){
 function attachQtyHint(input, unit){
   if (!input || !input.parentNode) return null;
   var host = input.parentNode;
-  host.classList.add('qty-host');
+  if (!host.classList || !host.classList.contains('qty-host')) {
+    /* Bọc riêng ô số lượng: gợi ý căn đúng theo khung ô, không theo cả .field/td (có nhãn phía trên). */
+    var w = doc.createElement('span');
+    w.className = 'qty-host';
+    host.insertBefore(w, input);
+    w.appendChild(input);
+    host = w;
+  }
   var h = doc.createElement('span');
   h.className = 'qty-hint';
   h.setAttribute('aria-hidden', 'true');
@@ -1199,7 +1207,7 @@ function attachQtyHint(input, unit){
   input.setAttribute('aria-describedby', sr.id);
   input.classList.add('qty-hinted');
   var upd = function(){
-    var t = qtyHintText(input.value, unit);
+    var t = qtyHintText(input.value, typeof unit === 'function' ? unit() : unit);
     var long = String(input.value || '').length > 6;
     h.textContent = t;
     sr.textContent = t ? 'Tương đương ' + t : '';
@@ -1207,6 +1215,7 @@ function attachQtyHint(input, unit){
   };
   input.addEventListener('input', upd);
   input.addEventListener('change', upd);
+  input.qtyHintRefresh = upd;
   upd();
   return h;
 }
@@ -1958,6 +1967,7 @@ function renderRemedyNote(){
       qi.value = String(num(it.grams));
       qi.setAttribute('aria-label', 'Số lượng (gram)');
       tdq.appendChild(qi);
+      attachQtyHint(qi, 'g');
       var bs = el('button', 'btn btn--icon');
       bs.type = 'button'; bs.setAttribute('data-action', 'rnote-save'); bs.setAttribute('aria-label', 'Lưu dòng');
       bs.appendChild(svg('save'));
@@ -2125,6 +2135,7 @@ function renderNote(){
       qi.value = String(num(it.kg));
       qi.setAttribute('aria-label', 'Số lượng (kg)');
       tdq.appendChild(qi);
+      attachQtyHint(qi, 'kg');
       tdm = el('td', 'c-money');
       var mi = el('input', 'inp inp--sm inp--num');
       mi.id = 'noteEditMoney'; mi.type = 'number'; mi.step = 'any'; mi.min = '0'; mi.inputMode = 'decimal';
@@ -4088,6 +4099,7 @@ function openTxEdit(id){
   var priceField = $('#txEditPriceField');
   if (priceField) priceField.hidden = isRx;
   $('#txEditQty').value = String(isRx ? num(t.g) : dec(t.qty));
+  if ($('#txEditQty').qtyHintRefresh) $('#txEditQty').qtyHintRefresh();
   $('#txEditPrice').value = kInput(t.price);
   var meta = $('#txEditMeta');
   if (meta) meta.textContent = (t.rx ? 'Đơn thuốc chén · giá khách trả giữ nguyên' : t.type === 'NHAP' ? 'Nhập hàng' : 'Bán hàng') + ' · ngày ' +
@@ -4763,6 +4775,8 @@ function bindEvents(){
   });
   var nqHint = $('#nhapQty');
   if (nqHint) attachQtyHint(nqHint, 'kg');
+  var txqHint = $('#txEditQty');
+  if (txqHint) attachQtyHint(txqHint, function(){ return txEditCur && txEditCur.rx ? 'g' : 'kg'; });
   var ns = $('#nhapSearch');
   if (ns) ns.addEventListener('input', function(){
     if (nhapPid) {
