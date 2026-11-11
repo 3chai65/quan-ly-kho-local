@@ -2569,3 +2569,24 @@ test('max ô động: qty bán lẻ 1e6 kg, gram đơn thuốc 1e9, tiền dòng
   assert.match(PAGE, /qi\.max = isRetail \? '1000000' : '1000000000';/);
   assert.match(PAGE, /mi\.max = '1000000000';/);
 });
+
+test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổi so với 2.8.4', () => {
+  const titleOf = box => {
+    const i = PAGE.indexOf('id="' + box + '"');
+    assert.ok(i >= 0, 'thiếu id ' + box);
+    const j = PAGE.indexOf('</h2>', i);
+    const m = PAGE.slice(i, j).match(/<h2 class="card__title">([^<]*)$/);
+    return m ? m[1] : null;
+  };
+  assert.equal(titleOf('retailBox'), 'Bán lẻ');
+  assert.equal(titleOf('remedyBox'), 'Thuốc chén');
+  assert.equal(titleOf('nhapBox'), 'Nhập hàng');
+  assert.equal(titleOf('invBox'), 'Kho tồn');
+  assert.equal(titleOf('chartBox'), 'Thống kê');
+  assert.equal(titleOf('impBox'), 'Lịch sử nhập hàng');
+  assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
+  assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
+  assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
+  assert.equal(PAGE.match(/data-action="/g).length, 25);
+  assert.equal(PAGE.match(/ id="/g).length, 165);
+});
