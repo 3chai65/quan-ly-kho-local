@@ -358,7 +358,9 @@ input.qty-hinted{padding-left:50px}
 .nhap-pend__tot{float:right;font-size:13px}
 .nhap-hint{font-size:11px;margin:4px 0 0;text-align:left}
 #nhapListBox .note__pending tr.is-row>td{align-self:end}
-#nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px;display:block;margin-left:auto}
+#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}
+/* 2.14.0 (giai đoạn 4, M8): máy tính – nút + dòng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) 36×36 bằng ô inp--sm. Điện thoại ghi đè 44×44 ở khối ≤600px phía sau. */
+.note__pending tr.is-row .btn--icon{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
 #nhapListBox .note__foot{margin-top:8px}
 /* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
 #invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary,#backupBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
@@ -441,6 +443,8 @@ table.ord tr.is-row>td:nth-child(5) .btn,table.ord--r tr.is-row>td:nth-child(4) 
 #remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
 #remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
 #remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
+/* 2.14.0 (giai đoạn 4, M8): điện thoại – nút + dòng đang nhập giữ 44×44 (ghi đè quy tắc máy tính 36px ở trên). */
+#nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px}
 table.ord tr.is-row>td.c-qty::before,table.ord tr.is-row>td.c-money::before,
 table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,
 table.inv tr.is-row>td:nth-child(4)::before,
