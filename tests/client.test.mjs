@@ -4542,3 +4542,13 @@ test('2.14.0 M5 Sao lưu: summary sr-summary giữ h2; .card__bar có tiêu đ�
   assert.match(css, /#backupBox>summary\.sr-summary,?[^{]*\{position:absolute;/);
   assert.match(css, /#invBox>summary\.sr-summary,#impBox>summary\.sr-summary,#expBox>summary\.sr-summary,#backupBox>summary\.sr-summary\{/);
 });
+
+/* 2.14.0 (giai đoạn 4, M6): hàng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) không bị ép 34px; quy tắc height:auto đứng SAU .note td{height:34px} (so vị trí trong chuỗi CSS). */
+test('2.14.0 M6 hàng đang nhập: td của .note__pending tr.is-row có height:auto SAU .note td{height:34px}; dòng đã thêm vẫn 34px', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const base = css.indexOf('.note td{height:34px;');
+  const pend = css.indexOf('.note .note__pending tr.is-row>td{height:auto');
+  assert.ok(base >= 0, 'thiếu .note td{height:34px}');
+  assert.ok(pend > base, 'quy tắc height:auto của hàng đang nhập phải đứng sau .note td{height:34px}');
+  assert.match(css, /\.note .note__pending tr\.is-row>td \.inp\{display:block\}/, 'ô nhập trong hàng đang nhập là block');
+});
