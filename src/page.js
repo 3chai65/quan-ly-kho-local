@@ -882,7 +882,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       </div>
       <div class="field mt-12">
         <label class="lbl" for="editPrice">Giá nhập (k/kg)</label>
-        <input class="inp inp--num" id="editPrice" type="number" step="any" min="0" inputmode="decimal">
+        <input class="inp inp--num" id="editPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal">
       </div>
     </div>
     <div class="card__foot dlg__foot">
@@ -1603,7 +1603,10 @@ function scheduleSyncRetry(){
   syncRetryTimer = setTimeout(function(){
     syncRetryTimer = null;
     syncRetryDelay = Math.min(syncRetryDelay * 2, SYNC_RETRY_MAX);
-    if ((dirty || syncErrorShown) && !syncRejected && !conflictOpen && !busyEditing() && !pushing) pushState(false);
+    if ((dirty || syncErrorShown) && !syncRejected && !conflictOpen && !pushing) {
+      if (busyEditing()) scheduleSyncRetry();
+      else pushState(false);
+    }
   }, wait);
 }
 function noteAuthLost(){
@@ -1797,6 +1800,8 @@ function remedyNoteSave(){
   if (!it) { remedyEditIdx = -1; renderRemedyNote(); return; }
   var g = num(($('#remedyNoteEditQty') || {}).value);
   if (g <= 0) { toast('Số gram phải lớn hơn 0', 'error'); return; }
+  var limRn = checkLimits('grams', g);
+  if (limRn) { toast(limRn, 'error'); return; }
   it.grams = dec(g);
   remedyEditIdx = -1;
   calcRemedy();
@@ -2100,6 +2105,8 @@ function noteSave(){
   var m = num(($('#noteEditMoney') || {}).value);
   if (q <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
   if (m < 0) { toast('Thành tiền không được âm', 'error'); return; }
+  var limNs = checkLimits('q', q) || checkLimits('money', kToDong(m));
+  if (limNs) { toast(limNs, 'error'); return; }
   it.kg = dec(q);
   it.amount = kToDong(m);
   noteEditIdx = -1;
@@ -2291,6 +2298,9 @@ function savePreset(){
   if (!items.length) { toast('Chọn ít nhất 1 vị thuốc và nhập số gram', 'error'); return; }
   var thang = remedyThang();
   var grand = remedyGrand();
+  var limPs = checkLimits('name', name) || checkLimits('thang', thang) || checkLimits('money', grand);
+  for (var lg = 0; !limPs && lg < items.length; lg++) limPs = checkLimits('grams', items[lg].grams);
+  if (limPs) { toast(limPs, 'error'); return; }
   var sel = $('#remedyPreset');
   var selected = sel && sel.value ? findPreset(sel.value) : null;
   var byName = presetByName(name);
@@ -2352,6 +2362,9 @@ function copyPreset(){
   if (name === null) return;
   name = capWords(name);
   if (!name) { toast('Nhập tên đơn', 'error'); return; }
+  var limCp = checkLimits('name', name) || checkLimits('thang', remedyThang()) || checkLimits('money', remedyGrand());
+  for (var lc = 0; !limCp && lc < items.length; lc++) limCp = checkLimits('grams', items[lc].grams);
+  if (limCp) { toast(limCp, 'error'); return; }
   if (presetByName(name)) { toast('Đã có đơn "' + name + '"', 'error'); return; }
   var copy = {
     id: uid('RX'),
@@ -2400,6 +2413,10 @@ function saveRetail(){
       toast('Tồn "' + p.name + '" không đủ (còn ' + fmtQty(p.stock) + ')', 'error');
       return;
     }
+  }
+  for (var rk = 0; rk < items.length; rk++) {
+    var rlim = checkLimits('money', items[rk].kg > 0 ? money(items[rk].amount / items[rk].kg) : 0);
+    if (rlim) { toast(rlim, 'error'); return; }
   }
   items.forEach(function(it){
     var p = findProduct(it.pid);
@@ -2454,6 +2471,10 @@ function saveRemedy(){
   /* Vốn từng vị = kg × giá nhập, làm tròn tới đồng. Khách vẫn trả số thang × giá 1 thang. */
   var balanced = balanceRemedyMoney(grand, priced);
   if (!balanced) { toast('Giá bán thấp hơn vốn của đơn', 'error'); return; }
+  for (var rk2 = 0; rk2 < priced.length; rk2++) {
+    var rlim2 = checkLimits('money', priced[rk2].kg > 0 ? money(balanced[rk2].total / priced[rk2].kg) : 0);
+    if (rlim2) { toast(rlim2, 'error'); return; }
+  }
   var oname = capWords(($('#remedyName') || {}).value) || 'Đơn thuốc lẻ';
   var oid = uid('OD');
   var ts = Date.now();
@@ -3199,6 +3220,8 @@ function recFix(id){
     toast('Số theo lịch sử đang âm — không thể áp dụng. Hãy sửa giao dịch nhập/bán trước.', 'error');
     return;
   }
+  var limFx = checkLimits('q', Math.max(0, r.calc));
+  if (limFx) { toast(limFx, 'error'); return; }
   if (!confirm('Đặt tồn "' + p.name + '" từ ' + fmtQty(p.stock) + ' về ' + fmtQty(Math.max(0, r.calc)) + '?')) return;
   p.stock = Math.max(0, r.calc);
   commit('Đã chỉnh tồn "' + p.name + '"');
@@ -3207,13 +3230,13 @@ function recFix(id){
 function recFixAll(){
   var list = reconcileList();
   if (!list.length) return;
-  var valid = list.filter(function(r){ return r.calc >= -1e-9; });
+  var valid = list.filter(function(r){ return r.calc >= -1e-9 && !checkLimits('q', Math.max(0, r.calc)); });
   if (!valid.length) {
     toast('Tất cả vị lệch đều có số lịch sử âm — hãy sửa giao dịch trước.', 'error');
     return;
   }
   if (!confirm('Đặt lại tồn của ' + valid.length + ' vị thuốc theo lịch sử?' +
-    (valid.length < list.length ? '\n(' + (list.length - valid.length) + ' vị có số âm sẽ bỏ qua.)' : ''))) return;
+    (valid.length < list.length ? '\n(' + (list.length - valid.length) + ' vị có số âm hoặc vượt giới hạn sẽ bỏ qua.)' : ''))) return;
   valid.forEach(function(r){
     var p = findProduct(r.id);
     if (p) p.stock = Math.max(0, r.calc);
@@ -3483,7 +3506,7 @@ function pickSuggest(key, id){
     if (s1) s1.value = '';
     calcRetail();
   } else if (key === 'remedy') {
-    commitRemedyRow();
+    if (!commitRemedyRow()) return;
     var row2 = addOrderRow('remedy', p.id);
     if (row2) $('.remedy-qty', row2).focus();
     var s2 = $('#remedySearch');
@@ -3673,6 +3696,8 @@ function addNhapItem(){
   if (!name) { toast('Nhập tên vị thuốc', 'error'); if (inp) inp.focus(); return; }
   if (qty <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); var q = $('#nhapQty'); if (q) q.focus(); return; }
   if (price < 0) { toast('Giá nhập không được âm', 'error'); var pNeg = $('#nhapPrice'); if (pNeg) { pNeg.focus(); pNeg.select(); } return; }
+  var limN = checkLimits('q', qty) || checkLimits('money', price) || checkLimits('name', name);
+  if (limN) { toast(limN, 'error'); var qN = $('#nhapQty'); if (qN) qN.focus(); return; }
   var p = nhapPid ? findProduct(nhapPid) : findByName(name);
   if (!nhapPriceOk(p, price)) { var pi = $('#nhapPrice'); if (pi) { pi.focus(); pi.select(); } return; }
   nhapList.push({ pid: p ? p.id : null, name: p ? p.name : name, qty: dec(qty), price: price });
@@ -3709,7 +3734,18 @@ function saveNhap(e){
   for (var ei = 0; ei < entries.length; ei++) {
     if (entries[ei].qty < 0) { toast('Số lượng không được âm', 'error'); return; }
     if (entries[ei].price < 0) { toast('Giá nhập không được âm', 'error'); return; }
+    var limE = checkLimits('q', entries[ei].qty) || checkLimits('money', entries[ei].price) || checkLimits('name', entries[ei].name);
+    if (limE) { toast(limE, 'error'); return; }
   }
+  /* Kiểm trần sau khi cộng dồn (theo vị, kể cả trùng trong nhapList), trước mọi ghi db. */
+  var simStock = {}, limSum = null;
+  for (var si = 0; si < entries.length && !limSum; si++) {
+    var sp = entries[si].pid ? findProduct(entries[si].pid) : findByName(entries[si].name);
+    var sk = sp ? 'id:' + sp.id : 'new:' + capWords(entries[si].name).toLowerCase();
+    simStock[sk] = (sk in simStock ? simStock[sk] : (sp ? num(sp.stock) : 0)) + entries[si].qty;
+    limSum = checkLimits('q', simStock[sk]) || checkLimits('money', money(entries[si].qty * entries[si].price));
+  }
+  if (limSum) { toast(limSum, 'error'); return; }
 
   var savedN = 0;
   var batchId = uid('IM');
@@ -3770,6 +3806,8 @@ function saveEdit(){
   var price = kToDong($('#editPrice').value);
   if (!name) { toast('Tên vị thuốc không được để trống', 'error'); return; }
   if (price < 0) { toast('Giá nhập không được âm', 'error'); var ep = $('#editPrice'); if (ep) { ep.focus(); ep.select(); } return; }
+  var limEd = checkLimits('name', name) || checkLimits('money', price);
+  if (limEd) { toast(limEd, 'error'); return; }
   var p = findProduct(id);
   if (!p) { toast('Không tìm thấy vị thuốc', 'error'); return; }
   var d = dupName(name, id);
@@ -3833,6 +3871,13 @@ function remedyMates(t){
     return x.rx && x.oid && String(x.oid) === String(t.oid);
   });
 }
+/* Sau khi xóa lần nhập: giá vốn theo lần nhập có giá còn lại mới nhất (theo ts, cùng latestImportMap).
+   Không còn lần nhập có giá thì giữ nguyên. */
+function resetCostFromImports(p){
+  if (!p) return;
+  var m = latestImportMap();
+  if (String(p.id) in m) p.costPrice = money(m[String(p.id)]);
+}
 function delTx(id){
   var t = null;
   for (var i = 0; i < db.transactions.length; i++) if (db.transactions[i].id === id) { t = db.transactions[i]; break; }
@@ -3860,6 +3905,7 @@ function delTx(id){
     toast('Giá bán thấp hơn vốn của đơn', 'error');
     return;
   }
+  if (p && t.type === 'NHAP') resetCostFromImports(p);
   commit(mates.length ? 'Đã xóa vị và chia lại đơn thuốc' : 'Đã xóa giao dịch');
 }
 /* ================= SỬA GIAO DỊCH ================= */
@@ -3895,6 +3941,7 @@ function delOrder(oid){
     else p.stock = dec(p.stock + num(t.qty));
   });
   db.transactions = db.transactions.filter(function(x){ return x.oid !== oid; });
+  items.forEach(function(t){ if (t.type === 'NHAP') resetCostFromImports(findProduct(t.productId)); });
   commit('Đã xóa đơn');
 }
 function txEditKg(t, qRaw){
@@ -3949,7 +3996,7 @@ function saveTxEdit(){
   if (qRaw <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
   var isRx = !!t.rx;
   var q = txEditKg(t, qRaw);
-  var limTx = checkLimits('q', q) || checkLimits('money', price);
+  var limTx = checkLimits('q', q) || checkLimits('money', price) || (!isRx && checkLimits('money', money(q * price)));
   if (limTx) {
     toast(limTx, 'error');
     var ep = $('#txEditPrice'); if (ep) ep.focus();
@@ -3967,6 +4014,8 @@ function saveTxEdit(){
         toast('Tồn "' + p.name + '" không đủ để giảm (còn ' + fmtQty(p.stock) + ')', 'error');
         return;
       }
+      var limSt = checkLimits('q', num(p.stock) + delta);
+      if (limSt) { toast(limSt, 'error'); return; }
       p.stock = dec(num(p.stock) + delta);
       var latest = lastImport(t.productId);
       if (price > 0 && latest && String(latest.id) === String(t.id)) p.costPrice = money(price);
@@ -4041,7 +4090,16 @@ function cloudConflict(){
       return Promise.resolve(false);
     }
     return pullState(true, true).then(function(ok){
-      if (ok) resetDrafts();
+      if (ok) {
+        if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+        syncRetryDelay = DIRTY_BADGE_MS;
+        dirtySince = 0;
+        syncErrorShown = false;
+        syncDetail = '';
+        syncRejected = false;
+        renderSyncBadge();
+        resetDrafts();
+      }
       return false;
     });
   }
