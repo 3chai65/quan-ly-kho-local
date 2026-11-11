@@ -3465,6 +3465,16 @@ test('2.13.2 CSS: quy tắc điện thoại của đầu thẻ và dòng dữ li
   assert.ok(at('.chart-chip{display:inline-block') < at('.chart-chip{padding:3px 8px'), 'chip điện thoại phải sau gốc');
 });
 
+/* 2.14.0 (1): bỏ chú thích và chữ đơn vị tĩnh; id và hook dữ liệu còn nguyên. */
+test('2.14.0 (1) bỏ chú thích/chữ đơn vị tĩnh; các id dữ liệu vẫn có đúng một lần', () => {
+  for (const t of ['kg · k', 'Gram · k', 'Ô “Ngày bán” dùng', 'nhấn <b>Enter</b>', 'Gõ tên mới để tạo vị thuốc', 'Nhập số lượng, giá rồi bấm', 'Đối chiếu tồn hiện tại', 'Bản sao lưu là file JSON', 'Nếu trình duyệt chặn tải']) {
+    assert.ok(!PAGE.includes(t), 'còn chú thích: ' + t);
+  }
+  for (const id of ['retailBody', 'remedyBody', 'retailNote', 'nhapQty', 'nhapPrice', 'nhapListBox', 'invCount', 'impCount', 'expCount', 'backupLast', 'backupHint']) {
+    assert.equal(PAGE.split('id="' + id + '"').length - 1, 1, id + ' phải đúng một lần');
+  }
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
