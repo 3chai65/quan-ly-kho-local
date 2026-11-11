@@ -2668,7 +2668,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 168); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName
+  assert.equal(PAGE.match(/ id="/g).length, 169); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3319,7 +3319,8 @@ test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), l�
   assert.ok(base < m640 && m640 < r, 'thứ tự: gốc < 640px < khối 600px');
   assert.equal(PAGE.lastIndexOf('@media', r), PAGE.lastIndexOf('@media (max-width:600px)', r), 'quy tắc ô tên phải nằm trong @media (max-width:600px)');
   assert.ok(at('.nhap-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}') > r - 200, 'lưới 1fr 1fr 44px phải nằm trong khối 600px');
-  assert.match(PAGE, /<div class="field sug">\s*<label class="lbl" for="nhapSearch">/, 'ô tên phải là .field.sug');
+  /* 2.14.0 (giai đoạn 2b): ô tên nằm trong thanh card__bar của Nhập hàng, không còn nhãn chữ phía trên. */
+  assert.match(PAGE, /<div class="sug card__bar-search">\s*<input class="inp" id="nhapSearch"/, 'ô tên phải nằm trong thanh card__bar');
 });
 
 /* 2.13.0 (N5): lịch sử luôn mới nhất trước; bỏ Gần nhất/Tất cả; Lịch sử bán có ô tìm tên (expSearch) như Lịch sử nhập. */
@@ -3796,6 +3797,33 @@ test('2.14.0 Thuốc chén hành vi: "Lưu tên mới" mở ô tên đơn mới;
   assert.equal(c.getDb().prescriptions.length, 0, 'tờ ghi rỗng: savePreset báo lỗi, không lưu');
 });
 
+/* 2.14.0 giai đoạn 2b – Nhập hàng: cùng mẫu Thuốc chén/Bán lẻ; tờ ghi và dòng nhập luôn hiện; chân một hàng; không khung Thành tiền riêng. */
+test('2.14.0 Nhập hàng: thanh có nhapSearch, không nhãn chữ; summary ẩn trực quan; tờ ghi nhapListBox luôn hiện (không hidden)', () => {
+  const box = PAGE.slice(PAGE.indexOf('id="nhapBox"'), PAGE.indexOf('<div class="grid2 mt-18">'));
+  const bar = box.match(/<div class="card__bar">[\s\S]*?<\/div>\s*<\/div>\s*<div class="note" id="nhapListBox">/);
+  assert.ok(bar, 'thiếu thanh card__bar của Nhập hàng');
+  assert.match(bar[0], /id="nhapSearch"/);
+  assert.match(box, /<summary class="card__head sr-summary">/);
+  assert.doesNotMatch(box, /<label[^>]*for="nhap(Search|Qty|Price)"/, 'còn nhãn chữ phía trên ô');
+  assert.doesNotMatch(box, /class="hintbox/, 'còn khung Thành tiền riêng');
+  assert.match(box, /<div class="note" id="nhapListBox">/, 'tờ ghi không được có thuộc tính hidden');
+  assert.match(PAGE, /box\.hidden = false;/, 'renderNhapList phải luôn hiện tờ ghi');
+});
+
+test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) nằm trong tờ ghi; chân note__foot một hàng có nhapListTotal và Lưu nhập hàng', () => {
+  const note = PAGE.slice(PAGE.indexOf('id="nhapListBox"'), PAGE.indexOf('<div class="grid2 mt-18">'));
+  const iPend = note.indexOf('class="tw note__pending"'), iFoot = note.indexOf('class="note__foot"');
+  assert.ok(iPend > 0 && iFoot > iPend, 'dòng nhập phải nằm trong tờ ghi, trước chân');
+  const pend = note.slice(iPend, iFoot);
+  for (const id of ['nhapQty', 'nhapPrice', 'nhapTotal', 'nhapPendingBody']) assert.match(pend, new RegExp('id="' + id + '"'), 'dòng nhập thiếu ' + id);
+  assert.match(pend, /data-action="nhap-add"/);
+  const foot = note.slice(iFoot);
+  assert.match(foot, /id="nhapListTotal"/);
+  assert.match(foot, /<button class="btn btn--dark" type="submit"[^>]*>[\s\S]*?id="nhapSaveLabel"/);
+  assert.equal((PAGE.match(/id="nhapTotal"/g) || []).length, 1);
+  assert.match(PAGE, /renumber\(pendTb, nhapList\.length\);/);
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
@@ -3990,7 +4018,7 @@ test('2.13.0 N1 nút + / Lưu nhập / Lưu bán lẻ / Lưu thuốc chén có d
     const tag = PAGE.match(new RegExp('<button[^>]*' + sel + '[^>]*>'))[0];
     assert.match(tag, /data-keep-focus/, sel + ' thiếu data-keep-focus');
   }
-  const submit = PAGE.match(/<button class="btn btn--dark mt-12 w-full" type="submit"[^>]*>/)[0];
+  const submit = PAGE.match(/<button class="btn btn--dark" type="submit"[^>]*>/)[0];
   assert.match(submit, /data-keep-focus/, 'nút Lưu nhập hàng thiếu data-keep-focus');
   assert.match(PAGE, /doc\.addEventListener\('pointerdown', keepFocusDown, true\);/);
   assert.match(PAGE, /doc\.addEventListener\('mousedown', keepFocusDown, true\);/);
