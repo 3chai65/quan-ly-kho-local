@@ -790,10 +790,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm kiếm">
             <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
-          <div class="inline-row">
-            <button class="btn btn--sm" type="button" data-action="latest-imp">Gần nhất</button>
-            <button class="btn btn--sm" type="button" data-action="clear-imp">Tất cả</button>
-          </div>
         </div>
         <div class="tw">
           <table class="his">
@@ -831,9 +827,11 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
               <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
             </div>
           </div>
+          <div class="field">
+            <label class="lbl" for="expSearch">Tên vị thuốc</label>
+            <input class="inp inp--sm" id="expSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" maxlength="200" aria-label="Tìm theo tên vị thuốc">
+          </div>
           <div class="inline-row">
-            <button class="btn btn--sm" type="button" data-action="latest-exp">Gần nhất</button>
-            <button class="btn btn--sm" type="button" data-action="clear-exp">Tất cả</button>
             <button class="btn btn--sm" type="button" data-action="merge-old" id="mergeBtn" hidden>Gộp đơn thuốc lẻ cũ</button>
           </div>
         </div>
@@ -1390,7 +1388,6 @@ var BASE_KEY = 'kho_cloud_base_v1';
 var PAGE_SIZE = 10;
 var db = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
 var invPage = 1, impPage = 1, expPage = 1;
-var impAll = false, expAll = false;
 var cloudBase = 0;
 var dirty = false;
 var syncErrorShown = false;
@@ -2972,10 +2969,11 @@ function dateVN(iso){
   var d = String(iso || '').split('-');
   return d.length === 3 ? d[2] + '/' + d[1] + '/' + d[0] : 'Không rõ ngày';
 }
-function historyData(kind, month, latestOnly, q){
+/* N5 (2.13.0): không còn Gần nhất/Tất cả; luôn sắp mới nhất trước; ô tìm theo tên áp cho cả hai lịch sử. */
+function historyData(kind, month, q){
   var isImp = kind === 'imp';
   indexTx();
-  var nq = isImp ? normSearch(q || '') : '';
+  var nq = normSearch(q || '');
   var list = db.transactions.filter(function(t){
     if (t.type !== (isImp ? 'NHAP' : 'BAN')) return false;
     if (isImp) return true;
@@ -3025,7 +3023,7 @@ function historyData(kind, month, latestOnly, q){
     r.name = r.oname;
   });
 
-  if (isImp && nq) {
+  if (nq) {
     rows = rows.filter(function(r){
       if (r.group) {
         if (normSearch(r.name || '').indexOf(nq) >= 0) return true;
@@ -3045,24 +3043,11 @@ function historyData(kind, month, latestOnly, q){
     }
   });
 
-  var searching = isImp && !!nq;
-  if (latestOnly || searching) {
-    rows.sort(function(a, b){
-      if (b.ts !== a.ts) return b.ts - a.ts;
-      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-      return 0;
-    });
-  } else {
-    rows.sort(function(a, b){
-      var na = a.name, nb = b.name;
-      if (na === null && nb !== null) return 1;
-      if (nb === null && na !== null) return -1;
-      var c = (na || '').localeCompare(nb || '', 'vi', { sensitivity: 'base' });
-      if (c) return c;
-      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-      return b.ts - a.ts;
-    });
-  }
+  rows.sort(function(a, b){
+    if (b.ts !== a.ts) return b.ts - a.ts;
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return 0;
+  });
 
   return { rows: rows, latestDate: latestDate, latestTs: latestTs, latestHasTime: latestHasTime };
 }
@@ -3072,9 +3057,8 @@ function renderHistory(kind){
   var tbody = $('#' + kind + 'Body');
   if (!tbody) return;
   var month = isImp ? '' : getMonthInput('expMonth');
-  var impQ = isImp ? String(($('#impSearch') || {}).value || '') : '';
-  var latestOnly = isImp ? !(impAll) : (!month && !expAll);
-  var data = historyData(kind, month, latestOnly, impQ);
+  var sq = String(($('#' + kind + 'Search') || {}).value || '');
+  var data = historyData(kind, month, sq);
   var rows = data.rows;
 
   var count = $('#' + kind + 'Count');
@@ -3836,7 +3820,6 @@ function saveNhap(e){
   });
 
   if (savedN > 0) {
-    impAll = false;
     impPage = 1;
     var _is = $('#impSearch'); if (_is) _is.value = '';
   }
@@ -4649,9 +4632,6 @@ function handleAction(btn){
     case 'sync-discard': discardUnsynced(); break;
     case 'brand-devices': brandDevicesClick(); break;
     case 'close-edit': closeEdit(); break;
-    case 'clear-imp': { var _s1 = $('#impSearch'); if (_s1) _s1.value = ''; impAll = true; impPage = 1; renderHistory('imp'); break; }
-    case 'clear-exp': setMonthInput('expMonth', ''); expAll = true; expPage = 1; renderHistory('exp'); break;
-    case 'latest-imp': { var _s2 = $('#impSearch'); if (_s2) _s2.value = ''; impAll = false; impPage = 1; renderHistory('imp'); break; }
     case 'reconcile': openRec(); break;
     case 'merge-old': openMerge(); break;
     case 'close-merge': closeMerge(); break;
@@ -4659,7 +4639,6 @@ function handleAction(btn){
     case 'close-rec': closeRec(); break;
     case 'rec-fix': recFix(id); break;
     case 'rec-fix-all': recFixAll(); break;
-    case 'latest-exp': setMonthInput('expMonth', ''); expAll = false; expPage = 1; renderHistory('exp'); break;
     case 'backup-now': downloadBackup(true); break;
     case 'restore-file': {
       var ri = $('#restoreInput');
@@ -4789,8 +4768,10 @@ function bindEvents(){
   bindDateInput('retailDate');
   bindDateInput('remedyDate');
   var impS = $('#impSearch');
-  if (impS) impS.addEventListener('input', function(){ impPage = 1; if (!impS.value.trim()) impAll = false; renderHistory('imp'); });
-  bindMonthInput('expMonth', function(){ expAll = false; expPage = 1; renderHistory('exp'); });
+  if (impS) impS.addEventListener('input', function(){ impPage = 1; renderHistory('imp'); });
+  var expS = $('#expSearch');
+  if (expS) expS.addEventListener('input', function(){ expPage = 1; renderHistory('exp'); });
+  bindMonthInput('expMonth', function(){ expPage = 1; renderHistory('exp'); });
 
   var cy = $('#chartYear');
   if (cy) cy.addEventListener('change', function(){ lastChartYear = (String(cy.value).trim() === String(thisYear())) ? String(thisYear()) : null; chartSel = -1; renderChart(); });
