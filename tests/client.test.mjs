@@ -107,7 +107,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: normSearch,
-  handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
+  handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, chartDefaultMonth: chartDefaultMonth, renderChart: renderChart, onChartClick: onChartClick, getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -2668,7 +2668,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - NEW_213.reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 21, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 163); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
+  assert.equal(PAGE.match(/ id="/g).length, 167); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3386,6 +3386,85 @@ test('2.13.1 Esc đóng menu chế độ khi đang mở và đưa focus về nú
   assert.match(PAGE, /if \(e\.key !== 'Escape' \|\| !tm \|\| tm\.hidden\) return;\n    closeThemeMenu\(\);\n    var yb = \$\('#themeBtn'\); if \(yb\) yb\.focus\(\);/);
 });
 
+/* 2.13.2: Thống kê – số liệu ở đầu thẻ; ô năm một khung; dòng dữ liệu hai ô màu; tháng mặc định; bấm lại về mặc định. */
+test('2.13.2 Thống kê: không còn .stats--chart, chú giải .legend hay dòng "Bấm vào cột"', () => {
+  assert.doesNotMatch(PAGE, /stats--chart/);
+  assert.doesNotMatch(PAGE, /Bấm vào cột/);
+  assert.doesNotMatch(PAGE, /class="legend"/);
+  assert.doesNotMatch(PAGE, /\.legend\{/);
+});
+
+test('2.13.2 statImport/statStock nằm trong summary đầu thẻ #chartBox (id giữ nguyên); summary không còn chữ "Năm"', () => {
+  for (const id of ['statImport', 'statStock']) assert.equal(PAGE.split('id="' + id + '"').length - 1, 1, id + ' phải đúng một lần');
+  const c0 = PAGE.indexOf('<details class="card" id="chartBox"');
+  const sum = PAGE.slice(c0, PAGE.indexOf('</summary>', c0));
+  assert.ok(sum.includes('id="statImport"') && sum.includes('id="statStock"'), 'thiếu số liệu trong summary');
+  assert.match(sum, /Nhập trong tháng/);
+  assert.match(sum, /Tổng tồn kho/);
+  assert.doesNotMatch(sum, /class="hint">Năm</);
+});
+
+test('2.13.2 ô năm: #chartYear có aria-label "Năm" và nằm trong khung .chart-year__box cùng chữ "Năm"', () => {
+  assert.match(PAGE, /<label class="chart-year__box">\s*<span class="chart-year__k">Năm<\/span>\s*<input class="chart-year__in" id="chartYear"[^>]*aria-label="Năm"/);
+});
+
+test('2.13.2 hai ô màu dùng đúng biến màu của cột và chữ tương phản token; canvas cũng đọc cùng biến', () => {
+  assert.match(PAGE, /\.chart-chip--imp\{background:var\(--chart-imp\);color:var\(--chart-imp-ink\)\}/);
+  assert.match(PAGE, /\.chart-chip--exp\{background:var\(--chart-exp\);color:var\(--chart-exp-ink\)\}/);
+  assert.match(PAGE, /<span class="chart-chip chart-chip--imp" id="chartImpChip"/);
+  assert.match(PAGE, /<span class="chart-chip chart-chip--exp" id="chartExpChip"/);
+  assert.match(PAGE, /getPropertyValue\('--chart-imp'\)/);
+  assert.match(PAGE, /getPropertyValue\('--chart-exp'\)/);
+});
+
+test('2.13.2 tháng mặc định (hàm thuần): năm hiện tại → tháng hiện tại; năm khác có dữ liệu tháng 3 và 7 → 7; không dữ liệu → 12', () => {
+  const none = Array(12).fill(false);
+  assert.equal(loadClient().chartDefaultMonth(2026, 2026, 10, none), 10, 'năm hiện tại → tháng hiện tại');
+  const h = Array(12).fill(false); h[2] = true; h[6] = true;
+  assert.equal(loadClient().chartDefaultMonth(2025, 2026, 10, h), 6, 'năm khác → tháng cuối có dữ liệu (tháng 7)');
+  assert.equal(loadClient().chartDefaultMonth(2025, 2026, 10, none), 11, 'năm khác không dữ liệu → tháng 12');
+});
+
+test('2.13.2 dòng dữ liệu: mặc định tháng 7 (năm khác); bấm cột → tháng đó; bấm lại → về mặc định; ô màu và sr khớp', () => {
+  const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => ({ width: 0 })), set: (t, k, v) => { t[k] = v; return true; } });
+  const mk = () => ({ value: '', textContent: '', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; } }, focus() {}, select() {} });
+  const cv = { offsetParent: {}, clientWidth: 300, clientHeight: 200, parentNode: { clientWidth: 300 }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: 300, height: 200 }) };
+  const els = { '#statsChart': cv, '#chartYear': Object.assign(mk(), { value: '2025' }), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartTipSr': mk() };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 9, costPrice: 1 }], prescriptions: [], updatedAt: 0, moneyUnit: 'dong',
+    transactions: [
+      { id: 'a', date: '2025-03-10', type: 'NHAP', productId: 'p1', qty: 1, price: 1000, total: 3000000 },
+      { id: 'b', date: '2025-07-05', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 7000000, cost: 1000 }
+    ]
+  });
+  c.renderChart();
+  assert.equal(els['#chartMonth'].textContent, '07/2025', 'mặc định: tháng 7 (tháng cuối có dữ liệu của năm khác)');
+  assert.equal(els['#chartExpChip'].textContent, c.fmtMoney(7000000));
+  const cx = i => 44 + ((300 - 44 - 8) / 12) * (i + 0.5);
+  const click = i => c.onChartClick({ clientX: cx(i), clientY: 100 });
+  click(2);
+  assert.equal(els['#chartMonth'].textContent, '03/2025', 'bấm cột tháng 3 → hiện tháng 3');
+  assert.equal(els['#chartImpChip'].textContent, c.fmtMoney(3000000));
+  assert.equal(els['#chartExpChip'].textContent, c.fmtMoney(0));
+  assert.match(els['#chartTipSr'].textContent, /^Tháng 03\/2025 — Nhập: /);
+  click(2);
+  assert.equal(els['#chartMonth'].textContent, '07/2025', 'bấm lại cột đang chọn → về tháng mặc định');
+  assert.equal(c.getChartSel(), -1);
+});
+
+test('2.13.2 CSS: quy tắc điện thoại của đầu thẻ và dòng dữ liệu đặt SAU quy tắc gốc cùng bộ chọn', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  assert.ok(at('.chart-head__stats{display:flex') < at('#chartBox>summary.chart-head .chart-head__stats{width:100%'), 'đầu thẻ điện thoại phải sau gốc');
+  assert.ok(at('.chart-tip{display:flex') < at('.chart-tip{gap:6px}'), 'dòng dữ liệu điện thoại phải sau gốc');
+  assert.ok(at('.chart-chip{display:inline-block') < at('.chart-chip{padding:3px 8px'), 'chip điện thoại phải sau gốc');
+});
+
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
 test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
@@ -3721,8 +3800,9 @@ test('2.11.0 số liệu: mỗi id đúng một lần; Bán/Lợi nhuận trong 
     assert.ok(chart.includes('id="' + id + '"'), id + ' phải nằm trong #chartBox');
     assert.ok(!dai.includes('id="' + id + '"'), id + ' không được nằm trong dải');
   }
-  assert.ok(chart.indexOf('id="statImport"') < chart.indexOf('class="row mb-12"'), 'ô nhập phải đứng trên hàng chú thích/năm');
-  assert.ok(chart.indexOf('id="statStock"') < chart.indexOf('class="row mb-12"'), 'ô tồn kho phải đứng trên hàng chú thích/năm');
+  const sumAt = chart.indexOf('<summary'), sumEnd = chart.indexOf('</summary>');
+  assert.ok(sumAt >= 0 && sumEnd > sumAt, 'thiếu summary của #chartBox');
+  assert.ok(chart.slice(sumAt, sumEnd).includes('id="statImport"') && chart.slice(sumAt, sumEnd).includes('id="statStock"'), 'số liệu phải nằm trong summary (2.13.2)');
 });
 
 test('2.11.0 renderStats vẫn gán đủ 8 id số liệu (không đổi hành vi)', () => {
