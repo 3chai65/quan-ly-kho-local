@@ -3254,9 +3254,21 @@ test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng T
   // .tab: gốc (display:flex) trước khối 600px (11px)
   assert.ok(at('.tab{display:flex') < at('.tab{min-height:44px;padding:4px 2px;font-size:12px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
 
+  // 2.12.1: .nhap-row gốc đứng trước quy tắc điện thoại cùng bộ chọn
+  assert.ok(at('.nhap-row{display:grid') < at('.nhap-row>.field.sug{grid-column:1/-1}'), '.nhap-row gốc phải đứng trước quy tắc điện thoại');
   // quy tắc điện thoại của tab phải nằm trong @media (max-width:600px)
   const m = PAGE.lastIndexOf('@media (max-width:600px)', at('repeat(4,minmax(0,1fr))'));
   assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
+});
+
+/* 2.12.1: điện thoại (≤600px) – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +; đặt SAU quy tắc gốc và khối 640px. */
+test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), lưới 1fr 1fr 44px trong @media (max-width:600px), sau quy tắc gốc', () => {
+  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
+  const base = at('.nhap-row{display:grid'), m640 = at('.nhap-row{grid-template-columns:minmax(0,1fr) 78px 94px 44px'), r = at('.nhap-row>.field.sug{grid-column:1/-1}');
+  assert.ok(base < m640 && m640 < r, 'thứ tự: gốc < 640px < khối 600px');
+  assert.equal(PAGE.lastIndexOf('@media', r), PAGE.lastIndexOf('@media (max-width:600px)', r), 'quy tắc ô tên phải nằm trong @media (max-width:600px)');
+  assert.ok(at('.nhap-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}') > r - 200, 'lưới 1fr 1fr 44px phải nằm trong khối 600px');
+  assert.match(PAGE, /<div class="field sug">\s*<label class="lbl" for="nhapSearch">/, 'ô tên phải là .field.sug');
 });
 
 /* 2.12.0 (A): nút + ở Nhập hàng bấm CHÍNH addNhapItem (cùng đường với Enter). */
