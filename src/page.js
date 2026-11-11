@@ -318,10 +318,8 @@ table.inv .c-del,table.his .c-act{width:auto}
 .note td,.note th{padding-left:5px;padding-right:5px}
 .note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
 .tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.tab{min-height:38px;padding:4px;font-size:12px}
+.tab{min-height:38px;padding:4px;font-size:11px}
 .tab__ic{display:none}
-.tab__full{display:none}
-.tab__short{display:inline}
 }
 @media (min-width:601px){
 table.his th:nth-child(4),table.his th:nth-child(5),
@@ -342,7 +340,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
 .tab__ic{width:16px;height:16px;flex:none}
-.tab__short{display:none}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -456,10 +453,10 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
     <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span>Thuốc chén</span></button>
     <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span>Nhập hàng</span></button>
     <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span>Kho tồn</span></button>
-    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__full">Lịch sử nhập hàng</span><span class="tab__short">LS nhập</span></button>
-    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__full">Lịch sử bán hàng</span><span class="tab__short">LS bán</span></button>
+    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span>L.s nhập</span></button>
+    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cash"/></svg><span>L.s bán</span></button>
     <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span>Thống kê</span></button>
-    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__full">Sao lưu &amp; khôi phục</span><span class="tab__short">Sao lưu</span></button>
+    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-save"/></svg><span>Sao lưu</span></button>
   </nav>
 
   <div class="grid2">
