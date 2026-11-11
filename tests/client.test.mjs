@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import { PAGE } from '../src/page.js';
 
@@ -112,7 +114,7 @@ globalThis.__test = {
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
-  recFixAll: recFixAll
+  recFixAll: recFixAll, initTabs: initTabs
 };
 })();`;
   const store = new Map();
@@ -2630,16 +2632,19 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length, 25);
-  assert.equal(PAGE.match(/ id="/g).length, 158); // 165 - 7 symbol không dùng (vòng 17 nhóm C)
+  assert.equal(PAGE.match(/ id="/g).length, 159); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"
 });
 
-test('2.9.1 khối @media 901px: .main dùng align-items:start, không còn stretch (thẻ cạnh nhau không kéo dài)', () => {
-  const i = PAGE.indexOf('@media (min-width:901px){');
-  assert.ok(i >= 0, 'thiếu khối @media (min-width:901px)');
-  const end = PAGE.indexOf('\n}\n', i);
-  const block = PAGE.slice(i, end);
-  assert.match(block, /\.main\{[^}]*align-items:start[^}]*\}/);
-  assert.doesNotMatch(block, /stretch/);
+/* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
+test('2.10.0 (thay ca 2.9.1 đã bỏ) không còn lưới 2 cột: không @media 901px, .grid2 bọc ngoài là display:contents, thẻ không grid-area', () => {
+  assert.ok(!PAGE.includes('@media (min-width:901px)'), 'còn khối 901px của 2.9.x');
+  assert.match(PAGE, /\.main>\.grid2\{display:contents\}/);
+  assert.match(PAGE, /\.main>details\.card:not\(\[open\]\)\{display:none\}/);
+  assert.doesNotMatch(PAGE, /\.main\{[^}]*grid-template-columns/);
+  for (const id of ['retailBox', 'remedyBox', 'nhapBox', 'invBox', 'impBox', 'expBox', 'chartBox', 'backupBox']) {
+    assert.doesNotMatch(PAGE, new RegExp('#' + id + '\\{grid-area'));
+  }
+  assert.equal(PAGE.match(/class="stat__sub"/g).length, 2, 'mất dòng phụ "Hôm nay · Năm" của thẻ số');
 });
 
 /* ===== Vòng 16, nhóm A (kiểm trần đủ đường lưu, hẹn gửi lại, giá vốn, gợi ý, huy hiệu) ===== */
@@ -3198,4 +3203,172 @@ test('F13 recDlg, mergeDlg: bấm ra nền thì đóng đúng như nút Đóng; 
 
 test('F14 bỏ class không dùng .stack, .hide-sm và thuộc tính data-sug', () => {
   assert.doesNotMatch(PAGE, /\.stack\{|\.hide-sm\{|data-sug=/);
+});
+
+/* ===== 2.10.0: tab 8 mục (giao diện). Chỉ kiểm HTML/CSS/điều hướng; không chạm logic tiền/tồn/đồng bộ. ===== */
+const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
+const TAB_IDS = ['retailBox', 'remedyBox', 'nhapBox', 'invBox', 'impBox', 'expBox', 'chartBox', 'backupBox'];
+const TAB_ORDER_DOM = ['retailBox', 'remedyBox', 'nhapBox', 'chartBox', 'invBox', 'impBox', 'expBox', 'backupBox'];
+const TAB_LABELS = ['Bán lẻ', 'Thuốc chén', 'Nhập hàng', 'Kho tồn', 'Lịch sử nhập hàng', 'Lịch sử bán hàng', 'Thống kê', 'Sao lưu & khôi phục'];
+
+test('2.10.0 nav tab: sau thẻ số, trước các thẻ; 8 nút đúng thứ tự, data-tab và aria-controls trỏ tới thẻ tồn tại, nhãn đúng', () => {
+  const navAt = PAGE.indexOf('<nav class="tabs"');
+  assert.ok(navAt > PAGE.indexOf('</section>'), 'nav phải nằm sau thẻ số');
+  assert.ok(navAt < PAGE.indexOf('id="retailBox"'), 'nav phải nằm trước các thẻ');
+  const nav = PAGE.match(/<nav class="tabs"[\s\S]*?<\/nav>/)[0];
+  const btns = [...nav.matchAll(/<button [^>]*>[\s\S]*?<\/button>/g)].map(m => m[0]);
+  assert.equal(btns.length, 8, 'phải có đúng 8 nút');
+  const tabs = btns.map(b => b.match(/data-tab="([^"]+)"/)[1]);
+  assert.deepEqual(tabs, TAB_IDS);
+  for (const b of btns) {
+    assert.match(b, /^<button type="button" class="tab" role="tab" /);
+    const id = b.match(/data-tab="([^"]+)"/)[1];
+    assert.match(b, new RegExp('aria-controls="' + id + '"'));
+    assert.match(PAGE, new RegExp('<details class="card[^"]*" id="' + id + '"'));
+  }
+  const labels = btns.map(b => {
+    const a = b.match(/aria-label="([^"]+)"/);
+    const t = a ? a[1] : [...b.matchAll(/<span[^>]*>([^<]*)<\/span>/g)][0][1];
+    return t.replace(/&amp;/g, '&');
+  });
+  assert.deepEqual(labels, TAB_LABELS);
+  assert.match(nav, /<span class="tab__short">LS nhập<\/span>/);
+  assert.match(nav, /<span class="tab__short">LS bán<\/span>/);
+  assert.match(nav, /<span class="tab__short">Sao lưu<\/span>/);
+});
+
+test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
+  const old = execFileSync('git', ['-C', REPO_ROOT, 'show', '1023b40:src/page.js'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).sort();
+  assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi');
+  const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
+  const newIds = ids(PAGE);
+  for (const id of ids(old)) assert.ok(newIds.has(id), 'mất id ' + id);
+  const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
+  assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
+});
+
+/* Fake DOM tối thiểu cho initTabs: details có setter open phát 'toggle' khi đổi; summary có listener click. */
+class FakeEl {
+  constructor(id) {
+    this.id = id || ''; this.attrs = {}; this.classes = new Set(); this.listeners = {};
+    this._open = false; this.tabs = []; this.summary = null; this.isTab = false; this.style = {};
+  }
+  addEventListener(t, f) { (this.listeners[t] ||= []).push(f); }
+  dispatch(t, ev) { (this.listeners[t] || []).forEach(f => f.call(this, ev)); }
+  getAttribute(n) { return Object.prototype.hasOwnProperty.call(this.attrs, n) ? this.attrs[n] : null; }
+  setAttribute(n, v) { this.attrs[n] = String(v); }
+  hasAttribute(n) { return Object.prototype.hasOwnProperty.call(this.attrs, n); }
+  removeAttribute(n) { delete this.attrs[n]; }
+  get classList() {
+    const s = this.classes;
+    return {
+      add(c) { s.add(c); }, remove(c) { s.delete(c); },
+      toggle(c, on) { if (on) s.add(c); else s.delete(c); },
+      contains(c) { return s.has(c); }
+    };
+  }
+  get open() { return this._open; }
+  set open(v) { v = !!v; if (v !== this._open) { this._open = v; this.dispatch('toggle', {}); } }
+  querySelector(sel) { return sel === ':scope > summary' ? this.summary : null; }
+  querySelectorAll(sel) { return sel === '.tab' ? this.tabs : []; }
+  contains(x) { return this.tabs.includes(x); }
+  closest(sel) { return sel === '.tab' && this.isTab ? this : null; }
+  focus() {}
+}
+
+function makeTabEnv(saved) {
+  const boxes = TAB_IDS.map(id => { const b = new FakeEl(id); b.summary = new FakeEl(); return b; });
+  const byId = Object.fromEntries(boxes.map(b => [b.id, b]));
+  const nav = new FakeEl('tabs');
+  nav.tabs = TAB_IDS.map(id => { const t = new FakeEl(); t.isTab = true; t.attrs['data-tab'] = id; t.attrs['aria-selected'] = 'false'; return t; });
+  const store = new Map();
+  if (saved !== null) store.set('qlk_tab', saved);
+  const LS = { getItem: k => (store.has(k) ? store.get(k) : null), setItem: (k, v) => { store.set(k, String(v)); }, removeItem: k => { store.delete(k); } };
+  const doc = {
+    readyState: 'loading', documentElement: new FakeEl(), body: new FakeEl(),
+    querySelector: s => (s === '#tabs' ? nav : null),
+    querySelectorAll: () => [],
+    getElementById: id => byId[id] || null,
+    createElement: () => new FakeEl(), createElementNS: () => new FakeEl(),
+    addEventListener() {}, removeEventListener() {}
+  };
+  const tabBtn = id => nav.tabs.find(t => t.attrs['data-tab'] === id);
+  return {
+    doc, nav, byId, store, LS,
+    clickTab: id => nav.dispatch('click', { target: tabBtn(id) }),
+    clickSummary: box => {
+      const ev = { defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
+      box.summary.dispatch('click', ev);
+      if (!ev.defaultPrevented) box.open = !box.open; /* hành vi mặc định của <summary> */
+    },
+    openIds: () => boxes.filter(b => b.open).map(b => b.id),
+    selectedIds: () => nav.tabs.filter(t => t.getAttribute('aria-selected') === 'true').map(t => t.attrs['data-tab']),
+    activeIds: () => nav.tabs.filter(t => t.classList.contains('is-active')).map(t => t.attrs['data-tab'])
+  };
+}
+
+test('2.10.0 mặc định mở Bán lẻ: đúng một thẻ mở, nút đang chọn có aria-selected và is-active', () => {
+  const env = makeTabEnv(null);
+  const c = loadClient({ document: env.doc, localStorage: env.LS });
+  c.initTabs();
+  assert.deepEqual(env.openIds(), ['retailBox']);
+  assert.deepEqual(env.selectedIds(), ['retailBox']);
+  assert.deepEqual(env.activeIds(), ['retailBox']);
+});
+
+test('2.10.0 qlk_tab lưu mục gần nhất được khôi phục; giá trị lạ thì về Bán lẻ', () => {
+  const envOk = makeTabEnv('expBox');
+  loadClient({ document: envOk.doc, localStorage: envOk.LS }).initTabs();
+  assert.deepEqual(envOk.openIds(), ['expBox']);
+  assert.deepEqual(envOk.selectedIds(), ['expBox']);
+  const envBad = makeTabEnv('khong-co-muc-nay');
+  loadClient({ document: envBad.doc, localStorage: envBad.LS }).initTabs();
+  assert.deepEqual(envBad.openIds(), ['retailBox']);
+  assert.deepEqual(envBad.selectedIds(), ['retailBox']);
+});
+
+test('2.10.0 chọn tab → đúng một <details> mở, nút cập nhật và lưu qlk_tab', () => {
+  const env = makeTabEnv(null);
+  loadClient({ document: env.doc, localStorage: env.LS }).initTabs();
+  env.clickTab('impBox');
+  assert.deepEqual(env.openIds(), ['impBox']);
+  assert.deepEqual(env.selectedIds(), ['impBox']);
+  assert.deepEqual(env.activeIds(), ['impBox']);
+  assert.equal(env.store.get('qlk_tab'), 'impBox');
+  env.clickTab('chartBox');
+  assert.deepEqual(env.openIds(), ['chartBox']);
+});
+
+test('2.10.0 mở một details bằng mã → các mục khác đóng và nút cập nhật theo', () => {
+  const env = makeTabEnv(null);
+  loadClient({ document: env.doc, localStorage: env.LS }).initTabs();
+  env.byId.expBox.open = true;
+  assert.deepEqual(env.openIds(), ['expBox']);
+  assert.deepEqual(env.selectedIds(), ['expBox']);
+  assert.deepEqual(env.activeIds(), ['expBox']);
+});
+
+test('2.10.0 bấm summary của thẻ đang mở không đóng thẻ (preventDefault)', () => {
+  const env = makeTabEnv(null);
+  loadClient({ document: env.doc, localStorage: env.LS }).initTabs();
+  env.clickSummary(env.byId.retailBox);
+  assert.deepEqual(env.openIds(), ['retailBox']);
+  env.clickTab('retailBox');
+  assert.deepEqual(env.openIds(), ['retailBox'], 'bấm lại nút đang chọn không được đóng mục');
+  assert.deepEqual(env.selectedIds(), ['retailBox']);
+});
+
+test('2.10.0 chuyển tab không đổi db và không bật dirty', () => {
+  const env = makeTabEnv(null);
+  const c = loadClient({ document: env.doc, localStorage: env.LS });
+  const dbObj = { products: [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
+  c.setDb(dbObj);
+  c.setDirty(false);
+  c.initTabs();
+  for (const id of ['nhapBox', 'expBox', 'remedyBox', 'backupBox', 'retailBox']) env.clickTab(id);
+  assert.equal(c.getDb(), dbObj, 'db bị thay thế');
+  assert.equal(JSON.stringify(c.getDb()), JSON.stringify(dbObj), 'db bị đổi nội dung');
+  assert.equal(c.isDirty(), false, 'chuyển tab làm bật dirty');
 });
