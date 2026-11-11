@@ -1083,11 +1083,23 @@ function inRange(v, min, max){ var n = Number(v); return isFinite(n) && n >= min
 
   /* Kiểm trần giới hạn, dùng đúng hằng hiện có. Trả về null (hợp lệ) hoặc chuỗi lỗi. */
   function checkLimits(kind, v){
+    var n = Number(v);
+    var neg = isFinite(n) && n < 0;
     switch (kind) {
-      case 'q': return inRange(v, 0, QTY_MAX) ? null : 'Số lượng vượt giới hạn (' + QTY_MAX + ')';
-      case 'grams': return inRange(v, 0, GRAMS_MAX) ? null : 'Gram vượt giới hạn (' + GRAMS_MAX + ')';
-      case 'thang': return inRange(v, 1, THANG_MAX) ? null : 'Số thang vượt giới hạn (' + THANG_MAX + ')';
-      case 'money': return inRange(v, 0, MONEY_MAX) ? null : 'Tiền vượt giới hạn (' + MONEY_MAX + ')';
+      case 'q':
+        if (neg) return 'Số lượng không được âm';
+        return inRange(v, 0, QTY_MAX) ? null : 'Số lượng vượt giới hạn (' + QTY_MAX + ')';
+      case 'grams':
+        if (neg) return 'Gram không được âm';
+        return inRange(v, 0, GRAMS_MAX) ? null : 'Gram vượt giới hạn (' + GRAMS_MAX + ')';
+      case 'thang':
+        if (neg) return 'Số thang không được âm';
+        return inRange(v, 1, THANG_MAX) ? null : 'Số thang vượt giới hạn (' + THANG_MAX + ')';
+      case 'money':
+        /* Ô nhập là nghìn đồng; MONEY_MAX là đồng, đổi sang nghìn để hiển thị. */
+        if (!isFinite(n)) return 'Số tiền không hợp lệ';
+        if (n < 0) return 'Tiền không được âm';
+        return n <= MONEY_MAX ? null : 'Tiền vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng)';
       case 'name': return String(v || '').length <= NAME_MAX ? null : 'Tên vượt giới hạn (' + NAME_MAX + ' ký tự)';
       default: return null;
     }
@@ -1359,7 +1371,7 @@ var KEY = 'kho_db_local_v1';
 var DIRTY_KEY = 'kho_db_dirty_v1';
 var BASE_KEY = 'kho_cloud_base_v1';
 var PAGE_SIZE = 10;
-var db = { products: [], transactions: [], prescriptions: [], updatedAt: 0 };
+var db = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
 var invPage = 1, impPage = 1, expPage = 1;
 var impAll = false, expAll = false;
 var cloudBase = 0;
@@ -1787,7 +1799,7 @@ function addRemedyToNote(){
   if (!row) return;
   var qi = $('.remedy-qty', row);
   if (num(qi.value) <= 0) { toast('Nhập số gram lớn hơn 0', 'error'); qi.focus(); return; }
-  commitRemedyRow();
+  if (!commitRemedyRow()) return;
   calcRemedy();
   var s = $('#remedySearch');
   if (s) {
@@ -3724,7 +3736,7 @@ function saveNhap(e){
     var lim2 = checkLimits('q', qty) || checkLimits('money', price);
     if (lim2) {
       toast(lim2, 'error');
-      if (pi2) { pi2.focus(); pi2.select(); }
+      var pPrice = $('#nhapPrice'); if (pPrice) { pPrice.focus(); pPrice.select(); }
       return;
     }
     if (!nhapPriceOk(cp, price)) { var pi2 = $('#nhapPrice'); if (pi2) { pi2.focus(); pi2.select(); } return; }
@@ -3880,19 +3892,19 @@ function resetCostFromImports(p){
   if (l) p.costPrice = money(l.price);
 }
 function delTx(id){
-  var t = null;
-  for (var i = 0; i < db.transactions.length; i++) if (db.transactions[i].id === id) { t = db.transactions[i]; break; }
+  var t = null, pos = -1;
+  for (var i = 0; i < db.transactions.length; i++) if (db.transactions[i].id === id) { t = db.transactions[i]; pos = i; break; }
   if (!t) return;
   var mates = remedyMates(t).filter(function(x){ return x.id !== t.id; });
   var msg = mates.length
     ? 'Xóa vị này khỏi đơn thuốc? Tồn kho hoàn lại. Tiền khách trả giữ nguyên và chia lại cho các vị còn lại.'
     : 'Xóa giao dịch này? Tồn kho sẽ được điều chỉnh lại.';
-  if (!confirm(msg)) return;
   var p = findProduct(t.productId);
   if (p && t.type === 'NHAP' && num(p.stock) - num(t.qty) < -1e-9) {
     toast('Không thể xóa: "' + p.name + '" đã bán, tồn sẽ âm. Hãy sửa/xóa đơn bán liên quan trước.', 'error');
     return;
   }
+  if (!confirm(msg)) return;
   var grand = num(t.total);
   mates.forEach(function(x){ grand += num(x.total); });
   if (p) {
@@ -3901,7 +3913,7 @@ function delTx(id){
   }
   db.transactions = db.transactions.filter(function(x){ return x.id !== id; });
   if (mates.length && !applyRemedyBalance(mates, grand)) {
-    db.transactions.push(t);
+    db.transactions.splice(pos, 0, t);
     if (p) p.stock = dec(num(p.stock) - num(t.qty));
     toast('Giá bán thấp hơn vốn của đơn', 'error');
     return;
@@ -4489,7 +4501,6 @@ function restoreFromFile(file){
 /* ================= RENDER TỔNG ================= */
 function renderAll(){
   indexTx();
-  db.products.forEach(function(p){ p.name = capWords(p.name); });
   renderPresetOptions();
   renderInventory();
   renderHistory('imp');
@@ -4627,7 +4638,7 @@ function bindEvents(){
   if (ns) ns.addEventListener('input', function(){
     if (nhapPid) {
       var p = findProduct(nhapPid);
-      if (!p || capWords(ns.value) !== p.name) nhapPid = null;
+      if (!p || capWords(ns.value) !== capWords(p.name)) nhapPid = null;
     }
   });
 
@@ -4728,8 +4739,11 @@ function bindEvents(){
   if (dlg) dlg.addEventListener('click', function(e){ if (e.target === dlg) closeEdit(); });
   var txd = $('#txDlg');
   if (txd) txd.addEventListener('click', function(e){ if (e.target === txd) closeTxEdit(); });
+  /* Esc/cancel đóng dialog native mà không qua closeTxEdit: chỉ xóa đúng biến mà closeTxEdit dọn. */
+  if (txd) txd.addEventListener('close', function(){ txEditCur = null; });
   var od = $('#orderDlg');
   if (od) od.addEventListener('click', function(e){ if (e.target === od) closeOrder(); });
+  if (od) od.addEventListener('close', function(){ orderCur = null; });
   ['txEditQty', 'txEditPrice'].forEach(function(id){
     var n = $('#' + id);
     if (n) n.addEventListener('input', calcTxEdit);
@@ -4781,7 +4795,7 @@ function init(){
     cloudBase = savedBase || num(local.updatedAt);
     dirty = false;
   } else {
-    db = { products: [], transactions: [], prescriptions: [], updatedAt: 0 };
+    db = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
     cloudBase = 0;
     dirty = false;
   }
