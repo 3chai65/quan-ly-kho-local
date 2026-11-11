@@ -3592,14 +3592,16 @@ test('2.14.0 N6 hàm gợi ý: 0.2→(2 lạng), 0.25→(2,5 lạng), 2→(2 kg)
 test('2.14.0 N6 gắn gợi ý: .qty-hint đổi theo input và chỉ nhắc (không đổi value); ẩn khi trống; có aria-describedby', () => {
   const doc = trackDoc({});
   const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
-  const kids = [];
-  const host = { classList: { add() {} }, appendChild(x) { kids.push(x); return x; } };
+  let wrap = null;
+  const host = { classList: { add() {}, contains() { return false; } }, insertBefore(w) { wrap = w; return w; } };
   const input = { id: 'retailQty', value: '0.2', parentNode: host, attrs: {}, l: {},
     classList: { add() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
   c.attachQtyHint(input, 'kg');
-  const h = kids[0];
+  assert.ok(wrap, 'ô phải được bọc trong khung .qty-host riêng');
+  assert.equal(wrap.children[0], input, 'ô nằm trong khung bọc');
+  const h = wrap.children[1];
   assert.equal(h.textContent, '(2 lạng)');
-  assert.equal(input.attrs['aria-describedby'], kids[1].id, 'phải có mô tả cho trình đọc màn hình');
+  assert.equal(input.attrs['aria-describedby'], wrap.children[2].id, 'phải có mô tả cho trình đọc màn hình');
   input.value = '2'; input.l.input();
   assert.equal(h.textContent, '(2 kg)', 'đổi theo sự kiện input');
   assert.equal(input.value, '2', 'không được đổi giá trị ô');
@@ -3608,10 +3610,20 @@ test('2.14.0 N6 gắn gợi ý: .qty-hint đổi theo input và chỉ nhắc (kh
   assert.equal(input.value, '', 'giá trị ô vẫn trống');
 });
 
-test('2.14.0 N6 gắn trên dòng đang nhập Bán lẻ, Thuốc chén và nhapQty (qua DOM có .qty-host)', () => {
+test('2.14.0 N6 gắn trên dòng đang nhập Bán lẻ, Thuốc chén, nhapQty, txEditQty, noteEditQty (qua DOM có .qty-host)', () => {
   assert.match(PAGE, /input\.qty-hinted\{padding-left:50px\}/);
   assert.match(PAGE, /attachQtyHint\(qi, isRetail \? 'kg' : 'g'\);/);
-  assert.match(PAGE, /if \(nqHint\) attachQtyHint\(nqHint, 'kg'\);|attachQtyHint\(nqHint, 'kg'\)/);
+  assert.match(PAGE, /if \(nqHint\) attachQtyHint\(nqHint, 'kg'\);/);
+  assert.match(PAGE, /attachQtyHint\(txqHint, function\(\)\{ return txEditCur && txEditCur\.rx \? 'g' : 'kg'; \}\);/);
+  assert.match(PAGE, /attachQtyHint\(qi, 'g'\);/, 'sửa dòng thuốc chén (gram)');
+  assert.match(PAGE, /attachQtyHint\(qi, 'kg'\);/, 'sửa dòng bán lẻ (kg)');
+  assert.match(PAGE, /\$\('#txEditQty'\)\.qtyHintRefresh\(\)/, 'mở hộp thoại sửa phải cập nhật gợi ý');
+});
+
+test('2.14.0 N6 CSS: gợi ý căn giữa theo khung ô (không theo .field/td có nhãn), không top âm cố định', () => {
+  assert.match(PAGE, /\.qty-host\{position:relative;display:block\}/);
+  assert.match(PAGE, /\.qty-hint\{position:absolute;left:7px;top:50%;transform:translateY\(-50%\)/);
+  assert.doesNotMatch(PAGE, /\.qty-hint\{[^}]*top:-/);
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
