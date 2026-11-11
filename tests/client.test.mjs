@@ -2846,7 +2846,7 @@ test('A4 scheduleSyncRetry: đang ở ô nhập thì hẹn lại bằng timer m�
   assert.ok(fetches >= 1, 'hết bận thì phải đẩy được');
 });
 
-test('A5 delTx: xóa NHAP mới nhất → costPrice về giá lần nhập còn lại (theo ts)', () => {
+test('A5 delTx: xóa NHAP mới nhất → costPrice về giá lần nhập còn lại (theo ngày)', () => {
   const dom = limitStock();
   const txs = [
     { id: 'n_old', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 1000 },
@@ -2858,6 +2858,18 @@ test('A5 delTx: xóa NHAP mới nhất → costPrice về giá lần nhập còn
   assert.equal(p.stock, 1);
   assert.equal(p.costPrice, 150000);
   assert.equal(c.isDirty(), true);
+});
+
+test('A5 delTx: lần có NGÀY mới hơn nhưng ts cũ hơn thắng (theo lastImport, không theo ts)', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'n_a', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000, ts: 3000 },
+    { id: 'n_b', date: '2026-11-03', type: 'NHAP', productId: 'p1', qty: 1, price: 170000, total: 170000, ts: 1000 },
+    { id: 'n_del', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 3, costPrice: 200000 }], txs);
+  c.delTx('n_del');
+  assert.equal(c.getDb().products[0].costPrice, 170000, 'ngày 11-03 mới hơn 11-01 phải thắng dù ts cũ hơn');
 });
 
 test('A5 delOrder: xóa đơn nhập mới nhất → costPrice theo lần nhập còn lại', () => {
