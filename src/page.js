@@ -156,8 +156,6 @@ select.inp{cursor:pointer}
 .nhap-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 128px;gap:10px;align-items:end}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .grid2+.grid2,.stats+.grid2{margin-top:18px}
-.stack{display:grid;gap:12px}
-.stack>*+*{margin-top:0}
 /* ---------- table ---------- */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -266,7 +264,6 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .bar{min-height:56px}
 .brand span{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
-.hide-sm{display:none}
 .stat__v{font-size:19px}
 .stat__ic{width:36px;height:36px;border-radius:10px}
 .card__body{padding:13px}
@@ -389,7 +386,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <span>Quản Lý Kho</span>
     </a>
     <div class="bar__actions">
-      <button class="sync-badge" id="syncBadge" type="button" hidden>Chưa đồng bộ</button>
+      <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
       <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
       <a class="btn btn--sm" href="/auth/devices" title="Quản lý thiết bị">Thiết bị</a>
       <div class="menu">
@@ -461,7 +458,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         <div class="row mb-12">
           <div class="sug">
             <label class="lbl" for="retailSearch">Chọn vị thuốc</label>
-            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc..." data-sug="retail" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
+            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc..." role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
             <div class="sug__list" id="retailList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="field">
@@ -549,7 +546,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         <div class="grid2 gap-12 mb-12">
           <div class="sug">
             <label class="lbl" for="remedySearch">Chọn vị thuốc</label>
-            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc..." data-sug="remedy" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
+            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc..." role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
             <div class="sug__list" id="remedyList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="field">
@@ -634,7 +631,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <div class="nhap-row">
         <div class="field sug">
           <label class="lbl" for="nhapSearch">Vị thuốc</label>
-          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc..." maxlength="200" data-sug="nhap" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
+          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên vị thuốc..." maxlength="200" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
           <div class="sug__list" id="nhapList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
         </div>
         <div class="field">
@@ -713,7 +710,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         <div class="row mb-12">
           <div class="sug">
             <label class="lbl" for="invSearch">Tìm vị thuốc</label>
-            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc để lọc..." data-sug="inv" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
+            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Nhập tên vị thuốc để lọc..." role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
             <div class="sug__list" id="invList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="field">
@@ -763,7 +760,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         <div class="row mb-12">
           <div class="field sug">
             <label class="lbl" for="impSearch">Tìm kiếm</label>
-            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" data-sug="imph" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm kiếm">
+            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Tên vị thuốc" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm kiếm">
             <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="inline-row">
@@ -4730,6 +4727,10 @@ function bindEvents(){
 
   var dlg = $('#editDlg');
   if (dlg) dlg.addEventListener('click', function(e){ if (e.target === dlg) closeEdit(); });
+  var recD = $('#recDlg');
+  if (recD) recD.addEventListener('click', function(e){ if (e.target === recD) closeRec(); });
+  var mergeD = $('#mergeDlg');
+  if (mergeD) mergeD.addEventListener('click', function(e){ if (e.target === mergeD) closeMerge(); });
   var txd = $('#txDlg');
   if (txd) txd.addEventListener('click', function(e){ if (e.target === txd) closeTxEdit(); });
   /* Esc/cancel đóng dialog native mà không qua closeTxEdit: chỉ xóa đúng biến mà closeTxEdit dọn. */
