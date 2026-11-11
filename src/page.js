@@ -577,7 +577,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
               <td colspan="2">Tổng 1 thang</td>
               <td class="num txt-brand" id="remedyNoteTotal">0 g</td>
               <td>
-                <div class="inline-row"><input class="inp inp--sm inp--num w-120" id="remedyUnitPrice" type="number" step="any" min="0" inputmode="decimal" placeholder="0" aria-label="Giá 1 thang" title="Giá 1 thang"></div>
+                <div class="inline-row"><input class="inp inp--sm inp--num w-120" id="remedyUnitPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá 1 thang" title="Giá 1 thang"></div>
               </td>
             </tr></tfoot>
           </table>
@@ -586,7 +586,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         <div class="hintbox mt-12">
           <div class="inline-row">
             <label class="lbl lbl--flat" for="remedyThang">Số thang</label>
-            <input class="inp inp--sm inp--num w-70" id="remedyThang" type="number" step="1" min="1" inputmode="numeric" value="1" aria-label="Số thang">
+            <input class="inp inp--sm inp--num w-70" id="remedyThang" type="number" step="1" min="1" max="10000" inputmode="numeric" value="1" aria-label="Số thang">
           </div>
           <span class="b txt-brand" aria-hidden="true">=</span>
           <div class="inline-row">
@@ -631,11 +631,11 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         </div>
         <div class="field">
           <label class="lbl" for="nhapQty">Số lượng (kg)</label>
-          <input class="inp inp--num" id="nhapQty" type="number" step="any" min="0" inputmode="decimal" placeholder="0">
+          <input class="inp inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0">
         </div>
         <div class="field">
           <label class="lbl" for="nhapPrice">Giá nhập (k/kg)</label>
-          <input class="inp inp--num" id="nhapPrice" type="number" step="any" min="0" inputmode="decimal" placeholder="0">
+          <input class="inp inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0">
         </div>
       </div>
       <p class="hint mt-10" id="nhapHint" hidden></p>
@@ -943,7 +943,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
         </div>
         <div class="field" id="txEditPriceField">
           <label class="lbl" for="txEditPrice">Đơn giá (k/kg)</label>
-          <input class="inp inp--num" id="txEditPrice" type="number" step="any" min="0" inputmode="decimal">
+          <input class="inp inp--num" id="txEditPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal">
         </div>
       </div>
       <div class="hintbox mt-12">
@@ -1865,6 +1865,7 @@ function addOrderRow(kind, pid){
   tdQ.setAttribute('data-label', isRetail ? 'SL (kg)' : 'SL (gram)');
   var qi = el('input', 'inp inp--sm inp--num ' + (isRetail ? 'retail-qty' : 'remedy-qty'));
   qi.type = 'number'; qi.step = 'any'; qi.min = '0'; qi.inputMode = 'decimal'; qi.placeholder = '0';
+  qi.max = isRetail ? '1000000' : '1000000000';
   qi.setAttribute('aria-label', isRetail ? 'Số lượng (kg)' : 'Số lượng (gram)');
   tdQ.appendChild(qi);
   tr.appendChild(tdQ);
@@ -1874,6 +1875,7 @@ function addOrderRow(kind, pid){
     tdM.setAttribute('data-label', 'Thành tiền');
     var mi = el('input', 'inp inp--sm inp--num retail-money');
     mi.type = 'number'; mi.step = 'any'; mi.min = '0'; mi.inputMode = 'decimal'; mi.placeholder = '0';
+    mi.max = '1000000000';
     mi.setAttribute('aria-label', 'Thành tiền');
     tdM.appendChild(mi);
     tr.appendChild(tdM);
