@@ -4706,6 +4706,11 @@ function renderAll(){
 function keepFocusDown(e){ var t = e.target; if (t && t.closest && t.closest('[data-keep-focus]')) e.preventDefault(); }
 doc.addEventListener('pointerdown', keepFocusDown, true);
 doc.addEventListener('mousedown', keepFocusDown, true);
+/* 2.14.0 N7: cuộn chuột trên ô số đang focus không được đổi số. Blur trước khi cuộn; không preventDefault (trang vẫn cuộn). */
+doc.addEventListener('wheel', function(e){
+  var t = e.target;
+  if (t && t.tagName === 'INPUT' && t.type === 'number' && doc.activeElement === t && typeof t.blur === 'function') t.blur();
+}, { passive: true, capture: true });
 /* ================= SỰ KIỆN ================= */
 function handleAction(btn){
   var a = btn.getAttribute('data-action');
