@@ -236,6 +236,9 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .note table{background:transparent}
 .note th{background:transparent}
 .note td{height:34px;padding:4px 10px;border-bottom:1px dashed var(--border)}
+/* 2.14.0 (giai đoạn 4, M6): hàng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) cao theo nội dung, không ép 34px; ô nhập block để đáy thẳng với nút +. Đặt SAU .note td (độ cụ thể cao hơn). Dòng đã thêm không đổi. */
+.note .note__pending tr.is-row>td{height:auto;vertical-align:bottom}
+.note .note__pending tr.is-row>td .inp{display:block}
 .note tbody tr:hover{background:transparent}
 .note tfoot td{height:40px;border-top:2px solid var(--border);border-bottom:0;font-weight:800}
 .note .foot{margin:0;padding:8px 12px}
