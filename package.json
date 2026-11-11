@@ -12,6 +12,7 @@
     "start": "node server.js",
     "test": "node --test tests/server.test.mjs",
     "test:client": "node --test tests/client.test.mjs",
+    "test:auth": "node --test tests/auth.test.mjs tests/auth.devices.test.mjs",
     "lint:client": "node scripts/lint-client.mjs"
   },
   "dependencies": {

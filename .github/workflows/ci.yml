@@ -44,3 +44,6 @@ jobs:
 
       - name: Run server tests in container
         run: docker run --rm -e DATA_DIR=/tmp/qlk-ci quan-ly-kho-local:ci npm test
+
+      - name: Run auth tests in container
+        run: docker run --rm -e DATA_DIR=/tmp/qlk-ci quan-ly-kho-local:ci npm run test:auth
