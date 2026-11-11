@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 import { createAuth } from '../auth.js';
 
@@ -528,7 +529,8 @@ test('auth-reset xóa cả thiết bị và mã mời', () => {
   try {
     const owner = enrollOwner(s);
     invite(s, owner);
-    const r = spawnSync(process.execPath, [path.resolve('scripts/auth-reset.mjs')], {
+    const resetScript = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'auth-reset.mjs');
+    const r = spawnSync(process.execPath, [resetScript], {
       env: { ...process.env, DATA_DIR: s.dir },
       encoding: 'utf8'
     });
