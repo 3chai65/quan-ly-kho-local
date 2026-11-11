@@ -2418,7 +2418,7 @@ function saveRetail(){
   }
   for (var rk = 0; rk < items.length; rk++) {
     var rlim = checkLimits('money', items[rk].kg > 0 ? money(items[rk].amount / items[rk].kg) : 0);
-    if (rlim) { toast(rlim, 'error'); return; }
+    if (rlim) { toast('Đơn giá vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng/kg)', 'error'); return; }
   }
   items.forEach(function(it){
     var p = findProduct(it.pid);
@@ -2475,7 +2475,7 @@ function saveRemedy(){
   if (!balanced) { toast('Giá bán thấp hơn vốn của đơn', 'error'); return; }
   for (var rk2 = 0; rk2 < priced.length; rk2++) {
     var rlim2 = checkLimits('money', priced[rk2].kg > 0 ? money(balanced[rk2].total / priced[rk2].kg) : 0);
-    if (rlim2) { toast(rlim2, 'error'); return; }
+    if (rlim2) { toast('Đơn giá vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng/kg)', 'error'); return; }
   }
   var oname = capWords(($('#remedyName') || {}).value) || 'Đơn thuốc lẻ';
   var oid = uid('OD');
@@ -3699,7 +3699,12 @@ function addNhapItem(){
   if (qty <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); var q = $('#nhapQty'); if (q) q.focus(); return; }
   if (price < 0) { toast('Giá nhập không được âm', 'error'); var pNeg = $('#nhapPrice'); if (pNeg) { pNeg.focus(); pNeg.select(); } return; }
   var limN = checkLimits('q', qty) || checkLimits('money', price) || checkLimits('name', name);
-  if (limN) { toast(limN, 'error'); var qN = $('#nhapQty'); if (qN) qN.focus(); return; }
+  if (limN) {
+    toast(limN, 'error');
+    var fN = checkLimits('q', qty) ? $('#nhapQty') : (checkLimits('money', price) ? $('#nhapPrice') : inp);
+    if (fN) fN.focus();
+    return;
+  }
   var p = nhapPid ? findProduct(nhapPid) : findByName(name);
   if (!nhapPriceOk(p, price)) { var pi = $('#nhapPrice'); if (pi) { pi.focus(); pi.select(); } return; }
   nhapList.push({ pid: p ? p.id : null, name: p ? p.name : name, qty: dec(qty), price: price });
@@ -3873,8 +3878,9 @@ function remedyMates(t){
     return x.rx && x.oid && String(x.oid) === String(t.oid);
   });
 }
-/* Sau khi xóa lần nhập: giá vốn theo lần nhập có giá còn lại gần nhất theo lastImport
-   (theo ngày, hòa thì theo ts), cùng tiêu chí với saveTxEdit và refPrice.
+/* Chỉ gọi khi lần nhập bị xóa LÀ lastImport (tính TRƯỚC khi xóa): giá vốn theo lần nhập
+   có giá còn lại gần nhất theo lastImport (theo ngày, hòa thì theo ts), cùng tiêu chí với
+   saveTxEdit và refPrice. Xóa lần nhập cũ hơn thì giá vốn sửa tay được giữ nguyên.
    Không còn lần nhập có giá thì giữ nguyên. */
 function resetCostFromImports(p){
   if (!p) return;
@@ -3901,6 +3907,11 @@ function delTx(id){
     if (t.type === 'NHAP') p.stock = dec(p.stock - num(t.qty));
     else p.stock = dec(p.stock + num(t.qty));
   }
+  var wasLast = false;
+  if (t.type === 'NHAP') {
+    var lt = lastImport(t.productId);
+    wasLast = !!lt && String(lt.id) === String(t.id);
+  }
   db.transactions = db.transactions.filter(function(x){ return x.id !== id; });
   if (mates.length && !applyRemedyBalance(mates, grand)) {
     db.transactions.splice(pos, 0, t);
@@ -3908,7 +3919,7 @@ function delTx(id){
     toast('Giá bán thấp hơn vốn của đơn', 'error');
     return;
   }
-  if (p && t.type === 'NHAP') resetCostFromImports(p);
+  if (p && t.type === 'NHAP' && wasLast) resetCostFromImports(p);
   commit(mates.length ? 'Đã xóa vị và chia lại đơn thuốc' : 'Đã xóa giao dịch');
 }
 /* ================= SỬA GIAO DỊCH ================= */
@@ -3943,8 +3954,17 @@ function delOrder(oid){
     if (t.type === 'NHAP') p.stock = dec(p.stock - num(t.qty));
     else p.stock = dec(p.stock + num(t.qty));
   });
+  /* Chỉ đặt lại giá vốn cho vị có lần nhập bị xóa LÀ lastImport (tính trước khi xóa). */
+  var resetPids = [];
+  items.forEach(function(t){
+    if (t.type !== 'NHAP') return;
+    var lt = lastImport(t.productId);
+    if (!lt) return;
+    if (!items.some(function(x){ return x.type === 'NHAP' && String(x.id) === String(lt.id); })) return;
+    if (resetPids.indexOf(String(t.productId)) < 0) resetPids.push(String(t.productId));
+  });
   db.transactions = db.transactions.filter(function(x){ return x.oid !== oid; });
-  items.forEach(function(t){ if (t.type === 'NHAP') resetCostFromImports(findProduct(t.productId)); });
+  resetPids.forEach(function(pid){ resetCostFromImports(findProduct(pid)); });
   commit('Đã xóa đơn');
 }
 function txEditKg(t, qRaw){
