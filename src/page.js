@@ -317,9 +317,6 @@ table.inv .c-del,table.his .c-act{width:auto}
 .note .c-act{width:76px}
 .note td,.note th{padding-left:5px;padding-right:5px}
 .note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
-.tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.tab{min-height:38px;padding:4px;font-size:11px}
-.tab__ic{display:none}
 }
 @media (min-width:601px){
 table.his th:nth-child(4),table.his th:nth-child(5),
@@ -340,6 +337,11 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
 .tab__ic{width:16px;height:16px;flex:none}
+@media (max-width:600px){
+.tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tab{min-height:38px;padding:4px;font-size:11px}
+.tab__ic{display:none}
+}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
