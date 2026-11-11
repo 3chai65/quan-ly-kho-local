@@ -5,6 +5,28 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.10.0] - 2026-11-11
+
+### Giao diện
+
+- Thẻ số (Nhập trong tháng, Bán trong tháng, Lợi nhuận tháng, Tổng tồn kho) gọn hơn: padding, cỡ chữ và biểu tượng nhỏ hơn; vẫn giữ dòng phụ “Hôm nay · Năm”. Máy tính 4 thẻ một hàng, điện thoại 2×2.
+- Tám mục (Bán lẻ, Thuốc chén, Nhập hàng, Kho tồn, Lịch sử nhập hàng, Lịch sử bán hàng, Thống kê, Sao lưu & khôi phục) thành một hàng nút; bấm nút thì mục đó hiện toàn chiều rộng, các mục khác ẩn. Điện thoại xếp 4 cột × 2 hàng.
+- Nhớ mục đã chọn gần nhất (localStorage `qlk_tab`); mặc định mở Bán lẻ. Chuyển mục không xóa dữ liệu đang soạn.
+- Bỏ lưới 2 cột của 2.9.0 và 2.9.1.
+
+### Biết, chưa sửa
+
+- Lưu nhập hàng: khi số lượng vượt trần, con trỏ nhảy sang ô giá.
+- Thông báo (toast) bị bàn phím ảo che trên iPhone.
+
+### Test
+
+- Ca tab trong `tests/client.test.mjs`: 8 nút đúng thứ tự, id thẻ và `data-action` không đổi so với 2.9.2, chọn/mở/đóng mục, bấm summary, `qlk_tab` lạ, chuyển tab không đổi `db` và không bật dirty.
+
+### Tài liệu
+
+- CLAUDE.md ghi phiên bản 2.10.0.
+
 ## [2.9.2] - 2026-11-11
 
 ### Sửa lỗi
