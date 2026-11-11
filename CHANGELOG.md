@@ -8,6 +8,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 ## [2.10.1] - 2026-11-11
 
 - Nút tab rút gọn một nhãn: “L.s nhập”, “L.s bán”, “Sao lưu”; điện thoại cỡ chữ 11px.
+- Sửa: quy tắc điện thoại của hàng nút bị ghi đè (thứ tự CSS), nay 4 cột × 2 hàng.
 
 ## [2.10.0] - 2026-11-11
 
