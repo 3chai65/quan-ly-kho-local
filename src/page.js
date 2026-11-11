@@ -325,6 +325,21 @@ table.inv .c-del,table.his .c-act{width:auto}
 table.his th:nth-child(4),table.his th:nth-child(5),
 table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 }
+/* 2.9.0: bố cục máy tính (>900px). Đặt hàng bằng grid-area, DOM giữ nguyên; điện thoại/tablet dùng luồng DOM cũ. */
+@media (min-width:901px){
+.main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch}
+.main>.stats{grid-column:1/-1;grid-row:1;margin-bottom:0}
+.main>.grid2{display:contents}
+.main>.mt-18{margin-top:0}
+#retailBox{grid-area:2/1}
+#remedyBox{grid-area:2/2}
+#nhapBox{grid-area:3/1}
+#invBox{grid-area:3/2}
+#impBox{grid-area:4/1}
+#expBox{grid-area:4/2}
+#chartBox{grid-area:5/1}
+#backupBox{grid-area:5/2}
+}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -445,7 +460,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <summary class="card__head">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>
-        <h2 class="card__title">1. Đơn bán lẻ</h2>
+        <h2 class="card__title">Bán lẻ</h2>
         <span class="spacer"></span>
         <span class="hint">kg · k</span>
       </summary>
@@ -516,7 +531,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <summary class="card__head">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>
-        <h2 class="card__title">2. Đơn thuốc chén</h2>
+        <h2 class="card__title">Thuốc chén</h2>
         <span class="spacer"></span>
         <span class="hint">Gram · k</span>
       </summary>
@@ -618,7 +633,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
     <summary class="card__head">
       <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
       <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
-      <h2 class="card__title">3. Nhập hàng</h2>
+      <h2 class="card__title">Nhập hàng</h2>
       <span class="spacer"></span>
       <span class="hint">Gõ tên mới để tạo vị thuốc</span>
     </summary>
@@ -673,7 +688,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <summary class="card__head">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg>
-        <h2 class="card__title">Thống kê nhập &amp; bán 12 tháng</h2>
+        <h2 class="card__title">Thống kê</h2>
         <span class="spacer"></span>
         <span class="hint">Năm</span>
       </summary>
@@ -697,7 +712,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
       <summary class="card__head">
         <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>
-        <h2 class="card__title">Danh sách tồn kho</h2>
+        <h2 class="card__title">Kho tồn</h2>
         <span class="spacer"></span>
         <span class="hint" id="invCount"></span>
       </summary>
