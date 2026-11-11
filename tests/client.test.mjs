@@ -109,7 +109,7 @@ globalThis.__test = {
   setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
   setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
   normSearch: normSearch,
-  handleAction: handleAction, toast: toast, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
+  handleAction: handleAction, toast: toast, brandDevicesClick: brandDevicesClick, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -2668,8 +2668,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - PAGE.split('data-action="nhap-add"').length + 1, 25, 'data-action cũ đã đổi (nhap-add thêm ở 2.12.0 không tính)');
-  assert.equal(PAGE.match(/ id="/g).length, 159); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"
+  assert.equal(PAGE.match(/data-action="/g).length - NEW_213.reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 25, 'data-action cũ đã đổi (nhap-add, brand-devices thêm ở 2.12.0/2.13.0 không tính)');
+  assert.equal(PAGE.match(/ id="/g).length, 161); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3323,6 +3323,70 @@ test('2.12.1 nhap-row điện thoại: ô tên cả hàng (grid-column 1/-1), l�
   assert.match(PAGE, /<div class="field sug">\s*<label class="lbl" for="nhapSearch">/, 'ô tên phải là .field.sug');
 });
 
+/* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
+test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
+  const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
+  assert.doesNotMatch(head, /href="\/auth\/devices"/, 'còn liên kết /auth/devices trong header');
+  assert.doesNotMatch(head, /<a class="brand"/, 'brand vẫn là thẻ a');
+  assert.doesNotMatch(head, />\s*Thiết bị\s*</, 'còn nút chữ Thiết bị');
+  assert.doesNotMatch(head, /Hệ thống/, 'còn chữ Hệ thống trong header');
+  assert.match(head, /<button class="brand" type="button" id="brandBtn" data-action="brand-devices"[^>]*>Quản Lý Kho<\/button>/);
+  assert.match(head, /<button class="brand__yin" type="button" id="themeBtn" data-action="theme-menu"[^>]*aria-label="Đổi giao diện sáng hoặc tối"/);
+  assert.match(head, /data-theme-set="light"/);
+  assert.match(head, /data-theme-set="dark"/);
+  assert.match(head, /data-theme-set="system"[^>]*>Theo máy</);
+});
+
+test('2.13.0 N4 CSS: keyframes rung và nhánh prefers-reduced-motion cho icon; tiêu đề là nút không viền', () => {
+  assert.match(PAGE, /@keyframes yinShake\{/);
+  assert.match(PAGE, /\.brand__yin\.is-shake\{animation:yinShake/);
+  assert.match(PAGE, /@media \(prefers-reduced-motion:reduce\)\{\.brand__yin\.is-shake\{animation:none/);
+  assert.match(PAGE, /\.brand\{[^}]*background:none;border:0;padding:0/);
+});
+
+test('2.13.0 N4 brandDevicesClick: fetch 200 → vào /auth/devices; 403, lỗi mạng → không đi, rung icon và báo chỉ-đọc; chặn bấm lặp', async () => {
+  const yinClasses = new Set();
+  const yin = { classList: { add: c => yinClasses.add(c), remove: c => yinClasses.delete(c), contains: c => yinClasses.has(c) }, offsetWidth: 0 };
+  const note = { textContent: '' };
+  const els = { '#themeBtn': yin, '#brandNote': note, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const mkDoc = () => ({
+    readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {}
+  });
+  const run = async (status, throws) => {
+    const loc = { href: 'https://example.test/' };
+    const calls = [];
+    const fetchStub = async (url, opts) => { calls.push([url, opts]); if (throws) throw new Error('mạng'); return { status }; };
+    const c = loadClient({ document: mkDoc(), location: loc, fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
+    await c.brandDevicesClick();
+    return { loc, calls, c };
+  };
+  yinClasses.clear(); note.textContent = '';
+  const ok = await run(200, false);
+  assert.equal(ok.loc.href, '/auth/devices', 'thiết bị chủ phải vào /auth/devices');
+  assert.equal(ok.calls[0][0], '/auth/devices');
+  assert.equal(ok.calls[0][1].redirect, 'manual');
+  assert.equal(ok.calls[0][1].credentials, 'same-origin');
+
+  for (const [status, throws] of [[403, false], [401, false], [0, true]]) {
+    yinClasses.clear(); note.textContent = '';
+    const r = await run(status, throws);
+    assert.equal(r.loc.href, 'https://example.test/', 'thành viên không được điều hướng (status ' + status + ')');
+    assert.ok(yinClasses.has('is-shake'), 'icon phải rung (status ' + status + ')');
+    assert.equal(note.textContent, 'Chỉ thiết bị chủ quản lý được thiết bị.');
+  }
+
+  yinClasses.clear();
+  const loc2 = { href: 'https://example.test/' };
+  let n = 0;
+  const slow = () => new Promise(res => setTimeout(() => res({ status: 403 }), 0));
+  const c2 = loadClient({ document: mkDoc(), location: loc2, fetch: async () => { n++; return slow(); }, setTimeout() { return 0; }, clearTimeout() {} });
+  const p1 = c2.brandDevicesClick(), p2 = c2.brandDevicesClick();
+  await Promise.all([p1, p2]);
+  assert.equal(n, 1, 'bấm lặp trong lúc kiểm không được gửi thêm yêu cầu');
+});
+
 /* 2.13.0 (N2): thông báo phải thấy được: lỗi 5 giây + assertive; trong hộp thoại đang mở thì có khung lỗi; phone: toast ở đầu màn hình. */
 function toastDoc(openDialog) {
   const classes = new Set();
@@ -3623,6 +3687,8 @@ test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc g�
 });
 
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
+/* 2.12.0 thêm nhap-add; 2.13.0 thêm brand-devices (không tính khi so với danh sách 1023b40). */
+const NEW_213 = ['nhap-add', 'brand-devices'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
   'copy-preset', 'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
   'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
@@ -3638,7 +3704,7 @@ function oldPageFromGit() {
 
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
   const old = oldPageFromGit();
-  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => a !== 'nhap-add').sort();
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a)).sort();
   assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS, 'data-action đã đổi so với 1023b40');
   if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
