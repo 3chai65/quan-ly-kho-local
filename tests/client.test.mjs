@@ -3900,9 +3900,10 @@ test('2.14.0 Kho/Nhập/Bán: thanh card__bar có tên mục, ô tìm/lọc, s�
   assert.match(PAGE, /data-action="merge-old"/);
 });
 
-test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu tượng; ô tìm lịch sử nhập cùng hàng với tên; ô tìm/lọc khác xuống hàng 2', () => {
+test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu tượng; ô tìm lịch sử nhập xuống hàng 2 cả hàng; số liệu Lịch sử nhập ở hàng 1 cùng tên', () => {
   assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.card__bar-lbl\{display:none\}/);
-  assert.match(PAGE, /\.card__bar-search\.is-inline\{order:0;flex:1 1 0;min-width:0\}/);
+  assert.match(PAGE, /\.card__bar-search\.is-inline\{order:3;flex:1 0 100%;min-width:0\}/, 'ô tìm Lịch sử nhập: hàng 2, rộng 100%');
+  assert.match(PAGE, /#impBox \.card__bar-count\{order:1\}/, 'số liệu Lịch sử nhập: hàng 1 (sau tên, order 1 < ô tìm 3)');
   assert.match(PAGE, /\.card__bar>\.inp\.card__bar-search\{order:3;flex:1 0 100%\}/);
   assert.match(PAGE, /aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho"/);
 });
