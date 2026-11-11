@@ -114,19 +114,22 @@ details>.card__head:hover{background:var(--surface2)}
 details[open] .chev{transform:rotate(90deg)}
 .spacer{flex:1 1 auto}
 /* ---------- stats ---------- */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh);
-padding:5px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+/* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--surface);
+border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
+.stats--chart{box-shadow:none}
+.stats__c{padding:6px 12px;min-width:0}
+.stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
-.stat__v{font-size:17px;font-weight:800;letter-spacing:-.02em;margin-top:1px;line-height:1.2;font-variant-numeric:tabular-nums}
-.stat__ic{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:none}
-.stat__ic .ico{width:14px;height:14px}
+.stat__v{font-size:16px;font-weight:800;letter-spacing:-.02em;margin-top:1px;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .stat__sub{font-size:10px;color:var(--muted);margin-top:1px;line-height:1.3}
 .stat__sub b{color:var(--text2);font-weight:700;font-variant-numeric:tabular-nums}
-.ic-blue{background:var(--blue-soft);color:var(--blue-text)}
-.ic-green{background:var(--green-soft);color:var(--green-text)}
-.ic-amber{background:var(--amber-soft);color:var(--amber-text)}
-.ic-purple{background:var(--purple-soft);color:var(--purple-text)}
+.stat__sub span+span::before{content:"· "}
+@media (max-width:600px){
+.stats__c{padding:6px 10px}
+.stat__sub span{display:block}
+.stat__sub span+span::before{content:none}
+}
 </style>
 <style>
 /* ---------- forms ---------- */
@@ -257,15 +260,12 @@ max-height:calc(100dvh - 24px);overflow:auto}
 /* ---------- responsive ---------- */
 @media (max-width:900px){
 .grid2{grid-template-columns:1fr}
-.stats{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:640px){
 .wrap{padding:0 12px}
 .bar{min-height:56px}
 .brand span{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
-.stat__v{font-size:16px}
-.stat__ic{width:22px;height:22px;border-radius:7px}
 .card__body{padding:13px}
 .row{grid-template-columns:1fr}
 .nhap-row{grid-template-columns:minmax(0,1fr) 78px 94px;gap:8px}
@@ -417,36 +417,16 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 <main id="main" class="wrap main">
   <h1 class="sr">Quản lý kho dược liệu</h1>
 
-  <section class="stats" aria-label="Số liệu kho và bán hàng">
-    <div class="stat">
-      <div>
-        <p class="stat__k">Nhập trong tháng</p>
-        <p class="stat__v" id="statImport">0</p>
-      </div>
-      <span class="stat__ic ic-blue" aria-hidden="true"><svg class="ico"><use href="#i-cart"/></svg></span>
+  <section class="stats" aria-label="Bán và lợi nhuận tháng">
+    <div class="stats__c">
+      <p class="stat__k">Bán trong tháng</p>
+      <p class="stat__v" id="statExport">0</p>
+      <p class="stat__sub"><span>Hôm nay <b id="statExportDay">0</b></span><span>Năm <b id="statExportYear">0</b></span></p>
     </div>
-    <div class="stat">
-      <div>
-        <p class="stat__k">Bán trong tháng</p>
-        <p class="stat__v" id="statExport">0</p>
-        <p class="stat__sub">Hôm nay <b id="statExportDay">0</b> · Năm <b id="statExportYear">0</b></p>
-      </div>
-      <span class="stat__ic ic-green" aria-hidden="true"><svg class="ico"><use href="#i-cash"/></svg></span>
-    </div>
-    <div class="stat">
-      <div>
-        <p class="stat__k">Lợi nhuận tháng</p>
-        <p class="stat__v" id="statProfit">0</p>
-        <p class="stat__sub">Hôm nay <b id="statProfitDay">0</b> · Năm <b id="statProfitYear">0</b></p>
-      </div>
-      <span class="stat__ic ic-amber" aria-hidden="true"><svg class="ico"><use href="#i-chart-line"/></svg></span>
-    </div>
-    <div class="stat">
-      <div>
-        <p class="stat__k">Tổng tồn kho</p>
-        <p class="stat__v" id="statStock">0g</p>
-      </div>
-      <span class="stat__ic ic-purple" aria-hidden="true"><svg class="ico"><use href="#i-warehouse"/></svg></span>
+    <div class="stats__c">
+      <p class="stat__k">Lợi nhuận tháng</p>
+      <p class="stat__v" id="statProfit">0</p>
+      <p class="stat__sub"><span>Hôm nay <b id="statProfitDay">0</b></span><span>Năm <b id="statProfitYear">0</b></span></p>
     </div>
   </section>
 
@@ -699,6 +679,16 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <span class="hint">Năm</span>
       </summary>
       <div class="card__body">
+        <section class="stats stats--chart" aria-label="Nhập và tồn kho">
+          <div class="stats__c">
+            <p class="stat__k">Nhập trong tháng</p>
+            <p class="stat__v" id="statImport">0</p>
+          </div>
+          <div class="stats__c">
+            <p class="stat__k">Tổng tồn kho</p>
+            <p class="stat__v" id="statStock">0g</p>
+          </div>
+        </section>
         <div class="row mb-12">
           <div class="legend" aria-hidden="true">
             <span><i class="dot dot--imp"></i>Nhập</span>
