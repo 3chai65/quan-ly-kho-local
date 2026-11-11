@@ -2367,6 +2367,31 @@ test('Enter vị khớp chính xác không có trong gợi ý hiển thị: khô
 });
 
 
+function limitDoc(els) {
+  return {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return els[s] || null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+}
+function limitStock() {
+  const dom = stockDom();
+  dom.set('toast', ''); dom.set('toastMsg', '');
+  return dom;
+}
+function limitClient(dom, products, transactions = []) {
+  const c = loadClient({
+    document: dom.document, confirm: () => true,
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  c.setDb({ products, transactions, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  return c;
+}
+const toastText = dom => dom.document.querySelector('#toastMsg').textContent;
+
 test('checkLimits: commitRetailRow trả false khi kg vượt trần', () => {
   const row = {
     getAttribute() { return 'p1'; },
@@ -2377,17 +2402,15 @@ test('checkLimits: commitRetailRow trả false khi kg vượt trần', () => {
     }
   };
   const tb = { textContent: 'giu', querySelector() { return row; } };
-  const doc = {
-    readyState: 'loading', hidden: false, activeElement: null,
-    documentElement: makeEl(), body: makeEl(),
-    querySelector(s) { return s === '#retailBody' ? tb : null; },
-    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
-    addEventListener() {}, removeEventListener() {}
-  };
-  const c = loadClient({ document: doc });
+  const els = { '#retailBody': tb, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const c = loadClient({ document: limitDoc(els) });
   c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  const before = JSON.stringify(c.getDb());
   assert.equal(c.commitRetailRow(), false);
-  assert.equal(c.getDb().transactions.length, 0);
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.getRetailItems().length, 0);
+  assert.equal(c.isDirty(), false);
+  assert.match(els['#toastMsg'].textContent, /Số lượng vượt giới hạn/);
 });
 
 test('checkLimits: commitRemedyRow trả false khi gram vượt trần', () => {
@@ -2399,35 +2422,120 @@ test('checkLimits: commitRemedyRow trả false khi gram vượt trần', () => {
     }
   };
   const tb = { textContent: 'giu', querySelector() { return row; } };
-  const doc = {
-    readyState: 'loading', hidden: false, activeElement: null,
-    documentElement: makeEl(), body: makeEl(),
-    querySelector(s) { return s === '#remedyBody' ? tb : null; },
-    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
-    addEventListener() {}, removeEventListener() {}
-  };
-  const c = loadClient({ document: doc });
+  const els = { '#remedyBody': tb, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const c = loadClient({ document: limitDoc(els) });
   c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  const before = JSON.stringify(c.getDb());
   assert.equal(c.commitRemedyRow(), false);
+  assert.equal(JSON.stringify(c.getDb()), before);
   assert.equal(c.getRemedyItems().length, 0);
+  assert.equal(c.isDirty(), false);
+  assert.match(els['#toastMsg'].textContent, /Gram vượt giới hạn/);
 });
 
 test('checkLimits: saveNhap trả false khi nhập lượng vượt trần', () => {
   const nq = { value: '10000000', focus() {}, select() {} };
   const np = { value: '14', focus() {}, select() {} };
-  const doc = {
-    readyState: 'loading', hidden: false, activeElement: null,
-    documentElement: makeEl(), body: makeEl(),
-    querySelector(s) { return s === '#nhapSearch' ? { value: 'Cam' } : s === '#nhapQty' ? nq : s === '#nhapPrice' ? np : null; },
-    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
-    addEventListener() {}, removeEventListener() {}
+  const els = {
+    '#nhapSearch': { value: 'Cam' }, '#nhapQty': nq, '#nhapPrice': np,
+    '#toast': makeEl(), '#toastMsg': makeEl()
   };
-  const c = loadClient({ document: doc });
+  const c = loadClient({ document: limitDoc(els) });
   c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  const before = JSON.stringify(c.getDb());
   c.saveNhap({ preventDefault() {} });
-  assert.equal(c.getDb().transactions.length, 0);
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(els['#toastMsg'].textContent, /Số lượng vượt giới hạn/);
 });
 
+test('checkLimits: saveRemedy thang 10001 bị từ chối: db không đổi, không dirty, có toast', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1000000, costPrice: 1 }]);
+  dom.set('remedyThang', '10001'); dom.set('remedyUnitPrice', '1000');
+  c.setRemedyItems([{ productId: 'p1', grams: 1000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveRemedy();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số thang vượt giới hạn/);
+});
+
+test('checkLimits: saveRemedy vốn sau nhân vượt trần (1 thang × giá 1e13 đồng) bị từ chối', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 1000000, costPrice: 1 }]);
+  dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '10000000000');
+  c.setRemedyItems([{ productId: 'p1', grams: 1000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveRemedy();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('checkLimits: saveRemedy sát trần (1e6 kg, 1e12 đồng) vẫn lưu được', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 2000000, costPrice: 1 }]);
+  dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1000000000');
+  c.setRemedyItems([{ productId: 'p1', grams: 1000000000 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveRemedy();
+  assert.notEqual(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), true);
+  assert.doesNotMatch(toastText(dom), /vượt giới hạn/);
+});
+
+test('checkLimits: saveTxEdit qty 1e7 bị từ chối: db không đổi, không dirty, có toast', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  dom.set('txEditQty', '10000000'); dom.set('txEditPrice', '200');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('checkLimits: saveTxEdit giá 1e13 đồng bị từ chối: db không đổi, không dirty, có toast', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '10000000000');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Tiền vượt giới hạn/);
+});
+
+test('checkLimits: saveTxEdit đơn thuốc sau nhân vượt trần (1e6 g × 1e4 thang = 1e7 kg) bị từ chối', () => {
+  const dom = limitStock();
+  const tx = { id: 'r1', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, ts: 2000, rx: true, thang: 10000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 1 }], [tx]);
+  c.openTxEdit('r1');
+  dom.set('txEditQty', '1000000'); dom.set('txEditPrice', '1');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), false);
+  assert.match(toastText(dom), /Số lượng vượt giới hạn/);
+});
+
+test('checkLimits: saveTxEdit sát trần (1e6 kg, 1e12 đồng) vẫn lưu được', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  dom.set('txEditQty', '1000000'); dom.set('txEditPrice', '1000000000');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.notEqual(JSON.stringify(c.getDb()), before);
+  assert.equal(c.isDirty(), true);
+  assert.doesNotMatch(toastText(dom), /vượt giới hạn/);
+});
 
 test('checkLimits: q/gram/thang/money ngoài trần bị từ chối; trần hợp lệ', () => {
   const c = loadClient({ setTimeout() { return 0; }, clearTimeout() {} });
