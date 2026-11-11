@@ -4552,3 +4552,16 @@ test('2.14.0 M6 hàng đang nhập: td của .note__pending tr.is-row có height
   assert.ok(pend > base, 'quy tắc height:auto của hàng đang nhập phải đứng sau .note td{height:34px}');
   assert.match(css, /\.note .note__pending tr\.is-row>td \.inp\{display:block\}/, 'ô nhập trong hàng đang nhập là block');
 });
+
+/* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập 4 ô: gram 2/2–3/4, nút + 2/4 căn đáy, 44×44 (trong khối 600px, đặt sau quy tắc chung). */
+test('2.14.0 M7 Thuốc chén điện thoại: gram chiếm 2/2–3/4, nút + ở 2/4 căn đáy 44×44 (sau quy tắc chung table.ord)', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const gen = css.indexOf('table.ord tr.is-row>td:nth-child(4){grid-area:2/3}');
+  const g = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}');
+  const b = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}');
+  const btn = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}');
+  assert.ok(g >= 0, 'thiếu quy tắc gram 2/2–3/4');
+  assert.ok(b >= 0, 'thiếu quy tắc nút + 2/4 căn đáy');
+  assert.ok(btn >= 0, 'thiếu quy tắc nút + 44×44');
+  assert.ok(g > gen && b > gen && btn > gen, 'quy tắc Thuốc chén phải đứng sau quy tắc chung table.ord');
+});
