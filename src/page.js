@@ -507,7 +507,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <span class="total__v txt-green" id="retailTotal">0</span>
           </div>
           <button class="btn btn--green" type="button" data-action="save-retail">
-            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Lưu đơn
+            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
           </button>
         </div>
       </div>
