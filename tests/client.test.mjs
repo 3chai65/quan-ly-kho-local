@@ -3844,7 +3844,7 @@ test('2.14.0 Nhập hàng điện thoại: dòng đang nhập là một dòng l�
   const rowEnd = PAGE.indexOf('</tr>', rowStart);
   const iHint = PAGE.indexOf('id="nhapHint"');
   assert.ok(iHint > rowStart && iHint < rowEnd, '#nhapHint phải là hậu duệ của tr.is-row (dòng đang nhập), không tràn ra ngoài');
-  assert.match(PAGE, /#nhapListBox \.note__pending \.nhap-add\{height:44px;min-height:44px;width:44px;min-width:44px;display:block;margin-left:auto\}/, 'nút + cao 44px bằng ô nhập, là khối (không khoảng đệm baseline)');
+  assert.match(PAGE, /#nhapListBox \.note__pending \.nhap-add\{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto\}/, 'nút + máy tính 36px bằng ô inp--sm, là khối (M8)');
   assert.doesNotMatch(PAGE, /Tương đương/);
   assert.match(PAGE, /\.nhap-pend__tot\{float:right/);
 });
@@ -4564,4 +4564,17 @@ test('2.14.0 M7 Thuốc chén điện thoại: gram chiếm 2/2–3/4, nút + �
   assert.ok(b >= 0, 'thiếu quy tắc nút + 2/4 căn đáy');
   assert.ok(btn >= 0, 'thiếu quy tắc nút + 44×44');
   assert.ok(g > gen && b > gen && btn > gen, 'quy tắc Thuốc chén phải đứng sau quy tắc chung table.ord');
+});
+
+/* 2.14.0 (giai đoạn 4, M8): nút + dòng đang nhập máy tính 36px (bằng ô inp--sm); điện thoại 44px đặt SAU khối ≤600px. */
+test('2.14.0 M8 nút + dòng đang nhập: máy tính 36×36 (nhap-add và .note__pending .btn--icon) đứng TRƯỚC khối ≤600px; điện thoại 44×44 đứng SAU', () => {
+  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
+  const dNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}');
+  const dIcon = css.indexOf('.note__pending tr.is-row .btn--icon{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}');
+  const mNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px}');
+  const m7 = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}');
+  assert.ok(dNhap >= 0, 'thiếu nhap-add 36px máy tính');
+  assert.ok(dIcon >= 0, 'thiếu .btn--icon 36px máy tính trong dòng đang nhập');
+  assert.ok(mNhap >= 0, 'thiếu nhap-add 44px điện thoại');
+  assert.ok(mNhap > m7 && m7 > dIcon, 'quy tắc điện thoại 44px phải nằm trong khối ≤600px, đứng SAU quy tắc máy tính');
 });
