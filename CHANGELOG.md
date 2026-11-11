@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.1] - 2026-11-11
+
+### Giao diện điện thoại
+
+- Thuốc chén: ô chọn đơn không hẹp hơn chữ "Đơn mới" (min-width 92 px); ô ngày 108 px ở màn hình ≤400 px để ba phần vừa một hàng ở 375/393 px (320 px: ô ngày xuống hàng).
+- Thống kê: chú giải tháng (tháng – Nhập – Bán) gom một hàng; số tiền chỉ hiện phần nguyên của nghìn đồng (cắt, không làm tròn; hàm hiển thị riêng, fmtMoney giữ nguyên ở nơi khác).
+
 ## [2.15.0] - 2026-11-11
 
 ### Giao diện điện thoại

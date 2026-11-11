@@ -267,15 +267,16 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .chart-chip--exp .chart-chip__sw{background:var(--chart-exp)}
 .chart-chip__k{font-weight:600;color:var(--text2);min-width:2.2em}
 /* 2.15.0: chú giải tháng – mỗi dòng "[ô màu] Nhập  số tiền"; ô năm nằm cùng hàng tiêu đề Thống kê. */
-.chart-tip{flex-direction:column;align-items:flex-start;gap:4px}
+.chart-tip{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px}
 #chartBox>summary.chart-head .chart-year{margin-left:auto}
 #chartBox>summary.chart-head .chart-head__stats{margin-left:0}
 .chart-year__box{cursor:text}
 @media (max-width:600px){
 #chartBox>summary.chart-head .chart-head__stats{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chart-head__c{align-items:flex-start}
-.chart-tip{gap:4px}
-.chart-chip{font-size:13px}
+.chart-tip{gap:4px 10px}
+.chart-chip{font-size:13px;gap:5px}
+.chart-chip__k{min-width:0}
 }
 /* ---------- toast ---------- */
 .toast{position:fixed;z-index:120;left:50%;bottom:22px;transform:translate(-50%,150%);
@@ -398,7 +399,8 @@ td.c-qty{position:relative}
 #remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
 @media (max-width:600px){
-#remedyBox .card__bar-preset{order:1;flex:1 1 80px}
+#remedyBox .card__bar-preset{order:1;flex:1 1 92px;min-width:92px}
+/* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
 /* 2.15.0: điện thoại – Lưu đơn | Tên mới | Bán đơn đúng một hàng; Xóa/Sao chép đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
 #remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
 #remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:44px;padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
@@ -428,6 +430,10 @@ td.c-qty{position:relative}
 }
 @media (max-width:400px){
 .card__bar-title .ico{display:none}
+#remedyBox .card__bar-date{flex:0 0 108px}
+/* 2.15.1: chú giải tháng cùng một hàng ở 375px kể cả số lớn. */
+.chart-tip,.chart-tip__m{font-size:12px}
+.chart-chip{font-size:12px;gap:4px}
 }
 /* ---------- responsive ---------- */
 @media (max-width:900px){
@@ -1380,6 +1386,13 @@ function fmtMoney(dong){
   var ip = bits[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   var fp = bits[1] ? ',' + bits[1] : '';
   return (neg ? '-' : '') + (ip || '0') + fp;
+}
+/* 2.15.1: chỉ để hiển thị chú giải tháng – phần nguyên của nghìn đồng, CẮT bỏ phần lẻ (không làm tròn). Không đổi dữ liệu. */
+function fmtMoneyInt(dong){
+  var d = Math.abs(Math.round(num(dong)));
+  if (!isFinite(d)) d = 0;
+  var k = Math.floor(d / DONG_PER_K);
+  return (num(dong) < 0 && k > 0 ? '-' : '') + String(k).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 function fmtUnitPrice(k){ return fmtMoney(k) + '/kg'; }
 function pad2(n){ return n < 10 ? '0' + n : '' + n; }
@@ -3601,7 +3614,7 @@ function renderChart(){
 
   chartGeo = { padL: padL, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
   var mmStr = pad2(shown + 1) + '/' + data.year;
-  var impTxt = fmtMoney(data.impK[shown]), expTxt = fmtMoney(data.expK[shown]);
+  var impTxt = fmtMoneyInt(data.impK[shown]), expTxt = fmtMoneyInt(data.expK[shown]);
   var mEl = $('#chartMonth'), iEl = $('#chartImpChip'), eEl = $('#chartExpChip'), sEl = $('#chartTipSr');
   if (mEl) mEl.textContent = mmStr;
   /* 2.15.0: chú giải "[ô màu] Nhập số tiền"; số tiền nằm trong phần tử con (chip còn nhãn + ô màu). */

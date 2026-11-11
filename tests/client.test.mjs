@@ -39,7 +39,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
+  fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
   reconcileList: (typeof reconcileList === 'function' ? reconcileList : null), findProduct: (typeof findProduct === 'function' ? findProduct : null), renderStats: (typeof renderStats === 'function' ? renderStats : null),
   loadPreset: (typeof loadPreset === 'function' ? loadPreset : null), remedyPresetPick: typeof remedyPresetPick === 'function' ? remedyPresetPick : null, remedyNewName: typeof remedyNewName === 'function' ? remedyNewName : null, recFix: (typeof recFix === 'function' ? recFix : null), resetDrafts: (typeof resetDrafts === 'function' ? resetDrafts : null), checkLimits: (typeof checkLimits === 'function' ? checkLimits : null),
@@ -3332,13 +3332,13 @@ test('2.13.2 dòng dữ liệu: mặc định tháng 7 (năm khác); bấm cột
   });
   c.renderChart();
   assert.equal(els['#chartMonth'].textContent, '07/2025', 'mặc định: tháng 7 (tháng cuối có dữ liệu của năm khác)');
-  assert.equal(els['#chartExpVal'].textContent, c.fmtMoney(7000000));
+  assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(7000000));
   const cx = i => 44 + ((300 - 44 - 8) / 12) * (i + 0.5);
   const click = i => c.onChartClick({ clientX: cx(i), clientY: 100 });
   click(2);
   assert.equal(els['#chartMonth'].textContent, '03/2025', 'bấm cột tháng 3 → hiện tháng 3');
-  assert.equal(els['#chartImpVal'].textContent, c.fmtMoney(3000000));
-  assert.equal(els['#chartExpVal'].textContent, c.fmtMoney(0));
+  assert.equal(els['#chartImpVal'].textContent, c.fmtMoneyInt(3000000));
+  assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(0));
   assert.match(els['#chartTipSr'].textContent, /^Tháng 03\/2025 — Nhập: /);
   click(2);
   assert.equal(els['#chartMonth'].textContent, '07/2025', 'bấm lại cột đang chọn → về tháng mặc định');
@@ -3348,8 +3348,8 @@ test('2.13.2 dòng dữ liệu: mặc định tháng 7 (năm khác); bấm cột
 test('2.13.2 CSS: quy tắc điện thoại của đầu thẻ và dòng dữ liệu đặt SAU quy tắc gốc cùng bộ chọn', () => {
   const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
   assert.ok(at('.chart-head__stats{display:flex') < at('#chartBox>summary.chart-head .chart-head__stats{width:100%'), 'đầu thẻ điện thoại phải sau gốc');
-  assert.ok(at('.chart-tip{display:flex') < at('.chart-tip{gap:4px}'), 'dòng dữ liệu điện thoại phải sau gốc');
-  assert.ok(at('.chart-chip{display:inline-flex') < at('.chart-chip{font-size:13px}'), 'chip điện thoại phải sau gốc');
+  assert.ok(at('.chart-tip{display:flex') < at('.chart-tip{gap:4px 10px}'), 'dòng dữ liệu điện thoại phải sau gốc');
+  assert.ok(at('.chart-chip{display:inline-flex') < at('.chart-chip{font-size:13px;gap:5px}'), 'chip điện thoại phải sau gốc');
 });
 
 /* 2.14.0 (1): bỏ chú thích và chữ đơn vị tĩnh; id và hook dữ liệu còn nguyên. */
@@ -3714,7 +3714,7 @@ test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) n�
 
 /* 2.14.0 (T1–T3, Nhập hàng điện thoại): bố cục gọn theo ảnh duyệt. */
 test('2.14.0 Thuốc chén điện thoại: ô chọn đơn rộng cả hàng 2 của thanh; nút chân ≥44px; tiêu đề cột ẩn khi tờ ghi rỗng', () => {
-  assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:1;flex:1 1 80px\}/);
+  assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:1;flex:1 1 92px;min-width:92px\}/);
   assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
   assert.match(PAGE, /#remedyNote>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/);
   assert.match(PAGE, /#remedyNote:has\(#remedyBody tr\[data-pid\]\)>table>thead\{display:table-header-group\}/);
@@ -4770,7 +4770,7 @@ test('2.15.0 thanh tiêu đề điện thoại: ô tìm/ô chọn đơn không c
   assert.doesNotMatch(PAGE, /\.card__bar-search\{order:3;flex:1 0 100%\}/);
   assert.doesNotMatch(PAGE, /#remedyBox \.card__bar-preset\{order:3;flex:1 0 100%\}/);
   assert.match(PAGE, /\.card__bar>\.inp\.card__bar-search\{order:1;flex:1 1 80px;min-width:0\}/);
-  assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 80px\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 92px;min-width:92px\}/);
 });
 
 test('2.15.0 chân Thuốc chén: Lưu đơn | Tên mới | Bán đơn một hàng không xuống dòng; Xóa/Sao chép ở hàng phụ riêng; id/action/aria-label giữ', () => {
@@ -4807,4 +4807,33 @@ test('2.15.0 dữ liệu cũ có oid/oname (đã gộp trước đây) vẫn qua
   const g = rows.filter(r => r.group);
   assert.equal(g.length, 1, 'hai dòng cùng oid phải gom một đơn');
   assert.equal(g[0].oname, 'Đơn thuốc lẻ');
+});
+
+/* 2.15.1: ràng buộc CSS (số đo thật ở trình duyệt nằm trong báo cáo; ở đây giữ quy tắc). */
+test('2.15.1 Thuốc chén điện thoại: ô chọn đơn không hẹp hơn chữ "Đơn mới" (min-width >= 90px), ô ngày 108px ở <=400px', () => {
+  const m = PAGE.match(/#remedyBox \.card__bar-preset\{order:1;flex:1 1 (\d+)px;min-width:(\d+)px\}/);
+  assert.ok(m, 'thiếu quy tắc ô chọn đơn điện thoại');
+  assert.ok(Number(m[2]) >= 90, 'min-width ô chọn đơn phải >= 90px');
+  assert.ok(Number(m[1]) >= Number(m[2]), 'flex-basis không nhỏ hơn min-width');
+  assert.match(PAGE, /@media \(max-width:400px\)\{[^@]*#remedyBox \.card__bar-date\{flex:0 0 108px\}/);
+});
+
+test('2.15.1 chú giải tháng cùng một hàng: chart-tip là hàng (row, wrap), không còn cột; chip <=12px ở <=400px', () => {
+  assert.match(PAGE, /\.chart-tip\{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px\}/);
+  assert.ok(!/\.chart-tip\{flex-direction:column/.test(PAGE), 'không còn xếp cột');
+  assert.match(PAGE, /@media \(max-width:400px\)\{[^@]*\.chart-chip\{font-size:12px;gap:4px\}/);
+});
+
+test('2.15.1 fmtMoneyInt (chú giải tháng): cắt phần lẻ nghìn, không làm tròn; fmtMoney nơi khác vẫn giữ số lẻ', () => {
+  assert.equal(app.fmtMoneyInt(123456789), '123.456');
+  assert.equal(app.fmtMoneyInt(123456999), '123.456', 'cắt, không làm tròn lên');
+  assert.equal(app.fmtMoneyInt(400), '0');
+  assert.equal(app.fmtMoneyInt(999), '0');
+  assert.equal(app.fmtMoneyInt(1000), '1');
+  assert.equal(app.fmtMoneyInt(0), '0');
+  assert.equal(app.fmtMoneyInt(-1500), '-1');
+  assert.equal(app.fmtMoneyInt(-400), '0', 'không hiện -0');
+  assert.equal(app.fmtMoneyInt(1234567000), '1.234.567');
+  assert.equal(app.fmtMoney(123456789), '123.456,789', 'fmtMoney không đổi');
+  assert.equal(app.fmtMoney(400), '0,4');
 });
