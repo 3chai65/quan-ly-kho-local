@@ -103,7 +103,7 @@ globalThis.__test = {
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
   latestImportMap: latestImportMap, importParen: importParen, costParen: costParen,
-  historyData: historyData, renderHistory: renderHistory, renderNote: renderNote, qtyHintText: qtyHintText, attachQtyHint: attachQtyHint,
+  historyData: historyData, renderHistory: renderHistory, renderNote: renderNote, qtyHintText: qtyHintText, attachQtyHint: attachQtyHint, refreshAllQtyHints: refreshAllQtyHints,
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: normSearch,
@@ -4604,5 +4604,35 @@ test('2.14.0 S1 CSS: cột SL máy tính 152px (ô 132px) trong @media (min-widt
   const at = css.indexOf(m[0]);
   for (const base of ['#remedyNote col.cg-qty{width:84px}', '#nhapListBox col.cg-qty{width:84px}', '#retailNote col.cg-qty{width:104px}']) {
     assert.ok(at > css.indexOf(base), 'quy tắc 152px phải đứng sau ' + base);
+  }
+});
+
+/* 2.14.0 N1: mã gán value rỗng cho ô số có gợi ý phải làm mới gợi ý (không còn "(12,5 kg)" trên ô trống). */
+test('2.14.0 N1 runtime: refreshAllQtyHints làm mới gợi ý; ô bị xóa bằng mã → gợi ý rỗng và ẩn', () => {
+  const doc = trackDoc({});
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  let wrap = null;
+  const host = { classList: { add() {}, contains() { return false; } }, insertBefore(w) { wrap = w; return w; } };
+  const input = { id: 'nhapQty', value: '0.5', parentNode: host, attrs: {}, l: {}, clientWidth: 0, style: {},
+    classList: { add() {}, remove() {} }, setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(ev, f) { this.l[ev] = f; } };
+  c.attachQtyHint(input, 'kg');
+  const h = wrap.children[1];
+  assert.equal(h.textContent, '(5 lạng)', 'trước khi xóa: có gợi ý');
+  input.value = '';
+  doc.querySelectorAll = () => [input];
+  c.refreshAllQtyHints();
+  assert.equal(h.textContent, '', 'ô trống → gợi ý rỗng');
+  assert.equal(h.hidden, true, 'ô trống → gợi ý ẩn');
+});
+
+test('2.14.0 N1 cấu trúc: resetRetail, resetRemedy, resetNhapInputs, saveNhap, commitRetailRow, commitRemedyRow đều gọi refreshAllQtyHints()', () => {
+  const body = name => {
+    const i = PAGE.indexOf('\nfunction ' + name + '(');
+    assert.ok(i >= 0, 'thiếu hàm ' + name);
+    const j = PAGE.indexOf('\n}\n', i);
+    return PAGE.slice(i, j);
+  };
+  for (const n of ['resetRetail', 'resetRemedy', 'resetNhapInputs', 'saveNhap', 'commitRetailRow', 'commitRemedyRow']) {
+    assert.match(body(n), /\n {2}refreshAllQtyHints\(\);/, n + ' phải làm mới gợi ý sau khi xóa ô');
   }
 });
