@@ -109,7 +109,7 @@ globalThis.__test = {
   setImpAll: function(v){ impAll = !!v; }, getImpAll: function(){ return impAll; },
   setExpAll: function(v){ expAll = !!v; }, getExpAll: function(){ return expAll; },
   normSearch: normSearch,
-  addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
+  handleAction: handleAction, addNhapItem: addNhapItem, addRemedyToNote: addRemedyToNote, delOrder: delOrder, pickSuggest: pickSuggest,
   scheduleSyncRetry: scheduleSyncRetry, noteSave: noteSave, remedyNoteSave: remedyNoteSave,
   savePreset: savePreset, copyPreset: copyPreset, saveEdit: saveEdit,
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -2631,7 +2631,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length, 25);
+  assert.equal(PAGE.match(/data-action="/g).length - PAGE.split('data-action="nhap-add"').length + 1, 25, 'data-action cũ đã đổi (nhap-add thêm ở 2.12.0 không tính)');
   assert.equal(PAGE.match(/ id="/g).length, 159); // 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"
 });
 
@@ -3259,6 +3259,44 @@ test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng T
   assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
 });
 
+/* 2.12.0 (A): nút + ở Nhập hàng bấm CHÍNH addNhapItem (cùng đường với Enter). */
+test('2.12.0 nút + nhập hàng: đúng một nút data-action=nhap-add; bấm thêm đúng một dòng, db không đổi, không dirty; 1e7 không thêm và có toast; 2 dòng rồi saveNhap lưu cả 2', () => {
+  assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'phải đúng một nút nhap-add');
+  const els = {
+    '#nhapSearch': Object.assign(makeEl(), { value: 'Cam thảo' }),
+    '#nhapQty': Object.assign(makeEl(), { value: '2' }),
+    '#nhapPrice': Object.assign(makeEl(), { value: '10' }),
+    '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null,
+    documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return els[s] || null; },
+    querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); },
+    addEventListener() {}, removeEventListener() {}
+  };
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 0, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.setBase(1);
+  c.setDirty(false);
+  const before = JSON.stringify(c.getDb());
+  const btn = { getAttribute(k) { return k === 'data-action' ? 'nhap-add' : null; } };
+  c.handleAction(btn);
+  assert.equal(c.getNhapList().length, 1, 'bấm + phải thêm đúng một dòng');
+  assert.equal(JSON.stringify(c.getDb()), before, 'db không đổi khi thêm vào tờ ghi');
+  assert.equal(c.isDirty(), false, 'không bật dirty');
+  els['#nhapSearch'].value = 'Cam thảo'; els['#nhapQty'].value = '10000000'; els['#nhapPrice'].value = '10';
+  els['#toastMsg'].textContent = '';
+  c.handleAction(btn);
+  assert.equal(c.getNhapList().length, 1, 'số lượng 1e7 không được thêm dòng');
+  assert.ok(els['#toastMsg'].textContent.length > 0, 'số lượng 1e7 phải có toast');
+  els['#nhapSearch'].value = 'Cam thảo'; els['#nhapQty'].value = '3'; els['#nhapPrice'].value = '10';
+  c.handleAction(btn);
+  assert.equal(c.getNhapList().length, 2, 'thêm liên tiếp phải có 2 dòng');
+  c.saveNhap();
+  assert.equal(c.getDb().transactions.filter(t => t.type === 'NHAP').length, 2, 'saveNhap phải lưu cả 2 dòng');
+});
+
 /* 2.11.0: dải số liệu mỏng (Bán/Lợi nhuận) trên cùng; Nhập/Tồn kho chuyển vào Thống kê. Chỉ giao diện. */
 const STAT_IDS = ['statImport', 'statExport', 'statExportDay', 'statExportYear', 'statProfit', 'statProfitDay', 'statProfitYear', 'statStock'];
 
@@ -3322,9 +3360,10 @@ function oldPageFromGit() {
 
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
   const old = oldPageFromGit();
-  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).sort();
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => a !== 'nhap-add').sort();
   assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS, 'data-action đã đổi so với 1023b40');
   if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
+  assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
