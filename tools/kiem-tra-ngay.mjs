@@ -68,7 +68,6 @@ function scan(kind, rows) {
   }
 }
 scan('giao dịch', data.transactions);
-scan('đơn thuốc', data.prescriptions);
 
 console.log('Tổng bản ghi: ' + total + ' | xác định thời điểm tạo bằng ts: ' + viaTs + ', bằng id: ' + viaId +
   ' | không xác định được: ' + unknown + ' | lệch ngày: ' + bad.length);
