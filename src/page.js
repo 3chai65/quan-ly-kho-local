@@ -453,11 +453,14 @@ td.c-qty{position:relative}
 .btn{min-height:44px}
 .btn--sm{min-height:38px}
 .inp{min-height:44px;font-size:16px}
-/* 2.15.0: chân tờ ghi (Tổng + Bán đơn) dính đáy màn hình điện thoại. Bỏ overflow cắt của thẻ/tờ ghi để sticky chạy theo cửa sổ; z-index thấp hơn .top (30), gợi ý (40), toast/hộp thoại. */
+/* 2.15.3: chân tờ ghi (Tổng + Bán đơn) là thanh position:fixed ở đáy MÀN HÌNH (sticky chỉ dính khi đáy tờ ghi còn dưới màn hình). JS (initFootBars) đặt .foot-fixed trên #retailBox/#remedyBox
+   khi thẻ đang mở trên điện thoại, và .foot-off khi tờ ghi ra khỏi vùng nhìn hoặc đang gõ/bàn phím hiện. Chừa chỗ ở đáy thẻ bằng padding = chiều cao thanh (--foot-h). z-index thấp hơn .top (30), gợi ý (40), toast/hộp thoại. */
 #retailBox,#remedyBox{overflow:visible}
 #retailNote{overflow:visible}
-#retailNote .note__foot,#remedyNote .note__foot{position:sticky;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--border);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
-#remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+#retailBox.foot-fixed>.card__body,#remedyBox.foot-fixed>.card__body{padding-bottom:calc(var(--foot-h,72px) + 8px)}
+#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -2px 10px rgba(15,23,42,.12);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
+#remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
 .chart{height:260px}
 }
@@ -2104,6 +2107,14 @@ function commitRemedyRow(){
   refreshAllQtyHints();
   return true;
 }
+/* 2.15.3: sau "+" đưa focus về ô tìm để gõ vị tiếp theo (nút + có data-keep-focus nên ô số không mất focus trước đó). */
+function refocusSearch(sel, key){
+  var s = $(sel);
+  if (!s) return;
+  s.focus();
+  closeSuggest(key);
+  updateFootBars();
+}
 function addRemedyToNote(){
   var row = $('#remedyBody tr[data-pid]');
   if (!row) return;
@@ -2111,11 +2122,7 @@ function addRemedyToNote(){
   if (num(qi.value) <= 0) { toast('Nhập số gram lớn hơn 0', 'error'); qi.focus(); return; }
   if (!commitRemedyRow()) return;
   calcRemedy();
-  var s = $('#remedySearch');
-  if (s) {
-    s.focus();
-    closeSuggest('remedy');
-  }
+  refocusSearch('#remedySearch', 'remedy');
 }
 function remedyNoteSave(){
   var it = remedyItems[remedyEditIdx];
@@ -2228,6 +2235,7 @@ function addOrderRow(kind, pid){
     b = el('button', 'btn btn--icon btn--primary');
     b.type = 'button';
     b.setAttribute('data-action', 'note-add');
+    b.setAttribute('data-keep-focus', '');
     b.setAttribute('aria-label', 'Thêm vào tờ ghi');
     b.setAttribute('title', 'Thêm vào tờ ghi');
     b.appendChild(svg('plus'));
@@ -2235,6 +2243,7 @@ function addOrderRow(kind, pid){
     b = el('button', 'btn btn--icon btn--primary');
     b.type = 'button';
     b.setAttribute('data-action', 'rnote-add');
+    b.setAttribute('data-keep-focus', '');
     b.setAttribute('aria-label', 'Thêm vào tờ ghi');
     b.setAttribute('title', 'Thêm vào tờ ghi');
     b.appendChild(svg('plus'));
@@ -2413,11 +2422,7 @@ function addRetailToNote(){
   if (num(qi.value) <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); qi.focus(); return; }
   if (!commitRetailRow()) return;
   calcRetail();
-  var s = $('#retailSearch');
-  if (s) {
-    s.focus();
-    closeSuggest('retail');
-  }
+  refocusSearch('#retailSearch', 'retail');
 }
 function noteSave(){
   var it = retailItems[noteEditIdx];
@@ -5036,6 +5041,7 @@ function bindEvents(){
     if (cb.open) requestAnimationFrame(renderChart);
   });
   initTabs();
+  initFootBars();
 
   var rt = null;
   window.addEventListener('resize', function(){
@@ -5084,6 +5090,79 @@ function bindEvents(){
   }
 }
 
+/* ================= THANH CHÂN TỜ GHI (điện thoại) ================= */
+/* Quyết định hiện thanh: chỉ điện thoại, thẻ đang mở, tờ ghi còn trong vùng nhìn (không cuộn đi hẳn), không đang gõ ô nhập/chọn và bàn phím không hiện. */
+function footBarShow(o){
+  return !!(o && o.mobile && o.open && !o.editing && !o.keyboard && o.height > 0 && o.top < o.vh - 60 && o.bottom > 100);
+}
+/* Độ cuộn (px) để đưa tâm dòng về giữa vùng nhìn thấy (visualViewport) khi bàn phím hiện; bỏ qua lệch nhỏ. */
+function scrollDeltaToCenter(rowTop, rowH, vvTop, vvH){
+  var d = (rowTop + rowH / 2) - (vvTop + vvH / 2);
+  return Math.abs(d) < 8 ? 0 : d;
+}
+var footBarSched = false;
+function updateFootBars(){
+  var mobile = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
+  var vv = window.visualViewport;
+  var vh = window.innerHeight || 0;
+  var keyboard = !!(vv && vv.height && vv.height < vh - 120);
+  var ae = doc.activeElement;
+  [['retailBox', 'retailNote'], ['remedyBox', 'remedyNote']].forEach(function(p){
+    var box = $('#' + p[0]), note = $('#' + p[1]);
+    if (!box || !note) return;
+    var open = !!box.open;
+    var fixedOn = mobile && open;
+    if (!box.classList || !box.classList.toggle) return;
+    box.classList.toggle('foot-fixed', fixedOn);
+    if (!fixedOn) { box.classList.remove('foot-off'); return; }
+    var r = note.getBoundingClientRect ? note.getBoundingClientRect() : { height: 0, top: 0, bottom: 0 };
+    var editing = !!(ae && box.contains(ae) && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA'));
+    var show = footBarShow({ mobile: mobile, open: open, editing: editing, keyboard: keyboard, height: r.height, top: r.top, bottom: r.bottom, vh: vh });
+    box.classList.toggle('foot-off', !show);
+    var foot = note.querySelector ? note.querySelector('.note__foot') : null;
+    if (show && foot && foot.offsetHeight) box.style.setProperty('--foot-h', foot.offsetHeight + 'px');
+  });
+}
+function scheduleFootBars(){
+  if (footBarSched) return;
+  footBarSched = true;
+  setTimeout(function(){ footBarSched = false; updateFootBars(); }, 30);
+}
+/* Ô SL của dòng đang nhập: khi focus, sau khi bàn phím hiện, đưa cả dòng (ô SL + nút +) vào giữa vùng nhìn thấy phía trên bàn phím. */
+function centerPendingRow(e){
+  var t = e && e.target;
+  if (!t || !t.closest) return;
+  var row = t.closest('#retailBody tr[data-pid], #remedyBody tr[data-pid]');
+  if (!row || !(t.tagName === 'INPUT')) return;
+  setTimeout(function(){
+    if (doc.activeElement !== t) return;
+    var vv = window.visualViewport;
+    var r = row.getBoundingClientRect();
+    var d = scrollDeltaToCenter(r.top, r.height, vv ? vv.offsetTop : 0, vv && vv.height ? vv.height : (window.innerHeight || 0));
+    if (d) window.scrollBy(0, d);
+  }, 320);
+}
+function initFootBars(){
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('scroll', scheduleFootBars, { passive: true });
+    window.addEventListener('resize', scheduleFootBars);
+  }
+  if (window.visualViewport && window.visualViewport.addEventListener) {
+    window.visualViewport.addEventListener('resize', scheduleFootBars);
+    window.visualViewport.addEventListener('scroll', scheduleFootBars);
+  }
+  doc.addEventListener('focusin', function(e){ scheduleFootBars(); centerPendingRow(e); });
+  doc.addEventListener('focusout', scheduleFootBars);
+  ['retailBox', 'remedyBox'].forEach(function(id){
+    var b = $('#' + id);
+    if (b && b.addEventListener) b.addEventListener('toggle', scheduleFootBars);
+    var n = $(id === 'retailBox' ? '#retailNote' : '#remedyNote');
+    if (n && typeof window.ResizeObserver === 'function') new window.ResizeObserver(scheduleFootBars).observe(n);
+  });
+  var tabs = $('#tabs');
+  if (tabs) tabs.addEventListener('click', scheduleFootBars);
+  updateFootBars();
+}
 /* ================= KHỞI ĐỘNG ================= */
 /* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */
 function initTabs(){

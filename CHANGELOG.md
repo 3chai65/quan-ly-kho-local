@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.3] - 2026-11-12
+
+### Giao diện điện thoại (Bán lẻ, Thuốc chén)
+
+- Thanh Tổng + Bán đơn nay là thanh cố định ở đáy màn hình (không còn sticky theo tờ ghi); chỉ hiện khi thẻ đang mở và tờ ghi còn trong vùng nhìn, chừa chỗ để dòng cuối không bị che; tự ẩn khi đang gõ/chọn trong thẻ hoặc bàn phím hiện và hiện lại khi bỏ focus.
+- Ô SL của dòng đang nhập được cuộn vào giữa vùng nhìn thấy phía trên bàn phím (cả ô SL và nút +).
+- Nút + của dòng đang nhập có data-keep-focus (như các nút khác) để sau khi bấm + focus quay về ô "Nhập tên".
+
 ## [2.15.2] - 2026-11-12
 
 ### Giao diện

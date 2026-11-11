@@ -39,6 +39,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
+  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), scrollDeltaToCenter: (typeof scrollDeltaToCenter === 'function' ? scrollDeltaToCenter : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
@@ -4709,7 +4710,7 @@ test('2.15.0 nút Tải lại: chỉ hiện ở màn hình chính; có nháp/dir
   /* CSS + markup */
   assert.match(PAGE, /id="reloadBtn"[^>]*data-action="reload-app"[^>]*aria-label="Tải lại ứng dụng"[^>]*hidden/);
   assert.ok(PAGE.includes("case 'reload-app': reloadAppClick()"));
-  assert.ok(PAGE.includes('#retailNote .note__foot,#remedyNote .note__foot{position:sticky;bottom:0;'));
+  assert.ok(PAGE.includes('#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;'), '2.15.3: thanh fixed ở đáy màn hình');
   assert.ok(PAGE.includes('env(safe-area-inset-bottom'));
 });
 
@@ -4909,4 +4910,75 @@ test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm 6/24px
   assert.match(PAGE, /#remedyBox \.card__bar-date\{flex:0 0 118px\}/);
   assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px;padding-right:24px\}/);
   assert.match(PAGE, /\.card__bar-date \.datefield__ico\{right:6px;width:16px;height:16px\}/);
+});
+
+/* 2.15.3: thanh chân tờ ghi fixed ở đáy màn hình; ẩn khi gõ/bàn phím/cuộn đi; focus về ô tìm sau "+". */
+test('2.15.3 footBarShow: chỉ hiện khi điện thoại, thẻ mở, tờ ghi còn trong vùng nhìn, không gõ, không bàn phím', () => {
+  const base = { mobile: true, open: true, editing: false, keyboard: false, height: 300, top: 100, bottom: 400, vh: 852 };
+  assert.equal(app.footBarShow(base), true, 'tờ ghi ngắn vẫn hiện (thanh ở đáy màn hình)');
+  assert.equal(app.footBarShow({ ...base, top: -2000, bottom: -50 }), false, 'cuộn đi hẳn lên trên thì ẩn');
+  assert.equal(app.footBarShow({ ...base, top: 840, bottom: 1500 }), false, 'tờ ghi mới lấp ló ở đáy thì ẩn');
+  assert.equal(app.footBarShow({ ...base, mobile: false }), false, 'máy tính không đổi');
+  assert.equal(app.footBarShow({ ...base, open: false }), false);
+  assert.equal(app.footBarShow({ ...base, editing: true }), false, 'đang focus ô nhập thì ẩn');
+  assert.equal(app.footBarShow({ ...base, keyboard: true }), false, 'bàn phím hiện thì ẩn');
+  assert.equal(app.footBarShow({ ...base, height: 0 }), false);
+  assert.equal(app.footBarShow(null), false);
+});
+
+test('2.15.3 scrollDeltaToCenter: đưa tâm dòng về giữa vùng nhìn; lệch nhỏ thì không cuộn', () => {
+  assert.equal(app.scrollDeltaToCenter(500, 50, 0, 400), 325);
+  assert.equal(app.scrollDeltaToCenter(100, 50, 0, 400), -75);
+  assert.equal(app.scrollDeltaToCenter(175, 50, 0, 400), 0);
+});
+
+test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗi (thiếu số) thì ở ô số', () => {
+  for (const kind of ['remedy', 'retail']) {
+    let focused = '';
+    const cls = kind === 'remedy' ? '.remedy-qty' : '.retail-qty';
+    const qi = { value: '500', focus() { focused = 'qty'; }, select() {} };
+    const mi = { value: '10', focus() { focused = 'money'; }, select() {} };
+    const row = { getAttribute() { return 'p1'; }, querySelector(sel) { return sel === cls ? qi : (sel === '.retail-money' ? mi : null); } };
+    const tb = { textContent: 'giu', querySelector(s) { return /data-pid/.test(s) ? row : null; }, appendChild() {}, children: [] };
+    const els = {
+      ['#' + kind + 'Body']: tb, ['#' + kind + 'Body tr[data-pid]']: row,
+      ['#' + kind + 'Search']: { value: '', focus() { focused = 'search'; }, select() {}, setAttribute() {} },
+      '#toast': makeEl(), '#toastMsg': makeEl()
+    };
+    const c = loadClient({ document: limitDoc(els) });
+    c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1000, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+    (kind === 'remedy' ? c.addRemedyToNote : c.addRetailToNote)();
+    assert.equal(focused, 'search', kind + ': focus phải về ô tìm sau "+"');
+    qi.value = '0'; focused = '';
+    (kind === 'remedy' ? c.addRemedyToNote : c.addRetailToNote)();
+    assert.equal(focused, 'qty', kind + ': thiếu số thì ở ô số');
+  }
+});
+
+test('2.15.3 nút "+" của dòng đang nhập có data-keep-focus (không làm ô số mất focus/bàn phím trước khi xử lý); CSS thanh fixed', () => {
+  assert.ok(/data-action', 'note-add'\);\s+b\.setAttribute\('data-keep-focus', ''\)/.test(PAGE), 'nút + Bán lẻ có data-keep-focus');
+  assert.ok(/data-action', 'rnote-add'\);\s+b\.setAttribute\('data-keep-focus', ''\)/.test(PAGE), 'nút + Thuốc chén có data-keep-focus');
+  assert.ok(!/note__foot,#remedyNote \.note__foot\{position:sticky/.test(PAGE), 'không còn sticky');
+  assert.ok(PAGE.includes('.foot-fixed.foot-off #retailNote .note__foot'), 'có quy tắc ẩn khi foot-off');
+  assert.match(PAGE, /foot-fixed>\.card__body[^}]*padding-bottom:calc\(var\(--foot-h,72px\) \+ 8px\)/);
+  assert.ok(PAGE.includes('bottom:0;z-index:20'), 'z-index thấp hơn .top, gợi ý');
+  assert.ok(PAGE.includes('bottom:0;z-index:20'), 'z-index thấp hơn .top, gợi ý');
+});
+
+test('2.15.3 updateFootBars: thẻ mở trên điện thoại gắn foot-fixed; focus ô nhập trong thẻ thì thêm foot-off; blur thì bỏ; máy tính không gắn', () => {
+  const mkBox = () => { const cl = new Set(); return { open: true, cl, classList: { toggle(n, on) { on ? cl.add(n) : cl.delete(n); }, remove(n) { cl.delete(n); }, add(n) { cl.add(n); } }, contains(x) { return x === this.input; }, style: { setProperty() {} }, input: null }; };
+  const box = mkBox(), note = { getBoundingClientRect: () => ({ height: 300, top: 100, bottom: 400 }), querySelector: () => ({ offsetHeight: 70 }) };
+  const els = { '#retailBox': box, '#retailNote': note };
+  const doc = limitDoc(els);
+  const input = { tagName: 'INPUT' }; box.input = input;
+  const c = loadClient({ document: doc, matchMedia: () => ({ matches: true }), innerHeight: 852 });
+  c.updateFootBars();
+  assert.ok(box.cl.has('foot-fixed') && !box.cl.has('foot-off'), 'hiện thanh khi chưa gõ');
+  doc.activeElement = input; c.updateFootBars();
+  assert.ok(box.cl.has('foot-off'), 'focus ô nhập thì ẩn thanh');
+  doc.activeElement = null; c.updateFootBars();
+  assert.ok(!box.cl.has('foot-off'), 'blur thì hiện lại');
+  const c2 = loadClient({ document: doc, matchMedia: () => ({ matches: false }), innerHeight: 852 });
+  c2.updateFootBars();
+  assert.ok(!box.cl.has('foot-fixed'), 'máy tính không gắn foot-fixed');
 });
