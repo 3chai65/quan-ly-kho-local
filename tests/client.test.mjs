@@ -39,7 +39,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), placeScrollDelta: (typeof placeScrollDelta === 'function' ? placeScrollDelta : null), kbVisBottom: (typeof kbVisBottom === 'function' ? kbVisBottom : null), kbPadFixed: (typeof kbPadFixed === 'function' ? kbPadFixed : null), kbUserStop: (typeof kbUserStop === 'function' ? kbUserStop : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), kbSchedule: (typeof kbSchedule === 'function' ? kbSchedule : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
+  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), placeScrollDelta: (typeof placeScrollDelta === 'function' ? placeScrollDelta : null), kbVisBottom: (typeof kbVisBottom === 'function' ? kbVisBottom : null), kbPadFixed: (typeof kbPadFixed === 'function' ? kbPadFixed : null), kbUserStop: (typeof kbUserStop === 'function' ? kbUserStop : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), kbOnFocus: (typeof kbOnFocus === 'function' ? kbOnFocus : null), kbSafeDelta: (typeof kbSafeDelta === 'function' ? kbSafeDelta : null), wholeWordMatch: (typeof wholeWordMatch === 'function' ? wholeWordMatch : null), sugWhole: (typeof sugWhole === 'function' ? sugWhole : null), sugListMaxHeight: (typeof sugListMaxHeight === 'function' ? sugListMaxHeight : null), sugReveal: (typeof sugReveal === 'function' ? sugReveal : null), matchProducts: (typeof matchProducts === 'function' ? matchProducts : null), focusNS: (typeof focusNS === 'function' ? focusNS : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
@@ -5032,7 +5032,7 @@ test('2.15.6 thêm dòng bằng "+" (compactSync(true)) đo lại và cuộn cu�
   k.c.compactSync(true);
   assert.equal(k.list.scrollTop, 999);
   assert.ok(/refocusSearch[\s\S]{0,400}compactSync\(true\)/.test(PAGE), 'refocusSearch phải gọi compactSync(true)');
-  assert.match(PAGE, /focusin', function\(e\)\{ scheduleFootBars\(\); compactSync\(false\); kbSchedule\(e && e\.target\)/);
+  assert.match(PAGE, /focusin', function\(e\)\{ scheduleFootBars\(\); compactSync\(false\); kbOnFocus\(e && e\.target\)/);
   assert.match(PAGE, /var COMPACT_ROWS = 2;/);
 });
 
@@ -5075,51 +5075,177 @@ function placeRig(opts = {}) {
   return { c, timers, docL, vvL, st, input, vv, bar, doc, els };
 }
 
-test('2.15.8 focusin ô nhập trong thẻ: định vị ngay + các mốc 100/300/600/1000; sau đó đỉnh thanh thẻ = đáy .top + 8 và dòng đang nhập đủ chỗ', () => {
+test('2.15.9 focusin ô nhập trong thẻ: định vị ĐÚNG MỘT LẦN (đỉnh thanh thẻ = đáy .top + 8), không có mốc trễ; lần focus sau không cuộn lại', () => {
   const k = placeRig();
-  k.c.kbSchedule(k.input);
-  assert.deepEqual(k.timers.map(x => x.ms), [100, 300, 600, 1000]);
+  k.c.kbOnFocus(k.input);
+  assert.equal(k.timers.length, 0, 'không lập lịch định vị lặp');
   assert.equal(k.bar.getBoundingClientRect().top, 56 + 8, 'đỉnh thanh thẻ = đáy .top + 8');
   assert.equal(k.st.vars['--kb-pad'], Math.round(852 * 0.6) + 'px', 'chừa chỗ cuối trang cố định, không theo vv');
-  const n = k.st.s.length;
-  k.timers.forEach(x => x.fn());
-  assert.equal(k.st.s.length, n, 'đã đúng chỗ thì các mốc trễ không giật');
-  /* layout đổi trễ (gọn bật làm thanh thẻ trôi): mốc trễ kéo lại */
-  k.st.y -= 90; k.timers[2].fn();
-  assert.equal(k.bar.getBoundingClientRect().top, 64, 'mốc trễ định vị lại');
+  assert.equal(k.st.s.length, 1);
+  k.st.y -= 90; /* layout trôi: focus tiếp theo (chọn tên, SL, +) KHÔNG kéo lại */
+  for (let i = 0; i < 4; i++) k.c.kbOnFocus(k.input);
+  assert.equal(k.st.s.length, 1, 'chỉ cuộn một lần');
+  assert.equal(k.timers.length, 0);
 });
 
-test('2.15.8 không phụ thuộc visualViewport: vv = innerHeight (chưa báo bàn phím) hoặc không có vv vẫn định vị', () => {
-  const a = placeRig({ vvH: 852 }); a.c.kbSchedule(a.input);
+test('2.15.9 không phụ thuộc visualViewport: vv = innerHeight hoặc không có vv vẫn định vị', () => {
+  const a = placeRig({ vvH: 852 }); a.c.kbOnFocus(a.input);
   assert.equal(a.bar.getBoundingClientRect().top, 64);
-  const b = placeRig({ extra: { visualViewport: undefined } }); b.c.kbSchedule(b.input);
+  const b = placeRig({ extra: { visualViewport: undefined } }); b.c.kbOnFocus(b.input);
   assert.equal(b.bar.getBoundingClientRect().top, 64);
 });
 
-test('2.15.8 chạm (tap) không chặn: touchstart/pointerdown không gắn kbUserStop; chỉ touchmove/wheel; focus mới sau vuốt vẫn định vị', () => {
+test('2.15.9 chạm không chặn; vuốt (touchmove/wheel) chỉ ghi mốc; vv resize và focus sau định vị không cuộn lại', () => {
   const k = placeRig();
   k.c.initFootBars();
   assert.ok(!(k.docL.touchstart || []).some(l => l.fn.name === 'kbUserStop'), 'touchstart không dừng');
   assert.ok(!(k.docL.pointerdown || []).some(l => l.fn.name === 'kbUserStop'), 'pointerdown không dừng');
   for (const n of ['touchmove', 'wheel']) assert.ok((k.docL[n] || []).some(l => l.fn.name === 'kbUserStop' && l.o && l.o.passive === true), n + ' passive');
-  k.c.kbSchedule(k.input);
-  k.st.s.length = 0; k.st.y = 0;
-  k.docL.touchmove.find(l => l.fn.name === 'kbUserStop').fn();
-  k.timers.forEach(x => x.fn());
-  assert.equal(k.st.s.length, 0, 'sau vuốt các timer cũ không ép');
+  k.c.kbOnFocus(k.input);
+  assert.equal(k.st.s.length, 1);
+  k.st.y -= 70;
   k.vvL.resize.forEach(fn => fn());
-  assert.equal(k.st.s.length, 0, 'vv resize ngay sau vuốt: không ép');
-  k.c.kbSchedule(k.input);
-  assert.equal(k.st.s.length, 1, 'focus/"+" mới sau vuốt vẫn được định vị (không bị chặn 800ms)');
+  assert.equal(k.st.s.length, 1, 'vv resize sau định vị: không cuộn lại');
+  k.docL.touchmove.find(l => l.fn.name === 'kbUserStop').fn();
+  k.vvL.resize.forEach(fn => fn());
+  assert.equal(k.st.s.length, 1, 'sau vuốt cũng không ép');
 });
 
-test('2.15.8 sau "+" (refocusSearch) định vị lại ở các mốc trễ', () => {
+test('2.15.9 sau "+" (refocusSearch): focus preventScroll, KHÔNG định vị lại trang, không lập lịch', () => {
   const k = placeRig({ id: 'retailSearch' });
+  k.c.kbOnFocus(k.input);
+  const n = k.st.s.length, args = [];
+  k.input.focus = (o) => { args.push(o); k.doc.activeElement = k.input; };
+  k.st.y -= 70;
   k.c.refocusSearch('#retailSearch', 'retail');
-  assert.equal(k.bar.getBoundingClientRect().top, 64, 'định vị ngay sau +');
-  assert.deepEqual(k.timers.map(x => x.ms).slice(-4), [100, 300, 600, 1000]);
-  k.st.y -= 70; k.timers.at(-1).fn();
-  assert.equal(k.bar.getBoundingClientRect().top, 64, 'mốc trễ sau + cũng định vị');
+  assert.equal(args.length, 1); assert.equal(args[0] && args[0].preventScroll, true, 'focus ô tìm với preventScroll');
+  assert.equal(k.st.s.length, n, 'không cuộn trang sau +');
+  assert.equal(k.timers.length, 0, 'không có mốc trễ');
+});
+
+test('2.15.9 chưa có dòng đang nhập: ước lượng chỗ dòng sẽ hiện để định vị đủ ngay lần đầu', () => {
+  const k2 = placeRig({ barY: 300 });
+  k2.els['#retailBody'] = { getBoundingClientRect() { return { top: 460 - k2.st.y, bottom: 490 - k2.st.y }; } };
+  k2.c.kbOnFocus(k2.input);
+  /* thanh thẻ cần 236; dòng ước lượng đáy 564-236 = 328 <= 380: chỉ 236 */
+  assert.equal(k2.st.s[0], 236);
+  const k3 = placeRig({ barY: 300 });
+  k3.els['#retailBody'] = { getBoundingClientRect() { return { top: 560 - k3.st.y, bottom: 590 - k3.st.y }; } };
+  k3.c.kbOnFocus(k3.input);
+  /* dòng ước lượng đáy 664: thanh thẻ cần 236, dòng cần 664-379 = 285 (đỉnh dòng 560-64 = 496 đủ chỗ) -> 284 */
+  assert.equal(k3.st.s[0], 285, 'ước lượng dòng nhập làm cuộn đủ ngay lần đầu');
+  assert.match(PAGE, /var ENTRY_ROW_H = 104;/);
+});
+
+test('2.15.9 lưới an toàn: chỉ cuộn khi ô bị che hẳn, tối đa một lần', () => {
+  assert.equal(app.kbSafeDelta(370, 380), 0);
+  assert.equal(app.kbSafeDelta(380, 380), 0);
+  assert.equal(app.kbSafeDelta(421.2, 380), 42);
+  assert.equal(app.kbSafeDelta(0, 380), 0);
+  assert.equal(app.kbSafeDelta(500, 0), 0);
+  const k = placeRig();
+  k.input.getBoundingClientRect = () => ({ top: 500, bottom: 520 });
+  k.c.kbOnFocus(k.input); /* lần đầu: định vị */
+  assert.equal(k.st.s.length, 1);
+  k.c.kbOnFocus(k.input); /* lần 2: ô bị che (đáy 520 > 379) -> lưới an toàn một lần */
+  assert.equal(k.st.s.length, 2);
+  assert.equal(k.st.s[1], 141);
+  k.c.kbOnFocus(k.input); k.c.kbOnFocus(k.input);
+  assert.equal(k.st.s.length, 2, 'chỉ một lần');
+});
+
+test('2.15.9 mọi focus() trong luồng nhập Bán lẻ/Thuốc chén dùng preventScroll (focusNS); không còn lập lịch định vị', () => {
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  for (const n of ['commitRetailRow', 'commitRemedyRow', 'addRetailToNote', 'addRemedyToNote', 'refocusSearch', 'pickSuggest']) {
+    assert.ok(!/\.focus\(\)/.test(fnBody(n)), n + ' không được gọi .focus() trần');
+  }
+  assert.match(fnBody('focusNS'), /e\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(fnBody('refocusSearch'), /focusNS\(s\)/);
+  assert.ok(!/kbSchedule|kbTimers|kbGen|kbClear|\[100, 300, 600, 1000\]/.test(PAGE), 'không còn lập lịch định vị lặp');
+  assert.ok(!/kbOnFocus|kbPlaceNow|compactSync\(false\)/.test(fnBody('refocusSearch')), 'refocusSearch không định vị lại');
+  const vv = PAGE.match(/function onVvChange\(\)\{[^\n]*\n/)[0];
+  assert.ok(!/setTimeout/.test(vv));
+  assert.ok(!/scrollIntoView/.test(PAGE), 'không scrollIntoView (iOS có thể cuộn cả trang)');
+});
+
+test('2.15.9 focusNS: truyền preventScroll; trình duyệt cũ ném lỗi thì focus thường', () => {
+  const calls = [];
+  app.focusNS({ focus(o) { calls.push(o); } });
+  assert.equal(calls.length, 1); assert.equal(calls[0].preventScroll, true);
+  let plain = 0;
+  app.focusNS({ focus(o) { if (o) throw new Error('old'); plain++; } });
+  assert.equal(plain, 1);
+  app.focusNS(null);
+});
+
+/* ===== 2.15.9 gợi ý tên: gõ trọn một từ (mọi thiết bị), khung tối đa 3 mục ===== */
+test('2.15.9 wholeWordMatch: bốn ví dụ người dùng + tiền tố không hiện', () => {
+  const w = app.wholeWordMatch;
+  assert.equal(w('Cam Thảo', 'cam'), true);
+  assert.equal(w('Đỗ Trọng', 'do'), true);
+  assert.equal(w('Ích Trí Nhân', 'tri'), true, 'từ giữa');
+  assert.equal(w('Kê Huyết Đằng', 'dang'), true, 'từ cuối');
+  assert.equal(w('Cam Thảo', 'ca'), false, 'ca chưa trọn từ');
+  assert.equal(w('Đỗ Trọng', 'd'), false);
+  assert.equal(w('Ích Trí Nhân', 'tr'), false);
+});
+test('2.15.9 wholeWordMatch: dấu/đ/hoa-thường, nhiều từ liên tiếp, rỗng, thứ tự', () => {
+  const w = app.wholeWordMatch;
+  assert.equal(w('Cam Thảo', 'CAM THAO'), true);
+  assert.equal(w('Cam Thảo', 'cam thao'), true);
+  assert.equal(w('Cam Thảo', 'cam th'), false, 'th chưa trọn từ');
+  assert.equal(w('Cam Thảo', 'thao cam'), false, 'sai thứ tự');
+  assert.equal(w('Kê Huyết Đằng', 'huyet dang'), true, 'liên tiếp giữa-cuối');
+  assert.equal(w('Kê Huyết Đằng', 'ke dang'), false, 'không liên tiếp');
+  assert.equal(w('Đỗ Trọng', 'ĐỖ'), true, 'Đ hoa + dấu');
+  assert.equal(w('Đỗ Trọng', 'đo'), true);
+  assert.equal(w('Cam Thảo', ''), false);
+  assert.equal(w('Cam Thảo', '   '), false);
+  assert.equal(w('Cam', 'cam thao'), false, 'chữ gõ dài hơn tên');
+  assert.equal(w('Cam  Thảo', 'cam'), true, 'nhiều khoảng trắng');
+});
+test('2.15.9 hộp gợi ý Bán lẻ/Thuốc chén/Nhập hàng dùng luật trọn từ ở MỌI cỡ màn hình; ô lọc Kho tồn/Lịch sử giữ luật cũ', () => {
+  for (const mobile of [true, false]) {
+    const c = loadClient({ matchMedia: () => ({ matches: mobile }) });
+    c.setDb({ products: [{ id: '1', name: 'Cam Thảo' }, { id: '2', name: 'Đỗ Trọng' }, { id: '3', name: 'Ích Trí Nhân' }, { id: '4', name: 'Kê Huyết Đằng' }, { id: '5', name: 'Camphor' }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+    for (const key of ['retail', 'remedy', 'nhap']) {
+      assert.equal(c.sugWhole(key), true, key + ' mobile=' + mobile);
+      const ids = (q) => c.matchProducts(q, c.sugWhole(key)).map(p => p.id);
+      assert.deepEqual(ids('cam'), ['1'], 'cam -> Cam Thảo (không Camphor)');
+      assert.deepEqual(ids('do'), ['2']);
+      assert.deepEqual(ids('tri'), ['3']);
+      assert.deepEqual(ids('dang'), ['4']);
+      assert.deepEqual(ids('ca'), [], 'ca không hiện');
+      assert.equal(ids('').length, 5, 'rỗng: như cũ');
+    }
+    for (const key of ['inv', 'imph']) {
+      assert.equal(c.sugWhole(key), false);
+      assert.deepEqual(c.matchProducts('ca', c.sugWhole(key)).map(p => p.id).sort(), ['1', '5'], 'luật chứa chuỗi giữ nguyên');
+    }
+  }
+  assert.ok(!/function sugWhole\(key\)\{[^}]*kbMobile/.test(PAGE), 'sugWhole không phụ thuộc cỡ màn hình');
+});
+test('2.15.9 sugListMaxHeight: cao đúng 3 mục + đệm; <=3 mục thì không giới hạn; áp dụng mọi cỡ màn hình', () => {
+  assert.equal(app.sugListMaxHeight([37, 37, 37, 37, 37], 3, 10), 121);
+  assert.equal(app.sugListMaxHeight([37.5, 37.5, 40, 50], 3, 10), 125);
+  assert.equal(app.sugListMaxHeight([37, 37, 37], 3, 10), 0);
+  assert.equal(app.sugListMaxHeight([], 3, 10), 0);
+  assert.equal(app.sugListMaxHeight([0, 40, 40, 40, 40], 3, 0), 120, 'bỏ chiều cao 0');
+  const body = PAGE.slice(PAGE.indexOf('function openSuggest('), PAGE.indexOf('function dupOrderRow'));
+  assert.match(body, /sugListMaxHeight\(hs, SUG_ROWS, 10\)/);
+  assert.match(body, /if \(sugWhole\(key\)\)/);
+  assert.match(body, /list\.style\.maxHeight = mh \? mh \+ 'px' : '';/, 'áp max-height 3 mục vào khung');
+  assert.ok(!/kbMobile/.test(body), 'không riêng điện thoại');
+  assert.match(PAGE, /var SUG_ROWS = 3;/);
+});
+test('2.15.9 sugReveal cuộn mục vào tầm nhìn trong khung gợi ý', () => {
+  const list = { scrollTop: 0, clientHeight: 111 };
+  app.sugReveal(list, { offsetTop: 148, offsetHeight: 37 });
+  assert.equal(list.scrollTop, 74, 'mục dưới: đáy khớp');
+  app.sugReveal(list, { offsetTop: 0, offsetHeight: 37 });
+  assert.equal(list.scrollTop, 0, 'mục trên: đỉnh khớp');
+  app.sugReveal(list, { offsetTop: 10, offsetHeight: 37 });
+  assert.equal(list.scrollTop, 0, 'đã trong tầm nhìn');
 });
 
 test('2.15.8 ?kbdebug=1: dòng gỡ lỗi hiện NGAY khi khởi tạo (chưa focus), có vvH/vvTop/ih/y/compact và lý do; cập nhật lý do thoát sớm', () => {
@@ -5134,7 +5260,7 @@ test('2.15.8 ?kbdebug=1: dòng gỡ lỗi hiện NGAY khi khởi tạo (chưa fo
   assert.match(made[0].style.cssText, /position:fixed/);
   assert.equal(made[0].style.transform, 'translate(0px,0px)', 'bám visualViewport');
   k.doc.activeElement = { tagName: 'INPUT', closest() { return null; } };
-  k.c.kbSchedule(k.doc.activeElement);
+  k.c.kbOnFocus(k.doc.activeElement);
   assert.match(made[0].textContent, /thoat: khong-o-nhap-trong-the/, 'ghi lý do thoát sớm');
   const off = placeRig(); off.c.initFootBars();
   assert.equal(off.doc.body.children.length, 0, 'không có ?kbdebug thì không tạo');

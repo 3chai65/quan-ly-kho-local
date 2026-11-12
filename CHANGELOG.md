@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.9] - 2026-11-12
+
+### Fixed
+- Điện thoại, nhập Bán lẻ/Thuốc chén: màn hình không còn di chuyển liên tục khi chọn tên, nhập số, bấm "+". Trang được định vị ĐÚNG MỘT LẦN khi vào chế độ gọn của thẻ (đã tính chỗ dòng đang nhập sắp hiện); các focus lập trình trong luồng nhập (chọn gợi ý, sau "+", dòng trùng, báo lỗi) dùng `preventScroll` nên iOS không tự cuộn. Bỏ các mốc định vị lặp 100/300/600/1000ms, định vị lại sau "+" và sau visualViewport resize; chỉ còn lưới an toàn cuộn tối đa một lần khi ô đang nhập bị che hẳn. Gợi ý dùng cuộn trong khung thay cho `scrollIntoView` (không kéo cả trang).
+
+### Changed
+- Hộp gợi ý tên (Bán lẻ, Thuốc chén, Nhập hàng) áp dụng cho MỌI thiết bị (điện thoại và máy tính): chỉ hiện vị khi chữ gõ khớp TRỌN và LIÊN TIẾP một dãy từ của tên (không phân biệt hoa/thường, dấu, đ=d). "cam" -> Cam Thảo; "tri" -> Ích Trí Nhân; "dang" -> Kê Huyết Đằng; "ca" hoặc "cam th" không hiện. Ô lọc Kho tồn/Lịch sử giữ nguyên luật cũ (chứa chuỗi).
+- Khung gợi ý cao tối đa 3 mục (đo theo chiều cao mục thật), các mục còn lại cuộn trong khung; áp dụng mọi cỡ màn hình.
+
 ## [2.15.8] - 2026-11-12
 
 ### Fixed

@@ -2080,14 +2080,14 @@ function commitRemedyRow(){
   if (limG) {
     toast(limG, 'error');
     var qi = $('.remedy-qty', row);
-    if (qi) qi.focus();
+    if (qi) focusNS(qi);
     return false;
   }
   if (g <= 0) {
     var p = findProduct(row.getAttribute('data-pid'));
     toast('Dòng "' + (p ? p.name : '?') + '" thiếu gram', 'error');
     qi = $('.remedy-qty', row);
-    if (qi) qi.focus();
+    if (qi) focusNS(qi);
     return false;
   }
   remedyItems.push({ productId: row.getAttribute('data-pid'), grams: dec(g) });
@@ -2098,20 +2098,24 @@ function commitRemedyRow(){
   return true;
 }
 /* 2.15.3: sau "+" đưa focus về ô tìm để gõ vị tiếp theo (nút + có data-keep-focus nên ô số không mất focus trước đó). */
+/* 2.15.9: focus lập trình trong luồng nhập KHÔNG để iOS tự cuộn trang (preventScroll); trình duyệt cũ thì focus thường. */
+function focusNS(e){
+  if (!e) return;
+  try { e.focus({ preventScroll: true }); } catch (x) { e.focus(); }
+}
 function refocusSearch(sel, key){
   var s = $(sel);
   if (!s) return;
-  s.focus();
+  focusNS(s);
   closeSuggest(key);
   updateFootBars();
-  compactSync(true); /* 2.15.6/2.15.8: thêm dòng -> đo lại 2 dòng cuối, cuộn mượt xuống cuối (guồng) */
-  kbSchedule(s); /* 2.15.8: định vị lại trang ở các mốc trễ kể cả khi không có focusin mới */
+  compactSync(true); /* 2.15.6/2.15.8: thêm dòng -> đo lại 2 dòng cuối, cuộn mượt xuống cuối (guồng); 2.15.9: không định vị lại trang */
 }
 function addRemedyToNote(){
   var row = $('#remedyBody tr[data-pid]');
   if (!row) return;
   var qi = $('.remedy-qty', row);
-  if (num(qi.value) <= 0) { toast('Nhập số gram lớn hơn 0', 'error'); qi.focus(); return; }
+  if (num(qi.value) <= 0) { toast('Nhập số gram lớn hơn 0', 'error'); focusNS(qi); return; }
   if (!commitRemedyRow()) return;
   calcRemedy();
   refocusSearch('#remedySearch', 'remedy');
@@ -2384,20 +2388,20 @@ function commitRetailRow(){
   if (limRq) {
     toast(limRq, 'error');
     var bad = checkLimits('q', q) ? $('.retail-qty', row) : $('.retail-money', row);
-    if (bad) bad.focus();
+    if (bad) focusNS(bad);
     return false;
   }
   if (q <= 0) {
     var p = findProduct(row.getAttribute('data-pid'));
     toast('Dòng "' + (p ? p.name : '?') + '" thiếu số lượng', 'error');
     var qi = $('.retail-qty', row);
-    if (qi) qi.focus();
+    if (qi) focusNS(qi);
     return false;
   }
   if (m < 0) {
     toast('Thành tiền không được âm', 'error');
     var mi = $('.retail-money', row);
-    if (mi) { mi.focus(); if (mi.select) mi.select(); }
+    if (mi) { focusNS(mi); if (mi.select) mi.select(); }
     return false;
   }
   retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
@@ -2411,7 +2415,7 @@ function addRetailToNote(){
   var row = $('#retailBody tr[data-pid]');
   if (!row) return;
   var qi = $('.retail-qty', row);
-  if (num(qi.value) <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); qi.focus(); return; }
+  if (num(qi.value) <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); focusNS(qi); return; }
   if (!commitRetailRow()) return;
   calcRetail();
   refocusSearch('#retailSearch', 'retail');
@@ -3631,9 +3635,41 @@ var SUG = {
 };
 var sugIdx = -1;
 
-function matchProducts(q){
+/* 2.15.9 (mọi thiết bị): gợi ý chỉ khi chữ gõ khớp TRỌN và LIÊN TIẾP một dãy từ của tên (bỏ dấu, đ=d, không phân biệt hoa/thường).
+   "cam" -> Cam Thảo; "ca" -> không; "cam thao" -> Cam Thảo; "cam th" -> không. Chữ gõ rỗng -> false. Hàm thuần. */
+function wholeWordMatch(name, query){
+  var qw = normSearch(query).split(/\s+/).filter(Boolean);
+  var nw = normSearch(name).split(/\s+/).filter(Boolean);
+  if (!qw.length || qw.length > nw.length) return false;
+  for (var i = 0; i + qw.length <= nw.length; i++) {
+    var ok = true;
+    for (var j = 0; j < qw.length; j++) if (nw[i + j] !== qw[j]) { ok = false; break; }
+    if (ok) return true;
+  }
+  return false;
+}
+/* Luật whole-word cho hộp gợi ý tên Bán lẻ/Thuốc chén/Nhập hàng, MỌI thiết bị. Ô lọc Kho tồn/Lịch sử (inv, imph) giữ luật chứa chuỗi. */
+function sugWhole(key){ return key === 'retail' || key === 'remedy' || key === 'nhap'; }
+/* 2.15.9: khung gợi ý cao đúng n mục (đo mục thật) + đệm/viền của khung; <= n mục thì 0 (không giới hạn). Hàm thuần. */
+var SUG_ROWS = 3;
+function sugListMaxHeight(heights, n, extra){
+  var h = (heights || []).filter(function(x){ return x > 0; });
+  var k = n > 0 ? n : SUG_ROWS;
+  if (h.length <= k) return 0;
+  var sum = 0;
+  for (var i = 0; i < k; i++) sum += h[i];
+  return Math.ceil(sum + (extra > 0 ? extra : 0));
+}
+/* Cuộn mục vào tầm nhìn BÊN TRONG khung gợi ý (không cuộn bằng API cuộn-vào-khung vì iOS có thể cuộn cả trang). */
+function sugReveal(list, item){
+  if (!list || !item) return;
+  var t = item.offsetTop, b = t + item.offsetHeight;
+  if (t < list.scrollTop) list.scrollTop = t;
+  else if (b > list.scrollTop + list.clientHeight) list.scrollTop = b - list.clientHeight;
+}
+function matchProducts(q, whole){
   var nq = normSearch(q);
-  var arr = db.products.filter(function(p){ return !nq || normSearch(p.name).indexOf(nq) >= 0; });
+  var arr = db.products.filter(function(p){ return !nq || (whole ? wholeWordMatch(p.name, q) : normSearch(p.name).indexOf(nq) >= 0); });
   arr.sort(function(a, b){
     var sa = nq && normSearch(a.name).indexOf(nq) === 0 ? 0 : 1;
     var sb = nq && normSearch(b.name).indexOf(nq) === 0 ? 0 : 1;
@@ -3654,7 +3690,7 @@ function openSuggest(key){
   if (!cfg) return;
   var inp = $('#' + cfg.input), list = $('#' + cfg.list);
   if (!inp || !list) return;
-  var items = matchProducts(inp.value);
+  var items = matchProducts(inp.value, sugWhole(key));
   var raw = String(inp.value || '').trim();
   var exact = false;
   list.textContent = '';
@@ -3686,6 +3722,14 @@ function openSuggest(key){
   }
   if (!list.children.length) list.appendChild(el('div', 'sug__empty', 'Không tìm thấy vị thuốc nào'));
   list.hidden = false;
+  list.style.maxHeight = '';
+  if (sugWhole(key)) {
+    var hs = [];
+    for (var hi = 0; hi < list.children.length; hi++) hs.push(list.children[hi].getBoundingClientRect().height);
+    var mh = sugListMaxHeight(hs, SUG_ROWS, 10); /* đệm 4+4 và viền 1+1 của .sug__list */
+    list.style.maxHeight = mh ? mh + 'px' : '';
+    list.scrollTop = 0;
+  }
   inp.setAttribute('aria-expanded', 'true');
 }
 function dupOrderRow(bodySel, pid){
@@ -3709,7 +3753,7 @@ function pickSuggest(key, id){
         notePage = Math.floor(di / PAGE_SIZE) + 1;
         renderNote();
         var eq2 = $('#noteEditQty');
-        if (eq2) { eq2.focus(); eq2.select(); }
+        if (eq2) { focusNS(eq2); eq2.select(); }
         var s9 = $('#retailSearch');
         if (s9) s9.value = '';
         closeSuggest(key);
@@ -3724,7 +3768,7 @@ function pickSuggest(key, id){
         remedyNotePage = Math.floor(dj / PAGE_SIZE) + 1;
         renderRemedyNote();
         var eq3 = $('#remedyNoteEditQty');
-        if (eq3) { eq3.focus(); eq3.select(); }
+        if (eq3) { focusNS(eq3); eq3.select(); }
         var s8 = $('#remedySearch');
         if (s8) s8.value = '';
         closeSuggest(key);
@@ -3734,7 +3778,7 @@ function pickSuggest(key, id){
     if (dup) {
       toast('"' + p.name + '" đã có trong danh sách', 'error');
       var q0 = $(isR ? '.retail-qty' : '.remedy-qty', dup);
-      if (q0) { q0.focus(); if (q0.select) q0.select(); }
+      if (q0) { focusNS(q0); if (q0.select) q0.select(); }
       var s0 = $(isR ? '#retailSearch' : '#remedySearch');
       if (s0) s0.value = '';
       closeSuggest(key);
@@ -3744,14 +3788,14 @@ function pickSuggest(key, id){
   if (key === 'retail') {
     if (!commitRetailRow()) return;
     var row = addOrderRow('retail', p.id);
-    if (row) $('.retail-qty', row).focus();
+    if (row) focusNS($('.retail-qty', row));
     var s1 = $('#retailSearch');
     if (s1) s1.value = '';
     calcRetail();
   } else if (key === 'remedy') {
     if (!commitRemedyRow()) return;
     var row2 = addOrderRow('remedy', p.id);
-    if (row2) $('.remedy-qty', row2).focus();
+    if (row2) focusNS($('.remedy-qty', row2));
     var s2 = $('#remedySearch');
     if (s2) s2.value = '';
     calcRemedy();
@@ -3781,7 +3825,7 @@ function onSuggestKey(e, key){
     if (!items.length) return;
     sugIdx = (sugIdx + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
     items.forEach(function(n, i){ n.setAttribute('aria-selected', i === sugIdx ? 'true' : 'false'); });
-    items[sugIdx].scrollIntoView({ block: 'nearest' });
+    sugReveal(list, items[sugIdx]);
   } else if (e.key === 'Enter') {
     var items2 = $$('.sug__item', list);
     if (list.hidden || !items2.length) return;
@@ -3790,7 +3834,7 @@ function onSuggestKey(e, key){
     if (!pick) {
       var inp = $('#' + cfg.input);
       var raw = String(inp && inp.value || '').trim();
-      var prods = raw ? matchProducts(raw) : [];
+      var prods = raw ? matchProducts(raw, sugWhole(key)) : [];
       var wantId = null;
       for (var pi = 0; pi < prods.length; pi++) {
         if (normSearch(prods[pi].name) === normSearch(raw)) { wantId = String(prods[pi].id); break; }
@@ -5169,11 +5213,12 @@ function kbVisBottom(innerH, vvTop, vvH){
 }
 /* Chỗ trống cuối trang cố định (không theo vv) để trang đủ dài cuộn tới vị trí trên: 60% chiều cao cửa sổ. */
 function kbPadFixed(innerH){ return innerH > 0 ? Math.round(innerH * 0.6) : 0; }
-var kbTimers = [], kbGen = 0, kbMovedAt = 0, kbDebug = false, kbReason = 'init';
-function kbClear(){ kbGen++; kbTimers.forEach(clearTimeout); kbTimers = []; }
-/* Chỉ khi người dùng VUỐT/cuộn (touchmove, wheel): hủy các lần định vị đang chờ và không ép lại khi vv resize trong 800ms.
-   Chạm (tap) KHÔNG dừng; focusin/"+" mới luôn được định vị lại. */
-function kbUserStop(){ kbClear(); kbMovedAt = Date.now(); }
+var kbMovedAt = 0, kbDebug = false, kbReason = 'init';
+/* 2.15.9: định vị trang ĐÚNG MỘT LẦN mỗi lần vào chế độ gọn (kbPlacedBox = thẻ đã định vị), lưới an toàn tối đa một lần (kbSafeUsed). */
+var kbPlacedBox = null, kbSafeUsed = false;
+var ENTRY_ROW_H = 104; /* chiều cao ước lượng dòng đang nhập (nhãn + ô SL/Thành tiền/+), đo bằng trình duyệt ở 320-393px */
+/* Chỉ khi người dùng VUỐT/cuộn (touchmove, wheel): ghi mốc để lưới an toàn không kéo ngược trong 800ms. Chạm (tap) không tính. */
+function kbUserStop(){ kbMovedAt = Date.now(); }
 function kbMobile(){ return !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches); }
 /* Thẻ chứa ô nhập (INPUT không phải ngày) trong Bán lẻ/Thuốc chén; ngoài ra null. */
 function kbBoxOf(t){
@@ -5192,6 +5237,10 @@ function kbDbg(why){
   b.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
   b.textContent = 'vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' y ' + Math.round(window.scrollY || 0) + ' compact ' + (cp ? 1 : 0) + ' | ' + kbReason;
 }
+/* Lưới an toàn: phần tử đang focus bị che hẳn (đáy > visBottom) thì cuộn đúng phần thiếu. Hàm thuần. */
+function kbSafeDelta(elBottom, visBottom){
+  return elBottom > 0 && visBottom > 0 && elBottom > visBottom ? Math.ceil(elBottom - visBottom) : 0;
+}
 function kbPlaceNow(t){
   var box = kbBoxOf(t);
   if (!box) { kbDbg('thoat: khong-o-nhap-trong-the'); return; }
@@ -5200,34 +5249,48 @@ function kbPlaceNow(t){
   var bar = box.querySelector ? box.querySelector('.card__bar') : null;
   if (!bar) { kbDbg('thoat: khong-co-thanh-the'); return; }
   var ih = window.innerHeight || 0, vv = window.visualViewport;
+  var vvTop = vv ? (vv.offsetTop || 0) : 0;
   var root = doc.documentElement;
   if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', kbPadFixed(ih) + 'px');
-  var top = $('.top');
-  var tr = t.closest('tr[data-pid]'), rr = tr && tr.getBoundingClientRect ? tr.getBoundingClientRect() : null;
-  var d = placeScrollDelta(bar.getBoundingClientRect().top, top && top.getBoundingClientRect ? top.getBoundingClientRect().bottom : 60, vv ? (vv.offsetTop || 0) : 0,
-    rr ? rr.top : 0, rr ? rr.bottom : 0, kbVisBottom(ih, vv ? (vv.offsetTop || 0) : 0, vv ? vv.height : 0));
-  if (d) window.scrollBy(0, d);
-  kbDbg(d ? 'cuon ' + d : 'da-dung-cho');
+  if (kbPlacedBox !== box) {
+    /* lần đầu vào chế độ gọn của thẻ: đưa thanh thẻ lên sát dưới .top (một lần) */
+    var top = $('.top');
+    var tr = t.closest('tr[data-pid]'), rr = tr && tr.getBoundingClientRect ? tr.getBoundingClientRect() : null;
+    var rowTop = rr ? rr.top : 0, rowBottom = rr ? rr.bottom : 0;
+    if (!rr) { /* chưa có dòng đang nhập: ước lượng chỗ nó sẽ hiện (đỉnh phần thân đơn + ENTRY_ROW_H) để không phải cuộn lại sau */
+      var eb = $(box.id === 'remedyBox' ? '#remedyBody' : '#retailBody');
+      var er = eb && eb.getBoundingClientRect ? eb.getBoundingClientRect() : null;
+      if (er) { rowTop = er.top; rowBottom = er.top + ENTRY_ROW_H; }
+    }
+    var d = placeScrollDelta(bar.getBoundingClientRect().top, top && top.getBoundingClientRect ? top.getBoundingClientRect().bottom : 60, vvTop,
+      rowTop, rowBottom, kbVisBottom(ih, vvTop, vv ? vv.height : 0));
+    kbPlacedBox = box;
+    if (d) window.scrollBy(0, d);
+    kbDbg(d ? 'cuon ' + d : 'da-dung-cho');
+    return;
+  }
+  /* đã định vị: không cuộn lại; chỉ lưới an toàn một lần khi ô bị che hẳn */
+  if (kbSafeUsed || Date.now() - kbMovedAt < 800 || !t.getBoundingClientRect) { kbDbg('giu-nguyen'); return; }
+  var sd = kbSafeDelta(t.getBoundingClientRect().bottom, kbVisBottom(ih, vvTop, vv ? vv.height : 0));
+  if (sd) { kbSafeUsed = true; window.scrollBy(0, sd); }
+  kbDbg(sd ? 'luoi-an-toan ' + sd : 'giu-nguyen');
 }
-/* focusin / sau "+": định vị ngay và lại ở 100/300/600/1000ms vì bố cục đổi trễ (bàn phím, chế độ gọn). Chỉ vuốt tay mới hủy; lần mới luôn chạy. */
-function kbSchedule(t){
-  kbClear();
+/* focusin: định vị (lần đầu) hoặc chỉ lưới an toàn. Không có mốc trễ/lập lịch. */
+function kbOnFocus(t){
   kbMovedAt = 0;
   if (!kbBoxOf(t)) { kbDbg('thoat: khong-o-nhap-trong-the'); return; }
-  var g = kbGen;
   kbPlaceNow(t);
-  [100, 300, 600, 1000].forEach(function(ms){ kbTimers.push(setTimeout(function(){ if (g === kbGen) kbPlaceNow(t); }, ms)); });
 }
 function kbRelease(){
   setTimeout(function(){
     if (kbBoxOf(doc.activeElement)) return;
-    kbClear();
+    kbPlacedBox = null; kbSafeUsed = false;
     var root = doc.documentElement;
     if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', '0px');
   }, 400);
 }
-/* Chỉ visualViewport 'resize' (bàn phím hiện/đổi) mới định vị lại; không nghe 'scroll' để không kéo ngược khi người dùng vuốt. */
-function onVvChange(){ scheduleFootBars(); kbDbg(); if (Date.now() - kbMovedAt < 800) return; var a = doc.activeElement; if (kbBoxOf(a)) kbPlaceNow(a); }
+/* Chỉ visualViewport 'resize' (bàn phím hiện/đổi) mới chạy lưới an toàn (không định vị lại); không nghe 'scroll'. */
+function onVvChange(){ scheduleFootBars(); kbDbg(); var a = doc.activeElement; if (kbBoxOf(a)) kbPlaceNow(a); }
 function initFootBars(){
   if (typeof window.addEventListener === 'function') {
     window.addEventListener('scroll', scheduleFootBars, { passive: true });
@@ -5243,7 +5306,7 @@ function initFootBars(){
     if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
   }
   ['touchmove', 'wheel'].forEach(function(n){ doc.addEventListener(n, kbUserStop, { passive: true }); });
-  doc.addEventListener('focusin', function(e){ scheduleFootBars(); compactSync(false); kbSchedule(e && e.target); });
+  doc.addEventListener('focusin', function(e){ scheduleFootBars(); compactSync(false); kbOnFocus(e && e.target); });
   doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); setTimeout(compactSync, 0); });
   ['retailBox', 'remedyBox'].forEach(function(id){
     var b = $('#' + id);
