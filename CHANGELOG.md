@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.6] - 2026-11-12
+
+### Giao diện điện thoại
+- Bán lẻ và Thuốc chén: khi đang nhập (bàn phím hiện), danh sách đã ghi gọn còn vùng cao đúng 3 dòng cuối (cuộn được, tự cuộn cuối khi thêm dòng bằng "+") để dòng đang nhập nằm cao trên bàn phím; rời ô nhập thì trả lại hiện đủ dòng (trễ 250ms để chuyển ô không nhấp nháy). Bọc bảng tờ ghi trong `.note__list`.
+
 ## [2.15.5] - 2026-11-12
 
 ### Sửa

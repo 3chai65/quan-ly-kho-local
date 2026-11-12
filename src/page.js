@@ -395,8 +395,8 @@ td.c-qty{position:relative}
 .pager .btn--sm{min-height:36px}
 }
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
-#remedyNote>table:has(#remedyNoteBody:empty)>thead{display:none}
-#remedyNote:has(#remedyBody tr[data-pid])>table>thead{display:table-header-group}
+#remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thead{display:none}
+#remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead{display:table-header-group}
 @media (max-width:600px){
 #remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
 /* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
@@ -458,6 +458,8 @@ td.c-qty{position:relative}
 #retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
 #remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
+/* 2.15.6: bàn phím hiện + đang nhập: danh sách đã ghi gọn còn vùng cao đúng 3 dòng cuối (JS đặt max-height), cuộn được; dòng đang nhập nằm cao hơn bàn phím. */
+.kb-compact .note__list{overflow-y:auto}
 /* 2.15.4: khi bàn phím hiện, JS đặt --kb-pad (cao bàn phím + thanh phụ) để trang còn cuộn được tới dòng đang nhập. */
 body{padding-bottom:calc(48px + var(--kb-pad,0px))}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
@@ -527,7 +529,7 @@ table.inv .c-del,table.his .c-act{width:auto}
 .note .c-act{width:76px}
 .note td,.note th{padding-left:5px;padding-right:5px}
 /* 2.14.0 M4: điện thoại – ẩn hàng tiêu đề cột của tờ ghi (mỗi ô đã có nhãn riêng); máy tính giữ. */
-.note>table>thead{display:none}
+.note>table>thead,.note>.note__list>table>thead{display:none}
 .note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
 }
 @media (min-width:601px){
@@ -679,6 +681,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         </div>
         <div class="note" id="retailNote">
           <div class="note__head"><span>Tờ ghi đơn bán lẻ</span><span id="retailNotePg"></span></div>
+          <div class="note__list" id="retailNoteList">
           <table>
             <caption class="sr">Tờ ghi đơn bán lẻ</caption>
             <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
@@ -691,6 +694,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             </tr></thead>
             <tbody id="retailNoteBody"></tbody>
           </table>
+          </div>
           <div class="tw note__pending">
             <table class="ord">
               <caption class="sr">Dòng đang nhập đơn bán lẻ</caption>
@@ -741,6 +745,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
             <div class="sug__list" id="remedyList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
+          <div class="note__list" id="remedyNoteList">
           <table>
             <caption class="sr">Tờ ghi đơn thuốc chén</caption>
             <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-act"></colgroup>
@@ -752,6 +757,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             </tr></thead>
             <tbody id="remedyNoteBody"></tbody>
           </table>
+          </div>
           <div class="tw note__pending">
             <table class="ord">
               <caption class="sr">Dòng đang nhập vị thuốc cho đơn thuốc chén</caption>
@@ -2111,6 +2117,7 @@ function refocusSearch(sel, key){
   s.focus();
   closeSuggest(key);
   updateFootBars();
+  compactSync(true); /* 2.15.6: thêm dòng -> đo lại 3 dòng cuối, cuộn cuối */
   kbSchedule(s); /* 2.15.5: cuộn tới ô tìm ở các mốc trễ kể cả khi không có focusin mới */
 }
 function addRemedyToNote(){
@@ -5132,6 +5139,55 @@ function kbPadPx(innerH, vvTop, vvH){
   if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
   return Math.max(0, Math.round(innerH - vvTop - vvH)) + KB_BAR;
 }
+/* 2.15.6: chế độ gọn khi nhập trên điện thoại. Hàm thuần: tổng cao n dòng cuối; 0 nếu số dòng <= n (không cần gọn). */
+var COMPACT_ROWS = 3;
+function compactListHeight(heights, n){
+  var h = [];
+  (heights || []).forEach(function(x){ if (x > 0) h.push(x); });
+  var k = n > 0 ? n : COMPACT_ROWS;
+  if (h.length <= k) return 0;
+  var sum = 0;
+  for (var i = h.length - k; i < h.length; i++) sum += h[i];
+  return Math.ceil(sum);
+}
+/* Bật gọn: điện thoại và đang focus một ô nhập (INPUT, không phải ngày) trong thẻ. */
+function compactWanted(o){
+  return !!(o && o.mobile && o.editing);
+}
+var compactOffTimer = {};
+function compactApply(box, list, on){
+  if (!box || !list) return;
+  if (!on) { box.classList.remove('kb-compact'); list.style.maxHeight = ''; return; }
+  var tb = list.querySelector('tbody');
+  var hs = [];
+  if (tb) { var rs = tb.children || []; for (var i = 0; i < rs.length; i++) hs.push(rs[i].getBoundingClientRect().height); }
+  var h = compactListHeight(hs, COMPACT_ROWS);
+  box.classList.add('kb-compact');
+  list.style.maxHeight = h ? h + 'px' : '';
+  list.scrollTop = list.scrollHeight;
+}
+/* Đồng bộ chế độ gọn theo ô đang focus. force = đo lại và cuộn cuối (sau "+"). Tắt trễ 250ms để chuyển ô SL -> Thành tiền -> + không nhấp nháy. */
+function compactSync(force){
+  var mobile = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
+  var ae = doc.activeElement;
+  [['retailBox', 'retailNoteList'], ['remedyBox', 'remedyNoteList']].forEach(function(p){
+    var box = $('#' + p[0]), list = $('#' + p[1]);
+    if (!box || !list || !box.classList) return;
+    var editing = !!(ae && ae.tagName === 'INPUT' && ae.type !== 'date' && box.contains && box.contains(ae));
+    var want = compactWanted({ mobile: mobile, editing: editing });
+    if (want) {
+      if (compactOffTimer[p[0]]) { clearTimeout(compactOffTimer[p[0]]); compactOffTimer[p[0]] = 0; }
+      if (force || !box.classList.contains('kb-compact')) compactApply(box, list, true);
+    } else if (box.classList.contains('kb-compact') && !compactOffTimer[p[0]]) {
+      compactOffTimer[p[0]] = setTimeout(function(){
+        compactOffTimer[p[0]] = 0;
+        var a2 = doc.activeElement;
+        if (a2 && a2.tagName === 'INPUT' && a2.type !== 'date' && box.contains && box.contains(a2)) return;
+        compactApply(box, list, false);
+      }, 250);
+    }
+  });
+}
 var kbTimers = [], kbGen = 0, kbUserAt = 0, kbDebug = false;
 function kbClear(){ kbGen++; kbTimers.forEach(clearTimeout); kbTimers = []; }
 /* Người dùng chạm/cuộn: hủy mọi ép cuộn đang chờ và không ép lại khi vv resize trong 800ms. */
@@ -5197,8 +5253,8 @@ function initFootBars(){
   }
   try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
   ['touchstart', 'touchmove', 'wheel', 'pointerdown'].forEach(function(n){ doc.addEventListener(n, kbUserStop, { passive: true }); });
-  doc.addEventListener('focusin', function(e){ scheduleFootBars(); keepPendingVisible(e); });
-  doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); });
+  doc.addEventListener('focusin', function(e){ scheduleFootBars(); compactSync(false); keepPendingVisible(e); });
+  doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); setTimeout(compactSync, 0); });
   ['retailBox', 'remedyBox'].forEach(function(id){
     var b = $('#' + id);
     if (b && b.addEventListener) b.addEventListener('toggle', scheduleFootBars);

@@ -39,7 +39,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), keepVisibleDelta: (typeof keepVisibleDelta === 'function' ? keepVisibleDelta : null), kbPadPx: (typeof kbPadPx === 'function' ? kbPadPx : null), searchScrollDelta: (typeof searchScrollDelta === 'function' ? searchScrollDelta : null), kbUserStop: (typeof kbUserStop === 'function' ? kbUserStop : null), kbSchedule: (typeof kbSchedule === 'function' ? kbSchedule : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), keepPendingVisible: (typeof keepPendingVisible === 'function' ? keepPendingVisible : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
+  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), keepVisibleDelta: (typeof keepVisibleDelta === 'function' ? keepVisibleDelta : null), kbPadPx: (typeof kbPadPx === 'function' ? kbPadPx : null), searchScrollDelta: (typeof searchScrollDelta === 'function' ? searchScrollDelta : null), kbUserStop: (typeof kbUserStop === 'function' ? kbUserStop : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), kbSchedule: (typeof kbSchedule === 'function' ? kbSchedule : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), keepPendingVisible: (typeof keepPendingVisible === 'function' ? keepPendingVisible : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
@@ -2559,7 +2559,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 17, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 166); // 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 168); // 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3716,8 +3716,8 @@ test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) n�
 test('2.14.0 Thuốc chén điện thoại: ô chọn đơn rộng cả hàng 2 của thanh; nút chân ≥44px; tiêu đề cột ẩn khi tờ ghi rỗng', () => {
   assert.match(PAGE, /@media \(max-width:600px\)\{\n#remedyBox \.card__bar-preset\{order:1;flex:1 1 90px;min-width:90px\}/);
   assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
-  assert.match(PAGE, /#remedyNote>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/);
-  assert.match(PAGE, /#remedyNote:has\(#remedyBody tr\[data-pid\]\)>table>thead\{display:table-header-group\}/);
+  assert.match(PAGE, /#remedyNote>\.note__list>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/);
+  assert.match(PAGE, /#remedyNote:has\(#remedyBody tr\[data-pid\]\)>\.note__list>table>thead\{display:table-header-group\}/);
 });
 
 test('2.14.0 Nhập hàng điện thoại: dòng đang nhập là một dòng lưới (is-row) có nhãn SL/Giá; thành tiền và gợi ý giá nằm trong khung; không còn "Tương đương"', () => {
@@ -4648,7 +4648,7 @@ test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn v�
 });
 
 test('2.14.0 M4 điện thoại ẩn tiêu đề cột tờ ghi (.note>table>thead) trong khối ≤600px', () => {
-  const k = PAGE.indexOf('.note>table>thead{display:none}');
+  const k = PAGE.indexOf('.note>.note__list>table>thead{display:none}');
   assert.ok(k > 0);
   const m = PAGE.lastIndexOf('@media (max-width:600px){', k);
   const e = PAGE.indexOf('\n}\n', m);
@@ -5115,4 +5115,75 @@ test('2.15.5 refocusSearch: lập lịch cuộn tới ô tìm ở các mốc tr�
   c.kbUserStop();
   timers.forEach(x => x.fn());
   assert.equal(y.s.length, n, 'sau khi chạm không cuộn thêm');
+});
+
+/* ===== 2.15.6 chế độ gọn khi nhập (điện thoại) ===== */
+test('2.15.6 compactListHeight: tổng cao đúng 3 dòng cuối; <=3 dòng thì 0; bỏ dòng cao 0', () => {
+  assert.equal(app.compactListHeight([50, 60, 70, 80, 90, 100], 3), 270);
+  assert.equal(app.compactListHeight([50, 60, 70], 3), 0);
+  assert.equal(app.compactListHeight([], 3), 0);
+  assert.equal(app.compactListHeight([50, 0, 60, 70, 80, 90], 3), 240, 'dòng ẩn (cao 0) không tính');
+  assert.equal(app.compactListHeight([40, 40, 40, 40, 40], 2), 80, 'đổi n');
+  assert.equal(app.compactListHeight([40.2, 40, 40, 40.1], 3), Math.ceil(120.1));
+  assert.equal(app.compactListHeight([10, 20, 30, 40]), 90, 'mặc định 3 dòng');
+});
+test('2.15.6 compactWanted: chỉ điện thoại và đang nhập', () => {
+  assert.equal(app.compactWanted({ mobile: true, editing: true }), true);
+  assert.equal(app.compactWanted({ mobile: true, editing: false }), false);
+  assert.equal(app.compactWanted({ mobile: false, editing: true }), false);
+  assert.equal(app.compactWanted(null), false);
+});
+
+function compactRig(nRows) {
+  const timers = [];
+  const cls = new Set();
+  const heights = Array.from({ length: nRows }, (_, i) => 50 + i * 10);
+  const rows = heights.map(h => ({ getBoundingClientRect() { return { height: h }; } }));
+  const tb = { children: rows };
+  const list = { style: { maxHeight: '' }, scrollTop: 0, scrollHeight: 999, querySelector: s => (s === 'tbody' ? tb : null) };
+  const inBox = new Set();
+  const box = { classList: { add: c => cls.add(c), remove: c => cls.delete(c), contains: c => cls.has(c) }, contains: e => inBox.has(e) };
+  const dom = { '#retailBox': box, '#retailNoteList': list };
+  const doc = limitDoc(dom); doc.documentElement = { style: { setProperty() {} } };
+  const c = loadClient({ document: doc, matchMedia: () => ({ matches: true }), innerHeight: 852,
+    setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; }, clearTimeout(id) { if (timers[id - 1]) timers[id - 1].dead = true; } });
+  const inp = { tagName: 'INPUT', type: 'text' }; inBox.add(inp);
+  const date = { tagName: 'INPUT', type: 'date' }; inBox.add(date);
+  return { c, doc, box, list, cls, timers, inp, date, heights };
+}
+test('2.15.6 gọn bật khi đang nhập trong thẻ: max-height = 3 dòng cuối, cuộn xuống cuối; ô ngày không bật', () => {
+  const k = compactRig(9);
+  k.doc.activeElement = k.date; k.c.compactSync(false);
+  assert.equal(k.cls.has('kb-compact'), false, 'ô ngày không bật gọn');
+  k.doc.activeElement = k.inp; k.c.compactSync(false);
+  assert.equal(k.cls.has('kb-compact'), true);
+  const h = k.heights.slice(-3).reduce((a, b) => a + b, 0);
+  assert.equal(k.list.style.maxHeight, h + 'px');
+  assert.equal(k.list.scrollTop, 999, 'cuộn tới cuối');
+});
+test('2.15.6 gọn tắt trễ 250ms khi blur; chuyển ô trong thẻ (focus lại) thì giữ; ít dòng thì không giới hạn', () => {
+  const k = compactRig(9);
+  k.doc.activeElement = k.inp; k.c.compactSync(false);
+  k.doc.activeElement = null; k.c.compactSync(false);
+  assert.equal(k.cls.has('kb-compact'), true, 'chưa tắt ngay');
+  assert.equal(k.timers.at(-1).ms, 250);
+  k.doc.activeElement = k.inp; k.c.compactSync(false);
+  k.timers.forEach(t => { if (!t.dead) t.fn(); });
+  assert.equal(k.cls.has('kb-compact'), true, 'focus lại trong thẻ: giữ gọn');
+  k.doc.activeElement = null; k.c.compactSync(false);
+  k.timers.forEach(t => { if (!t.dead) t.fn(); });
+  assert.equal(k.cls.has('kb-compact'), false, 'blur hẳn: bỏ gọn');
+  assert.equal(k.list.style.maxHeight, '', 'hiện đủ dòng');
+  const few = compactRig(2);
+  few.doc.activeElement = few.inp; few.c.compactSync(false);
+  assert.equal(few.list.style.maxHeight, '', 'chỉ 2 dòng: không giới hạn');
+});
+test('2.15.6 thêm dòng bằng "+" (compactSync(true)) đo lại và cuộn cuối', () => {
+  const k = compactRig(9);
+  k.doc.activeElement = k.inp; k.c.compactSync(false);
+  k.list.scrollTop = 0;
+  k.c.compactSync(true);
+  assert.equal(k.list.scrollTop, 999);
+  assert.ok(/refocusSearch[\s\S]{0,400}compactSync\(true\)/.test(PAGE), 'refocusSearch phải gọi compactSync(true)');
+  assert.match(PAGE, /focusin', function\(e\)\{ scheduleFootBars\(\); compactSync\(false\); keepPendingVisible\(e\)/);
 });
