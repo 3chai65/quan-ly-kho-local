@@ -465,6 +465,35 @@ test('pushState 400 và 428 hiện details, không hẹn gửi lại', async () 
   }
 });
 
+test('2.15.16 pushState 400/428 toast lỗi đúng một lần với d.error rút gọn; 401/409 không toast kiểu này', async () => {
+  const run = async (status, error) => {
+    const { doc } = toastDoc(false);
+    let writes = [];
+    const mEl = doc.querySelector('#toastMsg');
+    Object.defineProperty(mEl, 'textContent', { get() { return writes[writes.length - 1] || ''; }, set(v) { writes.push(v); } });
+    const client = loadClient({
+      document: doc,
+      fetch: async () => ({ status, json: async () => ({ success: false, error }) }),
+      setTimeout() { return 0; }, clearTimeout() {}
+    });
+    client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+    client.setBase(1);
+    await client.pushState(false, false);
+    return writes;
+  };
+  for (const status of [400, 428]) {
+    const w = await run(status, 'Lý do ' + status);
+    assert.equal(w.length, 1);
+    assert.match(w[0], /Chưa lưu được: Lý do /);
+    assert.ok(w[0].includes('Lý do ' + status));
+  }
+  const long = await run(400, 'x'.repeat(500));
+  assert.equal(long.length, 1);
+  assert.ok(long[0].length < 160);
+  assert.equal((await run(401, 'Thiết bị chưa được duyệt')).filter(t => /Chưa lưu được:/.test(t)).length, 0);
+  assert.equal((await run(409, 'x')).filter(t => /Chưa lưu được:/.test(t)).length, 0);
+});
+
 test('pushState 409 mở xung đột và không hẹn gửi lại', async () => {
   let confirms = 0;
   const fetchStub = async (url, opts = {}) => {

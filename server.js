@@ -511,6 +511,11 @@ app.get('/api/state', (req, res) => {
   }
 });
 
+// 2.15.16: một dòng log khi PUT bị từ chối. Chỉ giờ, mã, lý do cố định; không ghi dữ liệu/tên/số tiền/token.
+function warnReject(code, reason) {
+  console.warn(new Date().toISOString() + ' PUT /api/state từ chối ' + code + ': ' + reason);
+}
+
 app.put('/api/state', (req, res) => {
   res.set('Cache-Control', 'no-store');
   try {
@@ -519,25 +524,30 @@ app.put('/api/state', (req, res) => {
     try {
       body = JSON.parse(text);
     } catch (e) {
+      warnReject(400, 'JSON không hợp lệ');
       return res.status(400).json({ success: false, error: 'JSON không hợp lệ' });
     }
     const checked = validateState(body);
     if (checked.errors.length) {
+      warnReject(400, 'Dữ liệu không hợp lệ (' + checked.errors.length + ' lỗi)');
       return res.status(400).json({ success: false, error: 'Dữ liệu không hợp lệ', details: checked.errors });
     }
     const force = req.get('X-Force') === '1';
     const baseHdr = req.get('X-Base-Updated');
     if (!force && baseHdr == null) {
+      warnReject(428, 'thiếu X-Base-Updated');
       return res.status(428).json({ success: false, error: 'Thiếu X-Base-Updated (hoặc gửi X-Force: 1 để chủ động ghi đè)' });
     }
     if (baseHdr != null && !force) {
       const baseNum = Number(baseHdr);
       // Header không phải số hợp lệ → coi như xung đột (an toàn) thay vì bỏ qua kiểm tra.
       if (!Number.isFinite(baseNum)) {
+        warnReject(400, 'X-Base-Updated không hợp lệ');
         return res.status(400).json({ success: false, error: 'X-Base-Updated không hợp lệ' });
       }
       const current = getSourceUpdatedAt();
       if (current > baseNum) {
+        warnReject(409, 'xung đột: máy chủ có bản mới hơn');
         return res.status(409).json({ success: false, conflict: true, updatedAt: current });
       }
     }

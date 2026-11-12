@@ -134,6 +134,7 @@ function emptyState(extra = {}) {
   return { products: [], transactions: [], prescriptions: [], updatedAt: 0, ...extra };
 }
 
+let serverErr = '';
 test.before(async () => {
   PORT = await freePort();
   BASE = `http://127.0.0.1:${PORT}`;
@@ -141,8 +142,9 @@ test.before(async () => {
   child = spawn(process.execPath, ['server.js'], {
     cwd: root,
     env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, QLK_SETUP_CODE: SETUP_CODE },
-    stdio: 'ignore'
+    stdio: ['ignore', 'ignore', 'pipe']
   });
+  child.stderr.on('data', d => { serverErr += d.toString(); });
   await waitForServer();
   await enrollDevice();
 });
@@ -679,4 +681,21 @@ test('client sanitize/parseBackup tương thích server: mẫu biên không bị
     const r = await put(out, { 'X-Force': '1' });
     assert.notEqual(r.status, 400, 'sanitize đầu ra bị server từ chối: ' + label);
   }
+});
+
+test('server.js: PUT bị từ chối (400/428/409) ghi một dòng log, không lộ dữ liệu', async () => {
+  const SECRET = 'TenBiMatXyz987';
+  const start = serverErr.length;
+  const base = await put(emptyState({ products: [{ id: 'L1', name: 'A', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  assert.equal(base.status, 200);
+  assert.equal((await put(emptyState({ products: [{ id: 'L2', name: SECRET, stock: -5, costPrice: 777777 }] }), { 'X-Base-Updated': String(base.body.updatedAt) })).status, 400);
+  assert.equal((await put(emptyState({ products: [{ id: 'L3', name: SECRET, stock: 1, costPrice: 1 }] }))).status, 428);
+  assert.equal((await put(emptyState({ products: [{ id: 'L4', name: SECRET, stock: 1, costPrice: 1 }] }), { 'X-Base-Updated': '0' })).status, 409);
+  await new Promise(r => setTimeout(r, 300));
+  const log = serverErr.slice(start);
+  const lines = log.split(/\r?\n/).filter(l => l.includes('PUT /api/state từ chối'));
+  assert.equal(lines.length, 3, log);
+  for (const code of ['400', '428', '409']) assert.ok(lines.some(l => l.includes(' ' + code + ':')), 'thiếu dòng ' + code);
+  assert.match(lines[0], /^\d{4}-\d\d-\d\dT/);
+  assert.ok(!log.includes(SECRET) && !log.includes('777777') && !log.includes('qlk_dev'), 'log lộ dữ liệu');
 });

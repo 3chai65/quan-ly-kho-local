@@ -4511,6 +4511,12 @@ function pushState(manual, force){
     } else {
       var rejected = status >= 400 && status < 500;
       noteSyncFailure(syncFailText(d, 'Chưa lưu được lên máy chủ — dữ liệu vẫn giữ trên máy này'), !rejected);
+      if (rejected) {
+        /* 2.15.16: 400/428 máy chủ từ chối đúng dữ liệu này: báo một lần ngay, không chỉ nằm trong huy hiệu. */
+        var why = d && d.error ? String(d.error) : 'Máy chủ từ chối lưu';
+        if (why.length > 120) why = why.slice(0, 117) + '...';
+        toast('Chưa lưu được: ' + why, 'error');
+      }
     }
     return ok;
   }).catch(function(){
