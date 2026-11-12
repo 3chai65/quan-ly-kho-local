@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.17] - 2026-11-12
+
+### Removed
+- Thuốc chén: bỏ nút "Sao chép đơn" và khả năng đổi tên đơn đã lưu (chọn đơn thì ô tên ẩn; "Cập nhật đơn" chỉ đổi nội dung theo ID, giữ tên cũ). Dữ liệu đơn đã lưu không đổi.
+
+### Changed
+- Lưu đơn mới trùng tên đơn đã có (không phân biệt hoa/thường, khoảng trắng thừa): hỏi `Đã có đơn "<tên đang lưu>". Cập nhật đơn này bằng nội dung đang nhập?`; OK cập nhật đơn cũ, Hủy không đổi gì.
+
 ## [2.15.16] - 2026-11-12
 
 ### Added
