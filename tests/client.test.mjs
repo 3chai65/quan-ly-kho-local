@@ -110,7 +110,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -5556,4 +5556,64 @@ test('2.15.19 savePreset: đơn mới trùng tên (khác hoa/thường), bấm H
     assert.equal(r.els['#remedyPreset'].value, '', 'không tự chọn đơn');
     assert.ok(!r.els['#toastMsg'].textContent, 'không toast');
   }
+});
+
+/* ------------------------------------------------------------------ */
+/* 2.15.20: BUG-01 delOrder cộng dồn, BUG-02 openOrder, BUG-03 saveLocal */
+/* ------------------------------------------------------------------ */
+
+test('2.15.20 delOrder: đơn NHAP hai dòng cùng sản phẩm cộng dồn khi kiểm tồn âm', () => {
+  const mk = stock => {
+    const dom = limitStock();
+    const txs = [
+      { id: 'n1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 8, price: 1000, total: 8000, ts: 1, oid: 'IM1' },
+      { id: 'n2', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 8, price: 1000, total: 8000, ts: 2, oid: 'IM1' }
+    ];
+    return limitClient(dom, [{ id: 'p1', name: 'A', stock, costPrice: 1000 }], txs);
+  };
+  const a = mk(10);
+  a.delOrder('IM1');
+  assert.equal(a.getDb().products[0].stock, 10, 'tồn 10 < 16: không được xóa');
+  assert.equal(a.getDb().transactions.length, 2, 'đơn vẫn còn');
+  const b = mk(16);
+  b.delOrder('IM1');
+  assert.equal(b.getDb().products[0].stock, 0);
+  assert.equal(b.getDb().transactions.length, 0);
+});
+
+test('2.15.20 openOrder: oid không còn giao dịch thì không mở hộp, không đổi orderCur', () => {
+  const dom = limitStock();
+  dom.set('orderDlg', '');
+  let opened = 0;
+  const d = dom.document.querySelector('#orderDlg');
+  d.showModal = () => { opened++; };
+  const c = limitClient(dom, [], [{ id: 'n1', type: 'NHAP', productId: 'p1', qty: 1, oid: 'IM1', ts: 1, date: '2026-11-01' }]);
+  c.setOrderCur(null);
+  c.openOrder('KHONG_CO');
+  assert.equal(opened, 0);
+  assert.equal(c.getOrderCur(), null);
+  assert.match(toastText(dom), /Đơn không còn tồn tại/);
+});
+
+test('2.15.20 saveLocal: ghi KEY lỗi quota khi dirty thì DIRTY_KEY vẫn là 1 và BASE_KEY vẫn được ghi', () => {
+  const writes = [];
+  let n = 0;
+  const localStorage = {
+    getItem() { return null; },
+    setItem(k, v) {
+      n++;
+      if (n === 1) { const e = new Error('full'); e.name = 'QuotaExceededError'; throw e; }
+      writes.push([k, String(v)]);
+    },
+    removeItem() {}, clear() {}
+  };
+  const client = loadClient({ localStorage });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setDirty(true);
+  client.setBase(77);
+  client.saveLocal();
+  assert.equal(writes.length, 2, 'DIRTY_KEY và BASE_KEY đều được ghi');
+  assert.equal(writes[0][1], '1');
+  assert.equal(writes[1][1], '77');
+  assert.match(client.getQuotaNote(), /Bộ nhớ trình duyệt đầy/);
 });

@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.20] - 2026-11-12
+
+### Fixed
+- Xóa đơn nhập: cộng dồn số lượng theo sản phẩm khi kiểm tồn không âm (đơn có nhiều dòng cùng sản phẩm).
+- Mở đơn không còn tồn tại: báo lỗi thay vì mở hộp trống.
+- Lưu nháp cục bộ: ghi cờ chưa đồng bộ và mốc cloud độc lập; hết bộ nhớ không làm mất cờ chưa đồng bộ.
+- Dòng log khởi động nói đúng: ứng dụng nghe 0.0.0.0 trong container, compose chỉ mở 127.0.0.1.
+
 ## [2.15.19] - 2026-11-12
 
 ### Changed

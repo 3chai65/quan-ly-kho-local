@@ -1940,11 +1940,10 @@ function discardUnsynced(){
   });
 }
 function saveLocal(){
+  var keyOk = false;
   try {
     localStorage.setItem(KEY, JSON.stringify(db));
-    localStorage.setItem(DIRTY_KEY, dirty ? '1' : '0');
-    localStorage.setItem(BASE_KEY, String(cloudBase || 0));
-    if (quotaNote) { quotaNote = ''; quotaWarned = false; renderSyncBadge(); }
+    keyOk = true;
   } catch (e) {
     var quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
     if (quota && !quotaWarned) {
@@ -1953,6 +1952,13 @@ function saveLocal(){
       renderSyncBadge();
     }
   }
+  try {
+    localStorage.setItem(DIRTY_KEY, dirty ? '1' : '0');
+  } catch (e2) {}
+  try {
+    localStorage.setItem(BASE_KEY, String(cloudBase || 0));
+  } catch (e3) {}
+  if (keyOk && quotaNote) { quotaNote = ''; quotaWarned = false; renderSyncBadge(); }
 }
 function touch(){
   db.updatedAt = Date.now();
@@ -3203,6 +3209,10 @@ function renderOrder(){
   }
 }
 function openOrder(oid){
+  if (!db.transactions.some(function(x){ return String(x.oid) === String(oid); })) {
+    toast('Đơn không còn tồn tại', 'error');
+    return;
+  }
   orderCur = String(oid);
   orderPage = 1;
   renderOrder();
@@ -4204,11 +4214,16 @@ function delOrder(oid){
     : 'đơn');
   if (!confirm('Xóa cả ' + label + '? Tồn kho sẽ được điều chỉnh lại.')) return;
   /* Kiểm tra trước toàn bộ đơn nhập: không được để tồn âm. */
+  var needOut = {};
   for (var i = 0; i < items.length; i++) {
     var t0 = items[i];
     if (t0.type !== 'NHAP') continue;
-    var p0 = findProduct(t0.productId);
-    if (p0 && num(p0.stock) - num(t0.qty) < -1e-9) {
+    var k0 = String(t0.productId);
+    needOut[k0] = (needOut[k0] || 0) + num(t0.qty);
+  }
+  for (var k1 in needOut) {
+    var p0 = findProduct(k1);
+    if (p0 && num(p0.stock) - needOut[k1] < -1e-9) {
       toast('Không thể xóa: "' + p0.name + '" đã bán, tồn sẽ âm. Hãy sửa/xóa đơn bán liên quan trước.', 'error');
       return;
     }
