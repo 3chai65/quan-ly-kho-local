@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.12] - 2026-11-12
+
+### Removed
+- Dọn mã chết sau loạt 2.15.8–2.15.11, không đổi hành vi: 6 biến màu CSS không còn nơi dùng (`--green-soft`, `--blue-soft`, `--purple-soft`, `--purple-text`, `--chart-imp-ink`, `--chart-exp-ink`) ở cả hai chế độ sáng/tối; khai báo trùng giá trị trong khối media (`.toast.is-on`, `body{padding-bottom}`, `min-height`/`gap` của `.tab`/`.tabs`, `margin-left`/`font-size` của biểu đồ, `justify-content` của `.tab` ≥641px, `min-width` của bảng đơn/kho/lịch sử).
+
+### Changed
+- Test: bỏ khóa `remedyNewName` khỏi bộ nạp, gộp hai ca kiểm "không còn mã cũ" thành một; bộ kiểm tương phản dùng nền `--surface` cho chữ xanh lá/xanh dương; chuỗi CSS được ghim đổi theo các dòng đã gọn. JS: kiểm tra tới được 247 hàm, không có hàm hay biến chết.
+
 ## [2.15.11] - 2026-11-12
 
 ### Fixed

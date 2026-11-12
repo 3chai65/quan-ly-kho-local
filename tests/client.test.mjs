@@ -112,7 +112,7 @@ globalThis.__test = {
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
   handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
-  savePreset: (typeof savePreset === 'function' ? savePreset : null), copyPreset: (typeof copyPreset === 'function' ? copyPreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNewName: (typeof remedyNewName === 'function' ? remedyNewName : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
+  savePreset: (typeof savePreset === 'function' ? savePreset : null), copyPreset: (typeof copyPreset === 'function' ? copyPreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null),
@@ -3176,7 +3176,7 @@ test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng T
   // .tabs: gốc (8 cột) trước khối 600px (4 cột)
   assert.ok(at('.tabs{display:grid') < at('repeat(4,minmax(0,1fr))'), '.tabs gốc phải đứng trước quy tắc 4 cột điện thoại');
   // .tab: gốc (display:flex) trước khối 600px (11px)
-  assert.ok(at('.tab{display:flex') < at('.tab{min-height:44px;padding:4px 2px;font-size:12px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
+  assert.ok(at('.tab{display:flex') < at('.tab{padding:4px 2px;font-size:12px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
 
   // quy tắc điện thoại của tab phải nằm trong @media (max-width:600px)
   const m = PAGE.lastIndexOf('@media (max-width:600px)', at('repeat(4,minmax(0,1fr))'));
@@ -3342,7 +3342,7 @@ test('2.13.2 CSS: quy tắc điện thoại của đầu thẻ và dòng dữ li
   const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
   assert.ok(at('.chart-head__stats{display:flex') < at('#chartBox>summary.chart-head .chart-head__stats{width:100%'), 'đầu thẻ điện thoại phải sau gốc');
   assert.ok(at('.chart-tip{display:flex') < at('.chart-tip{gap:4px 10px}'), 'dòng dữ liệu điện thoại phải sau gốc');
-  assert.ok(at('.chart-chip{display:inline-flex') < at('.chart-chip{font-size:13px;gap:5px}'), 'chip điện thoại phải sau gốc');
+  assert.ok(at('.chart-chip{display:inline-flex') < at('.chart-chip{gap:5px}'), 'chip điện thoại phải sau gốc');
 });
 
 /* 2.14.0 (1): bỏ chú thích và chữ đơn vị tĩnh; id và hook dữ liệu còn nguyên. */
@@ -4035,14 +4035,13 @@ test('2.12.0 nhãn tab: mỗi nút đúng 2 span tab__l1/tab__l2 không rỗng; 
     assert.equal(b.split('<span').length - 1, 2, 'đúng 2 span (icon là svg, không phải span)');
   }
   assert.match(PAGE, /\.tab\{display:flex;flex-direction:column;[^}]*min-height:44px/);
-  assert.match(PAGE, /\.tab\{min-height:44px;padding:4px 2px;font-size:12px\}/);
+  assert.match(PAGE, /\.tab\{padding:4px 2px;font-size:12px\}/);
   assert.match(PAGE, /font-size:13px;font-weight:600;line-height:1\.2;text-align:center;cursor:pointer\}/);
 });
 
 /* 2.12.0 (C): giảm chói – token màu đổi ở cả :root và html[data-theme=dark]; không nền #fff; tương phản đạt AA. */
 const C_TOKENS = ['--bg', '--surface', '--surface2', '--text', '--text2', '--muted', '--brand', '--brand-text', '--brand-soft',
-  '--green-soft', '--green-text', '--amber-soft', '--amber-text', '--red-soft', '--red-text', '--blue-soft', '--blue-text',
-  '--purple-soft', '--purple-text', '--chart-imp', '--chart-exp'];
+  '--green-text', '--amber-soft', '--amber-text', '--red-soft', '--red-text', '--blue-text', '--chart-imp', '--chart-exp'];
 function tokenBlocks() {
   const r0 = PAGE.indexOf(':root{'), d0 = PAGE.indexOf('html[data-theme=dark]{');
   assert.ok(r0 >= 0 && d0 > r0, 'thiếu :root hoặc html[data-theme=dark]');
@@ -4080,8 +4079,8 @@ test('2.12.0 không có màu cứng #fff/#000 ngoài danh sách cho phép (chữ
 test('2.12.0 tương phản WCAG AA: chữ ≥ 4.5:1, chữ trắng trên nút màu ≥ 4.5:1 (cả hai chế độ)', () => {
   const { root, dark } = tokenBlocks();
   const pairs = [['--text', '--surface'], ['--text2', '--surface'], ['--muted', '--surface'], ['--brand-text', '--brand-soft'],
-    ['--brand-text', '--surface'], ['--green-text', '--green-soft'], ['--amber-text', '--amber-soft'], ['--red-text', '--red-soft'],
-    ['--blue-text', '--blue-soft'], ['--purple-text', '--purple-soft']];
+    ['--brand-text', '--surface'], ['--green-text', '--surface'], ['--amber-text', '--amber-soft'], ['--red-text', '--red-soft'],
+    ['--blue-text', '--surface']];
   for (const [blockName, block] of [['root', root], ['dark', dark]]) {
     for (const [a, b] of pairs) {
       const r = ratioC(tokenVal(block, a), tokenVal(block, b));
@@ -5193,7 +5192,7 @@ test('2.15.10 nguồn: không scrollBy/scrollIntoView; window.scrollTo chỉ tro
   assert.equal([...PAGE.matchAll(/window\.scrollTo\(/g)].length, 1, 'đúng một window.scrollTo');
   assert.match(fnBody('kbUnlock'), /window\.scrollTo\(0, kbSavedY\)/);
   assert.ok(!/(^|[^.\w])scrollTo\(/.test(PAGE), 'không scrollTo trần');
-  assert.ok(!/placeScrollDelta|kbSafeDelta|kbPadFixed|kbVisBottom|kbPlaceNow|kbOnFocus|kbUserStop|kbPlacedBox|kbSafeUsed|ENTRY_ROW_H|PLACE_GAP|KB_BAR|--kb-pad|kbMovedAt|kbSchedule/.test(PAGE), 'không còn mã định vị cũ');
+  assert.ok(!/placeScrollDelta|kbSafeDelta|kbPadFixed|kbVisBottom|kbPlaceNow|kbOnFocus|kbUserStop|kbPlacedBox|kbSafeUsed|ENTRY_ROW_H|PLACE_GAP|KB_BAR|--kb-pad|kbMovedAt|kbSchedule|keepVisibleDelta|kbUserAt|searchScrollDelta|kbPadPx|keepPendingVisible/.test(PAGE), 'không còn mã định vị cũ');
   assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ scheduleFootBars\(\); compactSync\(false\); \}\);/);
   for (const n of ['commitRetailRow', 'commitRemedyRow', 'addRetailToNote', 'addRemedyToNote', 'refocusSearch', 'pickSuggest']) {
     assert.ok(!/\.focus\(\)/.test(fnBody(n)), n + ' không được gọi .focus() trần');
@@ -5201,7 +5200,7 @@ test('2.15.10 nguồn: không scrollBy/scrollIntoView; window.scrollTo chỉ tro
   assert.match(fnBody('focusNS'), /e\.focus\(\{ preventScroll: true \}\)/);
   assert.match(fnBody('refocusSearch'), /focusNS\(s\)/);
   assert.ok(!/kbLock|kbUnlock|scrollTo/.test(fnBody('refocusSearch')), 'refocusSearch không đụng khóa/cuộn');
-  assert.match(PAGE, /body\{padding-bottom:48px\}/);
+  assert.match(PAGE, /body\{margin:0;[^}]*padding-bottom:48px;/);
   assert.match(PAGE, /html\.kb-lock,body\.kb-lock\{overflow-anchor:none;overscroll-behavior:none;transition:none!important\}/);
   const lk = fnBody('kbLock');
   assert.match(lk, /kbSavedY = kbLastY >= 0 \? kbLastY : y;/); assert.match(lk, /if \(kbLockBox \|\| /, 'idempotent');
@@ -5402,9 +5401,8 @@ test('2.15.8 guồng nước: vào gọn lần đầu nhảy thẳng; "+" khi đ
   assert.equal(r.calls.length, 1); assert.equal(r.calls[0].behavior, 'auto', 'prefers-reduced-motion: auto');
   assert.ok(PAGE.includes('list.scrollTop = list.scrollHeight; }, 450);'), 'lưới an toàn 450ms');
 });
-test('2.15.8 CSS: mặt nạ mờ mép trên chỉ khi .kb-compact; không còn mã cũ', () => {
+test('2.15.8 CSS: mặt nạ mờ mép trên chỉ khi .kb-compact', () => {
   assert.match(PAGE, /\.kb-compact \.note__list\{overflow-y:auto;-webkit-mask-image:linear-gradient\(to bottom,transparent 0,black 12px\);mask-image:linear-gradient\(to bottom,transparent 0,black 12px\)\}/);
-  assert.ok(!/keepVisibleDelta|kbUserAt|searchScrollDelta|kbPadPx|keepPendingVisible/.test(PAGE), 'không còn mã cũ');
 });
 
 test('2.15.8 tab máy tính có icon: 8 nút mỗi nút 1 svg aria-hidden trỏ tới symbol có thật, cùng icon tiêu đề thẻ; điện thoại ẩn icon; id/data-tab giữ nguyên', () => {

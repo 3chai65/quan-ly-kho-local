@@ -20,14 +20,13 @@ color-scheme:light;
 --bg:#eceef2;--surface:#f6f7f9;--surface2:#eaedf2;--border:#d7dde6;--border2:#e6eaf0;
 --text:#1e293b;--text2:#475569;--muted:#5b6b81;
 --brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#e8ebf8;
---green-soft:#e6f4ee;--green-text:#047857;
+--green-text:#047857;
 --amber:#b45309;--amber-soft:#fbf5e6;--amber-text:#b45309;
 --red:#be123c;--red-soft:#f8e7ea;--red-text:#be123c;
---blue-soft:#e6eef9;--blue-text:#1d4ed8;
---purple-soft:#ece9f8;--purple-text:#6d28d9;
+--blue-text:#1d4ed8;
 --r:14px;--r-sm:10px;
 --sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.05);
---chart-imp:#5b5fd0;--chart-exp:#2f9e76;--chart-imp-ink:#ffffff;--chart-exp-ink:#0f172a;
+--chart-imp:#5b5fd0;--chart-exp:#2f9e76;
 --ring:0 0 0 3px rgba(79,70,229,.30);
 }
 html[data-theme=dark]{
@@ -35,13 +34,12 @@ color-scheme:dark;
 --bg:#111620;--surface:#171e2b;--surface2:#1f2736;--border:#2d3850;--border2:#242e41;
 --text:#cdd5e1;--text2:#aab4c4;--muted:#8f9bb0;
 --brand:#5b5fd9;--brand-text:#b4bcf2;--brand-soft:#222545;
---green-soft:#0f2a24;--green-text:#7fd6ad;
+--green-text:#7fd6ad;
 --amber:#d99a2b;--amber-soft:#2e2412;--amber-text:#e6b964;
 --red:#e0566f;--red-soft:#3a1a22;--red-text:#ec8294;
---blue-soft:#14233a;--blue-text:#a7c7ea;
---purple-soft:#2a2341;--purple-text:#cabff0;
+--blue-text:#a7c7ea;
 --sh:0 1px 2px rgba(0,0,0,.35);
---chart-imp:#7f83e0;--chart-exp:#4fb991;--chart-imp-ink:#0b1220;--chart-exp-ink:#0b1220;
+--chart-imp:#7f83e0;--chart-exp:#4fb991;
 --ring:0 0 0 3px rgba(129,140,248,.35);
 }
 html{-webkit-text-size-adjust:100%}
@@ -263,10 +261,10 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 #chartBox>summary.chart-head .chart-year{margin-left:auto}
 #chartBox>summary.chart-head .chart-head__stats{margin-left:0}
 @media (max-width:600px){
-#chartBox>summary.chart-head .chart-head__stats{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#chartBox>summary.chart-head .chart-head__stats{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chart-head__c{align-items:flex-start}
 .chart-tip{gap:4px 10px}
-.chart-chip{font-size:13px;gap:5px}
+.chart-chip{gap:5px}
 .chart-chip__k{min-width:0}
 }
 /* ---------- toast ---------- */
@@ -284,7 +282,6 @@ box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .26s ease,opacity .2
 /* N2 (2.13.0): điện thoại – thông báo hiện ở ĐẦU màn hình, dưới thanh header (kể cả safe-area), trượt từ trên xuống. Đặt SAU quy tắc gốc. */
 @media (max-width:600px){
 .toast{top:calc(env(safe-area-inset-top,0px) + 64px);bottom:auto;transform:translate(-50%,-150%)}
-.toast.is-on{transform:translate(-50%,0)}
 }
 /* ---------- dialog ---------- */
 .dlg{border:0;padding:0;background:transparent;max-width:min(440px,calc(100% - 24px));width:100%;
@@ -452,13 +449,12 @@ html{scroll-padding-bottom:230px}
 html.kb-lock,body.kb-lock{overflow-anchor:none;overscroll-behavior:none;transition:none!important}
 /* 2.15.11: .top sticky vẫn bám đỉnh vùng nhìn khi body fixed top âm (vvTop=0) và che đỉnh thẻ: ẩn khi khóa (visibility giữ nguyên bố cục). */
 html.kb-lock .top{visibility:hidden}
-body{padding-bottom:48px}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
 .chart{height:260px}
 }
 @media (max-width:600px){
 .tw{overflow-x:visible}
-table.ord,table.inv,table.his{display:block;min-width:0}
+table.ord,table.inv,table.his{display:block}
 table.ord thead,table.inv thead,table.his thead{display:none}
 table.ord tbody,table.inv tbody,table.his tbody{display:block}
 table.ord tr,table.inv tr,table.his tr{display:block}
@@ -535,15 +531,15 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
 @media (max-width:600px){
-.tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.tab{min-height:44px;padding:4px 2px;font-size:12px}
+.tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tab{padding:4px 2px;font-size:12px}
 }
 /* 2.15.8 (máy tính >640px): biểu tượng cạnh nhãn hai hàng (cùng icon với tiêu đề thẻ); điện thoại giữ chữ hai dòng, ẩn icon. */
 .tab__ic{display:none}
 /* 2.15.10: icon tab mang cùng class màu (txt-*) với icon tiêu đề thẻ; tab đang chọn (nền brand) dùng chữ trắng của tab để đủ tương phản. */
 .tab.is-active .tab__ic{color:#fff}
 @media (min-width:641px){
-.tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;justify-content:center;align-content:center;justify-items:center;padding:5px 4px}
+.tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;align-content:center;justify-items:center;padding:5px 4px}
 .tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
 .tab__l1{grid-column:2;grid-row:1}
 .tab__l2{grid-column:2;grid-row:2}
