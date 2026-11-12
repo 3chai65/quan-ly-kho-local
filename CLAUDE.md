@@ -16,7 +16,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `tests/client.test.mjs` — test logic client (tiền, tồn kho, đồng bộ), chạy trên máy.
 - `tests/server.test.mjs` — test `server.js` thật qua HTTP, chạy trong Docker.
 - `auth.js` + `data/auth.db` — thiết bị được duyệt; cookie `qlk_dev_*`; băm SHA-256; tối đa 2 thiết bị chủ.
-- `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
+- `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng nghe `0.0.0.0` trong container, docker-compose chỉ mở cổng ra `127.0.0.1:8787` (chạy `npm start` trực tiếp thì mở ra LAN, không dùng cách đó).
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
 - Phiên bản hiện tại: 2.15.20.
