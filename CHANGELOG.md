@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.16] - 2026-11-12
+
+### Added
+- Lưu bị máy chủ từ chối (400/428): hiện thông báo lỗi nêu lý do (một lần mỗi lần thất bại). Máy chủ ghi một dòng log (giờ, mã, lý do ngắn; không ghi dữ liệu) khi từ chối PUT /api/state.
+
+### Fixed
+- iPhone: cập nhật đơn thuốc chén đã chọn mà ô tên bị xóa trống nay hỏi tên bằng hộp thoại (điền sẵn tên cũ; Hủy/rỗng: không đổi gì).
+
 ## [2.15.15] - 2026-11-12
 
 ### Fixed
