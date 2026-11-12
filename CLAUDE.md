@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.11.
+- Phiên bản hiện tại: 2.15.13.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -62,8 +62,9 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.11, commit 441b992, image `quan-ly-kho:2.15.11` (id 985a8974…).
-- Đường lui: `quan-ly-kho:pre-2.15.11` = 2.15.10 (id 67037c9e…, commit ab59982); trước nữa `pre-2.15.10` = 2.15.9 (id 43ec6f62…).
+- Đang chạy: 2.15.13, commit f95f4c7, image `quan-ly-kho:2.15.13` (id 55cc1714…). Giám sát sau triển khai 6/7 đạt (mục còn lại: trang đăng nhập không in số phiên bản, không phải lỗi).
+- 2.15.12 (dọn code chết CSS) + 2.15.13 (icon tab PC cùng một màu xanh lá `--tab-ico`, tab chọn có chip nền `--brand-soft`) triển khai chung; chưa xem trên màn hình thật, nếu tab chọn ở giao diện sáng chưa đủ nổi (tương phản 4,61) thì đậm hơn.
+- Đường lui: `quan-ly-kho:pre-2.15.13` = 2.15.11 (id 985a8974…, commit 441b992); trước nữa `pre-2.15.11` = 2.15.10 (id 67037c9e…, commit ab59982); `pre-2.15.10` = 2.15.9 (id 43ec6f62…).
 - 2.15.11: khi khóa trang, `.top` bị ẩn (visibility); chạm sang ô khác trong thẻ khóa dùng `touchstart` preventDefault + focus preventScroll (người dùng luôn chạm thẳng vào ô, không dùng mũi tên Prev/Next). ĐÃ XÁC NHẬN trên iPhone 14 Pro (12/11/2026): bàn phím vẫn bật, vvTop giữ 0→0 ở mọi sự kiện, khung đứng yên khi nhập tên/SL/thành tiền, thanh thẻ không bị che. Nếu sau này iOS không bật bàn phím từ touchstart thì đổi sang touchend.
 - Gợi ý tên (2.15.9): chỉ hiện khi gõ trọn một từ của tên (không phân biệt hoa/dấu/đ), mọi thiết bị, khung tối đa 3 mục cuộn trong; ô lọc Kho tồn/Lịch sử giữ luật cũ. Focus lập trình dùng preventScroll.
 - Giao diện điện thoại (2.15.3–2.15.10): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; khi nhập, trang bị KHÓA (body fixed, đỉnh thẻ cách mép trên 8px; chỉ `kbUnlock` gọi `window.scrollTo`); tờ ghi gọn 2 vị mới nhất (cuộn mượt kiểu guồng), tự co theo `visualViewport.height`. Số đo thật iPhone 14 Pro: khi bàn phím hiện vvH ≈ 357 (innerHeight 695), thanh phụ Prev/Next và viên địa chỉ Safari nằm DƯỚI đáy vv. Mở với `?kbdebug=1` có dòng chữ gỡ lỗi (vvH, vvTop, savedY, lock, lý do). Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật; chưa xác nhận 2.15.10 trên máy thật.
