@@ -39,6 +39,7 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 ## Dữ liệu
 - Không bao giờ đụng `data/`.
 - Sao lưu bằng `robocopy` (không `/MIR`) sang `E:\sao-luu-kho`, do Task Scheduler "SaoLuuKho" thực hiện.
+- Đã diễn tập khôi phục 12/11/2026 (chép backup thành app.db trong thư mục thử, chạy image, healthz 200, integrity_check ok): hướng dẫn ở `README-LOCAL.md` mục "Khôi phục từ bản sao lưu". Phát hiện: SaoLuuKho chạy MỖI TUẦN (21:00 chủ nhật), bản ở `E:` có thể cũ tới 7 ngày; `E:` (đĩa WD) và `G:` (NVMe) khác đĩa nhưng cùng máy; `auth.db` KHÔNG được sao lưu (mất thì thiết lập lại thiết bị, dữ liệu kho không mất). Khuyến nghị người dùng (cấu hình hệ thống, Claude không tự đổi): chuyển Task Scheduler sang hằng ngày và có thêm bản ngoài máy (USB/đám mây).
 
 ## Vai trò
 - **Giám sát** = Haiku (`.claude/agents/giam-sat.md`, chỉ đọc): chạy test/tóm tắt, kiểm sau triển khai, so số đo với ngưỡng, rút gọn log.
