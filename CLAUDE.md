@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.6.
+- Phiên bản hiện tại: 2.15.8.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -62,9 +62,10 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.6, commit 74c7ed0, image `quan-ly-kho:2.15.6` (id 97de297b…).
-- Đường lui: `quan-ly-kho:pre-2.15.6` = 2.15.5 (id 6602a95a…, commit 264ebe0); trước nữa `pre-2.15.5` = 2.15.4 (id 20a49c2d…).
-- Giao diện điện thoại (2.15.3–2.15.6): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; dòng nhập tự cuộn lên trên bàn phím theo visualViewport; khi bàn phím hiện, tờ ghi chỉ hiện 3 vị mới nhất (vùng cuộn riêng). Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật.
+- Đang chạy: 2.15.8, commit b6e28fc, image `quan-ly-kho:2.15.8` (id 8c9654e0…).
+- Đường lui: `quan-ly-kho:pre-2.15.8` = 2.15.6 (id 97de297b…, commit 74c7ed0); trước nữa `pre-2.15.6` = 2.15.5 (id 6602a95a…).
+- Giao diện điện thoại (2.15.3–2.15.8): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; khi nhập, trang cuộn tới vị trí cố định (thanh thẻ dưới `.top`, `placeScrollDelta`); tờ ghi chỉ hiện 2 vị mới nhất (vùng cuộn riêng, cuộn mượt kiểu guồng). Mở với `?kbdebug=1` có dòng chữ gỡ lỗi (vvH, vvTop, y, lý do thoát). Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật; chưa xác nhận 2.15.8 trên máy thật.
+- Tab PC có icon (2.15.8). Đã dọn code chết (2.15.7); lặp lại sau mỗi đợt chỉnh giao diện lớn.
 - 2.15.x chưa thử trên iPhone thật: sticky chân tờ ghi + bàn phím, vùng an toàn, nút "Tải lại" (chỉ hiện khi chạy từ màn hình chính), bo góc đáy tờ ghi, gợi ý có đè chân không. Đã bỏ chức năng "Gộp đơn thuốc lẻ cũ".
 - Nhánh làm việc `local-sqlite` = `origin-local/main`.
 - Chờ/biết chưa sửa: sao lưu tự động đè lên thông báo đang hiện (G17); Dockerfile còn công cụ build và chạy bằng root.
