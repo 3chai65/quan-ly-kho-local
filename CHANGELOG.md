@@ -5,6 +5,24 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.8] - 2026-11-12
+
+### Fixed
+- Điện thoại, nhập Bán lẻ/Thuốc chén: trang không còn tự cuộn theo số đo bàn phím (iOS báo không đáng tin). Mỗi lần focus ô nhập, sau "+" và ở các mốc 100/300/600/1000ms, trang được ĐỊNH VỊ xác định: đỉnh thanh thẻ nằm ngay dưới thanh trên + 8px; nếu dòng đang nhập vẫn thấp hơn (đỉnh bàn phím - 80px) thì cuộn thêm, đỉnh dòng không lên quá thanh trên. Chạm (tap) không còn chặn định vị; chỉ vuốt/cuộn tay (touchmove, wheel) mới hủy. Chỗ trống cuối trang cố định 60% chiều cao cửa sổ. Bỏ mã cũ (keepVisibleDelta, searchScrollDelta, kbPadPx, kbUserAt).
+- `?kbdebug=1`: dòng gỡ lỗi hiện ngay khi mở trang (vvH, vvTop, ih, y, compact, lý do thoát sớm gần nhất) và bám visualViewport nên không trôi khỏi màn hình khi bàn phím hiện.
+
+### Changed
+- Chế độ gọn hiển thị 2 dòng cuối (trước là 3). "Guồng nước": bấm "+" khi đang gọn thì danh sách cuộn mượt xuống cuối (prefers-reduced-motion: tức thì; lưới an toàn 450ms), mép trên mờ dần 12px; lần vào gọn đầu nhảy thẳng.
+- Máy tính (>640px): mỗi tab có icon cạnh nhãn hai hàng, cùng icon với tiêu đề thẻ (receipt, mortar, cart, warehouse, cart, cash, chart-col, save); điện thoại (<=640px) giữ nguyên, ẩn icon.
+
+## [2.15.7] - 2026-11-12
+
+### Removed
+- Dọn mã chết sau loạt 2.15.x, không đổi hành vi: CSS không còn phần tử nào khớp (`.spacer`, `.row`, `.nhap-row`, `.mb-12`, `.w-full`, `.total`, `.total__v`, `.foot--retail`, `.foot--rec`, `table.ord--r`, `.stats+.grid2`); 2 symbol icon không dùng (`i-monitor`, `i-chart-line`); ô sắp xếp Kho tồn đã bỏ nên bỏ luôn `#invSort` trong mã (nhánh sắp xếp không thể tới, listener).
+
+### Changed
+- CSS: gộp khai báo `.chart-tip` bị ghi đè (cùng giá trị) và bỏ `.chart-year__box{cursor:text}` lặp. Test: bỏ các ca ràng buộc quy tắc CSS đã xóa; số ` id="` trong trang 168 -> 166 (2 symbol).
+
 ## [2.15.6] - 2026-11-12
 
 ### Giao diện điện thoại

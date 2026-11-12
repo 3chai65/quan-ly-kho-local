@@ -122,7 +122,6 @@ details[open]>.card__head{border-bottom:1px solid var(--border2)}
 details>.card__head:hover{background:var(--surface2)}
 .chev{transition:transform .18s;color:var(--muted)}
 details[open] .chev{transform:rotate(90deg)}
-.spacer{flex:1 1 auto}
 /* ---------- stats ---------- */
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--surface);
@@ -164,12 +163,10 @@ select.inp{cursor:pointer}
 .datefield__native,.monthfield__native{position:absolute;right:0;top:0;height:100%;opacity:0;border:0;padding:0;cursor:pointer}
 .datefield__native{width:42px}
 .monthfield__native{width:30px}
-.row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
-.nhap-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 128px 44px;gap:10px;align-items:end}
 /* 2.12.0: nút + thêm vào tờ ghi (cạnh Giá nhập), vùng bấm ≥ 44×44. */
 .nhap-add{width:44px;min-width:44px;min-height:44px;height:44px;padding:0}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-.grid2+.grid2,.stats+.grid2{margin-top:18px}
+.grid2+.grid2{margin-top:18px}
 /* ---------- table ---------- */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -211,16 +208,14 @@ border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;fon
 .sug__meta{font-size:12px;color:var(--muted);white-space:nowrap}
 .sug__empty{padding:10px;font-size:13px;color:var(--muted)}
 /* ---------- misc ---------- */
-.mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-18{margin-top:18px}.mb-12{margin-bottom:12px}
-.w-70{width:70px}.w-120{width:120px}.w-full{width:100%}
+.mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-18{margin-top:18px}
+.w-70{width:70px}.w-120{width:120px}
 .gap-12{gap:12px}
 .lbl--flat{margin:0}
 .inline-row{display:flex;align-items:center;gap:6px}
 .bak-actions{display:flex;flex-wrap:wrap;gap:8px}
 .chk{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
 .chk input{width:18px;height:18px;accent-color:var(--brand);cursor:pointer}
-.total{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.total__v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
 .hintbox{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
 background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px}
 .hint{font-size:12px;color:var(--muted)}
@@ -243,9 +238,6 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .note tfoot td{height:40px;border-top:2px solid var(--border);border-bottom:0;font-weight:800}
 .note .foot{margin:0;padding:8px 12px}
 .note .r{text-align:right}
-.foot--retail{display:grid;grid-template-columns:1fr 104px;gap:0;padding-left:13px}
-.foot--retail .total{padding-right:10px}
-.foot--retail .btn{width:100%;padding-left:6px;padding-right:6px}
 .chart{display:block;width:100%;height:300px;cursor:pointer}
 /* 2.13.2: đầu thẻ Thống kê có số liệu; ô năm một khung; dòng dữ liệu tháng + hai ô màu (màu = màu cột). */
 #chartBox>summary.chart-head{flex-wrap:wrap;row-gap:6px}
@@ -259,7 +251,7 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .chart-year__k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .chart-year__in{width:88px;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:700;padding:2px 0;text-align:right;font-variant-numeric:tabular-nums}
 .chart-year__in:focus{outline:none}
-.chart-tip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;min-height:28px;font-size:13px;color:var(--text2)}
+.chart-tip{display:flex;margin-top:10px;min-height:28px;font-size:13px;color:var(--text2)}
 .chart-tip__m{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .chart-chip{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text)}
 .chart-chip__sw{display:inline-block;width:12px;height:12px;border-radius:3px;flex:0 0 12px}
@@ -270,7 +262,6 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .chart-tip{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px}
 #chartBox>summary.chart-head .chart-year{margin-left:auto}
 #chartBox>summary.chart-head .chart-head__stats{margin-left:0}
-.chart-year__box{cursor:text}
 @media (max-width:600px){
 #chartBox>summary.chart-head .chart-head__stats{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chart-head__c{align-items:flex-start}
@@ -301,7 +292,6 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .dlg::backdrop{background:rgba(10,15,26,.6)}
 .dlg__card{width:100%}
 .dlg--wide{max-width:min(640px,calc(100% - 24px))}
-.foot--rec{margin-top:0;padding-top:0;border-top:0}
 .note td.num{white-space:nowrap}
 .dlg__foot{display:flex;justify-content:flex-end;gap:8px}
 /* N2: khung lỗi trong hộp thoại (role=alert), tạo bằng JS khi có toast lỗi lúc hộp thoại mở. */
@@ -444,8 +434,6 @@ td.c-qty{position:relative}
 .brand{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
 .card__body{padding:13px}
-.row{grid-template-columns:1fr}
-.nhap-row{grid-template-columns:minmax(0,1fr) 78px 94px 44px;gap:8px}
 .btn{min-height:44px}
 .btn--sm{min-height:38px}
 .inp{min-height:44px;font-size:16px}
@@ -458,17 +446,12 @@ td.c-qty{position:relative}
 #retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
 #remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
-/* 2.15.6: bàn phím hiện + đang nhập: danh sách đã ghi gọn còn vùng cao đúng 3 dòng cuối (JS đặt max-height), cuộn được; dòng đang nhập nằm cao hơn bàn phím. */
-.kb-compact .note__list{overflow-y:auto}
-/* 2.15.4: khi bàn phím hiện, JS đặt --kb-pad (cao bàn phím + thanh phụ) để trang còn cuộn được tới dòng đang nhập. */
+/* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
+.kb-compact .note__list{overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,transparent 0,black 12px);mask-image:linear-gradient(to bottom,transparent 0,black 12px)}
+/* 2.15.8: JS đặt --kb-pad cố định (60% chiều cao cửa sổ) để trang đủ dài cuộn tới vị trí định vị, không theo số đo bàn phím. */
 body{padding-bottom:calc(48px + var(--kb-pad,0px))}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
 .chart{height:260px}
-}
-/* 2.12.1: điện thoại – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +. Đặt SAU quy tắc gốc và khối 640px. */
-@media (max-width:600px){
-.nhap-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:8px}
-.nhap-row>.field.sug{grid-column:1/-1}
 }
 @media (max-width:600px){
 .tw{overflow-x:visible}
@@ -485,10 +468,8 @@ table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/5;min-width:0;overflow-wrap:
 table.ord tr.is-row>td:nth-child(3){grid-area:2/2}
 table.ord tr.is-row>td:nth-child(4){grid-area:2/3}
 table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}
-table.ord--r tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
-table.ord--r tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
 /* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
-table.ord tr.is-row>td:nth-child(5) .btn,table.ord--r tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
+table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
 /* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập chỉ 4 ô (STT, tên, gram, +): gram chiếm 2 cột 1fr (2/2–3/4), nút + ở cột 46px cuối (2/4), đáy căn theo hàng, 44×44. Đặt SAU quy tắc chung table.ord. */
 #remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
 #remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
@@ -554,6 +535,14 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 .tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .tab{min-height:44px;padding:4px 2px;font-size:12px}
 }
+/* 2.15.8 (máy tính >640px): biểu tượng cạnh nhãn hai hàng (cùng icon với tiêu đề thẻ); điện thoại giữ chữ hai dòng, ẩn icon. */
+.tab__ic{display:none}
+@media (min-width:641px){
+.tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;justify-content:center;align-content:center;justify-items:center;padding:5px 4px}
+.tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
+.tab__l1{grid-column:2;grid-row:1}
+.tab__l2{grid-column:2;grid-row:2}
+}
 /* 2.14.0 S1 (máy tính): cột SL của tờ ghi và dòng đang nhập rộng 152px → ô nhập 132px, vùng chữ ≥ 56px khi có gợi ý. Đặt SAU mọi quy tắc cg-qty ở trên. */
 @media (min-width:601px){
 #retailNote col.cg-qty,#remedyNote col.cg-qty,#nhapListBox col.cg-qty{width:152px;min-width:152px}
@@ -583,9 +572,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
-<symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
 <symbol id="i-warehouse" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></symbol>
-<symbol id="i-chart-line" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></symbol>
 <symbol id="i-chart-col" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-4"/></symbol>
 <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"/><path d="M9 7h6M9 11h6"/></symbol>
 <symbol id="i-mortar" viewBox="0 0 24 24"><path d="M3 10h18v2a9 9 0 0 1-18 0v-2z"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
@@ -649,14 +636,14 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   </section>
 
   <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
-    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
-    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
-    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
-    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
-    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
-    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
-    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
-    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
+    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
+    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
+    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
+    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
+    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
+    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
+    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
+    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
   </nav>
 
   <div class="grid2">
@@ -2117,8 +2104,8 @@ function refocusSearch(sel, key){
   s.focus();
   closeSuggest(key);
   updateFootBars();
-  compactSync(true); /* 2.15.6: thêm dòng -> đo lại 3 dòng cuối, cuộn cuối */
-  kbSchedule(s); /* 2.15.5: cuộn tới ô tìm ở các mốc trễ kể cả khi không có focusin mới */
+  compactSync(true); /* 2.15.6/2.15.8: thêm dòng -> đo lại 2 dòng cuối, cuộn mượt xuống cuối (guồng) */
+  kbSchedule(s); /* 2.15.8: định vị lại trang ở các mốc trễ kể cả khi không có focusin mới */
 }
 function addRemedyToNote(){
   var row = $('#remedyBody tr[data-pid]');
@@ -3012,7 +2999,6 @@ function renderInventory(){
   var tbody = $('#invBody');
   if (!tbody) return;
   tbody.textContent = '';
-  var sortBy = ($('#invSort') || {}).value || 'sold_desc';
   var kw = normSearch(($('#invSearch') || {}).value || '');
   var list = db.products.filter(function(p){ return !kw || normSearch(p.name).indexOf(kw) >= 0; });
 
@@ -3026,10 +3012,7 @@ function renderInventory(){
   });
 
   list.sort(function(a, b){
-    if (sortBy === 'sold_desc') return ((sales[b.id] || 0) - (sales[a.id] || 0)) || sortByName(a, b);
-    if (sortBy === 'stock_desc') return num(b.stock) - num(a.stock);
-    if (sortBy === 'stock_asc') return num(a.stock) - num(b.stock);
-    return sortByName(a, b);
+    return ((sales[b.id] || 0) - (sales[a.id] || 0)) || sortByName(a, b);
   });
 
   var count = $('#invCount');
@@ -5000,8 +4983,6 @@ function bindEvents(){
     rname.addEventListener('blur', function(){ rname.value = capWords(rname.value); updatePresetUI(); });
   }
 
-  var sort = $('#invSort');
-  if (sort) sort.addEventListener('change', function(){ invPage = 1; renderInventory(); });
   var is = $('#invSearch');
   if (is) is.addEventListener('input', function(){ invPage = 1; renderInventory(); });
 
@@ -5105,42 +5086,8 @@ function scheduleFootBars(){
   footBarSched = true;
   setTimeout(function(){ footBarSched = false; updateFootBars(); }, 30);
 }
-/* 2.15.5: giữ dòng đang nhập (hoặc ô tìm) nhìn thấy phía trên bàn phím. Tính theo visualViewport (offsetTop + height), không theo cả màn hình.
-   Hàm thuần: trả độ cuộn (px, dương = cuộn xuống). Chỉ cuộn khi bàn phím đang hiện (vvH nhỏ hơn innerHeight đáng kể) và phần tử bị che
-   (đáy > đáy vùng thấy, chừa KB_BAR=96px cho thanh Prev/Next/Done của iOS ~57px + lề) hoặc nằm trên đỉnh vùng thấy; đã thấy thì 0. */
-var KB_BAR = 96, KB_MIN = 80;
-function keepVisibleDelta(top, bottom, vvTop, vvH, innerH){
-  if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
-  var visTop = vvTop + 8, visBot = vvTop + vvH - KB_BAR;
-  var d = 0;
-  if (bottom > visBot) {
-    d = bottom - visBot;
-    if (top - d < visTop) d = top - visTop;
-    if (d < 0) d = 0;
-  } else if (top < visTop) {
-    d = top - visTop;
-  }
-  return Math.abs(d) < 2 ? 0 : Math.round(d);
-}
-/* 2.15.5: ô tìm (Nhập tên): luôn đưa vào tầm nhìn, KHÔNG phụ thuộc có bàn phím hay chưa. Đỉnh ô >= đáy thanh tiêu đề dính + 12px;
-   đáy ô <= đáy vùng thấy (trừ KB_BAR nếu có bàn phím, ngược lại 12px). barBottom = đáy .top (mặc định 60). */
-function searchScrollDelta(top, bottom, vvTop, vvH, innerH, barBottom){
-  var ih = innerH > 0 ? innerH : 0, vh = vvH > 0 ? vvH : ih;
-  var kb = vvH > 0 && ih > 0 && vvH < ih - KB_MIN;
-  var visTop = Math.max(vvTop || 0, barBottom > 0 ? barBottom : 60) + 12;
-  var visBot = (vvTop || 0) + vh - (kb ? KB_BAR : 12);
-  var d = 0;
-  if (top < visTop) d = top - visTop;
-  else if (bottom > visBot) { d = bottom - visBot; if (top - d < visTop) d = top - visTop; }
-  return Math.abs(d) < 2 ? 0 : Math.round(d);
-}
-/* Chỗ trống cuối trang (px) để trang còn cuộn được khi bàn phím chiếm đáy: chiều cao bàn phím + thanh phụ; 0 khi chưa có bàn phím. */
-function kbPadPx(innerH, vvTop, vvH){
-  if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
-  return Math.max(0, Math.round(innerH - vvTop - vvH)) + KB_BAR;
-}
-/* 2.15.6: chế độ gọn khi nhập trên điện thoại. Hàm thuần: tổng cao n dòng cuối; 0 nếu số dòng <= n (không cần gọn). */
-var COMPACT_ROWS = 3;
+/* 2.15.6: chế độ gọn khi nhập trên điện thoại (2.15.8: 2 dòng cuối). Hàm thuần: tổng cao n dòng cuối; 0 nếu số dòng <= n (không cần gọn). */
+var COMPACT_ROWS = 2;
 function compactListHeight(heights, n){
   var h = [];
   (heights || []).forEach(function(x){ if (x > 0) h.push(x); });
@@ -5155,8 +5102,19 @@ function compactWanted(o){
   return !!(o && o.mobile && o.editing);
 }
 var compactOffTimer = {};
-function compactApply(box, list, on){
+/* 2.15.8 "guồng nước": smooth = true (đã gọn từ trước, vừa thêm vị bằng "+") thì cuộn MƯỢT xuống cuối; prefers-reduced-motion thì 'auto'. Lần vào gọn đầu: nhảy thẳng. */
+function compactScrollEnd(list, smooth){
+  var top = list.scrollHeight;
+  if (smooth && typeof list.scrollTo === 'function') {
+    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    list.scrollTo({ top: top, behavior: reduce ? 'auto' : 'smooth' });
+    /* lưới an toàn: cuộn mượt có thể bị hủy khi bố cục đổi; sau 450ms chắc chắn nằm ở cuối */
+    setTimeout(function(){ if (list.scrollHeight - list.clientHeight - list.scrollTop > 1) list.scrollTop = list.scrollHeight; }, 450);
+  } else list.scrollTop = top;
+}
+function compactApply(box, list, on, smooth){
   if (!box || !list) return;
+  var was = !!(box.classList && box.classList.contains('kb-compact'));
   if (!on) { box.classList.remove('kb-compact'); list.style.maxHeight = ''; return; }
   var tb = list.querySelector('tbody');
   var hs = [];
@@ -5164,11 +5122,11 @@ function compactApply(box, list, on){
   var h = compactListHeight(hs, COMPACT_ROWS);
   box.classList.add('kb-compact');
   list.style.maxHeight = h ? h + 'px' : '';
-  list.scrollTop = list.scrollHeight;
+  compactScrollEnd(list, !!smooth && was);
 }
 /* Đồng bộ chế độ gọn theo ô đang focus. force = đo lại và cuộn cuối (sau "+"). Tắt trễ 250ms để chuyển ô SL -> Thành tiền -> + không nhấp nháy. */
 function compactSync(force){
-  var mobile = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
+  var mobile = kbMobile();
   var ae = doc.activeElement;
   [['retailBox', 'retailNoteList'], ['remedyBox', 'remedyNoteList']].forEach(function(p){
     var box = $('#' + p[0]), list = $('#' + p[1]);
@@ -5177,7 +5135,7 @@ function compactSync(force){
     var want = compactWanted({ mobile: mobile, editing: editing });
     if (want) {
       if (compactOffTimer[p[0]]) { clearTimeout(compactOffTimer[p[0]]); compactOffTimer[p[0]] = 0; }
-      if (force || !box.classList.contains('kb-compact')) compactApply(box, list, true);
+      if (force || !box.classList.contains('kb-compact')) compactApply(box, list, true, force);
     } else if (box.classList.contains('kb-compact') && !compactOffTimer[p[0]]) {
       compactOffTimer[p[0]] = setTimeout(function(){
         compactOffTimer[p[0]] = 0;
@@ -5188,61 +5146,88 @@ function compactSync(force){
     }
   });
 }
-var kbTimers = [], kbGen = 0, kbUserAt = 0, kbDebug = false;
+/* 2.15.8: ĐỊNH VỊ TRANG XÁC ĐỊNH khi nhập trên điện thoại (không phụ thuộc số đo bàn phím của iOS, vốn không đáng tin).
+   Cuộn sao cho thanh tiêu đề thẻ (.card__bar của Bán lẻ/Thuốc chén) nằm ngay dưới thanh .top (hoặc đỉnh vùng thấy vvTop nếu iOS đã pan) + PLACE_GAP.
+   Khi đó .top + thanh thẻ + đầu tờ ghi + 2 dòng gọn + dòng đang nhập ~ 400px < vùng thấy trên bàn phím (~459px).
+   Hàm thuần: trả độ cuộn (px, dương = cuộn xuống); sai số < 2px thì 0. barBottom không đo được: mặc định 60. */
+var PLACE_GAP = 8;
+function placeScrollDelta(cardTop, barBottom, vvTop, rowTop, rowBottom, visBottom){
+  var vt = vvTop > 0 ? vvTop : 0;
+  var tb = barBottom > 0 ? barBottom : 60;
+  var minTop = Math.max(tb, vt) + PLACE_GAP;
+  var d = cardTop - minTop;
+  /* dòng đang nhập (nếu có) phải nằm trên visBottom (đỉnh thanh phụ bàn phím): cuộn thêm, nhưng đỉnh dòng không được lên quá minTop */
+  if (rowBottom > 0 && visBottom > 0 && rowBottom - d > visBottom) d = Math.max(d, Math.min(rowBottom - visBottom, rowTop - minTop));
+  return Math.abs(d) < 2 ? 0 : Math.round(d);
+}
+/* Đáy vùng an toàn của dòng đang nhập: đỉnh bàn phím trừ KB_BAR (thanh Prev/Next/Done ~57px + lề). Có vv báo bàn phím thì dùng; chưa báo thì giả định bàn phím cao ~46% màn hình. */
+var KB_BAR = 80;
+function kbVisBottom(innerH, vvTop, vvH){
+  if (!(innerH > 0)) return 0;
+  var kb = vvH > 0 && vvH < innerH - 80;
+  return (kb ? (vvTop > 0 ? vvTop : 0) + vvH : Math.round(innerH * 0.54)) - KB_BAR;
+}
+/* Chỗ trống cuối trang cố định (không theo vv) để trang đủ dài cuộn tới vị trí trên: 60% chiều cao cửa sổ. */
+function kbPadFixed(innerH){ return innerH > 0 ? Math.round(innerH * 0.6) : 0; }
+var kbTimers = [], kbGen = 0, kbMovedAt = 0, kbDebug = false, kbReason = 'init';
 function kbClear(){ kbGen++; kbTimers.forEach(clearTimeout); kbTimers = []; }
-/* Người dùng chạm/cuộn: hủy mọi ép cuộn đang chờ và không ép lại khi vv resize trong 800ms. */
-function kbUserStop(){ kbClear(); kbUserAt = Date.now(); }
-/* Phần tử cần thấy: dòng đang nhập (ô SL, giá, thành tiền) hoặc chính ô tìm của Bán lẻ/Thuốc chén. */
-function kbTargetOf(t){
-  if (!t || !t.closest || t.tagName !== 'INPUT') return null;
-  var row = t.closest('#retailBody tr[data-pid], #remedyBox #remedyBody tr[data-pid], #remedyBody tr[data-pid]');
-  if (row) return row;
-  if (t.id === 'retailSearch' || t.id === 'remedySearch') return t;
-  return null;
+/* Chỉ khi người dùng VUỐT/cuộn (touchmove, wheel): hủy các lần định vị đang chờ và không ép lại khi vv resize trong 800ms.
+   Chạm (tap) KHÔNG dừng; focusin/"+" mới luôn được định vị lại. */
+function kbUserStop(){ kbClear(); kbMovedAt = Date.now(); }
+function kbMobile(){ return !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches); }
+/* Thẻ chứa ô nhập (INPUT không phải ngày) trong Bán lẻ/Thuốc chén; ngoài ra null. */
+function kbBoxOf(t){
+  if (!t || !t.closest || t.tagName !== 'INPUT' || t.type === 'date') return null;
+  return t.closest('#retailBox, #remedyBox');
 }
-function kbDbg(r, d, vvH, vvTop, ih){
-  if (!kbDebug) return;
+/* Dòng gỡ lỗi (?kbdebug=1): hiện ngay khi mở trang; đặt theo visualViewport vì fixed của iOS bám layout viewport (có thể trôi ra ngoài màn hình khi bàn phím hiện). */
+function kbDbg(why){
+  if (why) kbReason = why;
+  if (!kbDebug || !doc.body) return;
   var b = $('#kbDbg');
-  if (!b) { b = doc.createElement('div'); b.id = 'kbDbg'; b.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:11px monospace;padding:2px 4px'; doc.body.appendChild(b); }
-  b.textContent = 'vvH ' + Math.round(vvH) + ' vvTop ' + Math.round(vvTop) + ' ih ' + ih + ' top ' + Math.round(r.top) + ' bot ' + Math.round(r.bottom) + ' d ' + d + ' y ' + Math.round(window.scrollY || 0);
+  if (!b) { b = doc.createElement('div'); b.id = 'kbDbg'; b.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:10px monospace;padding:2px 4px;white-space:nowrap;pointer-events:none;max-width:100vw;overflow:hidden'; doc.body.appendChild(b); }
+  var vv = window.visualViewport, ih = window.innerHeight || 0;
+  var rb = $('#retailBox'), mb = $('#remedyBox');
+  var cp = !!((rb && rb.classList && rb.classList.contains('kb-compact')) || (mb && mb.classList && mb.classList.contains('kb-compact')));
+  b.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
+  b.textContent = 'vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' y ' + Math.round(window.scrollY || 0) + ' compact ' + (cp ? 1 : 0) + ' | ' + kbReason;
 }
-function keepVisibleNow(t){
-  var el = kbTargetOf(t);
-  if (!el || doc.activeElement !== t) return;
-  var vv = window.visualViewport;
-  var ih = window.innerHeight || 0;
-  var vvH = vv && vv.height ? vv.height : ih, vvTop = vv ? (vv.offsetTop || 0) : 0;
+function kbPlaceNow(t){
+  var box = kbBoxOf(t);
+  if (!box) { kbDbg('thoat: khong-o-nhap-trong-the'); return; }
+  if (doc.activeElement !== t) { kbDbg('thoat: o-khong-con-focus'); return; }
+  if (!kbMobile()) { kbDbg('thoat: may-tinh'); return; }
+  var bar = box.querySelector ? box.querySelector('.card__bar') : null;
+  if (!bar) { kbDbg('thoat: khong-co-thanh-the'); return; }
+  var ih = window.innerHeight || 0, vv = window.visualViewport;
   var root = doc.documentElement;
-  if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', kbPadPx(ih, vvTop, vvH) + 'px');
-  var r = el.getBoundingClientRect();
-  var d;
-  if (el === t) {
-    var bar = doc.querySelector ? doc.querySelector('.top') : null;
-    d = searchScrollDelta(r.top, r.bottom, vvTop, vvH, ih, bar && bar.getBoundingClientRect ? bar.getBoundingClientRect().bottom : 60);
-  } else d = keepVisibleDelta(r.top, r.bottom, vvTop, vvH, ih);
-  kbDbg(r, d, vvH, vvTop, ih);
+  if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', kbPadFixed(ih) + 'px');
+  var top = $('.top');
+  var tr = t.closest('tr[data-pid]'), rr = tr && tr.getBoundingClientRect ? tr.getBoundingClientRect() : null;
+  var d = placeScrollDelta(bar.getBoundingClientRect().top, top && top.getBoundingClientRect ? top.getBoundingClientRect().bottom : 60, vv ? (vv.offsetTop || 0) : 0,
+    rr ? rr.top : 0, rr ? rr.bottom : 0, kbVisBottom(ih, vv ? (vv.offsetTop || 0) : 0, vv ? vv.height : 0));
   if (d) window.scrollBy(0, d);
+  kbDbg(d ? 'cuon ' + d : 'da-dung-cho');
 }
-/* focusin / sau "+": tính ngay và lại ở 100/300/600/1000ms vì iOS đổi visualViewport trễ khi chuyển bàn phím chữ <-> số. Người dùng chạm/cuộn thì hủy hết. */
+/* focusin / sau "+": định vị ngay và lại ở 100/300/600/1000ms vì bố cục đổi trễ (bàn phím, chế độ gọn). Chỉ vuốt tay mới hủy; lần mới luôn chạy. */
 function kbSchedule(t){
   kbClear();
-  kbUserAt = 0;
-  if (!kbTargetOf(t)) return;
+  kbMovedAt = 0;
+  if (!kbBoxOf(t)) { kbDbg('thoat: khong-o-nhap-trong-the'); return; }
   var g = kbGen;
-  keepVisibleNow(t);
-  [100, 300, 600, 1000].forEach(function(ms){ kbTimers.push(setTimeout(function(){ if (g === kbGen) keepVisibleNow(t); }, ms)); });
+  kbPlaceNow(t);
+  [100, 300, 600, 1000].forEach(function(ms){ kbTimers.push(setTimeout(function(){ if (g === kbGen) kbPlaceNow(t); }, ms)); });
 }
-function keepPendingVisible(e){ kbSchedule(e && e.target); }
 function kbRelease(){
   setTimeout(function(){
-    if (kbTargetOf(doc.activeElement)) return;
+    if (kbBoxOf(doc.activeElement)) return;
     kbClear();
     var root = doc.documentElement;
     if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', '0px');
   }, 400);
 }
-/* Chỉ visualViewport 'resize' (bàn phím hiện/đổi) mới ép; KHÔNG nghe 'scroll' (người dùng cuộn sẽ bị kéo ngược). */
-function onVvChange(){ scheduleFootBars(); if (Date.now() - kbUserAt < 800) return; var a = doc.activeElement; if (kbTargetOf(a)) keepVisibleNow(a); }
+/* Chỉ visualViewport 'resize' (bàn phím hiện/đổi) mới định vị lại; không nghe 'scroll' để không kéo ngược khi người dùng vuốt. */
+function onVvChange(){ scheduleFootBars(); kbDbg(); if (Date.now() - kbMovedAt < 800) return; var a = doc.activeElement; if (kbBoxOf(a)) kbPlaceNow(a); }
 function initFootBars(){
   if (typeof window.addEventListener === 'function') {
     window.addEventListener('scroll', scheduleFootBars, { passive: true });
@@ -5252,8 +5237,13 @@ function initFootBars(){
     window.visualViewport.addEventListener('resize', onVvChange);
   }
   try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
-  ['touchstart', 'touchmove', 'wheel', 'pointerdown'].forEach(function(n){ doc.addEventListener(n, kbUserStop, { passive: true }); });
-  doc.addEventListener('focusin', function(e){ scheduleFootBars(); compactSync(false); keepPendingVisible(e); });
+  if (kbDebug) {
+    kbDbg('mo-trang');
+    if (window.visualViewport && window.visualViewport.addEventListener) window.visualViewport.addEventListener('scroll', function(){ kbDbg(); });
+    if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
+  }
+  ['touchmove', 'wheel'].forEach(function(n){ doc.addEventListener(n, kbUserStop, { passive: true }); });
+  doc.addEventListener('focusin', function(e){ scheduleFootBars(); compactSync(false); kbSchedule(e && e.target); });
   doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); setTimeout(compactSync, 0); });
   ['retailBox', 'remedyBox'].forEach(function(id){
     var b = $('#' + id);
