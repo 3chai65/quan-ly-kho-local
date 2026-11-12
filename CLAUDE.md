@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.18.
+- Phiên bản hiện tại: 2.15.19.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -62,7 +62,8 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.18, commit 845be1e, image `quan-ly-kho:2.15.18` (id 6cd4178e…, 351MB). Giám sát sau triển khai 7/7 đạt. Đường lui: `quan-ly-kho:pre-2.15.18` = 2.15.17 (id 344fc595…, commit 3951ea7); `pre-2.15.17` = 2.15.16 (id 7b1d3f86…, commit 4348495); `pre-2.15.16` = 2.15.15 (id 6c2b04c1…, commit d22d096).
+- Đang chạy: 2.15.19, commit 045cb44, image `quan-ly-kho:2.15.19` (id 8ba802fb…, 351MB). Giám sát sau triển khai 7/7 đạt. Đường lui: `quan-ly-kho:pre-2.15.19` = 2.15.18 (id 6cd4178e…, commit 845be1e); `pre-2.15.18` = 2.15.17 (id 344fc595…, commit 3951ea7); `pre-2.15.17` = 2.15.16 (id 7b1d3f86…, commit 4348495); `pre-2.15.16` = 2.15.15 (id 6c2b04c1…, commit d22d096).
+- 2.15.19 (không đổi hành vi): dọn code chết đợt 2.15.12–2.15.18 (chỉ 3 mục nhỏ; rà 0 hàm/CSS/id/icon mồ côi; đo giao diện trước/sau 0 khác biệt) + thêm test (log từ chối 400 JSON/header, 200 không log; 5xx/mạng không toast; Hủy tên trùng). Đã nghi nhưng giữ: `class="cg-name"` trên 6 `<col>`, `html{scroll-padding-bottom:230px}`, `tr[data-pid]{scroll-margin-*}`, selector thead `#remedyNote` chồng nhau, khai báo CSS trùng bộ chọn (`.chart-tip`, `.tab__ic`, `.note__row--aux/--btns`). Chưa làm: không xóa tờ đơn khi lưu thất bại (chờ gặp "Chưa lưu được" thật).
 - 2.15.17 (ĐÃ XÁC NHẬN trên iPhone 12/11/2026): bỏ "Sao chép đơn" và khả năng đổi tên đơn thuốc chén (chọn đơn có sẵn: không có ô tên, còn 3 nút Xóa đơn / Cập nhật đơn / Bán đơn; Cập nhật giữ tên cũ). Lưu đơn mới trùng tên (không phân biệt hoa/thường, khoảng trắng) → hộp xác nhận `Đã có đơn "<tên>". Cập nhật đơn này bằng nội dung đang nhập?`. Cách người dùng dùng chính: Đơn mới → gõ hết đơn → Lưu đơn (nếu muốn dùng lại), không thì để tên mặc định. Ca "tên trùng đơn khác khi đã chọn đơn" không còn tồn tại.
 - 2.15.18 (ĐÃ XÁC NHẬN trên iPhone 12/11/2026: mọi thứ ổn; số đo ban đầu chỉ mô phỏng Edge): tờ ghi gọn luôn chừa chỗ 2 dòng sau "+" khi dòng nhập trống (compactAvail không trừ ENTRY_BLOCK_H khi pendH=0); ẩn thead trong chế độ gọn; dòng nhập thẳng cột STT/tên với dòng ghi. Cần thử trên iPhone: sau "+" con trỏ ở ô tên thấy 2 dòng; khi ô SL focus có thể co xuống 1 dòng (chưa biết vvH thật khi focus ô tên so với ô SL: nếu vẫn sai, lấy số bằng ?kbdebug=1). Phá thử CSS chưa có (chỉ test chuỗi tĩnh).
 - 2.15.16: (a) khi máy chủ từ chối PUT /api/state (400/428) client hiện toast "Chưa lưu được: <lý do>" một lần; server ghi `console.warn` một dòng (giờ, mã, lý do cố định, không dữ liệu/tên/tiền/cookie). 401/409/5xx/mất mạng không đổi. Chưa làm: không xóa tờ đơn khi lưu thất bại (đổi luồng đồng bộ, rủi ro hơn). (b) iPhone: ô tên đơn trống khi cập nhật đơn có sẵn cũng hỏi bằng `prompt`. Auditor đã duyệt. Chưa sửa (nit): nhánh "tên trùng đơn khác" trong `savePreset` (~dòng 2672) vẫn `nameInp.focus()` trên điện thoại nên ẩn thanh chân; test còn thiếu: log 400 JSON hỏng/400 header sai, 5xx và lỗi mạng không toast, Hủy ở confirm đổi tên. CHANGELOG/README-LOCAL đã sửa hướng dẫn chown (PowerShell).
