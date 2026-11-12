@@ -5,6 +5,16 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.10] - 2026-11-12
+
+### Fixed
+- Điện thoại, nhập Bán lẻ/Thuốc chén: trang ĐỨNG YÊN TUYỆT ĐỐI khi nhập. Lần đầu vào chế độ gọn của thẻ, trang bị KHÓA CUỘN (body `position:fixed`, `top` âm) sao cho đỉnh thẻ cách đỉnh vùng nhìn 8px; vị trí hiển thị là hằng số ở mọi bước (gõ tên, chọn gợi ý, SL, thành tiền, "+"), thanh thẻ/ô tìm luôn thấy, iOS không còn gì để tự cuộn. Gỡ khóa (idempotent, mọi đường thoát: tắt gọn, blur 400ms, đóng thẻ, pagehide, ẩn tab, xoay/đổi cỡ, về >640px) thì trang về đúng vị trí trước khi nhập (ghi nhận trước lúc trình duyệt tự cuộn khi focus). iOS pan visualViewport thì top khóa được bù theo `visualViewport.offsetTop`. Bỏ toàn bộ định vị bằng scrollTo/scrollBy (placeScrollDelta, lưới an toàn, --kb-pad, chỗ trống cuối trang); `focus({preventScroll:true})` giữ nguyên.
+- Ngân sách chiều cao theo `visualViewport.height` thật (iPhone 14 Pro: ~357px khi bàn phím mở, innerHeight vẫn 695): danh sách gọn tự giảm từ 2 xuống 1 dòng (hoặc cắt vừa) để dòng đang nhập (SL, Thành tiền, +) không vượt đáy vùng nhìn trừ 8px; tính lại khi bàn phím hiện/ẩn.
+- `?kbdebug=1`: dòng gỡ lỗi gắn vào `<html>`, thêm savedY, top khóa, lock 0/1.
+
+### Changed
+- Máy tính: icon trên 8 tab mang cùng class màu (txt-green/brand/blue) với icon tiêu đề thẻ tương ứng; tab đang chọn (nền brand) dùng icon trắng như chữ tab (tương phản 6.3 sáng, 5.1 tối).
+
 ## [2.15.9] - 2026-11-12
 
 ### Fixed

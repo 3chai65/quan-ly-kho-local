@@ -448,8 +448,9 @@ td.c-qty{position:relative}
 html{scroll-padding-bottom:230px}
 /* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
 .kb-compact .note__list{overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,transparent 0,black 12px);mask-image:linear-gradient(to bottom,transparent 0,black 12px)}
-/* 2.15.8: JS đặt --kb-pad cố định (60% chiều cao cửa sổ) để trang đủ dài cuộn tới vị trí định vị, không theo số đo bàn phím. */
-body{padding-bottom:calc(48px + var(--kb-pad,0px))}
+/* 2.15.10: khi nhập trên điện thoại JS khóa cuộn trang (body fixed, top âm); .kb-lock chặn neo cuộn/cuộn dội của iOS. */
+html.kb-lock,body.kb-lock{overflow-anchor:none;overscroll-behavior:none}
+body{padding-bottom:48px}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
 .chart{height:260px}
 }
@@ -537,6 +538,8 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 }
 /* 2.15.8 (máy tính >640px): biểu tượng cạnh nhãn hai hàng (cùng icon với tiêu đề thẻ); điện thoại giữ chữ hai dòng, ẩn icon. */
 .tab__ic{display:none}
+/* 2.15.10: icon tab mang cùng class màu (txt-*) với icon tiêu đề thẻ; tab đang chọn (nền brand) dùng chữ trắng của tab để đủ tương phản. */
+.tab.is-active .tab__ic{color:#fff}
 @media (min-width:641px){
 .tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;justify-content:center;align-content:center;justify-items:center;padding:5px 4px}
 .tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
@@ -636,14 +639,14 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   </section>
 
   <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
-    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
-    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
-    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
-    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
-    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
-    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
-    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
-    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
+    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic txt-green" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
+    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
+    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><svg class="ico tab__ic txt-blue" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
+    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
+    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic txt-blue" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
+    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic txt-green" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
+    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
+    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
   </nav>
 
   <div class="grid2">
@@ -5156,17 +5159,59 @@ function compactScrollEnd(list, smooth){
     setTimeout(function(){ if (list.scrollHeight - list.clientHeight - list.scrollTop > 1) list.scrollTop = list.scrollHeight; }, 450);
   } else list.scrollTop = top;
 }
-function compactApply(box, list, on, smooth){
-  if (!box || !list) return;
-  var was = !!(box.classList && box.classList.contains('kb-compact'));
-  if (!on) { box.classList.remove('kb-compact'); list.style.maxHeight = ''; return; }
+/* 2.15.10: NGÂN SÁCH CHIỀU CAO. Vùng thấy thật khi bàn phím mở = visualViewport.height (đo trên iPhone 14 Pro: 357-358 CSS px, innerHeight vẫn 695), tính từ đỉnh vùng nhìn.
+   Thẻ khóa cách đỉnh KB_TOP_GAP; từ đỉnh thẻ tới đáy dòng đang nhập phải <= vvH - KB_TOP_GAP - KB_BOTTOM_GAP. Hàm thuần: chỗ còn cho danh sách = vvH - gap trên - gap dưới - (đỉnh danh sách - đỉnh thẻ) - khối dòng nhập (lấy lớn hơn của đo thật và ước lượng ENTRY_BLOCK_H). */
+var ENTRY_BLOCK_H = 104, KB_BOTTOM_GAP = 8;
+function compactAvail(vvH, listTopRel, pendH){
+  if (!(vvH > 0)) return NaN;
+  return vvH - KB_TOP_GAP - KB_BOTTOM_GAP - (listTopRel > 0 ? listTopRel : 0) - Math.max(pendH > 0 ? pendH : 0, ENTRY_BLOCK_H);
+}
+/* Hàm thuần: max-height (px) của danh sách gọn; 0 = không giới hạn. Giảm dần từ n dòng xuống 1 cho vừa avail; 1 dòng vẫn không vừa thì cắt đúng avail (>=1). avail không xác định (NaN) = chỉ n dòng. */
+function compactFitHeight(hs, n, avail, natural){
+  if (avail !== avail) return compactListHeight(hs, n);
+  var cnt = 0;
+  (hs || []).forEach(function(x){ if (x > 0) cnt++; });
+  var k = Math.min(n > 0 ? n : COMPACT_ROWS, cnt);
+  for (; k >= 1; k--) {
+    var h = compactListHeight(hs, k); /* 0 khi chỉ có <= k dòng: hiện đủ */
+    var sum = h;
+    if (!h) { sum = natural > 0 ? natural : 0; if (!(sum > 0)) (hs || []).forEach(function(x){ if (x > 0) sum += x; }); } /* không giới hạn: cao tự nhiên của danh sách (gồm tiêu đề bảng) */
+    if (sum <= avail) return h;
+  }
+  return Math.max(1, Math.floor(avail));
+}
+/* Đặt max-height danh sách gọn theo ngân sách; trả true nếu đổi. */
+function compactFit(box, list){
   var tb = list.querySelector('tbody');
   var hs = [];
   if (tb) { var rs = tb.children || []; for (var i = 0; i < rs.length; i++) hs.push(rs[i].getBoundingClientRect().height); }
-  var h = compactListHeight(hs, COMPACT_ROWS);
+  var avail = NaN;
+  if (box.getBoundingClientRect && list.getBoundingClientRect) {
+    var vv = window.visualViewport, vvH = (vv && vv.height) || window.innerHeight || 0;
+    var pend = box.querySelector ? box.querySelector('.note__pending') : null;
+    var pr = pend && pend.getBoundingClientRect ? pend.getBoundingClientRect().height : 0;
+    avail = compactAvail(vvH, list.getBoundingClientRect().top - box.getBoundingClientRect().top, pr);
+  }
+  var h = compactFitHeight(hs, COMPACT_ROWS, avail, list.scrollHeight);
+  var m = h ? h + 'px' : '';
+  var changed = list.style.maxHeight !== m;
+  list.style.maxHeight = m;
+  return changed;
+}
+function compactRefit(){
+  [['retailBox', 'retailNoteList'], ['remedyBox', 'remedyNoteList']].forEach(function(p){
+    var box = $('#' + p[0]), list = $('#' + p[1]);
+    if (box && list && box.classList && box.classList.contains('kb-compact') && compactFit(box, list)) list.scrollTop = list.scrollHeight;
+  });
+}
+function compactApply(box, list, on, smooth){
+  if (!box || !list) return;
+  var was = !!(box.classList && box.classList.contains('kb-compact'));
+  if (!on) { box.classList.remove('kb-compact'); list.style.maxHeight = ''; kbUnlock('tat-gon'); return; }
   box.classList.add('kb-compact');
-  list.style.maxHeight = h ? h + 'px' : '';
+  compactFit(box, list);
   compactScrollEnd(list, !!smooth && was);
+  kbLock(box);
 }
 /* Đồng bộ chế độ gọn theo ô đang focus. force = đo lại và cuộn cuối (sau "+"). Tắt trễ 250ms để chuyển ô SL -> Thành tiền -> + không nhấp nháy. */
 function compactSync(force){
@@ -5180,6 +5225,7 @@ function compactSync(force){
     if (want) {
       if (compactOffTimer[p[0]]) { clearTimeout(compactOffTimer[p[0]]); compactOffTimer[p[0]] = 0; }
       if (force || !box.classList.contains('kb-compact')) compactApply(box, list, true, force);
+      else { kbLock(box); if (compactFit(box, list)) list.scrollTop = list.scrollHeight; } /* đã gọn nhưng khóa bị gỡ (xoay/đổi cỡ) mà vẫn đang nhập: khóa lại */
     } else if (box.classList.contains('kb-compact') && !compactOffTimer[p[0]]) {
       compactOffTimer[p[0]] = setTimeout(function(){
         compactOffTimer[p[0]] = 0;
@@ -5190,127 +5236,104 @@ function compactSync(force){
     }
   });
 }
-/* 2.15.8: ĐỊNH VỊ TRANG XÁC ĐỊNH khi nhập trên điện thoại (không phụ thuộc số đo bàn phím của iOS, vốn không đáng tin).
-   Cuộn sao cho thanh tiêu đề thẻ (.card__bar của Bán lẻ/Thuốc chén) nằm ngay dưới thanh .top (hoặc đỉnh vùng thấy vvTop nếu iOS đã pan) + PLACE_GAP.
-   Khi đó .top + thanh thẻ + đầu tờ ghi + 2 dòng gọn + dòng đang nhập ~ 400px < vùng thấy trên bàn phím (~459px).
-   Hàm thuần: trả độ cuộn (px, dương = cuộn xuống); sai số < 2px thì 0. barBottom không đo được: mặc định 60. */
-var PLACE_GAP = 8;
-function placeScrollDelta(cardTop, barBottom, vvTop, rowTop, rowBottom, visBottom){
+/* 2.15.10: KHÓA CUỘN TRANG khi nhập trên điện thoại (thay mọi định vị bằng scrollTo/scrollBy của 2.15.8-2.15.9).
+   Lần đầu vào chế độ gọn: nhớ scrollY, đặt body position:fixed với top âm sao cho đỉnh thẻ cách đỉnh vùng nhìn KB_TOP_GAP px; vị trí hiển thị là hằng số, không còn gì để iOS cuộn.
+   Gỡ khóa (idempotent) ở mọi đường thoát: khi tắt gọn, blur ngoài thẻ (lưới 400ms), đóng thẻ, pagehide, ẩn tab, đổi chiều/cỡ, về >640px. Chỉ kbUnlock được gọi window.scrollTo. */
+var KB_TOP_GAP = 8;
+/* Hàm thuần: top (px, <= vvTop) của body khi khóa; absTop = đỉnh thẻ so với đỉnh trang; vvTop = offsetTop của visualViewport (iOS pan) bù vào để thẻ vẫn cách đỉnh vùng THẤY 8px. */
+function kbLockTop(absTop, vvTop){
   var vt = vvTop > 0 ? vvTop : 0;
-  var tb = barBottom > 0 ? barBottom : 60;
-  var minTop = Math.max(tb, vt) + PLACE_GAP;
-  var d = cardTop - minTop;
-  /* dòng đang nhập (nếu có) phải nằm trên visBottom (đỉnh thanh phụ bàn phím): cuộn thêm, nhưng đỉnh dòng không được lên quá minTop */
-  if (rowBottom > 0 && visBottom > 0 && rowBottom - d > visBottom) d = Math.max(d, Math.min(rowBottom - visBottom, rowTop - minTop));
-  return Math.abs(d) < 2 ? 0 : Math.round(d);
+  var a = absTop > KB_TOP_GAP ? absTop - KB_TOP_GAP : 0;
+  return Math.round(vt - a) || 0;
 }
-/* Đáy vùng an toàn của dòng đang nhập: đỉnh bàn phím trừ KB_BAR (thanh Prev/Next/Done ~57px + lề). Có vv báo bàn phím thì dùng; chưa báo thì giả định bàn phím cao ~46% màn hình. */
-var KB_BAR = 80;
-function kbVisBottom(innerH, vvTop, vvH){
-  if (!(innerH > 0)) return 0;
-  var kb = vvH > 0 && vvH < innerH - 80;
-  return (kb ? (vvTop > 0 ? vvTop : 0) + vvH : Math.round(innerH * 0.54)) - KB_BAR;
-}
-/* Chỗ trống cuối trang cố định (không theo vv) để trang đủ dài cuộn tới vị trí trên: 60% chiều cao cửa sổ. */
-function kbPadFixed(innerH){ return innerH > 0 ? Math.round(innerH * 0.6) : 0; }
-var kbMovedAt = 0, kbDebug = false, kbReason = 'init';
-/* 2.15.9: định vị trang ĐÚNG MỘT LẦN mỗi lần vào chế độ gọn (kbPlacedBox = thẻ đã định vị), lưới an toàn tối đa một lần (kbSafeUsed). */
-var kbPlacedBox = null, kbSafeUsed = false;
-var ENTRY_ROW_H = 104; /* chiều cao ước lượng dòng đang nhập (nhãn + ô SL/Thành tiền/+), đo bằng trình duyệt ở 320-393px */
-/* Chỉ khi người dùng VUỐT/cuộn (touchmove, wheel): ghi mốc để lưới an toàn không kéo ngược trong 800ms. Chạm (tap) không tính. */
-function kbUserStop(){ kbMovedAt = Date.now(); }
+/* kbLastY: scrollY mới nhất TRƯỚC khi focus (cập nhật khi cuộn/chạm lúc chưa khóa). Cần vì trình duyệt có thể tự cuộn khi focus ô nhập (đo thật: 150 -> 190) trước khi khóa chạy; gỡ khóa phải về vị trí trước khi nhập. */
+var kbLastY = -1;
+function kbTrackY(){ if (!kbLockBox) kbLastY = window.pageYOffset || window.scrollY || 0; }
+var kbLockBox = null, kbSavedY = 0, kbLockAbs = 0, kbLockW = 0, kbDebug = false, kbReason = 'init';
 function kbMobile(){ return !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches); }
+function kbVvTop(){ var vv = window.visualViewport; return vv ? (vv.offsetTop || 0) : 0; }
 /* Thẻ chứa ô nhập (INPUT không phải ngày) trong Bán lẻ/Thuốc chén; ngoài ra null. */
 function kbBoxOf(t){
   if (!t || !t.closest || t.tagName !== 'INPUT' || t.type === 'date') return null;
   return t.closest('#retailBox, #remedyBox');
 }
-/* Dòng gỡ lỗi (?kbdebug=1): hiện ngay khi mở trang; đặt theo visualViewport vì fixed của iOS bám layout viewport (có thể trôi ra ngoài màn hình khi bàn phím hiện). */
+function kbLockApply(){
+  var b = doc.body;
+  if (kbLockBox && b && b.style) b.style.top = kbLockTop(kbLockAbs, kbVvTop()) + 'px';
+}
+function kbLock(box){
+  var b = doc.body, r = doc.documentElement;
+  if (kbLockBox || !box || !b || !b.style || !box.getBoundingClientRect) return;
+  var y = window.pageYOffset || window.scrollY || 0;
+  kbSavedY = kbLastY >= 0 ? kbLastY : y;
+  kbLockAbs = box.getBoundingClientRect().top + y;
+  kbLockW = window.innerWidth || 0;
+  kbLockBox = box;
+  kbLockApply();
+  b.style.position = 'fixed'; b.style.left = '0'; b.style.right = '0'; b.style.width = '100%';
+  if (b.classList) b.classList.add('kb-lock');
+  if (r && r.classList) r.classList.add('kb-lock');
+  kbDbg('khoa');
+}
+function kbUnlock(why){
+  var b = doc.body, r = doc.documentElement;
+  var was = !!kbLockBox;
+  kbLockBox = null;
+  if (b && b.style) { b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = ''; }
+  if (b && b.classList) b.classList.remove('kb-lock');
+  if (r && r.classList) r.classList.remove('kb-lock');
+  if (was) window.scrollTo(0, kbSavedY);
+  kbDbg(why ? 'go: ' + why : 'go');
+}
+/* Dòng gỡ lỗi (?kbdebug=1), gắn vào <html> (không bị body fixed/top âm kéo đi), bám visualViewport. */
 function kbDbg(why){
   if (why) kbReason = why;
-  if (!kbDebug || !doc.body) return;
-  var b = $('#kbDbg');
-  if (!b) { b = doc.createElement('div'); b.id = 'kbDbg'; b.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:10px monospace;padding:2px 4px;white-space:nowrap;pointer-events:none;max-width:100vw;overflow:hidden'; doc.body.appendChild(b); }
+  var root = doc.documentElement;
+  if (!kbDebug || !root) return;
+  var d = $('#kbDbg');
+  if (!d) { d = doc.createElement('div'); d.id = 'kbDbg'; d.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:10px monospace;padding:2px 4px;white-space:nowrap;pointer-events:none;max-width:100vw;overflow:hidden'; root.appendChild(d); }
   var vv = window.visualViewport, ih = window.innerHeight || 0;
   var rb = $('#retailBox'), mb = $('#remedyBox');
   var cp = !!((rb && rb.classList && rb.classList.contains('kb-compact')) || (mb && mb.classList && mb.classList.contains('kb-compact')));
-  b.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
-  b.textContent = 'vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' y ' + Math.round(window.scrollY || 0) + ' compact ' + (cp ? 1 : 0) + ' | ' + kbReason;
+  d.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
+  d.textContent = 'savedY ' + Math.round(kbSavedY) + ' top ' + (kbLockBox ? (doc.body && doc.body.style ? doc.body.style.top : '') : '-') + ' vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' lock ' + (kbLockBox ? 1 : 0) + ' | ' + kbReason;
 }
-/* Lưới an toàn: phần tử đang focus bị che hẳn (đáy > visBottom) thì cuộn đúng phần thiếu. Hàm thuần. */
-function kbSafeDelta(elBottom, visBottom){
-  return elBottom > 0 && visBottom > 0 && elBottom > visBottom ? Math.ceil(elBottom - visBottom) : 0;
-}
-function kbPlaceNow(t){
-  var box = kbBoxOf(t);
-  if (!box) { kbDbg('thoat: khong-o-nhap-trong-the'); return; }
-  if (doc.activeElement !== t) { kbDbg('thoat: o-khong-con-focus'); return; }
-  if (!kbMobile()) { kbDbg('thoat: may-tinh'); return; }
-  var bar = box.querySelector ? box.querySelector('.card__bar') : null;
-  if (!bar) { kbDbg('thoat: khong-co-thanh-the'); return; }
-  var ih = window.innerHeight || 0, vv = window.visualViewport;
-  var vvTop = vv ? (vv.offsetTop || 0) : 0;
-  var root = doc.documentElement;
-  if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', kbPadFixed(ih) + 'px');
-  if (kbPlacedBox !== box) {
-    /* lần đầu vào chế độ gọn của thẻ: đưa thanh thẻ lên sát dưới .top (một lần) */
-    var top = $('.top');
-    var tr = t.closest('tr[data-pid]'), rr = tr && tr.getBoundingClientRect ? tr.getBoundingClientRect() : null;
-    var rowTop = rr ? rr.top : 0, rowBottom = rr ? rr.bottom : 0;
-    if (!rr) { /* chưa có dòng đang nhập: ước lượng chỗ nó sẽ hiện (đỉnh phần thân đơn + ENTRY_ROW_H) để không phải cuộn lại sau */
-      var eb = $(box.id === 'remedyBox' ? '#remedyBody' : '#retailBody');
-      var er = eb && eb.getBoundingClientRect ? eb.getBoundingClientRect() : null;
-      if (er) { rowTop = er.top; rowBottom = er.top + ENTRY_ROW_H; }
-    }
-    var d = placeScrollDelta(bar.getBoundingClientRect().top, top && top.getBoundingClientRect ? top.getBoundingClientRect().bottom : 60, vvTop,
-      rowTop, rowBottom, kbVisBottom(ih, vvTop, vv ? vv.height : 0));
-    kbPlacedBox = box;
-    if (d) window.scrollBy(0, d);
-    kbDbg(d ? 'cuon ' + d : 'da-dung-cho');
-    return;
-  }
-  /* đã định vị: không cuộn lại; chỉ lưới an toàn một lần khi ô bị che hẳn */
-  if (kbSafeUsed || Date.now() - kbMovedAt < 800 || !t.getBoundingClientRect) { kbDbg('giu-nguyen'); return; }
-  var sd = kbSafeDelta(t.getBoundingClientRect().bottom, kbVisBottom(ih, vvTop, vv ? vv.height : 0));
-  if (sd) { kbSafeUsed = true; window.scrollBy(0, sd); }
-  kbDbg(sd ? 'luoi-an-toan ' + sd : 'giu-nguyen');
-}
-/* focusin: định vị (lần đầu) hoặc chỉ lưới an toàn. Không có mốc trễ/lập lịch. */
-function kbOnFocus(t){
-  kbMovedAt = 0;
-  if (!kbBoxOf(t)) { kbDbg('thoat: khong-o-nhap-trong-the'); return; }
-  kbPlaceNow(t);
-}
+/* Lưới an toàn: sau blur 400ms mà không còn ô nhập trong thẻ thì gỡ khóa. */
 function kbRelease(){
-  setTimeout(function(){
-    if (kbBoxOf(doc.activeElement)) return;
-    kbPlacedBox = null; kbSafeUsed = false;
-    var root = doc.documentElement;
-    if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', '0px');
-  }, 400);
+  setTimeout(function(){ if (!kbBoxOf(doc.activeElement)) kbUnlock('blur'); }, 400);
 }
-/* Chỉ visualViewport 'resize' (bàn phím hiện/đổi) mới chạy lưới an toàn (không định vị lại); không nghe 'scroll'. */
-function onVvChange(){ scheduleFootBars(); kbDbg(); var a = doc.activeElement; if (kbBoxOf(a)) kbPlaceNow(a); }
+/* visualViewport đổi (bàn phím hiện/đổi, iOS pan): chỉ bù lại top theo vvTop; không cuộn. */
+function onVvChange(){ scheduleFootBars(); kbLockApply(); compactRefit(); kbDbg(); }
+/* Đổi chiều/cỡ: gỡ khóa nếu rộng đổi hoặc về >640px (bàn phím Android đổi cao thì giữ). */
+function kbOnResize(){
+  if (kbLockBox && (!kbMobile() || (window.innerWidth || 0) !== kbLockW)) kbUnlock('resize');
+}
 function initFootBars(){
   if (typeof window.addEventListener === 'function') {
     window.addEventListener('scroll', scheduleFootBars, { passive: true });
+    window.addEventListener('scroll', kbTrackY, { passive: true });
     window.addEventListener('resize', scheduleFootBars);
+    window.addEventListener('resize', kbOnResize);
+    window.addEventListener('orientationchange', function(){ kbUnlock('xoay'); });
+    window.addEventListener('pagehide', function(){ kbUnlock('pagehide'); });
   }
+  ['touchstart', 'mousedown'].forEach(function(n){ doc.addEventListener(n, kbTrackY, { passive: true, capture: true }); });
+  kbTrackY();
+  doc.addEventListener('visibilitychange', function(){ if (doc.visibilityState === 'hidden') kbUnlock('an-tab'); });
   if (window.visualViewport && window.visualViewport.addEventListener) {
     window.visualViewport.addEventListener('resize', onVvChange);
+    window.visualViewport.addEventListener('scroll', onVvChange);
   }
   try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
   if (kbDebug) {
     kbDbg('mo-trang');
-    if (window.visualViewport && window.visualViewport.addEventListener) window.visualViewport.addEventListener('scroll', function(){ kbDbg(); });
     if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
   }
-  ['touchmove', 'wheel'].forEach(function(n){ doc.addEventListener(n, kbUserStop, { passive: true }); });
-  doc.addEventListener('focusin', function(e){ scheduleFootBars(); compactSync(false); kbOnFocus(e && e.target); });
+  doc.addEventListener('focusin', function(){ scheduleFootBars(); compactSync(false); });
   doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); setTimeout(compactSync, 0); });
   ['retailBox', 'remedyBox'].forEach(function(id){
     var b = $('#' + id);
-    if (b && b.addEventListener) b.addEventListener('toggle', scheduleFootBars);
+    if (b && b.addEventListener) b.addEventListener('toggle', function(){ scheduleFootBars(); kbUnlock('dong-the'); });
     var n = $(id === 'retailBox' ? '#retailNote' : '#remedyNote');
     if (n && typeof window.ResizeObserver === 'function') new window.ResizeObserver(scheduleFootBars).observe(n);
   });
