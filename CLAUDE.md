@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.14.
+- Phiên bản hiện tại: 2.15.15.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -62,7 +62,8 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.14, commit 7097f8b, image `quan-ly-kho:2.15.14` (id 0b5b5a0a…, 351MB). Giám sát sau triển khai 7/7 đạt.
+- Đang chạy: 2.15.15, commit d22d096, image `quan-ly-kho:2.15.15` (id 6c2b04c1…, 351MB). Giám sát sau triển khai 7/7 đạt. Đường lui: `quan-ly-kho:pre-2.15.15` = 2.15.14 (id 0b5b5a0a…, commit 7097f8b).
+- 2.15.15: iPhone, "Lưu đơn" thuốc chén khi chưa có tên hỏi tên bằng `prompt` (ô `#remedyName` nằm trong thanh chân fixed, focus vào làm thanh bị ẩn nên trước đó không lưu được). ĐÃ XÁC NHẬN trên iPhone (12/11/2026). Còn hiếm: chọn đơn có sẵn, xóa trống ô tên rồi Lưu vẫn có thể bị ẩn thanh (chưa sửa). Bài học: ô nhập đặt trong thanh `fixed` không được focus trực tiếp trên iPhone.
 - 2.15.14: Dockerfile hai giai đoạn (image cuối không có python3/make/g++), chạy bằng `USER node` (uid 1000). `data/` đã `chown -R 1000:1000` một lần (12/11/2026); nếu khôi phục data/ từ backup robocopy mà file thuộc root thì chạy lại lệnh chown (PowerShell, container dừng). Đường lui: `quan-ly-kho:pre-2.15.14` = 2.15.13 (id 55cc1714…, root vẫn ghi được file uid 1000). Tài liệu còn 2 chỗ nhỏ cần sửa đợt sau: CHANGELOG.md:12 và README-LOCAL.md:31 (ghi lệnh chown chạy trong PowerShell; Windows có thể không bắt buộc, vẫn nên chạy). Chưa thử đăng nhập trên iPhone sau khi bật.
 - 2.15.12 (dọn code chết CSS) + 2.15.13 (icon tab PC cùng một màu xanh lá `--tab-ico`, tab chọn có chip nền `--brand-soft`) triển khai chung; chưa xem trên màn hình thật, nếu tab chọn ở giao diện sáng chưa đủ nổi (tương phản 4,61) thì đậm hơn.
 - Trước nữa: `quan-ly-kho:pre-2.15.13` = 2.15.11 (id 985a8974…, commit 441b992); trước nữa `pre-2.15.11` = 2.15.10 (id 67037c9e…, commit ab59982); `pre-2.15.10` = 2.15.9 (id 43ec6f62…).
