@@ -46,6 +46,46 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 - **Backup thủ công:** nút "Sao lưu" trong app tải file JSON theo trình duyệt
   của từng thiết bị; cách copy `app.db`/`backups` trên mới là backup thật trên PC.
 
+## Khôi phục từ bản sao lưu
+
+Đã diễn tập thật 12/11/2026: chép một backup thành `app.db` trong thư mục thử, chạy image 2.15.19 → `/healthz` 200, `integrity_check` ok, `money_unit` là `dong`.
+
+### Các lớp sao lưu hiện có
+1. **Server tự tạo** `data\backups\backup-<ngày>.db` (`VACUUM INTO`, chụp trước lần ghi đầu tiên trong ngày) và `backup-<ngày>-truoc-ghi-de-<giờ>.db` (trước mỗi lần ghi đè chủ động); giữ 30 ngày/bản như mục trên.
+2. **Task Scheduler "SaoLuuKho"** chạy `E:\sao-luu-kho\sao-luu.cmd`: `robocopy` `data\backups` và `data\luu-tru` sang `E:\sao-luu-kho` với cờ `/E /XO /R:2 /W:5`, KHÔNG dùng `/MIR`. Hiện chạy mỗi tuần; nên chuyển sang hằng ngày để mất tối đa một ngày dữ liệu.
+3. `E:` là đĩa khác `G:` nhưng cùng máy: mất máy là mất cả hai. Nên có thêm một bản ngoài máy (USB hoặc đám mây).
+4. `E:` KHÔNG chứa `app.db`/`auth.db` đang chạy; chỉ có các file backup.
+
+### Khôi phục dữ liệu kho
+Chạy từng lệnh trong PowerShell. Container phải dừng trước khi động vào `data\`.
+```powershell
+cd "G:\quan-ly-kho-local"
+docker compose stop
+# Chọn file backup mới nhất còn hợp lệ (xem danh sách, mới nhất ở cuối):
+Get-ChildItem data\backups\*.db | Sort-Object LastWriteTime | Select-Object Name,Length,LastWriteTime
+# Nếu app.db hiện tại còn, cất sang tên khác trước (đừng bỏ bước này):
+Copy-Item "data\app.db" "data\app.db.hong-$(Get-Date -Format yyyyMMdd-HHmm)" -ErrorAction SilentlyContinue
+# Chép backup đã chọn thành app.db (đổi tên file cho đúng):
+Copy-Item "data\backups\backup-2026-11-12.db" "data\app.db" -Force
+# Xóa WAL/SHM cũ (chỉ khi container đã dừng):
+Remove-Item "data\app.db-wal","data\app.db-shm" -ErrorAction SilentlyContinue
+```
+- Nếu `data\` bị đổi chủ sai, chạy lệnh `chown` ở mục "Dữ liệu nằm ở đâu".
+- Bật lại: `docker compose start`. Kiểm: mở `https://localhost/healthz` phải ra 200, rồi mở app xem số liệu. Kiểm tra trước khi dùng (chưa chạy nguyên văn): `curl.exe -k -s -o NUL -w "%{http_code}" https://localhost/healthz`.
+- **Dữ liệu mới hơn bản backup sẽ mất.** Bản `truoc-ghi-de` phản ánh trạng thái TRƯỚC lần ghi đầu trong ngày, nên cũng không chứa thay đổi hôm đó. Nếu backup trên `G:` hỏng thì lấy từ `E:\sao-luu-kho\backups` (cùng cách chép).
+
+### Mất `auth.db`
+Dữ liệu kho không mất (nằm ở `app.db`). Khi chạy, server tự tạo `auth.db` mới rỗng và in mã thiết lập vào log: `docker logs quan-ly-kho --tail 50` (không dán mã ra ngoài). Thiết lập lại thiết bị chủ trên PC rồi duyệt lại iPhone/PC theo mục "Xác thực thiết bị" (tối đa 2 thiết bị chủ). Nếu `auth.db` còn nhưng mất quyền vào, đặt lại bằng `docker compose exec quan-ly-kho node scripts/auth-reset.mjs` rồi `docker compose restart quan-ly-kho` (xem phía dưới).
+
+### Diễn tập an toàn (không đụng `data\` thật)
+Chép backup vào thư mục thử ngoài `data\`, đặt tên `app.db`, chạy ở cổng khác cổng thật (18789, chỉ `127.0.0.1`):
+```powershell
+New-Item -ItemType Directory C:\Temp\thu-kho -Force
+Copy-Item "G:\quan-ly-kho-local\data\backups\backup-2026-11-12.db" "C:\Temp\thu-kho\app.db"
+docker run --name thu-kho --rm -d -p 127.0.0.1:18789:8787 -e DATA_DIR=/data -v "C:\Temp\thu-kho:/data" quan-ly-kho:2.15.19
+```
+Kiểm tra trước khi dùng (chưa chạy nguyên văn): `curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:18789/healthz` phải ra 200. Dừng và dọn: `docker rm -f thu-kho`, rồi xóa `C:\Temp\thu-kho`. Thay `2.15.19` bằng phiên bản đang chạy.
+
 ## Nạp dữ liệu từ file backup JSON
 
 Nếu có file `kho-backup-YYYY-MM-DD.json` (xuất từ bản Cloudflare cũ hoặc từ nút
