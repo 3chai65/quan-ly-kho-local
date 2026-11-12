@@ -4262,12 +4262,15 @@ const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merg
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
   'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
   'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
-/* Trên host có git: đối chiếu thêm với 1023b40; trong image (không có git) chỉ dùng danh sách chốt sẵn. */
+/* Trên host có đủ lịch sử git: đối chiếu thêm với 1023b40; trong image (không có git) và
+   clone nông trên CI (không có commit 1023b40) chỉ dùng danh sách chốt sẵn. */
 function oldPageFromGit() {
   try {
-    return execFileSync('git', ['-C', REPO_ROOT, 'show', '1023b40:src/page.js'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    return execFileSync('git', ['-C', REPO_ROOT, 'show', '1023b40:src/page.js'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) {
     if (e && e.code === 'ENOENT') return null;
+    const err = String((e && e.stderr) || '');
+    if (e && (e.status === 128 || /bad object|invalid object name|unknown revision|exists on disk, but not in/i.test(err))) return null;
     throw e;
   }
 }
