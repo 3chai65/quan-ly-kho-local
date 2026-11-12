@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.19] - 2026-11-12
+
+### Changed
+- Dọn code chết sau đợt chỉnh giao diện 2.15.12–2.15.18 (một biến cục bộ, một bộ chọn CSS thừa, một assert test trùng); giao diện đo lại y nguyên, không đổi hành vi.
+
+### Added
+- Test: log từ chối cho 400 "JSON không hợp lệ" và 400 "X-Base-Updated không hợp lệ", PUT 200 không ghi dòng từ chối; pushState 5xx/lỗi mạng không toast "Chưa lưu được:"; Hủy ở confirm tên đơn trùng không đổi gì.
+
 ## [2.15.18] - 2026-11-12
 
 ### Fixed
