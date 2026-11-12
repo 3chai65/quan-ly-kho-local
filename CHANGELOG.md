@@ -14,7 +14,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 ### Changed
 - Dockerfile hai giai đoạn: image cuối bỏ python3/make/g++ (759MB xuống ~351MB) và chạy bằng `USER node`. Không đổi mã app.
-- LƯU Ý nâng cấp: `data/` hiện thuộc root, phải chạy một lần trước khi bật: `docker run --rm -v "<đường dẫn tuyệt đối>/data:/data" alpine chown -R 1000:1000 /data` (hoặc `chown -R 1000:1000 data` trên Linux).
+- LƯU Ý nâng cấp: `data/` hiện thuộc root, phải chạy một lần trước khi bật: `docker run --rm -v "<đường dẫn tuyệt đối>/data:/data" alpine chown -R 1000:1000 /data` (hoặc `chown -R 1000:1000 data` trên Linux). Chạy trong PowerShell/cmd, KHÔNG dùng Git Bash (đổi đường dẫn `/data`). File cũ do root tạo (644) thì user node không ghi được nên NÊN chạy; Docker Desktop với file tạo từ Windows (777) có thể không cần, chạy vẫn vô hại.
 - Đường lui: image cũ chạy root nên ghi được file thuộc uid 1000.
 
 ## [2.15.13] - 2026-11-12

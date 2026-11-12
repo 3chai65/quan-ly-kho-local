@@ -28,7 +28,7 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 
 ## Dữ liệu nằm ở đâu
 - File SQLite: `G:\quan-ly-kho-local\data\app.db`
-- Từ 2.15.14 container chạy bằng user `node` (uid 1000), nên `data/` phải ghi được bởi uid 1000. Nếu `data/` đang thuộc root, chạy một lần: `docker run --rm -v "G:\quan-ly-kho-local\data:/data" alpine chown -R 1000:1000 /data`.
+- Từ 2.15.14 container chạy bằng user `node` (uid 1000), nên `data/` phải ghi được bởi uid 1000. Nếu `data/` đang thuộc root, chạy một lần: `docker run --rm -v "G:\quan-ly-kho-local\data:/data" alpine chown -R 1000:1000 /data`. Chạy trong PowerShell/cmd, KHÔNG dùng Git Bash (đổi đường dẫn `/data`). File cũ do root tạo (644) thì user node không ghi được nên NÊN chạy; Docker Desktop với file tạo từ Windows (777) có thể không cần, chạy vẫn vô hại.
 
 ## Tự động sao lưu (mỗi ngày)
 - Server tự tạo **1 bản backup/ngày** vào `G:\quan-ly-kho-local\data\backups\`,
