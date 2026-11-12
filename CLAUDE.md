@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.5.
+- Phiên bản hiện tại: 2.15.6.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -49,6 +49,7 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Auditor chạy MỘT lượt cuối trước "duyệt triển khai", chỉ nhận khoảng commit và vùng cần soi; báo cáo ≤15 dòng; sau đó chỉ duyệt lại các lỗi đã báo.
 - Worker dán diff/hunk và đầu ra test (file .md); Người duyệt chỉ đọc phần được dán. Đạt → bước sau; chưa đạt → chỉ đạo sửa lại.
 - Duyệt giao diện: phải đo bằng số trên trình duyệt trước. Worker không được báo "đã sửa/đã thẳng hàng" khi chưa có số đo hoặc lập luận từ mã.
+- Sau mỗi đợt chỉnh giao diện lớn, giao Người làm dọn code chết/thừa (hàm, CSS, id, icon, test cũ): chỉ xóa khi 0 tham chiếu tĩnh và động, nghi ngờ thì ghi lại, giao diện phải đo lại y nguyên.
 - Không commit khi test chưa xanh. Thay đổi tiền/tồn kho phải nêu rủi ro trước khi ghi đè, dựa vào backup tự động của server; không mở hai phiên ghi song song.
 
 ## Tối ưu hạn mức sử dụng
@@ -61,9 +62,9 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.5, commit 264ebe0, image `quan-ly-kho:2.15.5` (id 6602a95a…).
-- Đường lui: `quan-ly-kho:pre-2.15.5` = 2.15.4 (id 20a49c2d…, commit b420b93); trước nữa `pre-2.15.4` = 2.15.3 (id 1f1e78e0…).
-- Giao diện điện thoại (2.15.3–2.15.5): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; dòng nhập tự cuộn lên trên bàn phím theo visualViewport. Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật.
+- Đang chạy: 2.15.6, commit 74c7ed0, image `quan-ly-kho:2.15.6` (id 97de297b…).
+- Đường lui: `quan-ly-kho:pre-2.15.6` = 2.15.5 (id 6602a95a…, commit 264ebe0); trước nữa `pre-2.15.5` = 2.15.4 (id 20a49c2d…).
+- Giao diện điện thoại (2.15.3–2.15.6): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; dòng nhập tự cuộn lên trên bàn phím theo visualViewport; khi bàn phím hiện, tờ ghi chỉ hiện 3 vị mới nhất (vùng cuộn riêng). Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật.
 - 2.15.x chưa thử trên iPhone thật: sticky chân tờ ghi + bàn phím, vùng an toàn, nút "Tải lại" (chỉ hiện khi chạy từ màn hình chính), bo góc đáy tờ ghi, gợi ý có đè chân không. Đã bỏ chức năng "Gộp đơn thuốc lẻ cũ".
 - Nhánh làm việc `local-sqlite` = `origin-local/main`.
 - Chờ/biết chưa sửa: sao lưu tự động đè lên thông báo đang hiện (G17); Dockerfile còn công cụ build và chạy bằng root.
