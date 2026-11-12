@@ -699,3 +699,34 @@ test('server.js: PUT bị từ chối (400/428/409) ghi một dòng log, không 
   assert.match(lines[0], /^\d{4}-\d\d-\d\dT/);
   assert.ok(!log.includes(SECRET) && !log.includes('777777') && !log.includes('qlk_dev'), 'log lộ dữ liệu');
 });
+
+test('server.js: log từ chối có dòng cho 400 "JSON không hợp lệ" và 400 "X-Base-Updated không hợp lệ"; PUT 200 không ghi dòng từ chối', async () => {
+  const SECRET = 'RoiRacBiMat654';
+  const start = serverErr.length;
+  const rejectLines = () => serverErr.slice(start).split(/\r?\n/).filter(l => l.includes('PUT /api/state từ chối'));
+  const bad = await fetch(`${BASE}/api/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Base-Updated': '1', Cookie: deviceCookie },
+    body: '{"products":[{"name":"' + SECRET + '"'
+  });
+  assert.equal(bad.status, 400);
+  assert.equal((await bad.json()).error, 'JSON không hợp lệ');
+  const nan = await put(emptyState({ products: [{ id: 'N1', name: SECRET, stock: 1, costPrice: 1 }] }), { 'X-Base-Updated': 'abc' });
+  assert.equal(nan.status, 400);
+  assert.equal(nan.body.error, 'X-Base-Updated không hợp lệ');
+  await new Promise(r => setTimeout(r, 300));
+  let lines = rejectLines();
+  assert.equal(lines.length, 2, serverErr.slice(start));
+  assert.ok(lines.some(l => l.includes(' 400: JSON không hợp lệ')), 'thiếu dòng log JSON không hợp lệ');
+  assert.ok(lines.some(l => l.includes(' 400: X-Base-Updated không hợp lệ')), 'thiếu dòng log X-Base-Updated không hợp lệ');
+  assert.ok(lines.every(l => /^\d{4}-\d\d-\d\dT/.test(l)));
+  // PUT thành công (X-Force và có X-Base-Updated đúng) không thêm dòng từ chối nào
+  const ok1 = await put(emptyState({ products: [{ id: 'N2', name: 'A', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  assert.equal(ok1.status, 200);
+  const ok2 = await put(emptyState({ products: [{ id: 'N3', name: 'A', stock: 1, costPrice: 1 }] }), { 'X-Base-Updated': String(ok1.body.updatedAt) });
+  assert.equal(ok2.status, 200);
+  await new Promise(r => setTimeout(r, 300));
+  lines = rejectLines();
+  assert.equal(lines.length, 2, 'PUT 200 không được ghi dòng từ chối: ' + serverErr.slice(start));
+  assert.ok(!serverErr.slice(start).includes(SECRET), 'log lộ dữ liệu');
+});

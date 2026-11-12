@@ -5515,3 +5515,42 @@ test('2.15.8 tab máy tính có icon: 8 nút mỗi nút 1 svg aria-hidden trỏ 
   assert.match(PAGE, /\.tab\.is-active \.tab__ic\{background:var\(--brand-soft\);box-shadow:0 0 0 3px var\(--brand-soft\)\}/, 'tab đang chọn: icon xanh trên chip --brand-soft');
   assert.match(PAGE, /\.tab__ic\{display:none\}[\s\S]*?@media \(min-width:641px\)\{[\s\S]*?\.tab__ic\{display:block/, 'icon ẩn mặc định (<=640px), chỉ hiện từ 641px');
 });
+
+test('2.15.19 pushState 5xx và lỗi mạng KHÔNG hiện toast "Chưa lưu được:" (chỉ huy hiệu); trả false, không phải "bị từ chối"', async () => {
+  const run = async (kind) => {
+    const { doc } = toastDoc(false);
+    const writes = [];
+    const mEl = doc.querySelector('#toastMsg');
+    Object.defineProperty(mEl, 'textContent', { get() { return writes[writes.length - 1] || ''; }, set(v) { writes.push(v); } });
+    const fetchStub = kind === 'net'
+      ? async () => { throw new TypeError('Failed to fetch'); }
+      : async () => ({ status: kind, json: async () => ({ success: false, error: 'Lỗi máy chủ ' + kind }) });
+    const client = loadClient({ document: doc, fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
+    client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+    client.setBase(1);
+    const ok = await client.pushState(false, false);
+    return { ok, writes, rejected: client.isSyncRejected(), failShown: client.isSyncErrorShown() };
+  };
+  for (const kind of [500, 502, 503, 'net']) {
+    const r = await run(kind);
+    assert.equal(r.ok, false, String(kind));
+    assert.equal(r.writes.filter(t => /Chưa lưu được:/.test(t)).length, 0, 'không toast kiểu từ chối cho ' + kind);
+    assert.equal(r.rejected, false, 'không phải bị máy chủ từ chối: ' + kind);
+  }
+  // đối chứng: 400 vẫn toast đúng một lần
+  const r400 = await run(400);
+  assert.equal(r400.writes.filter(t => /Chưa lưu được:/.test(t)).length, 1);
+});
+test('2.15.19 savePreset: đơn mới trùng tên (khác hoa/thường), bấm Hủy ở confirm → không đổi gì: không đơn thứ hai, không commit/toast, không dirty, không chọn đơn, tên và nội dung đơn cũ nguyên', () => {
+  for (const typed of ['đơn cũ', 'ĐƠN CŨ', '  đƠn   cŨ  ']) {
+    const r = runSave({ name: typed, ok: false });
+    assert.equal(r.st.confirms.length, 1);
+    assert.equal(r.rx.length, 1, 'không tạo đơn thứ hai');
+    assert.equal(r.rx[0].id, 'RX1'); assert.equal(r.rx[0].name, 'Đơn Cũ'); assert.equal(r.rx[0].items[0].grams, 1);
+    assert.equal(r.rx[0].updatedAt, undefined, 'đơn cũ không bị đóng dấu cập nhật');
+    assert.equal(r.c.getDb().updatedAt, 1, 'không commit');
+    assert.equal(r.c.isDirty(), false, 'không đánh dấu chưa lưu');
+    assert.equal(r.els['#remedyPreset'].value, '', 'không tự chọn đơn');
+    assert.ok(!r.els['#toastMsg'].textContent, 'không toast');
+  }
+});
