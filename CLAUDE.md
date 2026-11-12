@@ -43,7 +43,7 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 
 ## Vai trò
 - **Giám sát** = Haiku (`.claude/agents/giam-sat.md`, chỉ đọc): chạy test/tóm tắt, kiểm sau triển khai, so số đo với ngưỡng, rút gọn log.
-- **Người làm** = Sonnet (`.claude/agents/worker.md`): sửa mã, build, viết test.
+- **Người làm** = Sonnet (`.claude/agents/worker.md`): sửa mã, build, viết test. Trước khi viết hay thêm mã/CSS/id/test phải tự hỏi: (1) có thật sự cần thiết không? (2) đã tồn tại sẵn trong dự án chưa (Grep, dùng lại)? (3) rút gọn thành một dòng được không? Báo cáo ghi 1 dòng "đã tự kiểm 3 câu: …"; Người duyệt trả lại diff thêm khối mới mà không đạt 3 câu.
 - **Người duyệt** = phiên chính, mặc định Sonnet: phân tích, lập kế hoạch, giao việc, duyệt. KHÔNG tự viết mã.
 - **Opus** chỉ vào "cổng" qua `.claude/agents/auditor.md` (chỉ đọc) khi: (a) chạm logic cốt lõi (tiền, tồn kho, đồng bộ, xác thực);
   (b) Sonnet không chắc; (c) lỗi lặp lại/khó. Việc chỉ giao diện/tài liệu không cần Opus.
