@@ -20,7 +20,7 @@ color-scheme:light;
 --bg:#eceef2;--surface:#f6f7f9;--surface2:#eaedf2;--border:#d7dde6;--border2:#e6eaf0;
 --text:#1e293b;--text2:#475569;--muted:#5b6b81;
 --brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#e8ebf8;
---green-text:#047857;
+--green-text:#047857;--tab-ico:#047857;
 --amber:#b45309;--amber-soft:#fbf5e6;--amber-text:#b45309;
 --red:#be123c;--red-soft:#f8e7ea;--red-text:#be123c;
 --blue-text:#1d4ed8;
@@ -34,7 +34,7 @@ color-scheme:dark;
 --bg:#111620;--surface:#171e2b;--surface2:#1f2736;--border:#2d3850;--border2:#242e41;
 --text:#cdd5e1;--text2:#aab4c4;--muted:#8f9bb0;
 --brand:#5b5fd9;--brand-text:#b4bcf2;--brand-soft:#222545;
---green-text:#7fd6ad;
+--green-text:#7fd6ad;--tab-ico:#7fd6ad;
 --amber:#d99a2b;--amber-soft:#2e2412;--amber-text:#e6b964;
 --red:#e0566f;--red-soft:#3a1a22;--red-text:#ec8294;
 --blue-text:#a7c7ea;
@@ -536,8 +536,9 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 }
 /* 2.15.8 (máy tính >640px): biểu tượng cạnh nhãn hai hàng (cùng icon với tiêu đề thẻ); điện thoại giữ chữ hai dòng, ẩn icon. */
 .tab__ic{display:none}
-/* 2.15.10: icon tab mang cùng class màu (txt-*) với icon tiêu đề thẻ; tab đang chọn (nền brand) dùng chữ trắng của tab để đủ tương phản. */
-.tab.is-active .tab__ic{color:#fff}
+/* 2.15.13: mọi icon tab cùng một màu xanh lá (--tab-ico, = màu icon Bán lẻ); tab đang chọn (nền tím) đặt icon xanh trên chip --brand-soft để vẫn nổi bật. */
+.tab__ic{color:var(--tab-ico);border-radius:4px}
+.tab.is-active .tab__ic{background:var(--brand-soft);box-shadow:0 0 0 3px var(--brand-soft)}
 @media (min-width:641px){
 .tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;align-content:center;justify-items:center;padding:5px 4px}
 .tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
@@ -637,14 +638,14 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   </section>
 
   <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
-    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic txt-green" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
-    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
-    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><svg class="ico tab__ic txt-blue" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
-    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
-    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic txt-blue" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
-    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic txt-green" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
-    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
-    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic txt-brand" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
+    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
+    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
+    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
+    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
+    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
+    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cash"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
+    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
+    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-save"/></svg><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
   </nav>
 
   <div class="grid2">

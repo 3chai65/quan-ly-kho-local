@@ -5413,17 +5413,17 @@ test('2.15.8 tab máy tính có icon: 8 nút mỗi nút 1 svg aria-hidden trỏ 
   for (const b of btns) {
     const id = b.match(/data-tab="(\w+)"/)[1];
     assert.equal((b.match(/<svg /g) || []).length, 1, id + ': đúng 1 icon');
-    assert.match(b, /<svg class="ico tab__ic txt-(green|brand|blue|red)" aria-hidden="true"><use href="#i-([\w-]+)"\/><\/svg>/);
-    /* 2.15.10: icon tab cùng class màu với icon tiêu đề thẻ tương ứng */
-    const tabCls = b.match(/<svg class="ico tab__ic (txt-\w+)"/)[1];
-    const hd = [...PAGE.matchAll(/<svg class="ico (txt-\w+)" aria-hidden="true"><use href="#(i-[\w-]+)"\/><\/svg>\s*<h2 class="card__title"/g)].find(m => m[2] === 'i-' + want[id]);
-    assert.ok(hd, id + ': có icon tiêu đề thẻ');
-    assert.equal(tabCls, hd[1], id + ': icon tab cùng class màu với tiêu đề thẻ');
+    /* 2.15.13: mọi icon tab cùng một class/biến màu (không còn txt-*) */
+    assert.match(b, /<svg class="ico tab__ic" aria-hidden="true"><use href="#i-([\w-]+)"\/><\/svg>/, id + ': icon tab không mang class màu riêng');
     const sym = b.match(/<use href="#(i-[\w-]+)"/)[1];
     assert.equal(sym, 'i-' + want[id], id + ': icon theo tiêu đề thẻ');
     assert.ok(PAGE.includes('<symbol id="' + sym + '"'), id + ': symbol ' + sym + ' phải tồn tại');
     assert.match(b, /role="tab"/); assert.match(b, /aria-selected="false"/);
   }
-  assert.match(PAGE, /\.tab\.is-active \.tab__ic\{color:#fff\}/, 'tab đang chọn (nền brand): icon trắng như chữ tab');
+  assert.match(PAGE, /\.tab__ic\{color:var\(--tab-ico\);/, 'mọi icon tab dùng một biến màu --tab-ico');
+  assert.equal((PAGE.match(/--tab-ico:#/g) || []).length, 2, '--tab-ico khai báo đúng 1 lần ở sáng, 1 lần ở tối');
+  assert.equal(PAGE.match(/--tab-ico:(#\w+)/)[1], PAGE.match(/:root\{[\s\S]*?--green-text:(#\w+)/)[1], 'sáng: --tab-ico = màu icon Bán lẻ');
+  assert.equal(PAGE.match(/--tab-ico:(#\w+)/g)[1].slice(10), PAGE.match(/html\[data-theme=dark\]\{[\s\S]*?--green-text:(#\w+)/)[1], 'tối: --tab-ico = màu icon Bán lẻ');
+  assert.match(PAGE, /\.tab\.is-active \.tab__ic\{background:var\(--brand-soft\);box-shadow:0 0 0 3px var\(--brand-soft\)\}/, 'tab đang chọn: icon xanh trên chip --brand-soft');
   assert.match(PAGE, /\.tab__ic\{display:none\}[\s\S]*?@media \(min-width:641px\)\{[\s\S]*?\.tab__ic\{display:block/, 'icon ẩn mặc định (<=640px), chỉ hiện từ 641px');
 });

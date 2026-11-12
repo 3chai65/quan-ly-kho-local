@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.13] - 2026-11-12
+
+### Changed
+- Máy tính (>640px): cả 8 icon tab dùng cùng một màu xanh lá (biến `--tab-ico`, bằng màu icon Bán lẻ, sáng `#047857`, tối `#7fd6ad`); tab đang chọn đặt icon xanh trên chip nền --brand-soft bo góc để vẫn nổi bật trên nền tím. Không đổi hình icon, chữ tab, icon tiêu đề thẻ; điện thoại vẫn ẩn icon.
+
 ## [2.15.12] - 2026-11-12
 
 ### Removed
