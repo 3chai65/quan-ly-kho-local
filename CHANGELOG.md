@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.14] - 2026-11-12
+
+### Changed
+- Dockerfile hai giai đoạn: image cuối bỏ python3/make/g++ (759MB xuống ~351MB) và chạy bằng `USER node`. Không đổi mã app.
+- LƯU Ý nâng cấp: `data/` hiện thuộc root, phải chạy một lần trước khi bật: `docker run --rm -v "<đường dẫn tuyệt đối>/data:/data" alpine chown -R 1000:1000 /data` (hoặc `chown -R 1000:1000 data` trên Linux).
+- Đường lui: image cũ chạy root nên ghi được file thuộc uid 1000.
+
 ## [2.15.13] - 2026-11-12
 
 ### Changed
