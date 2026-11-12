@@ -462,6 +462,9 @@ td.c-qty{position:relative}
 #retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
 #remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
+/* 2.15.4: khi bàn phím hiện, JS đặt --kb-pad (cao bàn phím + thanh phụ) để trang còn cuộn được tới dòng đang nhập. */
+body{padding-bottom:calc(48px + var(--kb-pad,0px))}
+#retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
 .chart{height:260px}
 }
 /* 2.12.1: điện thoại – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +. Đặt SAU quy tắc gốc và khối 640px. */
@@ -5095,11 +5098,6 @@ function bindEvents(){
 function footBarShow(o){
   return !!(o && o.mobile && o.open && !o.editing && !o.keyboard && o.height > 0 && o.top < o.vh - 60 && o.bottom > 100);
 }
-/* Độ cuộn (px) để đưa tâm dòng về giữa vùng nhìn thấy (visualViewport) khi bàn phím hiện; bỏ qua lệch nhỏ. */
-function scrollDeltaToCenter(rowTop, rowH, vvTop, vvH){
-  var d = (rowTop + rowH / 2) - (vvTop + vvH / 2);
-  return Math.abs(d) < 8 ? 0 : d;
-}
 var footBarSched = false;
 function updateFootBars(){
   var mobile = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
@@ -5128,31 +5126,78 @@ function scheduleFootBars(){
   footBarSched = true;
   setTimeout(function(){ footBarSched = false; updateFootBars(); }, 30);
 }
-/* Ô SL của dòng đang nhập: khi focus, sau khi bàn phím hiện, đưa cả dòng (ô SL + nút +) vào giữa vùng nhìn thấy phía trên bàn phím. */
-function centerPendingRow(e){
-  var t = e && e.target;
-  if (!t || !t.closest) return;
-  var row = t.closest('#retailBody tr[data-pid], #remedyBody tr[data-pid]');
-  if (!row || !(t.tagName === 'INPUT')) return;
-  setTimeout(function(){
-    if (doc.activeElement !== t) return;
-    var vv = window.visualViewport;
-    var r = row.getBoundingClientRect();
-    var d = scrollDeltaToCenter(r.top, r.height, vv ? vv.offsetTop : 0, vv && vv.height ? vv.height : (window.innerHeight || 0));
-    if (d) window.scrollBy(0, d);
-  }, 320);
+/* 2.15.4: giữ dòng đang nhập (hoặc ô tìm) nhìn thấy phía trên bàn phím. Tính theo visualViewport (offsetTop + height), không theo cả màn hình.
+   Hàm thuần: trả độ cuộn (px, dương = cuộn xuống). Chỉ cuộn khi bàn phím đang hiện (vvH nhỏ hơn innerHeight đáng kể) và phần tử bị che
+   (đáy > đáy vùng thấy, chừa 64px cho thanh Prev/Next/Done của iOS) hoặc nằm trên đỉnh vùng thấy; đã thấy thì 0. */
+var KB_BAR = 64, KB_MIN = 80;
+function keepVisibleDelta(top, bottom, vvTop, vvH, innerH){
+  if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
+  var visTop = vvTop + 8, visBot = vvTop + vvH - KB_BAR;
+  var d = 0;
+  if (bottom > visBot) {
+    d = bottom - visBot;
+    if (top - d < visTop) d = top - visTop;
+    if (d < 0) d = 0;
+  } else if (top < visTop) {
+    d = top - visTop;
+  }
+  return Math.abs(d) < 2 ? 0 : Math.round(d);
 }
+/* Chỗ trống cuối trang (px) để trang còn cuộn được khi bàn phím chiếm đáy: chiều cao bàn phím + thanh phụ; 0 khi chưa có bàn phím. */
+function kbPadPx(innerH, vvTop, vvH){
+  if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
+  return Math.max(0, Math.round(innerH - vvTop - vvH)) + KB_BAR;
+}
+var kbTimers = [];
+function kbClear(){ kbTimers.forEach(clearTimeout); kbTimers = []; }
+/* Phần tử cần thấy: dòng đang nhập (ô SL, giá, thành tiền) hoặc ô tìm của Bán lẻ/Thuốc chén. */
+function kbTargetOf(t){
+  if (!t || !t.closest || t.tagName !== 'INPUT') return null;
+  var row = t.closest('#retailBody tr[data-pid], #remedyBox #remedyBody tr[data-pid], #remedyBody tr[data-pid]');
+  if (row) return row;
+  if (t.id === 'retailSearch' || t.id === 'remedySearch') return t.closest('.sug') || t;
+  return null;
+}
+function keepVisibleNow(t){
+  var el = kbTargetOf(t);
+  if (!el || doc.activeElement !== t) return;
+  var vv = window.visualViewport;
+  var ih = window.innerHeight || 0;
+  var vvH = vv && vv.height ? vv.height : ih, vvTop = vv ? (vv.offsetTop || 0) : 0;
+  var root = doc.documentElement;
+  if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', kbPadPx(ih, vvTop, vvH) + 'px');
+  var r = el.getBoundingClientRect();
+  var d = keepVisibleDelta(r.top, r.bottom, vvTop, vvH, ih);
+  if (d) window.scrollBy(0, d);
+}
+/* focusin (kể cả focus lập trình sau khi chọn gợi ý/bấm +): tính ngay và lại ở 100/300/600/1000ms vì iOS đổi visualViewport trễ khi chuyển bàn phím chữ <-> số. */
+function keepPendingVisible(e){
+  var t = e && e.target;
+  kbClear();
+  if (!kbTargetOf(t)) return;
+  keepVisibleNow(t);
+  [100, 300, 600, 1000].forEach(function(ms){ kbTimers.push(setTimeout(function(){ keepVisibleNow(t); }, ms)); });
+}
+function kbRelease(){
+  setTimeout(function(){
+    if (kbTargetOf(doc.activeElement)) return;
+    kbClear();
+    var root = doc.documentElement;
+    if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', '0px');
+  }, 400);
+}
+function onVvChange(){ scheduleFootBars(); var a = doc.activeElement; if (kbTargetOf(a)) keepVisibleNow(a); }
 function initFootBars(){
   if (typeof window.addEventListener === 'function') {
     window.addEventListener('scroll', scheduleFootBars, { passive: true });
     window.addEventListener('resize', scheduleFootBars);
   }
   if (window.visualViewport && window.visualViewport.addEventListener) {
-    window.visualViewport.addEventListener('resize', scheduleFootBars);
-    window.visualViewport.addEventListener('scroll', scheduleFootBars);
+    window.visualViewport.addEventListener('resize', onVvChange);
+    window.visualViewport.addEventListener('scroll', onVvChange);
   }
-  doc.addEventListener('focusin', function(e){ scheduleFootBars(); centerPendingRow(e); });
-  doc.addEventListener('focusout', scheduleFootBars);
+  doc.addEventListener('focusin', function(e){ scheduleFootBars(); keepPendingVisible(e); });
+  doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); });
   ['retailBox', 'remedyBox'].forEach(function(id){
     var b = $('#' + id);
     if (b && b.addEventListener) b.addEventListener('toggle', scheduleFootBars);

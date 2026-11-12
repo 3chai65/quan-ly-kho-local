@@ -39,7 +39,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), scrollDeltaToCenter: (typeof scrollDeltaToCenter === 'function' ? scrollDeltaToCenter : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
+  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), keepVisibleDelta: (typeof keepVisibleDelta === 'function' ? keepVisibleDelta : null), kbPadPx: (typeof kbPadPx === 'function' ? kbPadPx : null), keepPendingVisible: (typeof keepPendingVisible === 'function' ? keepPendingVisible : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
@@ -4926,10 +4926,66 @@ test('2.15.3 footBarShow: chỉ hiện khi điện thoại, thẻ mở, tờ ghi
   assert.equal(app.footBarShow(null), false);
 });
 
-test('2.15.3 scrollDeltaToCenter: đưa tâm dòng về giữa vùng nhìn; lệch nhỏ thì không cuộn', () => {
-  assert.equal(app.scrollDeltaToCenter(500, 50, 0, 400), 325);
-  assert.equal(app.scrollDeltaToCenter(100, 50, 0, 400), -75);
-  assert.equal(app.scrollDeltaToCenter(175, 50, 0, 400), 0);
+test('2.15.4 keepVisibleDelta: chỉ cuộn khi dòng bị bàn phím che hoặc nằm trên đỉnh; không bàn phím thì 0', () => {
+  const IH = 852, VV = 852 * 0.6; /* bàn phím ~40% màn hình */
+  /* bị che: đáy 700 > đáy vùng thấy (511.2 - 64 = 447.2) */
+  const d = app.keepVisibleDelta(640, 700, 0, VV, IH);
+  assert.equal(d, Math.round(700 - (VV - 64)));
+  assert.ok(700 - d <= VV - 64 + 1, 'sau khi cuộn đáy dòng nằm trên thanh phụ');
+  assert.equal(app.keepVisibleDelta(100, 160, 0, VV, IH), 0, 'đã thấy thì không cuộn');
+  assert.equal(app.keepVisibleDelta(-120, -60, 0, VV, IH), -128, 'nằm trên đỉnh: cuộn lên (đỉnh+8)');
+  assert.equal(app.keepVisibleDelta(640, 700, 0, IH, IH), 0, 'vv.height = innerHeight (chưa có bàn phím): 0');
+  assert.equal(app.keepVisibleDelta(640, 700, 0, 0, IH), 0);
+  /* dòng cao hơn vùng thấy: ưu tiên đỉnh dòng */
+  assert.equal(app.keepVisibleDelta(300, 900, 0, VV, IH), 300 - 8);
+  /* visualViewport bị pan xuống (offsetTop) */
+  assert.equal(app.keepVisibleDelta(900, 960, 400, VV, IH), Math.round(960 - (400 + VV - 64)));
+  assert.equal(app.kbPadPx(IH, 0, VV), Math.round(IH - VV) + 64);
+  assert.equal(app.kbPadPx(IH, 0, IH), 0);
+});
+
+test('2.15.4 trình tự: focusin khi chưa có bàn phím, visualViewport đổi trễ -> tính lại ở các lần trễ và khi vv resize; ngoài dòng đang nhập thì không cuộn', () => {
+  const IH = 852;
+  const timers = [];
+  const vvL = {};
+  let scrollY = 0;
+  const vv = { height: IH, offsetTop: 0, addEventListener(type, fn) { (vvL[type] ||= []).push(fn); } };
+  const row = { getBoundingClientRect() { const top = 1200 - scrollY; return { top, bottom: top + 60, height: 60 }; } };
+  const input = { tagName: 'INPUT', id: '', closest(sel) { return /data-pid/.test(sel) ? row : null; } };
+  const outside = { tagName: 'INPUT', id: 'x', closest() { return null; } };
+  const doc = limitDoc({}); doc.activeElement = input;
+  doc.documentElement = { style: { vars: {}, setProperty(k, v) { this.vars[k] = v; } } };
+  const c = loadClient({ document: doc, innerHeight: IH, visualViewport: vv, scrollBy(x, y) { scrollY += y; },
+    setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  c.keepPendingVisible({ target: input });
+  assert.equal(scrollY, 0, 'chưa có bàn phím (vv = innerHeight) thì chưa cuộn');
+  assert.deepEqual(timers.map(x => x.ms), [100, 300, 600, 1000]);
+  /* bàn phím số hiện TRỄ: tới lần tính lại sau mới thấy vv nhỏ */
+  vv.height = IH * 0.6;
+  timers[0].fn();
+  const r = row.getBoundingClientRect();
+  assert.ok(scrollY > 0 && r.bottom <= vv.height - 64 + 1, 'lần tính lại 100ms đưa dòng lên trên bàn phím');
+  assert.equal(doc.documentElement.style.vars['--kb-pad'], c.kbPadPx(IH, 0, vv.height) + 'px', 'chừa chỗ cuối trang để cuộn được');
+  const y1 = scrollY; timers[1].fn(); assert.equal(scrollY, y1, 'đã thấy thì không giật');
+  /* sự kiện vv resize khi vẫn là activeElement */
+  scrollY = 0; vv.height = IH * 0.5;
+  c.onVvChange();
+  assert.ok(scrollY > 0, 'vv resize tính lại và cuộn');
+  /* activeElement không còn là ô đó: không cuộn */
+  scrollY = 0; doc.activeElement = outside; vv.height = IH * 0.4;
+  c.onVvChange(); timers.forEach(x => x.fn());
+  assert.equal(scrollY, 0);
+});
+
+test('2.15.4 bàn phím hiện sau lần tính đầu: vv resize là đường duy nhất (không timer) vẫn đưa dòng lên', () => {
+  const IH = 852, vv = { height: IH * 0.55, offsetTop: 0, addEventListener() {} };
+  let scrollY = 0;
+  const row = { getBoundingClientRect() { const top = 900 - scrollY; return { top, bottom: top + 60, height: 60 }; } };
+  const input = { tagName: 'INPUT', id: '', closest(s) { return /data-pid/.test(s) ? row : null; } };
+  const doc = limitDoc({}); doc.activeElement = input; doc.documentElement = { style: { setProperty() {} } };
+  const c = loadClient({ document: doc, innerHeight: IH, visualViewport: vv, scrollBy(x, y) { scrollY += y; }, setTimeout() { return 0; }, clearTimeout() {} });
+  c.onVvChange();
+  assert.ok(scrollY > 0 && row.getBoundingClientRect().bottom <= vv.height - 64 + 1);
 });
 
 test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗi (thiếu số) thì ở ô số', () => {

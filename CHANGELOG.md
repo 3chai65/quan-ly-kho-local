@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.4] - 2026-11-12
+
+### Giao diện điện thoại
+
+- Dòng đang nhập (và ô tìm) của Bán lẻ/Thuốc chén luôn được đưa lên phía trên bàn phím: tính theo visualViewport (offsetTop + chiều cao), chừa 64 px cho thanh Prev/Next/Done, tính ngay rồi lại ở 100/300/600/1000 ms và mỗi lần visualViewport resize/scroll; chỉ cuộn khi dòng thật sự bị che. Khi bàn phím hiện, trang chừa thêm chỗ cuối (--kb-pad) để cuộn tới được dòng ở cuối trang.
+
 ## [2.15.3] - 2026-11-12
 
 ### Giao diện điện thoại (Bán lẻ, Thuốc chén)
