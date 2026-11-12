@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.11] - 2026-11-12
+
+### Fixed
+- Điện thoại: khi trang bị khóa lúc nhập, thanh `Quản Lý Kho` (sticky) không còn che đỉnh thanh thẻ/ô tìm (`html.kb-lock .top{visibility:hidden}`, giữ nguyên bố cục); sửa che ở lần chạm đầu và khi chọn SL.
+- Chạm vào ô nhập khác trong thẻ đang khóa: chặn hành vi mặc định (iOS tự căn giữa ô = pan visualViewport làm tờ ghi bị kéo lên rồi về) và focus bằng `preventScroll`. Nút Trước/Sau của thanh phụ iOS không chặn được; khi đó vẫn bù `top` đồng bộ trong sự kiện visualViewport (không rAF, không transition).
+- `?kbdebug=1`: thêm dòng 2 ghi 3 sự kiện vvTop gần nhất (nguồn pointerdown/focusin/next/vv) và cờ preventScroll-chạm.
+
 ## [2.15.10] - 2026-11-12
 
 ### Fixed

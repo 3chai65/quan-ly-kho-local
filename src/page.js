@@ -449,7 +449,9 @@ html{scroll-padding-bottom:230px}
 /* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
 .kb-compact .note__list{overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,transparent 0,black 12px);mask-image:linear-gradient(to bottom,transparent 0,black 12px)}
 /* 2.15.10: khi nhập trên điện thoại JS khóa cuộn trang (body fixed, top âm); .kb-lock chặn neo cuộn/cuộn dội của iOS. */
-html.kb-lock,body.kb-lock{overflow-anchor:none;overscroll-behavior:none}
+html.kb-lock,body.kb-lock{overflow-anchor:none;overscroll-behavior:none;transition:none!important}
+/* 2.15.11: .top sticky vẫn bám đỉnh vùng nhìn khi body fixed top âm (vvTop=0) và che đỉnh thẻ: ẩn khi khóa (visibility giữ nguyên bố cục). */
+html.kb-lock .top{visibility:hidden}
 body{padding-bottom:48px}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
 .chart{height:260px}
@@ -5291,19 +5293,43 @@ function kbDbg(why){
   var root = doc.documentElement;
   if (!kbDebug || !root) return;
   var d = $('#kbDbg');
-  if (!d) { d = doc.createElement('div'); d.id = 'kbDbg'; d.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:10px monospace;padding:2px 4px;white-space:nowrap;pointer-events:none;max-width:100vw;overflow:hidden'; root.appendChild(d); }
+  if (!d) { d = doc.createElement('div'); d.id = 'kbDbg'; d.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:10px monospace;padding:2px 4px;white-space:pre;pointer-events:none;max-width:100vw;overflow:hidden'; root.appendChild(d); }
   var vv = window.visualViewport, ih = window.innerHeight || 0;
   var rb = $('#retailBox'), mb = $('#remedyBox');
   var cp = !!((rb && rb.classList && rb.classList.contains('kb-compact')) || (mb && mb.classList && mb.classList.contains('kb-compact')));
   d.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
-  d.textContent = 'savedY ' + Math.round(kbSavedY) + ' top ' + (kbLockBox ? (doc.body && doc.body.style ? doc.body.style.top : '') : '-') + ' vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' lock ' + (kbLockBox ? 1 : 0) + ' | ' + kbReason;
+  d.textContent = 'savedY ' + Math.round(kbSavedY) + ' top ' + (kbLockBox ? (doc.body && doc.body.style ? doc.body.style.top : '') : '-') + ' vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' lock ' + (kbLockBox ? 1 : 0) + ' | ' + kbReason + '\n' + kbEvs.join('  ') + ' | preventScroll-chạm: ' + (kbPS ? 'có' : 'không');
 }
 /* Lưới an toàn: sau blur 400ms mà không còn ô nhập trong thẻ thì gỡ khóa. */
 function kbRelease(){
   setTimeout(function(){ if (!kbBoxOf(doc.activeElement)) kbUnlock('blur'); }, 400);
 }
 /* visualViewport đổi (bàn phím hiện/đổi, iOS pan): chỉ bù lại top theo vvTop; không cuộn. */
-function onVvChange(){ scheduleFootBars(); kbLockApply(); compactRefit(); kbDbg(); }
+function onVvChange(){ scheduleFootBars(); kbLockApply(); compactRefit(); kbEvRec('vv'); kbDbg(); }
+/* 2.15.11: chạm vào ô nhập KHÁC trong thẻ đang khóa: chặn hành vi mặc định (iOS tự căn giữa ô vừa focus = pan visualViewport) rồi focus preventScroll.
+   Nút Trước/Sau của thanh phụ iOS không chặn được; khi đó vẫn bù top đồng bộ trong sự kiện vv (không rAF, không transition). Ô đang focus: chạm như thường (đặt con trỏ). */
+var kbPS = false, kbEvs = [], kbEvAt = 0, kbVvPrev = 0, kbTouchAt = 0;
+function kbTouch(e){
+  var t = e && e.target, box = kbBoxOf(t);
+  kbEvRec('pointerdown');
+  kbPS = false;
+  if (kbLockBox && box === kbLockBox && t !== doc.activeElement && e.cancelable !== false && e.preventDefault) {
+    e.preventDefault();
+    kbPS = true;
+    focusNS(t);
+  }
+  kbDbg();
+}
+/* Gỡ lỗi (?kbdebug=1): ghi 3 sự kiện vv/chạm/focus gần nhất để biết iOS pan do đâu. */
+function kbEvRec(src){
+  if (!kbDebug) return;
+  var now = Date.now(), t = Math.round(kbVvTop());
+  if (src === 'pointerdown') kbTouchAt = now;
+  if (src === 'vv' && t === kbVvPrev) return;
+  kbEvs.push('vvTop ' + kbVvPrev + '→' + t + ' (+' + (kbEvAt ? now - kbEvAt : 0) + 'ms, ' + src + ')');
+  if (kbEvs.length > 3) kbEvs.shift();
+  kbVvPrev = t; kbEvAt = now;
+}
 /* Đổi chiều/cỡ: gỡ khóa nếu rộng đổi hoặc về >640px (bàn phím Android đổi cao thì giữ). */
 function kbOnResize(){
   if (kbLockBox && (!kbMobile() || (window.innerWidth || 0) !== kbLockW)) kbUnlock('resize');
@@ -5318,6 +5344,7 @@ function initFootBars(){
     window.addEventListener('pagehide', function(){ kbUnlock('pagehide'); });
   }
   ['touchstart', 'mousedown'].forEach(function(n){ doc.addEventListener(n, kbTrackY, { passive: true, capture: true }); });
+  doc.addEventListener('touchstart', kbTouch, { passive: false, capture: true });
   kbTrackY();
   doc.addEventListener('visibilitychange', function(){ if (doc.visibilityState === 'hidden') kbUnlock('an-tab'); });
   if (window.visualViewport && window.visualViewport.addEventListener) {
@@ -5327,6 +5354,7 @@ function initFootBars(){
   try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
   if (kbDebug) {
     kbDbg('mo-trang');
+    doc.addEventListener('focusin', function(){ kbEvRec(kbTouchAt && Date.now() - kbTouchAt < 800 ? 'focusin' : 'next'); kbDbg(); });
     if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
   }
   doc.addEventListener('focusin', function(){ scheduleFootBars(); compactSync(false); });

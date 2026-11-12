@@ -5202,7 +5202,7 @@ test('2.15.10 nguồn: không scrollBy/scrollIntoView; window.scrollTo chỉ tro
   assert.match(fnBody('refocusSearch'), /focusNS\(s\)/);
   assert.ok(!/kbLock|kbUnlock|scrollTo/.test(fnBody('refocusSearch')), 'refocusSearch không đụng khóa/cuộn');
   assert.match(PAGE, /body\{padding-bottom:48px\}/);
-  assert.match(PAGE, /html\.kb-lock,body\.kb-lock\{overflow-anchor:none;overscroll-behavior:none\}/);
+  assert.match(PAGE, /html\.kb-lock,body\.kb-lock\{overflow-anchor:none;overscroll-behavior:none;transition:none!important\}/);
   const lk = fnBody('kbLock');
   assert.match(lk, /kbSavedY = kbLastY >= 0 \? kbLastY : y;/); assert.match(lk, /if \(kbLockBox \|\| /, 'idempotent');
   assert.match(fnBody('compactApply'), /kbUnlock\('tat-gon'\)/);
@@ -5236,6 +5236,80 @@ test('2.15.10 ?kbdebug=1: dòng gỡ lỗi gắn vào <html>, có savedY/top/vvH
   assert.match(made[0].textContent, /lock 0 \| go: blur/);
   const off = lockRig(); off.c.initFootBars();
   assert.equal(off.html.children.length, 0, 'không bật thì không tạo');
+});
+
+/* ===== 2.15.11 .top ẩn khi khóa; chặn pan iOS khi chạm ô; không hoạt ảnh bù; gỡ lỗi 3 sự kiện ===== */
+function touchRig(k) {
+  const other = { tagName: 'INPUT', type: 'text', closest: () => k.box, focus(o) { k.st.focusArgs.push(o); }, select() {}, setAttribute() {}, value: '' };
+  const mk = (t) => { const e = { target: t, cancelable: true, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } }; return e; };
+  return { other, mk };
+}
+test('2.15.11 CSS: .top ẩn bằng visibility khi html.kb-lock (không display:none), body/kb-lock không transition', () => {
+  assert.match(PAGE, /html\.kb-lock \.top\{visibility:hidden\}/);
+  assert.ok(!/html\.kb-lock \.top\{[^}]*display:none/.test(PAGE), 'giữ layout');
+  const rule = PAGE.match(/html\.kb-lock,body\.kb-lock\{[^}]*\}/)[0];
+  assert.match(rule, /transition:none!important/);
+  assert.ok(!/(^|\n)(html|body)\{[^}]*transition/.test(PAGE), 'html/body không transition');
+});
+test('2.15.11 touchstart vào ô KHÁC trong thẻ đang khóa: preventDefault + focus({preventScroll:true}); ô đang focus/ngoài thẻ/chưa khóa: không chặn', () => {
+  const k = lockRig(); k.c.initFootBars(); k.lock();
+  const { other, mk } = touchRig(k);
+  const handlers = k.docL.touchstart.filter(l => l.fn.name === 'kbTouch');
+  assert.equal(handlers.length, 1); assert.ok(handlers[0].o.passive === false && handlers[0].o.capture === true);
+  const fire = (e) => handlers[0].fn(e);
+  k.st.focusArgs.length = 0;
+  const e1 = mk(other); fire(e1);
+  assert.equal(e1.defaultPrevented, true);
+  assert.ok(k.st.focusArgs.length === 1 && k.st.focusArgs[0].preventScroll === true);
+  const e2 = mk(k.input); fire(e2); assert.equal(e2.defaultPrevented, false, 'ô đang focus: để đặt con trỏ');
+  const outside = { tagName: 'INPUT', type: 'text', closest: () => null };
+  const e3 = mk(outside); fire(e3); assert.equal(e3.defaultPrevented, false, 'ngoài thẻ');
+  const e4 = mk(other); e4.cancelable = false; fire(e4); assert.equal(e4.defaultPrevented, false, 'không hủy được thì thôi');
+  fire(undefined);
+  const u = lockRig(); u.c.initFootBars();
+  const { other: o2, mk: mk2 } = touchRig(u);
+  const e5 = mk2(o2); u.docL.touchstart.filter(l => l.fn.name === 'kbTouch')[0].fn(e5);
+  assert.equal(e5.defaultPrevented, false, 'chưa khóa: không chặn');
+});
+test('2.15.11 bù vvTop đồng bộ trong sự kiện vv: thẻ cách đỉnh vùng THẤY luôn 8px ở mọi bước, không dùng rAF/setTimeout', () => {
+  const k = lockRig(); k.c.initFootBars(); k.lock();
+  for (const v of [0, 40, 134, 134, 0, 200, 0]) {
+    k.vv.offsetTop = v; k.vvL.scroll.forEach(fn => fn());
+    const rectTop = (k.st.abs - k.st.y) + parseFloat(k.body.style.top) + k.st.y; /* thẻ trong layout viewport sau khi top body đổi */
+    assert.equal(rectTop - v, 8, 'vvTop ' + v);
+  }
+  const fb = (n) => { const i = PAGE.indexOf('function ' + n + '('); return PAGE.slice(i, PAGE.indexOf('\nfunction ', i + 10)); };
+  assert.ok(!/requestAnimationFrame|setTimeout/.test(fb('onVvChange') + fb('kbLockApply') + fb('kbTouch')), 'bù đồng bộ');
+});
+test('2.15.11 ?kbdebug=1: dòng 2 ghi 3 sự kiện vv gần nhất (nguồn pointerdown/focusin/next/vv) và cờ preventScroll-chạm', () => {
+  const k = lockRig({ search: '?kbdebug=1' });
+  const made = [];
+  k.doc.createElement = () => { const e = makeEl(); made.push(e); return e; };
+  const q = k.doc.querySelector; k.doc.querySelector = (s) => (s === '#kbDbg' ? made[0] || null : q(s));
+  k.c.initFootBars(); k.lock();
+  const line2 = () => made[0].textContent.split('\n')[1];
+  assert.match(line2(), /preventScroll-chạm: không/);
+  const { other, mk } = touchRig(k);
+  k.docL.touchstart.filter(l => l.fn.name === 'kbTouch')[0].fn(mk(other));
+  assert.match(line2(), /pointerdown\)/); assert.match(line2(), /preventScroll-chạm: có/);
+  k.docL.focusin.map(l => l.fn).forEach(fn => fn());
+  assert.match(line2(), /focusin\)/);
+  k.vv.offsetTop = 134; k.vvL.scroll.forEach(fn => fn());
+  assert.match(line2(), /vvTop 0→134 \(\+\d+ms, vv\)/);
+  for (let i = 0; i < 3; i++) { k.vv.offsetTop = 10 * (i + 1); k.vvL.scroll.forEach(fn => fn()); }
+  assert.equal(line2().split('  ').length, 3, 'chỉ giữ 3 sự kiện');
+  const n = lockRig({ search: '?kbdebug=1' }); const nm = [];
+  n.doc.createElement = () => { const e = makeEl(); nm.push(e); return e; };
+  const nq = n.doc.querySelector; n.doc.querySelector = (s) => (s === '#kbDbg' ? nm[0] || null : nq(s));
+  n.c.initFootBars(); n.docL.focusin.map(l => l.fn).forEach(fn => fn());
+  assert.match(nm[0].textContent.split('\n')[1], /next\)/, 'focus không do chạm = Trước/Sau');
+});
+test('2.15.11 không bật kbdebug: chạm/vv không tạo DOM hay ghi sự kiện', () => {
+  const k = lockRig(); k.c.initFootBars(); k.lock();
+  const { other, mk } = touchRig(k);
+  k.docL.touchstart.filter(l => l.fn.name === 'kbTouch')[0].fn(mk(other));
+  k.vv.offsetTop = 50; k.vvL.scroll.forEach(fn => fn());
+  assert.equal(k.html.children.length, 0);
 });
 
 /* ===== 2.15.9 gợi ý tên: gõ trọn một từ (mọi thiết bị), khung tối đa 3 mục ===== */
