@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.18] - 2026-11-12
+
+### Fixed
+- iPhone, Thuốc chén/Bán lẻ, tờ ghi gọn: sau "+" (ô tìm tên đang focus, dòng nhập trống) vẫn thấy đủ 2 vị mới nhất; trước đây ngân sách luôn chừa 104px cho dòng nhập dù chưa có nên chỉ còn 1 dòng. Có dòng nhập thật thì chừa như cũ.
+- Khi gọn, tiêu đề cột trong danh sách (hiện khi có dòng nhập) được ẩn: không nhảy +29px khi chọn vị, dòng cuối không bị cắt lệch.
+- Điện thoại: dòng đang nhập thẳng cột với dòng đã ghi (STT giữa cột, tên cùng lề).
+
 ## [2.15.17] - 2026-11-12
 
 ### Removed

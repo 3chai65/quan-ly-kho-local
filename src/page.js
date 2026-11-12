@@ -450,6 +450,8 @@ html.kb-lock,body.kb-lock{overflow-anchor:none;overscroll-behavior:none;transiti
 /* 2.15.11: .top sticky vẫn bám đỉnh vùng nhìn khi body fixed top âm (vvTop=0) và che đỉnh thẻ: ẩn khi khóa (visibility giữ nguyên bố cục). */
 html.kb-lock .top{visibility:hidden}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
+/* 2.15.18: khi gọn, tiêu đề cột trong danh sách (hiện khi có dòng nhập, +29px) bị ẩn: chiều cao danh sách không nhảy khi chọn vị, dòng cuối không lệch khỏi đáy. */
+#remedyBox.kb-compact #remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead,#remedyBox.kb-compact #remedyNote>.note__list>table>thead{display:none}
 .chart{height:260px}
 }
 @media (max-width:600px){
@@ -470,6 +472,9 @@ table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:en
 /* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
 table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
 /* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập chỉ 4 ô (STT, tên, gram, +): gram chiếm 2 cột 1fr (2/2–3/4), nút + ở cột 46px cuối (2/4), đáy căn theo hàng, 44×44. Đặt SAU quy tắc chung table.ord. */
+/* 2.15.18: dòng nhập thẳng cột với dòng đã ghi: cột STT rộng 26 + đệm 5 + khoảng 10 = tên bắt đầu ở 41px (như td 36px + đệm 5), STT căn giữa như .c-num. */
+#retailNote .note__pending tr.is-row,#remedyNote .note__pending tr.is-row{grid-template-columns:26px minmax(0,1fr) minmax(0,1fr) 46px;padding:6px 5px}
+#retailNote .note__pending tr.is-row>td:nth-child(1),#remedyNote .note__pending tr.is-row>td:nth-child(1){text-align:center}
 #remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
 #remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
 #remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
@@ -5136,7 +5141,8 @@ function compactScrollEnd(list, smooth){
 var ENTRY_BLOCK_H = 104, KB_BOTTOM_GAP = 8;
 function compactAvail(vvH, listTopRel, pendH){
   if (!(vvH > 0)) return NaN;
-  return vvH - KB_TOP_GAP - KB_BOTTOM_GAP - (listTopRel > 0 ? listTopRel : 0) - Math.max(pendH > 0 ? pendH : 0, ENTRY_BLOCK_H);
+  /* 2.15.18: chỉ chừa chỗ khi dòng đang nhập THẬT SỰ có (pendH > 0). Sau "+" hoặc khi đang gõ tên chưa chọn vị, dòng nhập trống (cao 0): chừa 104px ở đó làm tờ ghi chỉ còn 1 dòng. */
+  return vvH - KB_TOP_GAP - KB_BOTTOM_GAP - (listTopRel > 0 ? listTopRel : 0) - (pendH > 0 ? Math.max(pendH, ENTRY_BLOCK_H) : 0);
 }
 /* Hàm thuần: max-height (px) của danh sách gọn; 0 = không giới hạn. Giảm dần từ n dòng xuống 1 cho vừa avail; 1 dòng vẫn không vừa thì cắt đúng avail (>=1). avail không xác định (NaN) = chỉ n dòng. */
 function compactFitHeight(hs, n, avail, natural){

@@ -5114,7 +5114,7 @@ function lockRig(opts = {}) {
   const rows = [50, 60, 70, 80, 90, 100].map(h => ({ getBoundingClientRect() { return { height: h }; } }));
   const list = { style: { maxHeight: '' }, scrollTop: 0, scrollHeight: 999, querySelector: s => (s === 'tbody' ? { children: rows } : null), getBoundingClientRect() { return { top: st.abs - st.y + 101 }; } };
   const inBox = new Set(), bcls = mkCls();
-  const box = { id: 'retailBox', classList: bcls, contains: e => inBox.has(e), getBoundingClientRect() { return { top: st.abs - st.y }; }, addEventListener(t, fn) { (boxL[t] ||= []).push(fn); } };
+  const box = { id: 'retailBox', classList: bcls, contains: e => inBox.has(e), getBoundingClientRect() { return { top: st.abs - st.y }; }, querySelector: sel => (sel === '.note__pending' && opts.pend > 0 ? { getBoundingClientRect() { return { height: opts.pend }; } } : null), addEventListener(t, fn) { (boxL[t] ||= []).push(fn); } };
   const input = { tagName: 'INPUT', type: 'text', closest: () => box, focus(o) { st.focusArgs.push(o); }, select() {}, setAttribute() {}, value: '' };
   inBox.add(input);
   const els = { '#retailBox': box, '#retailNoteList': list, '#retailSearch': input };
@@ -5156,7 +5156,9 @@ test('2.15.10 vào gọn lần đầu: body fixed, top = -(đỉnh thẻ tuyệt
 });
 
 test('2.15.10 ngân sách chiều cao: compactAvail/compactFitHeight thuần (vv.height thật 357, không 459/379)', () => {
-  assert.equal(app.compactAvail(357, 101, 0), 357 - 16 - 101 - 104, 'dòng nhập chưa hiện: dùng ước lượng 104');
+  assert.equal(app.compactAvail(357, 101, 0), 357 - 16 - 101, '2.15.18: dòng nhập trống (sau "+", đang gõ tên): KHÔNG chừa 104, tờ ghi giữ đủ 2 dòng');
+  assert.ok(app.compactAvail(357, 101, 0) >= 2 * 41, '2.15.18: ví dụ iPhone: chỗ còn >= 2 dòng 41px khi ô tìm đang focus');
+  assert.equal(app.compactAvail(357, 101, 60), 357 - 16 - 101 - 104, 'dòng nhập có thật nhưng thấp hơn 104: lấy ước lượng 104');
   assert.equal(app.compactAvail(357, 101, 130), 357 - 16 - 101 - 130, 'đo thật lớn hơn ước lượng: dùng đo thật');
   assert.ok(Number.isNaN(app.compactAvail(0, 101, 0)), 'vv không rõ: NaN');
   assert.equal(app.compactFitHeight([60, 70, 80, 90], 2, 200), 170, 'đủ chỗ: 2 dòng');
@@ -5169,7 +5171,7 @@ test('2.15.10 ngân sách chiều cao: compactAvail/compactFitHeight thuần (vv
   assert.equal(app.compactFitHeight([40], 2, 80, 70), 0, 'cao tự nhiên 70 vừa 80: không giới hạn');
 });
 test('2.15.10 compactFit theo vv thật: bàn phím mở (vv 357) rút danh sách còn 1 dòng, dòng nhập không vượt đáy vv - 8; vv resize đo lại', () => {
-  const k = lockRig(); k.c.initFootBars();
+  const k = lockRig({ pend: 104 }); k.c.initFootBars();
   k.lock();
   assert.equal(k.list.style.maxHeight, '190px', 'chưa bàn phím (vv 695): 2 dòng cuối 90+100');
   k.vv.height = 357; k.vvL.resize.forEach(fn => fn());
@@ -5178,6 +5180,22 @@ test('2.15.10 compactFit theo vv thật: bàn phím mở (vv 357) rút danh sác
   k.vv.height = 695; k.vvL.resize.forEach(fn => fn());
   assert.equal(k.list.style.maxHeight, '190px', 'bàn phím hạ: lại 2 dòng');
   assert.equal(k.st.to.length, 0);
+});
+
+test('2.15.18 sau "+" / đang gõ tên (dòng nhập trống, cao 0): vv 357 vẫn giữ đủ 2 dòng; dòng nhập xuất hiện (104) thì rút còn 1; "+" xong lại 2', () => {
+  const k = lockRig(); k.c.initFootBars();
+  k.lock();
+  k.vv.height = 357; k.vvL.resize.forEach(fn => fn());
+  assert.equal(k.list.style.maxHeight, '190px', 'dòng nhập trống: 2 dòng cuối (90+100) vừa 357-16-101=240');
+  const k2 = lockRig({ pend: 104 }); k2.c.initFootBars(); k2.lock();
+  k2.vv.height = 357; k2.vvL.resize.forEach(fn => fn());
+  assert.equal(k2.list.style.maxHeight, '100px', 'có dòng nhập 104: còn 1 dòng');
+});
+
+test('2.15.18 CSS: dòng nhập thẳng cột dòng ghi (cột STT 26 + đệm 5 + gap 10 = 41, STT giữa); khi gọn ẩn thead trong danh sách', () => {
+  assert.ok(PAGE.includes('#retailNote .note__pending tr.is-row,#remedyNote .note__pending tr.is-row{grid-template-columns:26px minmax(0,1fr) minmax(0,1fr) 46px;padding:6px 5px}'));
+  assert.ok(PAGE.includes('#remedyNote .note__pending tr.is-row>td:nth-child(1){text-align:center}'));
+  assert.ok(/#remedyBox\.kb-compact #remedyNote:has\(#remedyBody tr\[data-pid\]\)>\.note__list>table>thead[^{]*\{display:none\}/.test(PAGE));
 });
 
 test('2.15.10 savedY là vị trí TRƯỚC focus: trình duyệt tự cuộn khi focus (500 -> 540) thì gỡ khóa vẫn về 500; scroll lúc khóa không ghi đè', () => {
