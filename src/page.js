@@ -2641,7 +2641,17 @@ function remedySavePresetClick(){
 function savePreset(){
   var nameInp = $('#remedyName');
   var name = capWords(nameInp ? nameInp.value : '');
-  if (!name) { toast('Nhập tên đơn', 'error'); if (nameInp) nameInp.focus(); return; }
+  if (!name) {
+    /* 2.15.16: điện thoại: focus ô tên làm thanh chân bị ẩn; hỏi tên bằng hộp thoại (điền sẵn tên cũ nếu đang chọn đơn). */
+    if (nameInp && window.matchMedia && window.matchMedia('(max-width:640px)').matches) {
+      var selP = $('#remedyPreset');
+      var oldP = selP && selP.value ? findPreset(selP.value) : null;
+      var askedP = window.prompt('Tên đơn', oldP ? oldP.name : '');
+      if (askedP == null || !capWords(askedP)) return;
+      nameInp.value = askedP;
+      name = capWords(askedP);
+    } else { toast('Nhập tên đơn', 'error'); if (nameInp) nameInp.focus(); return; }
+  }
   if (nameInp) nameInp.value = name;
   var items = collectRemedyItems();
   if (!items.length) { toast('Chọn ít nhất 1 vị thuốc và nhập số gram', 'error'); return; }

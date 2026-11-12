@@ -3735,6 +3735,42 @@ test('2.15.15 Lưu đơn thuốc chén: điện thoại hỏi tên bằng prompt
   assert.equal(r.c.getDb().prescriptions.length, 0);
 });
 
+test('2.15.16 savePreset: đang chọn đơn có sẵn, ô tên trống: điện thoại hỏi bằng prompt (điền sẵn tên cũ, không focus); PC vẫn focus', () => {
+  function run(mobile, answer, existing) {
+    const els = {
+      '#remedyPreset': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(),
+      '#remedySearch': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+    };
+    const st = { n: 0, def: null, focus: 0 };
+    els['#remedyPreset'].value = 'RX1'; els['#remedyName'].value = ''; els['#remedyThang'].value = '1'; els['#remedyUnitPrice'].value = '1';
+    const doc = trackDoc(els);
+    const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH,
+      matchMedia: () => ({ matches: mobile }), prompt: (m, d) => { st.n++; st.def = d; return answer; }, confirm: () => true });
+    c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], updatedAt: 1, moneyUnit: 'dong',
+      prescriptions: [{ id: 'RX1', name: 'Đơn Cũ', items: [{ productId: 'p1', grams: 1 }], total: 1, thang: 1 }].concat(existing || []) });
+    c.setBase(1);
+    c.setRemedyItems([{ productId: 'p1', grams: 5 }]);
+    c.savePreset();
+    st.focus = doc.activeElement === els['#remedyName'] ? 1 : 0;
+    return { c, st };
+  }
+  let r = run(true, null);
+  assert.equal(r.st.n, 1); assert.equal(r.st.def, 'Đơn Cũ'); assert.equal(r.st.focus, 0, 'không focus trên điện thoại');
+  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn Cũ'); assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1, 'Hủy: không đổi gì');
+  r = run(true, '  ');
+  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1, 'rỗng: không đổi gì');
+  r = run(true, 'đơn mới');
+  assert.equal(r.c.getDb().prescriptions.length, 1);
+  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn Mới', 'đổi tên đơn đang chọn (confirm OK)');
+  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 5);
+  r = run(true, 'đơn khác', [{ id: 'RX2', name: 'Đơn Khác', items: [], total: 0, thang: 1 }]);
+  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn Cũ', 'trùng tên đơn khác vẫn bị chặn');
+  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1);
+  r = run(false, 'X');
+  assert.equal(r.st.n, 0, 'PC không gọi prompt'); assert.equal(r.st.focus, 1, 'PC vẫn focus ô tên');
+  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1);
+});
+
 /* 2.14.0 giai đoạn 2b – Nhập hàng: cùng mẫu Thuốc chén/Bán lẻ; tờ ghi và dòng nhập luôn hiện; chân một hàng; không khung Thành tiền riêng. */
 test('2.14.0 Nhập hàng: thanh có nhapSearch, không nhãn chữ; summary ẩn trực quan; tờ ghi nhapListBox luôn hiện (không hidden)', () => {
   const box = PAGE.slice(PAGE.indexOf('id="nhapBox"'), PAGE.indexOf('<div class="grid2 mt-18">'));
