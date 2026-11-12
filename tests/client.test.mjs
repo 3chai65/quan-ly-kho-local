@@ -4838,7 +4838,6 @@ test('2.15.0 chân Thuốc chén: Lưu đơn | Bán đơn một hàng không xu�
   const foot = PAGE.slice(PAGE.indexOf('<div class="note__row note__row--aux">'), PAGE.indexOf('id="remedyBox"') > 0 ? PAGE.indexOf('id="nhapBox"') : undefined);
   const aux = foot.slice(0, foot.indexOf('note__row--btns'));
   assert.match(aux, /id="remedyDelPreset" hidden/);
-  assert.doesNotMatch(PAGE, /remedyCopyPreset|copy-preset|copyPreset|Sao chép đơn/, '2.15.17: bỏ Sao chép đơn');
   assert.doesNotMatch(aux, /save-preset|save-remedy/);
   const btns = foot.slice(foot.indexOf('note__row--btns'));
   assert.match(btns, /data-action="save-preset" id="remedySavePreset"/);

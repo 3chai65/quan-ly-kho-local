@@ -47,7 +47,7 @@ body{margin:0;background:var(--bg);color:var(--text);
 font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
 padding-bottom:48px;-webkit-font-smoothing:antialiased}
 [hidden]{display:none!important}
-h1,h2,h3,p{margin:0}
+h1,h2,p{margin:0}
 a{color:var(--brand-text)}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .sprite{position:absolute;width:0;height:0;overflow:hidden}
@@ -2612,7 +2612,6 @@ function onPresetChange(){
 }
 /* 2.15.17: chọn "Đơn mới" hoặc đơn đã lưu đều ẩn ô tên (không đổi tên đơn có sẵn); đơn mới: "Lưu đơn" tự mở ô tên. */
 function remedyPresetPick(){
-  var sel = $('#remedyPreset');
   onPresetChange();
   remedyNameShow(false);
 }
