@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng chỉ nghe `127.0.0.1:8787`.
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.10.
+- Phiên bản hiện tại: 2.15.11.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -62,8 +62,9 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.10, commit ab59982, image `quan-ly-kho:2.15.10` (id 67037c9e…).
-- Đường lui: `quan-ly-kho:pre-2.15.10` = 2.15.9 (id 43ec6f62…, commit d8dae47); trước nữa `pre-2.15.9` = 2.15.8 (id 8c9654e0…).
+- Đang chạy: 2.15.11, commit 441b992, image `quan-ly-kho:2.15.11` (id 985a8974…).
+- Đường lui: `quan-ly-kho:pre-2.15.11` = 2.15.10 (id 67037c9e…, commit ab59982); trước nữa `pre-2.15.10` = 2.15.9 (id 43ec6f62…).
+- 2.15.11: khi khóa trang, `.top` bị ẩn (visibility); chạm sang ô khác trong thẻ khóa dùng `touchstart` preventDefault + focus preventScroll (người dùng luôn chạm thẳng vào ô, không dùng mũi tên Prev/Next). Nếu iOS không bật bàn phím từ touchstart thì đổi sang touchend. Chưa xác nhận trên iPhone thật.
 - Gợi ý tên (2.15.9): chỉ hiện khi gõ trọn một từ của tên (không phân biệt hoa/dấu/đ), mọi thiết bị, khung tối đa 3 mục cuộn trong; ô lọc Kho tồn/Lịch sử giữ luật cũ. Focus lập trình dùng preventScroll.
 - Giao diện điện thoại (2.15.3–2.15.10): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; khi nhập, trang bị KHÓA (body fixed, đỉnh thẻ cách mép trên 8px; chỉ `kbUnlock` gọi `window.scrollTo`); tờ ghi gọn 2 vị mới nhất (cuộn mượt kiểu guồng), tự co theo `visualViewport.height`. Số đo thật iPhone 14 Pro: khi bàn phím hiện vvH ≈ 357 (innerHeight 695), thanh phụ Prev/Next và viên địa chỉ Safari nằm DƯỚI đáy vv. Mở với `?kbdebug=1` có dòng chữ gỡ lỗi (vvH, vvTop, savedY, lock, lý do). Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật; chưa xác nhận 2.15.10 trên máy thật.
 - Tab PC có icon cùng màu icon thẻ (2.15.8, 2.15.10). Đã dọn code chết (2.15.7); lặp lại sau mỗi đợt chỉnh giao diện lớn.
