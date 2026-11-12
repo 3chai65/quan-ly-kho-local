@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.5] - 2026-11-12
+
+### Sửa
+- Giao diện điện thoại, bàn phím số: không còn kéo trang ngược lại khi người dùng cuộn (bỏ ép cuộn theo visualViewport `scroll`; chạm/cuộn/lăn chuột hủy mọi ép cuộn đang chờ).
+- Dòng đang nhập chừa 96px dưới đáy vùng thấy (trước 64px) để không bị thanh Prev/Next/Done của iOS che.
+- Sau "+": cuộn tới ô "Nhập tên" (dưới thanh tiêu đề dính) ở các mốc 0/100/300/600/1000ms, không phụ thuộc bàn phím đang hiện.
+- Chế độ gỡ lỗi `?kbdebug=1`: hiện một dòng số đo (vv.height, offsetTop, innerHeight, rect, delta) ở góc trên.
+- Thuốc chén: bỏ lựa chọn "Tạo đơn mới" trong ô chọn đơn (còn "Đơn mới" + đơn đã lưu) và bỏ nút "Lưu tên mới" (thừa: "Lưu đơn" tự mở ô tên; "Sao chép đơn" đã có).
+
 ## [2.15.4] - 2026-11-12
 
 ### Giao diện điện thoại

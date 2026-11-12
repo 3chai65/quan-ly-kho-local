@@ -39,12 +39,12 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), keepVisibleDelta: (typeof keepVisibleDelta === 'function' ? keepVisibleDelta : null), kbPadPx: (typeof kbPadPx === 'function' ? kbPadPx : null), keepPendingVisible: (typeof keepPendingVisible === 'function' ? keepPendingVisible : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
+  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), keepVisibleDelta: (typeof keepVisibleDelta === 'function' ? keepVisibleDelta : null), kbPadPx: (typeof kbPadPx === 'function' ? kbPadPx : null), searchScrollDelta: (typeof searchScrollDelta === 'function' ? searchScrollDelta : null), kbUserStop: (typeof kbUserStop === 'function' ? kbUserStop : null), kbSchedule: (typeof kbSchedule === 'function' ? kbSchedule : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), keepPendingVisible: (typeof keepPendingVisible === 'function' ? keepPendingVisible : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
   reconcileList: (typeof reconcileList === 'function' ? reconcileList : null), findProduct: (typeof findProduct === 'function' ? findProduct : null), renderStats: (typeof renderStats === 'function' ? renderStats : null),
-  loadPreset: (typeof loadPreset === 'function' ? loadPreset : null), remedyPresetPick: typeof remedyPresetPick === 'function' ? remedyPresetPick : null, remedyNewName: typeof remedyNewName === 'function' ? remedyNewName : null, recFix: (typeof recFix === 'function' ? recFix : null), resetDrafts: (typeof resetDrafts === 'function' ? resetDrafts : null), checkLimits: (typeof checkLimits === 'function' ? checkLimits : null),
+  loadPreset: (typeof loadPreset === 'function' ? loadPreset : null), remedyPresetPick: typeof remedyPresetPick === 'function' ? remedyPresetPick : null, recFix: (typeof recFix === 'function' ? recFix : null), resetDrafts: (typeof resetDrafts === 'function' ? resetDrafts : null), checkLimits: (typeof checkLimits === 'function' ? checkLimits : null),
   backupLastDate: (typeof backupLastDate === 'function' ? backupLastDate : null), commitRetailRow: (typeof commitRetailRow === 'function' ? commitRetailRow : null),
   commitRemedyRow: (typeof commitRemedyRow === 'function' ? commitRemedyRow : null), onSuggestKey: (typeof onSuggestKey === 'function' ? onSuggestKey : null),
   getRemedyItems: function(){ return remedyItems; },
@@ -2559,7 +2559,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 17, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 167); // 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 166); // 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3621,16 +3621,17 @@ test('2.14.0 Thuốc chén: #remedySearch nằm trong khung tờ ghi .note, trư
   const box = PAGE.slice(PAGE.indexOf('id="remedyBox"'), PAGE.indexOf('id="nhapBox"'));
   assert.doesNotMatch(box, /<label[^>]*for="remedy(Search|Date|Preset|Name)"/, 'còn nhãn chữ phía trên ô');
   assert.doesNotMatch(box, /Chọn vị thuốc|Gõ tên vị thuốc|hintbox/);
-  assert.match(box, /<option value="__new__">Tạo đơn mới<\/option>\s*<option value="">Đơn mới<\/option>/, 'dòng đầu là Tạo đơn mới, rồi "Đơn mới" (value giữ "")');
+assert.match(box, /<option value="">Đơn mới<\/option>/);
+  assert.doesNotMatch(box, /__new__|Tạo đơn mới/, '2.15.5: bỏ lựa chọn Tạo đơn mới');
 });
 
-test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, nút); tên đơn ẩn mặc định; Lưu đơn, Lưu tên mới, Bán đơn; id/data-action giữ nguyên', () => {
+test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, nút); tên đơn ẩn mặc định; Lưu đơn, Bán đơn (2.15.5 bỏ Lưu tên mới); id/data-action giữ nguyên', () => {
   const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
   const foot = note.slice(note.indexOf('class="note__foot"'));
   assert.equal((foot.match(/class="note__row/g) || []).length, 3, 'chân phải đúng 3 hàng (tổng, Xóa/Sao chép, nút chính)');
   assert.ok(foot.indexOf('id="remedyName"') < foot.indexOf('note__row--btns'), 'ô tên nằm trên hàng nút');
   assert.match(foot, /<input[^>]*id="remedyName"[^>]*\shidden[^>]*>/, 'ô tên đơn phải ẩn mặc định');
-  assert.match(foot, /data-action="preset-newname" id="remedyNewName"|id="remedyNewName"[^>]*data-action="preset-newname"/);
+  assert.doesNotMatch(PAGE, /remedyNewName|preset-newname|__new__|nm-full|nm-short|Lưu tên mới/, '2.15.5: không còn nút/action/option cũ');
   assert.match(foot, /data-action="save-preset"/);
   assert.match(foot, /data-action="save-remedy"/);
   for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedySavePreset', 'remedySaveLabel', 'remedyDelPreset', 'remedyCopyPreset']) assert.match(foot, new RegExp('id="' + id + '"'), 'chân thiếu ' + id);
@@ -3644,13 +3645,13 @@ test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, n
   assert.match(PAGE, /if \(!it\) continue;\n    var p = findProduct\(it\.productId\);/);
 });
 
-test('2.14.0 Thuốc chén hành vi: "Tạo đơn mới" gọi đường đơn mới, trả select về "", focus #remedySearch, không lưu', () => {
+test('2.15.5 Thuốc chén hành vi: chọn "Đơn mới" (value rỗng) xóa tờ ghi như cũ, ô tên ẩn, không lưu', () => {
   const focusN = { n: 0 };
   const els = {
     '#remedyPreset': makeEl(), '#remedySearch': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(),
     '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
   };
-  els['#remedyPreset'].value = '__new__';
+  els['#remedyPreset'].value = '';
   const doc = trackDoc(els);
   els['#remedySearch'].focus = function () { focusN.n++; };
   els['#remedyName'].hidden = false;
@@ -3662,12 +3663,11 @@ test('2.14.0 Thuốc chén hành vi: "Tạo đơn mới" gọi đường đơn m
   c.remedyPresetPick();
   assert.equal(els['#remedyPreset'].value, '', 'select phải trả về ""');
   assert.equal(c.getRemedyItems().length, 0, 'đi đường đơn mới: tờ ghi được đặt lại như "— Đơn mới —"');
-  assert.equal(focusN.n, 1, 'phải focus #remedySearch');
   assert.equal(els['#remedyName'].hidden, true, 'chọn đơn khác/đơn mới thì ô tên ẩn');
   assert.equal(JSON.stringify(c.getDb().prescriptions), rxBefore, 'không được lưu hay sửa đơn');
 });
 
-test('2.14.0 Thuốc chén hành vi: "Lưu tên mới" mở ô tên đơn mới; chưa có tên và chưa chọn đơn thì chỉ mở ô tên', () => {
+test('2.15.5 Thuốc chén hành vi: "Lưu đơn" khi chưa có tên và chưa chọn đơn thì mở ô tên, không lưu', () => {
   const els = {
     '#remedyPreset': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(),
     '#remedySearch': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
@@ -3677,10 +3677,8 @@ test('2.14.0 Thuốc chén hành vi: "Lưu tên mới" mở ô tên đơn mới;
   const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
   c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
   c.setBase(1);
-  c.remedyNewName();
-  assert.equal(els['#remedyName'].hidden, false, 'Lưu tên mới phải hiện ô tên');
-  assert.equal(els['#remedyName'].value, '');
   c.remedySavePresetClick();
+  assert.equal(els['#remedyName'].hidden, false, 'Lưu đơn khi chưa có tên phải hiện ô tên');
   assert.equal(c.getDb().prescriptions.length, 0, 'chưa có tên thì không lưu đơn');
   els['#remedyName'].value = 'Đơn B';
   c.remedySavePresetClick();
@@ -4163,8 +4161,8 @@ test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc g�
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
 /* 2.12.0 thêm nhap-add; 2.13.0 thêm brand-devices (không tính khi so với danh sách 1023b40). */
 const NEW_213 = ['nhap-add', 'brand-devices'];
-/* 2.14.0 (Thuốc chén): nút "Lưu tên mới" mở ô tên đơn mới. */
-const NEW_214 = ['preset-newname'];
+/* 2.14.0 thêm preset-newname; 2.15.5 bỏ lại. */
+const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
@@ -4584,13 +4582,13 @@ const AB_RENAME_GOLDEN = "[{\"label\":\"R1 đổi tên đơn đang chọn, xác 
 test('2.14.0 A/B đổi tên đơn: db giống hệt golden 2.13.2 (R1 đổi tên OK, R2 từ chối → đơn mới)', () => {
   assert.equal(abRenameScenario(), AB_RENAME_GOLDEN);
 });
-test('2.14.0 N2 cấu trúc: Lưu tên mới khi đang chọn đơn gọi copyPreset; remedyPresetPick hiện ô tên theo đơn đang chọn', () => {
+test('2.15.5 cấu trúc: remedyPresetPick hiện ô tên theo đơn đang chọn; không còn remedyNewName', () => {
   const body = name => {
     const i = PAGE.indexOf('\nfunction ' + name + '(');
     const j = PAGE.indexOf('\n}\n', i);
     return PAGE.slice(i, j);
   };
-  assert.match(body('remedyNewName'), /copyPreset\(\);/);
+  assert.equal(PAGE.includes('function remedyNewName'), false);
   assert.match(body('remedyPresetPick'), /remedyNameShow\(!!\(sel && sel\.value\)\);/);
 });
 
@@ -4725,7 +4723,7 @@ test('2.15.0 placeholder rút gọn "Nhập tên" cho mọi ô tìm vị thuốc
   }
 });
 
-test('2.15.0 Thuốc chén: option "Đơn mới" giữ value rỗng; "Tạo đơn mới" vẫn là __new__; chỉ đổi chữ hiển thị', () => {
+test('2.15.5 Thuốc chén: chỉ còn option "Đơn mới" (value rỗng) + đơn đã lưu; không còn __new__', () => {
   const opts = [];
   const sel = makeEl();
   sel.appendChild = o => { opts.push(o); return o; };
@@ -4736,7 +4734,7 @@ test('2.15.0 Thuốc chén: option "Đơn mới" giữ value rỗng; "Tạo đơ
   const c = loadClient({ document: doc });
   c.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
   c.renderPresetOptions();
-  assert.deepEqual(opts.map(o => [o.value, o.textContent]), [['__new__', 'Tạo đơn mới'], ['', 'Đơn mới']]);
+  assert.deepEqual(opts.map(o => [o.value, o.textContent]), [['', 'Đơn mới']]);
 });
 
 test('2.15.0 Kho tồn: không còn ô #invSort; thiếu ô thì vẫn sắp theo bán chạy nhất (rồi theo tên)', () => {
@@ -4775,16 +4773,15 @@ test('2.15.0 thanh tiêu đề điện thoại: ô tìm/ô chọn đơn không c
   assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 90px;min-width:90px\}/);
 });
 
-test('2.15.0 chân Thuốc chén: Lưu đơn | Tên mới | Bán đơn một hàng không xuống dòng; Xóa/Sao chép ở hàng phụ riêng; id/action/aria-label giữ', () => {
+test('2.15.0 chân Thuốc chén: Lưu đơn | Bán đơn một hàng không xuống dòng; Xóa/Sao chép ở hàng phụ riêng; id/action/aria-label giữ', () => {
   assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
   const foot = PAGE.slice(PAGE.indexOf('<div class="note__row note__row--aux">'), PAGE.indexOf('id="remedyBox"') > 0 ? PAGE.indexOf('id="nhapBox"') : undefined);
   const aux = foot.slice(0, foot.indexOf('note__row--btns'));
   assert.match(aux, /id="remedyDelPreset" hidden/);
   assert.match(aux, /id="remedyCopyPreset" hidden/);
-  assert.doesNotMatch(aux, /save-preset|save-remedy|preset-newname/);
+  assert.doesNotMatch(aux, /save-preset|save-remedy/);
   const btns = foot.slice(foot.indexOf('note__row--btns'));
   assert.match(btns, /data-action="save-preset" id="remedySavePreset"/);
-  assert.match(btns, /data-action="preset-newname" id="remedyNewName" aria-label="Lưu tên mới"/);
   assert.match(btns, /data-action="save-remedy"/);
   assert.match(PAGE, /\.note__row--aux:not\(:has\(\.btn:not\(\[hidden\]\)\)\)\{display:none\}/);
 });
@@ -4926,12 +4923,12 @@ test('2.15.3 footBarShow: chỉ hiện khi điện thoại, thẻ mở, tờ ghi
   assert.equal(app.footBarShow(null), false);
 });
 
-test('2.15.4 keepVisibleDelta: chỉ cuộn khi dòng bị bàn phím che hoặc nằm trên đỉnh; không bàn phím thì 0', () => {
+test('2.15.5 keepVisibleDelta: chỉ cuộn khi dòng bị bàn phím che hoặc nằm trên đỉnh; không bàn phím thì 0', () => {
   const IH = 852, VV = 852 * 0.6; /* bàn phím ~40% màn hình */
-  /* bị che: đáy 700 > đáy vùng thấy (511.2 - 64 = 447.2) */
+  /* bị che: đáy 700 > đáy vùng thấy (511.2 - 96 = 447.2) */
   const d = app.keepVisibleDelta(640, 700, 0, VV, IH);
-  assert.equal(d, Math.round(700 - (VV - 64)));
-  assert.ok(700 - d <= VV - 64 + 1, 'sau khi cuộn đáy dòng nằm trên thanh phụ');
+  assert.equal(d, Math.round(700 - (VV - 96)));
+  assert.ok(700 - d <= VV - 96 + 1, 'sau khi cuộn đáy dòng nằm trên thanh phụ');
   assert.equal(app.keepVisibleDelta(100, 160, 0, VV, IH), 0, 'đã thấy thì không cuộn');
   assert.equal(app.keepVisibleDelta(-120, -60, 0, VV, IH), -128, 'nằm trên đỉnh: cuộn lên (đỉnh+8)');
   assert.equal(app.keepVisibleDelta(640, 700, 0, IH, IH), 0, 'vv.height = innerHeight (chưa có bàn phím): 0');
@@ -4939,12 +4936,12 @@ test('2.15.4 keepVisibleDelta: chỉ cuộn khi dòng bị bàn phím che hoặc
   /* dòng cao hơn vùng thấy: ưu tiên đỉnh dòng */
   assert.equal(app.keepVisibleDelta(300, 900, 0, VV, IH), 300 - 8);
   /* visualViewport bị pan xuống (offsetTop) */
-  assert.equal(app.keepVisibleDelta(900, 960, 400, VV, IH), Math.round(960 - (400 + VV - 64)));
-  assert.equal(app.kbPadPx(IH, 0, VV), Math.round(IH - VV) + 64);
+  assert.equal(app.keepVisibleDelta(900, 960, 400, VV, IH), Math.round(960 - (400 + VV - 96)));
+  assert.equal(app.kbPadPx(IH, 0, VV), Math.round(IH - VV) + 96);
   assert.equal(app.kbPadPx(IH, 0, IH), 0);
 });
 
-test('2.15.4 trình tự: focusin khi chưa có bàn phím, visualViewport đổi trễ -> tính lại ở các lần trễ và khi vv resize; ngoài dòng đang nhập thì không cuộn', () => {
+test('2.15.5 trình tự: focusin khi chưa có bàn phím, visualViewport đổi trễ -> tính lại ở các lần trễ và khi vv resize; ngoài dòng đang nhập thì không cuộn', () => {
   const IH = 852;
   const timers = [];
   const vvL = {};
@@ -4964,7 +4961,7 @@ test('2.15.4 trình tự: focusin khi chưa có bàn phím, visualViewport đổ
   vv.height = IH * 0.6;
   timers[0].fn();
   const r = row.getBoundingClientRect();
-  assert.ok(scrollY > 0 && r.bottom <= vv.height - 64 + 1, 'lần tính lại 100ms đưa dòng lên trên bàn phím');
+  assert.ok(scrollY > 0 && r.bottom <= vv.height - 96 + 1, 'lần tính lại 100ms đưa dòng lên trên bàn phím');
   assert.equal(doc.documentElement.style.vars['--kb-pad'], c.kbPadPx(IH, 0, vv.height) + 'px', 'chừa chỗ cuối trang để cuộn được');
   const y1 = scrollY; timers[1].fn(); assert.equal(scrollY, y1, 'đã thấy thì không giật');
   /* sự kiện vv resize khi vẫn là activeElement */
@@ -4977,7 +4974,7 @@ test('2.15.4 trình tự: focusin khi chưa có bàn phím, visualViewport đổ
   assert.equal(scrollY, 0);
 });
 
-test('2.15.4 bàn phím hiện sau lần tính đầu: vv resize là đường duy nhất (không timer) vẫn đưa dòng lên', () => {
+test('2.15.5 bàn phím hiện sau lần tính đầu: vv resize là đường duy nhất (không timer) vẫn đưa dòng lên', () => {
   const IH = 852, vv = { height: IH * 0.55, offsetTop: 0, addEventListener() {} };
   let scrollY = 0;
   const row = { getBoundingClientRect() { const top = 900 - scrollY; return { top, bottom: top + 60, height: 60 }; } };
@@ -4985,7 +4982,7 @@ test('2.15.4 bàn phím hiện sau lần tính đầu: vv resize là đường d
   const doc = limitDoc({}); doc.activeElement = input; doc.documentElement = { style: { setProperty() {} } };
   const c = loadClient({ document: doc, innerHeight: IH, visualViewport: vv, scrollBy(x, y) { scrollY += y; }, setTimeout() { return 0; }, clearTimeout() {} });
   c.onVvChange();
-  assert.ok(scrollY > 0 && row.getBoundingClientRect().bottom <= vv.height - 64 + 1);
+  assert.ok(scrollY > 0 && row.getBoundingClientRect().bottom <= vv.height - 96 + 1);
 });
 
 test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗi (thiếu số) thì ở ô số', () => {
@@ -5037,4 +5034,85 @@ test('2.15.3 updateFootBars: thẻ mở trên điện thoại gắn foot-fixed; 
   const c2 = loadClient({ document: doc, matchMedia: () => ({ matches: false }), innerHeight: 852 });
   c2.updateFootBars();
   assert.ok(!box.cl.has('foot-fixed'), 'máy tính không gắn foot-fixed');
+});
+
+/* ===== 2.15.5 ===== */
+test('2.15.5 keepVisibleDelta: dòng bị thanh phụ bàn phím cắt nửa dưới phải cuộn; đã thấy trọn có lề thì 0', () => {
+  const IH = 852, VV = 515; /* iPhone: vv.height ~ đỉnh bàn phím */
+  /* ảnh thật: đáy dòng ~470 > thanh phụ bắt đầu ~458: bị cắt */
+  assert.ok(app.keepVisibleDelta(380, 470, 0, VV, IH) >= 47, 'đáy 470 phải được kéo lên <= 515-96=419');
+  assert.equal(app.keepVisibleDelta(300, 419, 0, VV, IH), 0, 'đáy đúng lề: 0');
+  assert.equal(app.keepVisibleDelta(300, 400, 0, VV, IH), 0, 'thấy trọn có lề >= 96: 0');
+  assert.ok(VV - 419 >= 80, 'lề dưới >= 80px');
+});
+
+test('2.15.5 searchScrollDelta: ô tìm ngoài màn hình phía trên cuộn lên đúng; không bàn phím vẫn đưa vào tầm nhìn', () => {
+  const IH = 852, VV = 515, BAR = 58;
+  assert.equal(app.searchScrollDelta(-300, -260, 0, VV, IH, BAR), -300 - (BAR + 12), 'ô tìm trên cao: cuộn lên để đỉnh = đáy .top + 12');
+  assert.equal(app.searchScrollDelta(20, 60, 0, IH, IH, BAR), 20 - (BAR + 12), 'chưa có bàn phím: ô tìm bị .top che vẫn được đưa ra');
+  assert.equal(app.searchScrollDelta(-300, -260, 0, IH, IH, BAR), -370, 'chưa có bàn phím (vv=innerHeight) vẫn cuộn lên');
+  assert.equal(app.searchScrollDelta(120, 160, 0, VV, IH, BAR), 0, 'đã thấy: 0');
+  assert.ok(app.searchScrollDelta(700, 740, 0, VV, IH, BAR) > 0, 'ở dưới bàn phím: cuộn xuống');
+  assert.equal(app.searchScrollDelta(120, 160, 0, VV, IH, 0), 0, 'barBottom không đo được: mặc định 60');
+});
+
+function kbRig(vvH) {
+  const IH = 852, timers = [], docL = {}, vvL = {};
+  const state = { scrolls: [], y: 0 };
+  const vv = { height: vvH, offsetTop: 0, addEventListener(t, fn) { (vvL[t] ||= []).push(fn); } };
+  const row = { getBoundingClientRect() { const top = 1200 - state.y; return { top, bottom: top + 60, height: 60 }; } };
+  const input = { tagName: 'INPUT', id: '', closest(s) { return /data-pid/.test(s) ? row : null; } };
+  const doc = limitDoc({}); doc.activeElement = input;
+  doc.documentElement = { style: { setProperty() {} } };
+  doc.addEventListener = (t, fn, o) => { (docL[t] ||= []).push({ fn, o }); };
+  const c = loadClient({ document: doc, innerHeight: IH, visualViewport: vv,
+    scrollBy(x, y) { state.scrolls.push(y); state.y += y; },
+    setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  return { c, timers, docL, vvL, state, input, vv };
+}
+
+test('2.15.5 chạm/cuộn hủy mọi ép cuộn (kể cả timer đã đặt); vv resize ngay sau đó cũng không ép', () => {
+  const k = kbRig(852);
+  k.c.initFootBars();
+  for (const n of ['touchstart', 'touchmove', 'wheel', 'pointerdown']) assert.ok((k.docL[n] || []).some(l => l.fn.name === 'kbUserStop' && l.o && l.o.passive === true), n + ' passive');
+  k.c.keepPendingVisible({ target: k.input });
+  assert.equal(k.timers.length, 4);
+  k.vv.height = 852 * 0.6;
+  k.docL.touchstart.find(l => l.fn.name === 'kbUserStop').fn();
+  k.timers.forEach(x => x.fn());
+  assert.equal(k.state.scrolls.length, 0, 'sau touchstart các timer cũ không cuộn nữa');
+  k.vvL.resize.forEach(fn => fn());
+  assert.equal(k.state.scrolls.length, 0, 'vv resize ngay sau khi người dùng chạm: không ép');
+  /* focus mới thì được ép lại */
+  k.c.keepPendingVisible({ target: k.input });
+  assert.ok(k.state.scrolls.length > 0);
+});
+
+test('2.15.5 visualViewport chỉ nghe resize, không nghe scroll (không kéo ngược khi người dùng cuộn)', () => {
+  const k = kbRig(852 * 0.6);
+  k.c.initFootBars();
+  assert.ok(k.vvL.resize && k.vvL.resize.length === 1);
+  assert.equal(k.vvL.scroll, undefined, 'không được đăng ký vv scroll');
+  k.vvL.resize[0]();
+  assert.ok(k.state.scrolls.length > 0, 'vv resize vẫn ép khi bàn phím đổi');
+});
+
+test('2.15.5 refocusSearch: lập lịch cuộn tới ô tìm ở các mốc trễ; chạm giữa chừng thì dừng', () => {
+  const IH = 852, timers = [], y = { v: 0, s: [] };
+  const vv = { height: 515, offsetTop: 0, addEventListener() {} };
+  const bar = { getBoundingClientRect() { return { top: 0, bottom: 58 }; } };
+  const input = { tagName: 'INPUT', id: 'retailSearch', value: '', select() {}, setAttribute() {},
+    closest() { return null; }, getBoundingClientRect() { const t = -300 - y.v; return { top: t, bottom: t + 40 }; } };
+  input.focus = () => { doc.activeElement = input; };
+  const doc = limitDoc({ '#retailSearch': input, '.top': bar });
+  doc.documentElement = { style: { setProperty() {} } };
+  const c = loadClient({ document: doc, innerHeight: IH, visualViewport: vv,
+    scrollBy(x, d) { y.s.push(d); y.v += d; }, setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  c.refocusSearch('#retailSearch', 'retail');
+  assert.ok(y.s.length >= 1 && y.s[0] < 0, 'cuộn lên ngay');
+  assert.deepEqual(timers.map(x => x.ms).slice(0, 4), [100, 300, 600, 1000]);
+  const n = y.s.length;
+  c.kbUserStop();
+  timers.forEach(x => x.fn());
+  assert.equal(y.s.length, n, 'sau khi chạm không cuộn thêm');
 });

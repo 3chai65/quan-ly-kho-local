@@ -351,7 +351,6 @@ td.c-qty{position:relative}
 .note__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end}
 .note__row+.note__row{margin-top:8px}
 .note__row:first-child{justify-content:flex-start}
-.nm-short{display:none}
 .note__row--aux:not(:has(.btn:not([hidden]))){display:none}
 .note__row--aux{margin-top:8px}
 .note__name{flex:1 1 160px;min-width:0}
@@ -401,14 +400,11 @@ td.c-qty{position:relative}
 @media (max-width:600px){
 #remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
 /* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
-/* 2.15.0: điện thoại – Lưu đơn | Tên mới | Bán đơn đúng một hàng; Xóa/Sao chép đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
+/* 2.15.0: điện thoại – Lưu đơn | Bán đơn đúng một hàng; Xóa/Sao chép đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
 #remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
 #remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:44px;padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
-#remedyNote .note__row--btns #remedyNewName{flex:0 0 auto}
 #remedyNote .note__row--btns .btn .ico{display:none}
 #remedyNote .note__row--btns #remedySaveLabel{overflow:hidden;min-width:0}
-#remedyNote .note__row--btns .nm-full{display:none}
-#remedyNote .note__row--btns .nm-short{display:inline}
 #remedyNote .note__row--aux .btn{flex:1 1 0;min-height:34px}
 #remedyNote .note__row--aux{margin-top:6px}
 #remedyNote .note__row--aux .btn{white-space:nowrap;padding-left:8px;padding-right:8px}
@@ -731,7 +727,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
         <div class="card__bar">
           <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>Thuốc chén</span>
           <select class="inp card__bar-preset" id="remedyPreset" aria-label="Đơn có sẵn">
-            <option value="__new__">Tạo đơn mới</option>
             <option value="">Đơn mới</option>
           </select>
           <div class="datefield card__bar-date">
@@ -796,7 +791,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
               <button class="btn btn--sm" type="button" data-action="save-preset" id="remedySavePreset">
                 <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
               </button>
-              <button class="btn btn--sm" type="button" data-action="preset-newname" id="remedyNewName" aria-label="Lưu tên mới" title="Lưu tên mới"><span class="nm-full">Lưu tên mới</span><span class="nm-short" aria-hidden="true">Tên mới</span></button>
               <button class="btn btn--primary" type="button" data-action="save-remedy" data-keep-focus>
                 <svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg>Bán đơn
               </button>
@@ -2117,6 +2111,7 @@ function refocusSearch(sel, key){
   s.focus();
   closeSuggest(key);
   updateFootBars();
+  kbSchedule(s); /* 2.15.5: cuộn tới ô tìm ở các mốc trễ kể cả khi không có focusin mới */
 }
 function addRemedyToNote(){
   var row = $('#remedyBody tr[data-pid]');
@@ -2537,10 +2532,6 @@ function renderPresetOptions(){
   if (!sel) return;
   var cur = sel.value;
   sel.textContent = '';
-  /* 2.14.0: "Tạo đơn mới" là dòng đầu; xử lý ở remedyPresetPick, không bao giờ là giá trị lưu. */
-  var oNew = el('option', null, 'Tạo đơn mới');
-  oNew.value = '__new__';
-  sel.appendChild(oNew);
   var o0 = el('option', null, 'Đơn mới');
   o0.value = '';
   sel.appendChild(o0);
@@ -2622,33 +2613,15 @@ function onPresetChange(){
   calcRemedy();
   updatePresetUI();
 }
-/* 2.14.0 (giai đoạn 2a): chọn "Tạo đơn mới" = đường đơn mới (như "— Đơn mới —"), rồi trỏ về ô tìm vị. */
+/* 2.15.5: chọn "Đơn mới" (value rỗng) hoặc đơn đã lưu; ô tên chỉ hiện khi đang chọn đơn đã lưu (đơn mới: "Lưu đơn" tự mở ô tên). */
 function remedyPresetPick(){
   var sel = $('#remedyPreset');
-  var isNew = sel && sel.value === '__new__';
-  if (isNew) sel.value = '';
   onPresetChange();
   remedyNameShow(!!(sel && sel.value));
-  if (isNew) {
-    var s = $('#remedySearch');
-    if (s) { s.focus(); if (s.scrollIntoView) s.scrollIntoView({ block: 'center' }); }
-  }
 }
 function remedyNameShow(show){
   var n = $('#remedyName');
   if (n) n.hidden = !show;
-}
-/* 2.14.0: "Lưu tên mới" = đơn mới (bỏ chọn đơn có sẵn), hiện ô tên ở chân tờ ghi. */
-function remedyNewName(){
-  var sel = $('#remedyPreset');
-  /* N2: đang chọn đơn có sẵn → sao chép sang tên mới (copyPreset), giữ đơn đang chọn. */
-  if (sel && sel.value) { copyPreset(); return; }
-  if (sel) sel.value = '';
-  var n = $('#remedyName');
-  if (n) n.value = '';
-  updatePresetUI();
-  remedyNameShow(true);
-  if (n) n.focus();
 }
 /* 2.14.0: chưa có tên và chưa chọn đơn thì chỉ mở ô tên (không đổi logic savePreset). */
 function remedySavePresetClick(){
@@ -4831,7 +4804,6 @@ function handleAction(btn){
     case 'save-retail': saveRetail(); break;
     case 'save-remedy': saveRemedy(); break;
     case 'save-preset': remedySavePresetClick(); break;
-    case 'preset-newname': remedyNewName(); break;
     case 'del-preset': delPreset(); break;
     case 'copy-preset': copyPreset(); break;
     case 'edit-prod': openEdit(id); break;
@@ -5126,10 +5098,10 @@ function scheduleFootBars(){
   footBarSched = true;
   setTimeout(function(){ footBarSched = false; updateFootBars(); }, 30);
 }
-/* 2.15.4: giữ dòng đang nhập (hoặc ô tìm) nhìn thấy phía trên bàn phím. Tính theo visualViewport (offsetTop + height), không theo cả màn hình.
+/* 2.15.5: giữ dòng đang nhập (hoặc ô tìm) nhìn thấy phía trên bàn phím. Tính theo visualViewport (offsetTop + height), không theo cả màn hình.
    Hàm thuần: trả độ cuộn (px, dương = cuộn xuống). Chỉ cuộn khi bàn phím đang hiện (vvH nhỏ hơn innerHeight đáng kể) và phần tử bị che
-   (đáy > đáy vùng thấy, chừa 64px cho thanh Prev/Next/Done của iOS) hoặc nằm trên đỉnh vùng thấy; đã thấy thì 0. */
-var KB_BAR = 64, KB_MIN = 80;
+   (đáy > đáy vùng thấy, chừa KB_BAR=96px cho thanh Prev/Next/Done của iOS ~57px + lề) hoặc nằm trên đỉnh vùng thấy; đã thấy thì 0. */
+var KB_BAR = 96, KB_MIN = 80;
 function keepVisibleDelta(top, bottom, vvTop, vvH, innerH){
   if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
   var visTop = vvTop + 8, visBot = vvTop + vvH - KB_BAR;
@@ -5143,20 +5115,40 @@ function keepVisibleDelta(top, bottom, vvTop, vvH, innerH){
   }
   return Math.abs(d) < 2 ? 0 : Math.round(d);
 }
+/* 2.15.5: ô tìm (Nhập tên): luôn đưa vào tầm nhìn, KHÔNG phụ thuộc có bàn phím hay chưa. Đỉnh ô >= đáy thanh tiêu đề dính + 12px;
+   đáy ô <= đáy vùng thấy (trừ KB_BAR nếu có bàn phím, ngược lại 12px). barBottom = đáy .top (mặc định 60). */
+function searchScrollDelta(top, bottom, vvTop, vvH, innerH, barBottom){
+  var ih = innerH > 0 ? innerH : 0, vh = vvH > 0 ? vvH : ih;
+  var kb = vvH > 0 && ih > 0 && vvH < ih - KB_MIN;
+  var visTop = Math.max(vvTop || 0, barBottom > 0 ? barBottom : 60) + 12;
+  var visBot = (vvTop || 0) + vh - (kb ? KB_BAR : 12);
+  var d = 0;
+  if (top < visTop) d = top - visTop;
+  else if (bottom > visBot) { d = bottom - visBot; if (top - d < visTop) d = top - visTop; }
+  return Math.abs(d) < 2 ? 0 : Math.round(d);
+}
 /* Chỗ trống cuối trang (px) để trang còn cuộn được khi bàn phím chiếm đáy: chiều cao bàn phím + thanh phụ; 0 khi chưa có bàn phím. */
 function kbPadPx(innerH, vvTop, vvH){
   if (!(vvH > 0) || !(innerH > 0) || !(vvH < innerH - KB_MIN)) return 0;
   return Math.max(0, Math.round(innerH - vvTop - vvH)) + KB_BAR;
 }
-var kbTimers = [];
-function kbClear(){ kbTimers.forEach(clearTimeout); kbTimers = []; }
-/* Phần tử cần thấy: dòng đang nhập (ô SL, giá, thành tiền) hoặc ô tìm của Bán lẻ/Thuốc chén. */
+var kbTimers = [], kbGen = 0, kbUserAt = 0, kbDebug = false;
+function kbClear(){ kbGen++; kbTimers.forEach(clearTimeout); kbTimers = []; }
+/* Người dùng chạm/cuộn: hủy mọi ép cuộn đang chờ và không ép lại khi vv resize trong 800ms. */
+function kbUserStop(){ kbClear(); kbUserAt = Date.now(); }
+/* Phần tử cần thấy: dòng đang nhập (ô SL, giá, thành tiền) hoặc chính ô tìm của Bán lẻ/Thuốc chén. */
 function kbTargetOf(t){
   if (!t || !t.closest || t.tagName !== 'INPUT') return null;
   var row = t.closest('#retailBody tr[data-pid], #remedyBox #remedyBody tr[data-pid], #remedyBody tr[data-pid]');
   if (row) return row;
-  if (t.id === 'retailSearch' || t.id === 'remedySearch') return t.closest('.sug') || t;
+  if (t.id === 'retailSearch' || t.id === 'remedySearch') return t;
   return null;
+}
+function kbDbg(r, d, vvH, vvTop, ih){
+  if (!kbDebug) return;
+  var b = $('#kbDbg');
+  if (!b) { b = doc.createElement('div'); b.id = 'kbDbg'; b.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#111;color:#0f0;font:11px monospace;padding:2px 4px'; doc.body.appendChild(b); }
+  b.textContent = 'vvH ' + Math.round(vvH) + ' vvTop ' + Math.round(vvTop) + ' ih ' + ih + ' top ' + Math.round(r.top) + ' bot ' + Math.round(r.bottom) + ' d ' + d + ' y ' + Math.round(window.scrollY || 0);
 }
 function keepVisibleNow(t){
   var el = kbTargetOf(t);
@@ -5167,17 +5159,24 @@ function keepVisibleNow(t){
   var root = doc.documentElement;
   if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', kbPadPx(ih, vvTop, vvH) + 'px');
   var r = el.getBoundingClientRect();
-  var d = keepVisibleDelta(r.top, r.bottom, vvTop, vvH, ih);
+  var d;
+  if (el === t) {
+    var bar = doc.querySelector ? doc.querySelector('.top') : null;
+    d = searchScrollDelta(r.top, r.bottom, vvTop, vvH, ih, bar && bar.getBoundingClientRect ? bar.getBoundingClientRect().bottom : 60);
+  } else d = keepVisibleDelta(r.top, r.bottom, vvTop, vvH, ih);
+  kbDbg(r, d, vvH, vvTop, ih);
   if (d) window.scrollBy(0, d);
 }
-/* focusin (kể cả focus lập trình sau khi chọn gợi ý/bấm +): tính ngay và lại ở 100/300/600/1000ms vì iOS đổi visualViewport trễ khi chuyển bàn phím chữ <-> số. */
-function keepPendingVisible(e){
-  var t = e && e.target;
+/* focusin / sau "+": tính ngay và lại ở 100/300/600/1000ms vì iOS đổi visualViewport trễ khi chuyển bàn phím chữ <-> số. Người dùng chạm/cuộn thì hủy hết. */
+function kbSchedule(t){
   kbClear();
+  kbUserAt = 0;
   if (!kbTargetOf(t)) return;
+  var g = kbGen;
   keepVisibleNow(t);
-  [100, 300, 600, 1000].forEach(function(ms){ kbTimers.push(setTimeout(function(){ keepVisibleNow(t); }, ms)); });
+  [100, 300, 600, 1000].forEach(function(ms){ kbTimers.push(setTimeout(function(){ if (g === kbGen) keepVisibleNow(t); }, ms)); });
 }
+function keepPendingVisible(e){ kbSchedule(e && e.target); }
 function kbRelease(){
   setTimeout(function(){
     if (kbTargetOf(doc.activeElement)) return;
@@ -5186,7 +5185,8 @@ function kbRelease(){
     if (root && root.style && root.style.setProperty) root.style.setProperty('--kb-pad', '0px');
   }, 400);
 }
-function onVvChange(){ scheduleFootBars(); var a = doc.activeElement; if (kbTargetOf(a)) keepVisibleNow(a); }
+/* Chỉ visualViewport 'resize' (bàn phím hiện/đổi) mới ép; KHÔNG nghe 'scroll' (người dùng cuộn sẽ bị kéo ngược). */
+function onVvChange(){ scheduleFootBars(); if (Date.now() - kbUserAt < 800) return; var a = doc.activeElement; if (kbTargetOf(a)) keepVisibleNow(a); }
 function initFootBars(){
   if (typeof window.addEventListener === 'function') {
     window.addEventListener('scroll', scheduleFootBars, { passive: true });
@@ -5194,8 +5194,9 @@ function initFootBars(){
   }
   if (window.visualViewport && window.visualViewport.addEventListener) {
     window.visualViewport.addEventListener('resize', onVvChange);
-    window.visualViewport.addEventListener('scroll', onVvChange);
   }
+  try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
+  ['touchstart', 'touchmove', 'wheel', 'pointerdown'].forEach(function(n){ doc.addEventListener(n, kbUserStop, { passive: true }); });
   doc.addEventListener('focusin', function(e){ scheduleFootBars(); keepPendingVisible(e); });
   doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); });
   ['retailBox', 'remedyBox'].forEach(function(id){
