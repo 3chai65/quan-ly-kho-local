@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.15] - 2026-11-12
+
+### Fixed
+- iPhone: "Lưu đơn" (Thuốc chén, Đơn mới, chưa có tên) không phản hồi vì ô tên nằm trong thanh chân bị ẩn khi focus. Nay hỏi tên bằng hộp thoại (Hủy/rỗng: không lưu); PC giữ luồng cũ.
+
 ## [2.15.14] - 2026-11-12
 
 ### Changed

@@ -3676,6 +3676,36 @@ test('2.15.5 Thuốc chén hành vi: "Lưu đơn" khi chưa có tên và chưa c
   assert.equal(c.getDb().prescriptions.length, 0, 'tờ ghi rỗng: savePreset báo lỗi, không lưu');
 });
 
+test('2.15.15 Lưu đơn thuốc chén: điện thoại hỏi tên bằng prompt (Hủy/rỗng không lưu, có tên lưu đúng một đơn); PC không gọi prompt', () => {
+  function run(mobile, answer) {
+    const els = {
+      '#remedyPreset': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(),
+      '#remedySearch': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+    };
+    els['#remedyPreset'].value = ''; els['#remedyName'].hidden = true; els['#remedyThang'].value = '1'; els['#remedyUnitPrice'].value = '1';
+    const calls = { n: 0 };
+    const c = loadClient({ document: trackDoc(els), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH,
+      matchMedia: () => ({ matches: mobile }), prompt: () => { calls.n++; return answer; }, confirm: () => true });
+    c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+    c.setBase(1);
+    c.setRemedyItems([{ productId: 'p1', grams: 5 }]);
+    c.remedySavePresetClick();
+    return { c, calls, els };
+  }
+  let r = run(true, null);
+  assert.equal(r.calls.n, 1); assert.equal(r.c.getDb().prescriptions.length, 0, 'Hủy: không lưu');
+  r = run(true, '   ');
+  assert.equal(r.c.getDb().prescriptions.length, 0, 'rỗng: không lưu');
+  r = run(true, 'đơn an thần');
+  assert.equal(r.calls.n, 1);
+  assert.equal(r.c.getDb().prescriptions.length, 1, 'có tên: lưu đúng một đơn');
+  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn An Thần');
+  r = run(false, 'X');
+  assert.equal(r.calls.n, 0, 'PC không gọi prompt');
+  assert.equal(r.els['#remedyName'].hidden, false);
+  assert.equal(r.c.getDb().prescriptions.length, 0);
+});
+
 /* 2.14.0 giai đoạn 2b – Nhập hàng: cùng mẫu Thuốc chén/Bán lẻ; tờ ghi và dòng nhập luôn hiện; chân một hàng; không khung Thành tiền riêng. */
 test('2.14.0 Nhập hàng: thanh có nhapSearch, không nhãn chữ; summary ẩn trực quan; tờ ghi nhapListBox luôn hiện (không hidden)', () => {
   const box = PAGE.slice(PAGE.indexOf('id="nhapBox"'), PAGE.indexOf('<div class="grid2 mt-18">'));

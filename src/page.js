@@ -2627,7 +2627,14 @@ function remedyNameShow(show){
 function remedySavePresetClick(){
   var sel = $('#remedyPreset');
   var n = $('#remedyName');
-  if (!(sel && sel.value) && n && !capWords(n.value)) { remedyNameShow(true); n.focus(); return; }
+  if (!(sel && sel.value) && n && !capWords(n.value)) {
+    /* 2.15.15: điện thoại: ô tên nằm trong thanh chân fixed, focus làm thanh bị ẩn (foot-off) nên không thấy gì; hỏi tên bằng hộp thoại. */
+    if (window.matchMedia && window.matchMedia('(max-width:640px)').matches) {
+      var asked = window.prompt('Tên đơn', '');
+      if (asked == null || !capWords(asked)) return;
+      n.value = asked;
+    } else { remedyNameShow(true); n.focus(); return; }
+  }
   savePreset();
   remedyNameShow(!!(sel && sel.value));
 }
