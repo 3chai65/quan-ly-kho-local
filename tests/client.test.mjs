@@ -5595,25 +5595,40 @@ test('2.15.20 openOrder: oid không còn giao dịch thì không mở hộp, kh�
   assert.match(toastText(dom), /Đơn không còn tồn tại/);
 });
 
-test('2.15.20 saveLocal: ghi KEY lỗi quota khi dirty thì DIRTY_KEY vẫn là 1 và BASE_KEY vẫn được ghi', () => {
+function saveLocalRun(failKey, dirty){
   const writes = [];
-  let n = 0;
   const localStorage = {
     getItem() { return null; },
     setItem(k, v) {
-      n++;
-      if (n === 1) { const e = new Error('full'); e.name = 'QuotaExceededError'; throw e; }
+      if (failKey && writes.length === 0 && !writes.failed) { writes.failed = true; const e = new Error('full'); e.name = 'QuotaExceededError'; throw e; }
       writes.push([k, String(v)]);
     },
     removeItem() {}, clear() {}
   };
   const client = loadClient({ localStorage });
   client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
-  client.setDirty(true);
+  client.setDirty(dirty);
   client.setBase(77);
   client.saveLocal();
-  assert.equal(writes.length, 2, 'DIRTY_KEY và BASE_KEY đều được ghi');
+  return { writes, client };
+}
+
+test('2.15.20 saveLocal: KEY lỗi + dirty → DIRTY=1, KHÔNG ghi BASE (giữ base cũ)', () => {
+  const { writes, client } = saveLocalRun(true, true);
+  assert.equal(writes.length, 1, 'chỉ ghi DIRTY_KEY');
   assert.equal(writes[0][1], '1');
-  assert.equal(writes[1][1], '77');
+  assert.ok(!writes.some(w => w[1] === '77'), 'không được ghi base mới');
   assert.match(client.getQuotaNote(), /Bộ nhớ trình duyệt đầy/);
+});
+
+test('2.15.20 saveLocal: KEY lỗi + dirty=false → không ghi DIRTY/BASE', () => {
+  const { writes } = saveLocalRun(true, false);
+  assert.equal(writes.length, 0);
+});
+
+test('2.15.20 saveLocal: KEY ok → ghi cả DIRTY và BASE', () => {
+  const { writes } = saveLocalRun(false, true);
+  assert.equal(writes.length, 3);
+  assert.equal(writes[1][1], '1');
+  assert.equal(writes[2][1], '77');
 });

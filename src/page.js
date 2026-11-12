@@ -1952,12 +1952,13 @@ function saveLocal(){
       renderSyncBadge();
     }
   }
-  try {
-    localStorage.setItem(DIRTY_KEY, dirty ? '1' : '0');
-  } catch (e2) {}
-  try {
-    localStorage.setItem(BASE_KEY, String(cloudBase || 0));
-  } catch (e3) {}
+  /* KEY lỗi: giữ base cũ (khớp KEY cũ), chỉ ghi cờ dirty khi đang dirty. */
+  if (keyOk || dirty) {
+    try { localStorage.setItem(DIRTY_KEY, dirty ? '1' : '0'); } catch (e2) {}
+  }
+  if (keyOk) {
+    try { localStorage.setItem(BASE_KEY, String(cloudBase || 0)); } catch (e3) {}
+  }
   if (keyOk && quotaNote) { quotaNote = ''; quotaWarned = false; renderSyncBadge(); }
 }
 function touch(){
