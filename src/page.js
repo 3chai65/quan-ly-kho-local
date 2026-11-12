@@ -387,7 +387,7 @@ td.c-qty{position:relative}
 @media (max-width:600px){
 #remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
 /* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
-/* 2.15.0: điện thoại – Lưu đơn | Bán đơn đúng một hàng; Xóa/Sao chép đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
+/* 2.15.0: điện thoại – Lưu đơn | Bán đơn đúng một hàng; Xóa đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
 #remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
 #remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:44px;padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
 #remedyNote .note__row--btns .btn .ico{display:none}
@@ -777,9 +777,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
             <div class="note__row note__row--aux">
               <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
                 <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
-              </button>
-              <button class="btn btn--sm" type="button" data-action="copy-preset" id="remedyCopyPreset" hidden>
-                <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg>Sao chép đơn
               </button>
             </div>
             <div class="note__row note__row--btns">
@@ -2551,20 +2548,15 @@ function updatePresetUI(){
   var nameInp = $('#remedyName');
   var lbl = $('#remedySaveLabel');
   var del = $('#remedyDelPreset');
-  var copy = $('#remedyCopyPreset');
   var cur = sel && sel.value ? findPreset(sel.value) : null;
   var name = capWords(nameInp ? nameInp.value : '');
-  var target = name ? presetByName(name) : cur;
+  var target = name ? presetByName(name) : null;
   if (lbl) {
-    if (name) {
-      if (cur && (!target || String(target.id) === String(cur.id))) lbl.textContent = 'Cập nhật đơn (' + name + ')';
-      else if (target) lbl.textContent = 'Tên đã dùng (' + name + ')';
-      else lbl.textContent = 'Lưu đơn (' + name + ')';
-    }
+    if (cur) lbl.textContent = 'Cập nhật đơn (' + cur.name + ')';
+    else if (name) lbl.textContent = (target ? 'Tên đã dùng (' : 'Lưu đơn (') + name + ')';
     else lbl.textContent = 'Lưu đơn';
   }
   if (del) del.hidden = !cur;
-  if (copy) copy.hidden = !cur;
 }
 function loadPreset(id){
   var r = findPreset(id);
@@ -2613,11 +2605,11 @@ function onPresetChange(){
   calcRemedy();
   updatePresetUI();
 }
-/* 2.15.5: chọn "Đơn mới" (value rỗng) hoặc đơn đã lưu; ô tên chỉ hiện khi đang chọn đơn đã lưu (đơn mới: "Lưu đơn" tự mở ô tên). */
+/* 2.15.17: chọn "Đơn mới" hoặc đơn đã lưu đều ẩn ô tên (không đổi tên đơn có sẵn); đơn mới: "Lưu đơn" tự mở ô tên. */
 function remedyPresetPick(){
   var sel = $('#remedyPreset');
   onPresetChange();
-  remedyNameShow(!!(sel && sel.value));
+  remedyNameShow(false);
 }
 function remedyNameShow(show){
   var n = $('#remedyName');
@@ -2636,17 +2628,18 @@ function remedySavePresetClick(){
     } else { remedyNameShow(true); n.focus(); return; }
   }
   savePreset();
-  remedyNameShow(!!(sel && sel.value));
+  remedyNameShow(false);
 }
 function savePreset(){
   var nameInp = $('#remedyName');
-  var name = capWords(nameInp ? nameInp.value : '');
+  var sel = $('#remedyPreset');
+  var cur = sel && sel.value ? findPreset(sel.value) : null;
+  /* 2.15.17: đơn có sẵn không đổi tên được: cập nhật nội dung theo ID, giữ nguyên tên đang lưu. */
+  var name = cur ? cur.name : capWords(nameInp ? nameInp.value : '');
   if (!name) {
-    /* 2.15.16: điện thoại: focus ô tên làm thanh chân bị ẩn; hỏi tên bằng hộp thoại (điền sẵn tên cũ nếu đang chọn đơn). */
+    /* 2.15.16: điện thoại: focus ô tên làm thanh chân bị ẩn; hỏi tên bằng hộp thoại. */
     if (nameInp && window.matchMedia && window.matchMedia('(max-width:640px)').matches) {
-      var selP = $('#remedyPreset');
-      var oldP = selP && selP.value ? findPreset(selP.value) : null;
-      var askedP = window.prompt('Tên đơn', oldP ? oldP.name : '');
+      var askedP = window.prompt('Tên đơn', '');
       if (askedP == null || !capWords(askedP)) return;
       nameInp.value = askedP;
       name = capWords(askedP);
@@ -2660,37 +2653,23 @@ function savePreset(){
   var limPs = checkLimits('name', name) || checkLimits('thang', thang) || checkLimits('money', grand);
   for (var lg = 0; !limPs && lg < items.length; lg++) limPs = checkLimits('grams', items[lg].grams);
   if (limPs) { toast(limPs, 'error'); return; }
-  var sel = $('#remedyPreset');
-  var selected = sel && sel.value ? findPreset(sel.value) : null;
-  var byName = presetByName(name);
-  var cur = selected;
   var msg;
 
-  if (cur) {
-    /* Đang sửa một đơn có sẵn: cập nhật theo ID, không dò theo tên. */
-    if (byName && String(byName.id) !== String(cur.id)) {
-      toast('Tên "' + name + '" đã dùng cho đơn khác', 'error');
-      if (nameInp) { nameInp.focus(); if (nameInp.select) nameInp.select(); }
-      return;
+  if (!cur) {
+    var byName = presetByName(name);
+    if (byName) {
+      /* Đơn mới nhưng tên trùng (không phân biệt hoa/thường, khoảng trắng): hỏi cập nhật đơn cũ, giữ tên cũ. */
+      if (!confirm('Đã có đơn "' + byName.name + '". Cập nhật đơn này bằng nội dung đang nhập?')) return;
+      cur = byName;
     }
-    if (capWords(cur.name).toLowerCase() !== name.toLowerCase()) {
-      var rename = confirm('Đổi tên đơn "' + cur.name + '" thành "' + name + '"?\n\n'
-        + 'OK: đổi tên đơn đang chọn.\nHủy: lưu thành đơn mới (giữ lại đơn cũ).');
-      if (!rename) cur = null;
-    }
-  } else if (byName) {
-    /* Không chọn đơn nào nhưng tên đã tồn tại: xác nhận ghi đè. */
-    if (!confirm('Đơn "' + name + '" đã có. Cập nhật đơn này bằng nội dung đang nhập?')) return;
-    cur = byName;
   }
 
   if (cur) {
-    cur.name = name;
     cur.items = items;
     cur.total = dec(grand);
     cur.thang = thang;
     cur.updatedAt = Date.now();
-    msg = 'Đã cập nhật đơn "' + name + '"';
+    msg = 'Đã cập nhật đơn "' + cur.name + '"';
   } else {
     cur = { id: uid('RX'), name: name, items: items, total: dec(grand), thang: thang, updatedAt: Date.now() };
     db.prescriptions.push(cur);
@@ -2700,6 +2679,7 @@ function savePreset(){
   if (sel) sel.value = cur.id;
   renderPresetOptions();
   if (sel) sel.value = cur.id;
+  if (nameInp) nameInp.value = cur.name;
   updatePresetUI();
 }
 function delPreset(){
@@ -2711,35 +2691,6 @@ function delPreset(){
   resetRemedy();
   commit('Đã xóa đơn "' + r.name + '"');
 }
-function copyPreset(){
-  var sel = $('#remedyPreset');
-  var r = sel && sel.value ? findPreset(sel.value) : null;
-  if (!r) { toast('Chọn đơn có sẵn để sao chép', 'error'); return; }
-  var items = collectRemedyItems();
-  if (!items.length) { toast('Đơn chưa có vị thuốc nào', 'error'); return; }
-  var name = window.prompt('Tên đơn mới:', r.name + ' (bản sao)');
-  if (name === null) return;
-  name = capWords(name);
-  if (!name) { toast('Nhập tên đơn', 'error'); return; }
-  var limCp = checkLimits('name', name) || checkLimits('thang', remedyThang()) || checkLimits('money', remedyGrand());
-  for (var lc = 0; !limCp && lc < items.length; lc++) limCp = checkLimits('grams', items[lc].grams);
-  if (limCp) { toast(limCp, 'error'); return; }
-  if (presetByName(name)) { toast('Đã có đơn "' + name + '"', 'error'); return; }
-  var copy = {
-    id: uid('RX'),
-    name: name,
-    items: items,
-    total: dec(remedyGrand()),
-    thang: remedyThang(),
-    updatedAt: Date.now()
-  };
-  db.prescriptions.push(copy);
-  commit('Đã sao chép đơn "' + r.name + '" thành "' + name + '"');
-  var s = $('#remedyPreset');
-  if (s) s.value = copy.id;
-  loadPreset(copy.id);
-}
-
 /* ================= LƯU ĐƠN ================= */
 function commit(msg, force){
   touch();
@@ -4864,7 +4815,6 @@ function handleAction(btn){
     case 'save-remedy': saveRemedy(); break;
     case 'save-preset': remedySavePresetClick(); break;
     case 'del-preset': delPreset(); break;
-    case 'copy-preset': copyPreset(); break;
     case 'edit-prod': openEdit(id); break;
     case 'del-prod': delProduct(id); break;
     case 'del-nhap-item': {

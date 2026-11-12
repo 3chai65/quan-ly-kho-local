@@ -112,7 +112,7 @@ globalThis.__test = {
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
   handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
-  savePreset: (typeof savePreset === 'function' ? savePreset : null), copyPreset: (typeof copyPreset === 'function' ? copyPreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
+  savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null),
@@ -2587,8 +2587,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 17, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 166); // 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 16, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
+  assert.equal(PAGE.match(/ id="/g).length, 165); // 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -2712,22 +2712,6 @@ test('A2 savePreset: gram một vị vượt GRAMS_MAX bị chặn, không ghi �
   assert.equal(JSON.stringify(c.getDb()), before);
   assert.equal(c.isDirty(), false);
   assert.match(toastText(dom), /Gram vượt giới hạn/);
-});
-
-test('A2 copyPreset: tên bản sao từ prompt 201 ký tự bị chặn, không thêm đơn', () => {
-  const dom = limitStock();
-  dom.set('remedyPreset', 'RX1'); dom.set('remedyThang', '1'); dom.set('remedyUnitPrice', '1');
-  const prescriptions = [{ id: 'RX1', name: 'Cũ', items: [{ productId: 'p1', grams: 10 }], total: 1, thang: 1, updatedAt: 1 }];
-  const c = loadClient({ document: dom.document, confirm: () => true, prompt: () => 'B'.repeat(201),
-    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
-  c.setDb(A_DB([{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }], [], prescriptions));
-  c.setBase(1);
-  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
-  const before = JSON.stringify(c.getDb());
-  c.copyPreset();
-  assert.equal(JSON.stringify(c.getDb()), before);
-  assert.equal(c.isDirty(), false);
-  assert.match(toastText(dom), /Tên vượt giới hạn/);
 });
 
 test('A2 saveEdit: giá vượt trần (2e9 nghìn = 2e12 đồng) bị chặn, db không đổi', () => {
@@ -3456,7 +3440,7 @@ function abRemedyScenario() {
   c.setRemedyItems([{ productId: 'p1', grams: 50 }, { productId: 'p2', grams: 20 }]);
   set('2', '100', 'Đơn A'); c.savePreset(); snap('S8 savePreset tên mới, nhiều vị, thang 2');
   c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
-  set('1', '100', ''); c.savePreset(); snap('S9 savePreset không tên');
+  els['#remedyPreset'].value = ''; set('1', '100', ''); c.savePreset(); snap('S9 savePreset không tên');
   return JSON.stringify(out);
 }
 test('2.14.0 A/B in golden remedy/nhap (chỉ khi KHO_AB_PRINT=1)', (t) => {
@@ -3648,13 +3632,13 @@ assert.match(box, /<option value="">Đơn mới<\/option>/);
 test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, nút); tên đơn ẩn mặc định; Lưu đơn, Bán đơn (2.15.5 bỏ Lưu tên mới); id/data-action giữ nguyên', () => {
   const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
   const foot = note.slice(note.indexOf('class="note__foot"'));
-  assert.equal((foot.match(/class="note__row/g) || []).length, 3, 'chân phải đúng 3 hàng (tổng, Xóa/Sao chép, nút chính)');
+  assert.equal((foot.match(/class="note__row/g) || []).length, 3, 'chân phải đúng 3 hàng (tổng, Xóa, nút chính)');
   assert.ok(foot.indexOf('id="remedyName"') < foot.indexOf('note__row--btns'), 'ô tên nằm trên hàng nút');
   assert.match(foot, /<input[^>]*id="remedyName"[^>]*\shidden[^>]*>/, 'ô tên đơn phải ẩn mặc định');
   assert.doesNotMatch(PAGE, /remedyNewName|preset-newname|__new__|nm-full|nm-short|Lưu tên mới/, '2.15.5: không còn nút/action/option cũ');
   assert.match(foot, /data-action="save-preset"/);
   assert.match(foot, /data-action="save-remedy"/);
-  for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedySavePreset', 'remedySaveLabel', 'remedyDelPreset', 'remedyCopyPreset']) assert.match(foot, new RegExp('id="' + id + '"'), 'chân thiếu ' + id);
+  for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedySavePreset', 'remedySaveLabel', 'remedyDelPreset']) assert.match(foot, new RegExp('id="' + id + '"'), 'chân thiếu ' + id);
   assert.equal((PAGE.match(/id="remedyPreset"/g) || []).length, 1);
   assert.equal((PAGE.match(/id="remedySearch"/g) || []).length, 1);
   assert.equal((PAGE.match(/id="remedyName"/g) || []).length, 1);
@@ -3735,40 +3719,64 @@ test('2.15.15 Lưu đơn thuốc chén: điện thoại hỏi tên bằng prompt
   assert.equal(r.c.getDb().prescriptions.length, 0);
 });
 
-test('2.15.16 savePreset: đang chọn đơn có sẵn, ô tên trống: điện thoại hỏi bằng prompt (điền sẵn tên cũ, không focus); PC vẫn focus', () => {
-  function run(mobile, answer, existing) {
-    const els = {
-      '#remedyPreset': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(),
-      '#remedySearch': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
-    };
-    const st = { n: 0, def: null, focus: 0 };
-    els['#remedyPreset'].value = 'RX1'; els['#remedyName'].value = ''; els['#remedyThang'].value = '1'; els['#remedyUnitPrice'].value = '1';
-    const doc = trackDoc(els);
-    const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH,
-      matchMedia: () => ({ matches: mobile }), prompt: (m, d) => { st.n++; st.def = d; return answer; }, confirm: () => true });
-    c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], updatedAt: 1, moneyUnit: 'dong',
-      prescriptions: [{ id: 'RX1', name: 'Đơn Cũ', items: [{ productId: 'p1', grams: 1 }], total: 1, thang: 1 }].concat(existing || []) });
-    c.setBase(1);
-    c.setRemedyItems([{ productId: 'p1', grams: 5 }]);
-    c.savePreset();
-    st.focus = doc.activeElement === els['#remedyName'] ? 1 : 0;
-    return { c, st };
+function runSave(o) {
+  const els = {
+    '#remedyPreset': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(),
+    '#remedySearch': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const st = { prompts: 0, def: null, confirms: [], focus: 0 };
+  els['#remedyPreset'].value = o.sel || ''; els['#remedyName'].value = o.name || ''; els['#remedyThang'].value = '1'; els['#remedyUnitPrice'].value = '1';
+  const doc = trackDoc(els);
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH,
+    matchMedia: () => ({ matches: !!o.mobile }), prompt: (m, d) => { st.prompts++; st.def = d; return o.answer === undefined ? null : o.answer; },
+    confirm: m => { st.confirms.push(m); return o.ok !== false; } });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], updatedAt: 1, moneyUnit: 'dong',
+    prescriptions: [{ id: 'RX1', name: o.rxName || 'Đơn Cũ', items: [{ productId: 'p1', grams: 1 }], total: 1, thang: 1 }].concat(o.existing || []) });
+  c.setBase(1);
+  c.setRemedyItems([{ productId: 'p1', grams: 5 }]);
+  c.savePreset();
+  st.focus = doc.activeElement === els['#remedyName'] ? 1 : 0;
+  return { c, st, els, rx: c.getDb().prescriptions };
+}
+test('2.15.17 savePreset: chọn đơn có sẵn thì cập nhật theo ID, giữ nguyên tên cũ dù ô tên trống hay có chữ khác; không prompt/confirm', () => {
+  for (const mobile of [true, false]) for (const name of ['', 'Đơn Z', 'đơn khác']) {
+    const r = runSave({ sel: 'RX1', name, mobile, existing: [{ id: 'RX2', name: 'Đơn Khác', items: [], total: 0, thang: 1 }] });
+    assert.equal(r.st.prompts, 0); assert.equal(r.st.confirms.length, 0); assert.equal(r.st.focus, 0);
+    assert.equal(r.rx.length, 2, 'không tạo đơn mới');
+    assert.equal(r.rx[0].id, 'RX1'); assert.equal(r.rx[0].name, 'Đơn Cũ', 'giữ tên cũ');
+    assert.equal(r.rx[0].items[0].grams, 5, 'nội dung được cập nhật');
+    assert.equal(r.rx[1].items.length, 0, 'đơn khác không đổi');
   }
-  let r = run(true, null);
-  assert.equal(r.st.n, 1); assert.equal(r.st.def, 'Đơn Cũ'); assert.equal(r.st.focus, 0, 'không focus trên điện thoại');
-  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn Cũ'); assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1, 'Hủy: không đổi gì');
-  r = run(true, '  ');
-  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1, 'rỗng: không đổi gì');
-  r = run(true, 'đơn mới');
-  assert.equal(r.c.getDb().prescriptions.length, 1);
-  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn Mới', 'đổi tên đơn đang chọn (confirm OK)');
-  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 5);
-  r = run(true, 'đơn khác', [{ id: 'RX2', name: 'Đơn Khác', items: [], total: 0, thang: 1 }]);
-  assert.equal(r.c.getDb().prescriptions[0].name, 'Đơn Cũ', 'trùng tên đơn khác vẫn bị chặn');
-  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1);
-  r = run(false, 'X');
-  assert.equal(r.st.n, 0, 'PC không gọi prompt'); assert.equal(r.st.focus, 1, 'PC vẫn focus ô tên');
-  assert.equal(r.c.getDb().prescriptions[0].items[0].grams, 1);
+});
+test('2.15.17 savePreset: đơn mới (chưa chọn) trùng tên không phân biệt hoa/thường/khoảng trắng → confirm nêu tên đang lưu; OK ghi đè đúng ID, giữ tên cũ; Hủy không đổi', () => {
+  for (const typed of ['đơn cũ', 'ĐƠN CŨ', '  đƠn   cŨ  ', 'Đơn Cũ']) {
+    let r = runSave({ name: typed, ok: true });
+    assert.equal(r.st.confirms.length, 1);
+    assert.equal(r.st.confirms[0], 'Đã có đơn "Đơn Cũ". Cập nhật đơn này bằng nội dung đang nhập?');
+    assert.equal(r.rx.length, 1, 'không tạo đơn thứ hai trùng tên');
+    assert.equal(r.rx[0].id, 'RX1'); assert.equal(r.rx[0].name, 'Đơn Cũ'); assert.equal(r.rx[0].items[0].grams, 5);
+    r = runSave({ name: typed, ok: false });
+    assert.equal(r.st.confirms.length, 1);
+    assert.equal(r.rx.length, 1); assert.equal(r.rx[0].items[0].grams, 1, 'Hủy: không đổi gì'); assert.equal(r.rx[0].name, 'Đơn Cũ');
+  }
+  const lg = runSave({ rxName: 'đơn  cŨ ', name: 'ĐƠN CŨ', ok: true });
+  assert.equal(lg.st.confirms[0], 'Đã có đơn "đơn  cŨ ". Cập nhật đơn này bằng nội dung đang nhập?', 'hiện tên đang lưu trong máy');
+  assert.equal(lg.rx.length, 1); assert.equal(lg.rx[0].name, 'đơn  cŨ ', 'giữ tên cũ nguyên văn'); assert.equal(lg.rx[0].items[0].grams, 5);
+  const r = runSave({ name: 'đơn mới hẳn' });
+  assert.equal(r.st.confirms.length, 0); assert.equal(r.rx.length, 2); assert.equal(r.rx[1].name, 'Đơn Mới Hẳn');
+});
+test('2.15.17 savePreset: đơn mới, ô tên trống: điện thoại hỏi bằng prompt (không focus); PC báo lỗi và focus ô tên', () => {
+  let r = runSave({ mobile: true, answer: null });
+  assert.equal(r.st.prompts, 1); assert.equal(r.st.def, ''); assert.equal(r.st.focus, 0); assert.equal(r.rx.length, 1);
+  r = runSave({ mobile: true, answer: '  ' });
+  assert.equal(r.rx.length, 1);
+  r = runSave({ mobile: true, answer: 'đơn B' });
+  assert.equal(r.rx.length, 2); assert.equal(r.rx[1].name, 'Đơn B');
+  r = runSave({ mobile: false, answer: 'X' });
+  assert.equal(r.st.prompts, 0); assert.equal(r.st.focus, 1); assert.equal(r.rx.length, 1);
+});
+test('2.15.17 cấu trúc: không còn Sao chép đơn/đổi tên đơn trong mã', () => {
+  assert.doesNotMatch(PAGE, /copyPreset|copy-preset|remedyCopyPreset|Sao chép đơn|Đổi tên đơn|đã dùng cho đơn khác/);
 });
 
 /* 2.14.0 giai đoạn 2b – Nhập hàng: cùng mẫu Thuốc chén/Bán lẻ; tờ ghi và dòng nhập luôn hiện; chân một hàng; không khung Thành tiền riêng. */
@@ -4252,7 +4260,7 @@ const NEW_215 = ['reload-app'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
-  'copy-preset', 'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
+  'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
   'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
 /* Trên host có git: đối chiếu thêm với 1023b40; trong image (không có git) chỉ dùng danh sách chốt sẵn. */
 function oldPageFromGit() {
@@ -4268,12 +4276,12 @@ test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự
   const old = oldPageFromGit();
   const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !NEW_214.includes(a) && !NEW_215.includes(a) && !REMOVED_213.includes(a)).sort();
   assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS.filter(a => !REMOVED_213.includes(a)), 'data-action đã đổi so với 1023b40');
-  if (old !== null) assert.deepEqual(actions(PAGE), actions(old), 'data-action đã đổi (git 1023b40)');
+  if (old !== null) assert.deepEqual(actions(PAGE), actions(old).filter(a => a !== 'copy-preset'), 'data-action đã đổi (git 1023b40)');
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
@@ -4617,34 +4625,7 @@ test('2.14.0 N3 id mô tả gợi ý duy nhất: hai ô không id tạo hai id k
   assert.equal(b.input.attrs['aria-describedby'], b.sr.id);
 });
 
-/* 2.14.0 N2 A/B: đổi tên đơn đang chọn (savePreset, xác nhận OK) và từ chối xác nhận (lưu thành đơn mới) phải cho db giống hệt 2.13.2. */
-function abRenameScenario() {
-  let ans = true;
-  const mEl = makeEl();
-  const els = { '#toast': makeEl(), '#toastMsg': mEl, '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyPreset': makeEl() };
-  const doc = trackDoc(els);
-  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 11, 12), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, confirm: () => ans });
-  c.setDb({
-    products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }, { id: 'p2', name: 'Đảng sâm', stock: 50, costPrice: 5000 }],
-    transactions: [], prescriptions: [{ id: 'RX1', name: 'Đơn A', items: [{ productId: 'p1', grams: 50 }], total: 50000, thang: 1, updatedAt: 1 }],
-    updatedAt: 1, moneyUnit: 'dong'
-  });
-  c.setBase(1);
-  const out = [];
-  const snap = label => out.push({ label: label, toast: mEl.textContent, presc: c.getDb().prescriptions.map(p => [p.id === 'RX1' ? 'RX1' : 'NEW', p.name, p.thang, p.total, p.items.map(i => [i.productId, i.grams])]) });
-  els['#remedyPreset'].value = 'RX1';
-  els['#remedyThang'].value = '2'; els['#remedyUnitPrice'].value = '120'; els['#remedyName'].value = 'Đơn Z';
-  c.setRemedyItems([{ productId: 'p1', grams: 50 }, { productId: 'p2', grams: 20 }]);
-  ans = true; c.savePreset(); snap('R1 đổi tên đơn đang chọn, xác nhận OK');
-  els['#remedyPreset'].value = 'RX1'; els['#remedyName'].value = 'Đơn Y';
-  c.setRemedyItems([{ productId: 'p1', grams: 10 }]);
-  ans = false; c.savePreset(); snap('R2 đổi tên, từ chối: lưu thành đơn mới');
-  return JSON.stringify(out);
-}
-test('2.14.0 A/B in golden rename (chỉ khi KHO_AB_PRINT=1)', (t) => {
-  if (process.env.KHO_AB_PRINT) t.diagnostic('ABJSON_RENAME ' + abRenameScenario());
-});
-test('2.14.0 N2 runtime: chọn đơn có sẵn → ô tên hiện, điền tên đơn; chọn Đơn mới → ô tên ẩn', () => {
+test('2.14.0 N2 runtime: chọn đơn có sẵn → ô tên ẩn (2.15.17), vẫn điền tên đơn; chọn Đơn mới → ô tên ẩn', () => {
   const mEl = makeEl();
   const els = { '#toast': makeEl(), '#toastMsg': mEl, '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(), '#remedyPreset': makeEl(), '#remedyNote': makeEl() };
   const doc = trackDoc(els);
@@ -4654,26 +4635,21 @@ test('2.14.0 N2 runtime: chọn đơn có sẵn → ô tên hiện, điền tên
   c.setBase(1);
   els['#remedyPreset'].value = 'RX1';
   c.remedyPresetPick();
-  assert.equal(els['#remedyName'].hidden, false, 'đã chọn đơn → ô tên hiện');
+  assert.equal(els['#remedyName'].hidden, true, '2.15.17: đã chọn đơn → ô tên vẫn ẩn (không đổi tên)');
   assert.equal(els['#remedyName'].value, 'Đơn A', 'ô tên điền sẵn tên đơn');
   els['#remedyPreset'].value = '';
   c.remedyPresetPick();
   assert.equal(els['#remedyName'].hidden, true, 'Đơn mới → ô tên ẩn mặc định');
 });
 
-/* 2.14.0 N2 A/B golden 8ca207a: đổi tên đơn đang chọn và tách đơn; db giống hệt 2.13.2. */
-const AB_RENAME_GOLDEN = "[{\"label\":\"R1 đổi tên đơn đang chọn, xác nhận OK\",\"toast\":\"Đã cập nhật đơn \\\"Đơn Z\\\"\",\"presc\":[[\"RX1\",\"Đơn Z\",2,240000,[[\"p1\",50],[\"p2\",20]]]]},{\"label\":\"R2 đổi tên, từ chối: lưu thành đơn mới\",\"toast\":\"Đã lưu đơn \\\"Đơn Y\\\"\",\"presc\":[[\"RX1\",\"Đơn Z\",2,240000,[[\"p1\",50],[\"p2\",20]]],[\"NEW\",\"Đơn Y\",2,240000,[[\"p1\",10]]]]}]";
-test('2.14.0 A/B đổi tên đơn: db giống hệt golden 2.13.2 (R1 đổi tên OK, R2 từ chối → đơn mới)', () => {
-  assert.equal(abRenameScenario(), AB_RENAME_GOLDEN);
-});
-test('2.15.5 cấu trúc: remedyPresetPick hiện ô tên theo đơn đang chọn; không còn remedyNewName', () => {
+test('2.15.5 cấu trúc: remedyPresetPick luôn ẩn ô tên (2.15.17); không còn remedyNewName', () => {
   const body = name => {
     const i = PAGE.indexOf('\nfunction ' + name + '(');
     const j = PAGE.indexOf('\n}\n', i);
     return PAGE.slice(i, j);
   };
   assert.equal(PAGE.includes('function remedyNewName'), false);
-  assert.match(body('remedyPresetPick'), /remedyNameShow\(!!\(sel && sel\.value\)\);/);
+  assert.match(body('remedyPresetPick'), /remedyNameShow\(false\);/);
 });
 
 /* 2.14.0 S1 lint: ResizeObserver truy cập qua window (không biến tự do); khi không có window thì bỏ qua. */
@@ -4857,12 +4833,12 @@ test('2.15.0 thanh tiêu đề điện thoại: ô tìm/ô chọn đơn không c
   assert.match(PAGE, /#remedyBox \.card__bar-preset\{order:1;flex:1 1 90px;min-width:90px\}/);
 });
 
-test('2.15.0 chân Thuốc chén: Lưu đơn | Bán đơn một hàng không xuống dòng; Xóa/Sao chép ở hàng phụ riêng; id/action/aria-label giữ', () => {
+test('2.15.0 chân Thuốc chén: Lưu đơn | Bán đơn một hàng không xuống dòng; Xóa đơn ở hàng phụ riêng; id/action/aria-label giữ', () => {
   assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
   const foot = PAGE.slice(PAGE.indexOf('<div class="note__row note__row--aux">'), PAGE.indexOf('id="remedyBox"') > 0 ? PAGE.indexOf('id="nhapBox"') : undefined);
   const aux = foot.slice(0, foot.indexOf('note__row--btns'));
   assert.match(aux, /id="remedyDelPreset" hidden/);
-  assert.match(aux, /id="remedyCopyPreset" hidden/);
+  assert.doesNotMatch(PAGE, /remedyCopyPreset|copy-preset|copyPreset|Sao chép đơn/, '2.15.17: bỏ Sao chép đơn');
   assert.doesNotMatch(aux, /save-preset|save-remedy/);
   const btns = foot.slice(foot.indexOf('note__row--btns'));
   assert.match(btns, /data-action="save-preset" id="remedySavePreset"/);
