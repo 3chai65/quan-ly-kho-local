@@ -18,9 +18,10 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Mũi tên `.chev` (8 svg, symbol `i-chev-r`, CSS): luôn `display:none`.
 - `#txEditId` (chỉ ghi), `#retailTotal` ẩn (chỉ ghi) và tổng thừa trong `calcRetail` (vẫn gọi `renderNote`), `iEl/eEl` trong chú giải biểu đồ.
 - Hai khối kiểm số âm không bao giờ tới (`commitRetailRow`, `saveTxEdit`): `checkLimits` chặn trước, thông báo "Tiền không được âm".
-- `kg > 0 ?`, `thang > 0 ?`, `if (oid)` chết trong `saveRetail`/`saveRemedy`; 4 khai báo CSS thừa; biến `nameKey` ở đơn thuốc trong `server.js`.
+- `kg > 0 ?`, `thang > 0 ?`, `if (oid)` chết trong `saveRetail`/`saveRemedy`; 3 khai báo CSS thừa (`.grid2+.grid2`, `.rowmenu__list[hidden]`, padding trùng của `#nhapListBox .note__foot`); biến `nameKey` ở đơn thuốc trong `server.js`.
 
 ### Không làm (giữ có chủ ý)
+- `.note__row--aux{margin-top:8px}` (ở máy tính hàng "Xóa đơn" không có quy tắc khác, ghi đè 6px chỉ trong @media 600px).
 - Các kiểm số âm đứng trước `checkLimits` (có thông báo/con trỏ riêng), `refreshAllQtyHints()` cuối `saveNhap` (một test cấu trúc đòi), nhánh `!name` của `savePreset` (test gọi thẳng), `kInput/fmtMoney/fmtMoneyInt/qtyHintText`, nhánh else của `init`, CSS `table.ord` min-width/`details>.card__head:hover`/`mt-18`, `try` quanh `JSON.stringify`, `DELETE FROM prescription_items` và `state.updatedAt` ở `server.js` (vùng ghi dữ liệu, lợi nhỏ), bộ gỡ lỗi `?kbdebug=1`, `GET /api/backups`, 4 chỉ mục `transactions`, `migrateMoneyToDong`.
 
 ## [2.15.20] - 2026-11-12
