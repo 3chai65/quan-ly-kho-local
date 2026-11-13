@@ -5632,3 +5632,79 @@ test('2.15.20 saveLocal: KEY ok → ghi cả DIRTY và BASE', () => {
   assert.equal(writes[1][1], '1');
   assert.equal(writes[2][1], '77');
 });
+
+/* ===== 2.15.21 (vòng 18, nhóm A) ===== */
+test('2.15.21 A1 scheduleSyncRetry: đang bận nhập thì KHÔNG nhân đôi bước chờ; gửi thật mới nhân đôi', async () => {
+  const dom = limitStock();
+  const timers = [];
+  const c = loadClient({
+    document: dom.document,
+    setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {},
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) })
+  });
+  c.setDb(A_DB([{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }]));
+  c.setBase(1); c.setDirty(true);
+  const d0 = c.getSyncRetryDelay();
+  dom.document.activeElement = { tagName: 'INPUT' };
+  c.scheduleSyncRetry();
+  timers[0]();
+  assert.equal(c.getSyncRetryDelay(), d0, 'bận nhập: chưa thử gửi nên không giãn');
+  dom.document.activeElement = null;
+  timers[1]();
+  assert.equal(c.getSyncRetryDelay(), d0 * 2, 'gửi thật: nhân đôi');
+});
+
+test('2.15.21 A2 delOrder: đơn nhập làm tồn âm báo lỗi trước, KHÔNG hỏi confirm; hợp lệ thì hỏi 1 lần', () => {
+  const dom = limitStock();
+  let asked = 0;
+  const c = loadClient({ document: dom.document, confirm: () => { asked++; return false; },
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  const nhap = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 5, price: 1000, total: 5000, ts: 2000, oid: 'OD1' };
+  c.setDb(A_DB([{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1000 }], [nhap]));
+  c.setBase(1);
+  c.delOrder('OD1');
+  assert.equal(asked, 0, 'tồn âm: không hỏi');
+  assert.match(toastText(dom), /Không thể xóa/);
+  c.getDb().products[0].stock = 5;
+  c.delOrder('OD1');
+  assert.equal(asked, 1, 'hợp lệ: hỏi đúng 1 lần');
+});
+
+test('2.15.21 A3 saveTxEdit: lỗi số lượng focus ô SL, lỗi giá focus ô giá', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  const q = dom.document.querySelector('#txEditQty'), p = dom.document.querySelector('#txEditPrice');
+  let f = '';
+  q.focus = () => { f = 'qty'; }; p.focus = () => { f = 'price'; };
+  dom.set('txEditQty', '10000000'); dom.set('txEditPrice', '200');
+  c.saveTxEdit();
+  assert.equal(f, 'qty');
+  f = '';
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '10000000000');
+  c.saveTxEdit();
+  assert.equal(f, 'price');
+});
+
+test('2.15.21 A4 historyData: đơn ghi lùi ngày xếp theo ngày; "gần nhất" = hàng đầu bảng', () => {
+  const c = loadClient({ Date: fakeClock(2026, 10, 13, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  c.setDb(A_DB([{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }], [
+    { id: 'x', date: '2026-11-10', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, ts: 2000 },
+    { id: 'y', date: '2026-11-11', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1, ts: 1000 }
+  ]));
+  const d = c.historyData('exp', null);
+  assert.equal(d.rows[0].tx.id, 'y');
+  assert.equal(d.rows[1].tx.id, 'x');
+  assert.equal(d.latestDate, '2026-11-11');
+  assert.equal(d.latestTs, 1000);
+});
+
+test('2.15.21 A5 latestImportMap: nhập ghi lùi ngày không thắng nhập ngày mới hơn (khớp lastImport)', () => {
+  const c = loadClient({ Date: fakeClock(2026, 10, 13, 12), setTimeout() { return 0; }, clearTimeout() {} });
+  c.setDb(A_DB([{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }], [
+    { id: 'a', date: '2026-11-10', type: 'NHAP', productId: 'p1', qty: 1, price: 120000, total: 120000, ts: 2000 },
+    { id: 'b', date: '2026-11-11', type: 'NHAP', productId: 'p1', qty: 1, price: 135000, total: 135000, ts: 1000 }
+  ]));
+  assert.equal(c.latestImportMap()['p1'], 135000);
+});
