@@ -2386,12 +2386,6 @@ function commitRetailRow(){
     if (qi) focusNS(qi);
     return false;
   }
-  if (m < 0) {
-    toast('Thành tiền không được âm', 'error');
-    var mi = $('.retail-money', row);
-    if (mi) { focusNS(mi); if (mi.select) mi.select(); }
-    return false;
-  }
   retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
   notePage = 1e9;
   tb.textContent = '';
@@ -4270,7 +4264,6 @@ function saveTxEdit(){
     var ep = $(checkLimits('q', q) ? '#txEditQty' : '#txEditPrice'); if (ep) ep.focus();
     return;
   }
-  if (!isRx && price < 0) { toast('Đơn giá không được âm', 'error'); ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
 
   var p = findProduct(t.productId);
   var oldQty = num(t.qty);
