@@ -3551,10 +3551,10 @@ function renderChart(){
   chartGeo = { padL: padL, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
   var mmStr = pad2(shown + 1) + '/' + data.year;
   var impTxt = fmtMoneyInt(data.impK[shown]), expTxt = fmtMoneyInt(data.expK[shown]);
-  var mEl = $('#chartMonth'), iEl = $('#chartImpChip'), eEl = $('#chartExpChip'), sEl = $('#chartTipSr');
+  var mEl = $('#chartMonth'), sEl = $('#chartTipSr');
   if (mEl) mEl.textContent = mmStr;
   /* 2.15.0: chú giải "[ô màu] Nhập số tiền"; số tiền nằm trong phần tử con (chip còn nhãn + ô màu). */
-  var iV = $('#chartImpVal') || iEl, eV = $('#chartExpVal') || eEl;
+  var iV = $('#chartImpVal'), eV = $('#chartExpVal');
   if (iV) iV.textContent = impTxt;
   if (eV) eV.textContent = expTxt;
   if (sEl) sEl.textContent = 'Tháng ' + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
