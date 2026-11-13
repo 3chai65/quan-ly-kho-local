@@ -19,7 +19,8 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng nghe `0.0.0.0` trong container, docker-compose chỉ mở cổng ra `127.0.0.1:8787` (chạy `npm start` trực tiếp thì mở ra LAN, không dùng cách đó).
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.21.
+- `pwa.js` — manifest, icon PNG sinh bằng mã, sw.js passthrough (không cache); các đường này công khai GET/HEAD trong PUBLIC của `auth.js`; CSP của "/" có manifest-src/worker-src 'self'.
+- Phiên bản hiện tại: 2.16.0.
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -63,7 +64,9 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.15.21, commit 8f391c5, image `quan-ly-kho:2.15.21` (id 07fade33…), Giám sát sau triển khai 5/5 đạt (13/11/2026). Đường lui: `quan-ly-kho:pre-2.15.21` = 2.15.20 (id ab6f0e8e…, commit 788f2f3).
+- Đang chạy: 2.16.0, commit 2627fb6, image `quan-ly-kho:2.16.0` (id 223d52b8…), Giám sát sau triển khai 5/5 đạt (13/11/2026). Đường lui: `quan-ly-kho:pre-2.16.0` = 2.15.21 (id 07fade33…, commit 8f391c5).
+- 2.16.0: PWA. Đã xác nhận cài được trên Windows Edge (13/11/2026, "App installed", cửa sổ riêng); iPhone người dùng vẫn dùng biểu tượng cũ, chưa thử Thêm vào MH chính bản mới; Mac chưa thử. Bài học: CSP default-src 'none' chặn manifest/SW và lỗi bị .catch nuốt, test tĩnh không bắt được; Auditor bắt bằng Edge headless. Icon chưa ai xem trên iPhone; fetch handler rỗng trong sw.js giữ nguyên (cảnh báo no-op của Chrome chưa đo). Việc nhỏ chờ: thêm `*.out` vào .gitignore.
+- Trước đó đang chạy: 2.15.21, commit 8f391c5, image `quan-ly-kho:2.15.21` (id 07fade33…), Giám sát sau triển khai 5/5 đạt (13/11/2026). Đường lui: `quan-ly-kho:pre-2.15.21` = 2.15.20 (id ab6f0e8e…, commit 788f2f3).
 - 2.15.21: A1–A5 (hẹn gửi lại không giãn khi bận, delOrder kiểm trước hỏi sau, focus saveTxEdit, A4/A5 đổi "mới nhất" theo ngày rồi giờ ghi, cùng cách tính giá vốn `lastImport`) + dọn mã chết (xem CHANGELOG). Việc hoãn: vòng 19 (cho-worker-19), B9, B11 phần còn lại, `nameKey` ở client (~dòng 1760), dọn vòng kiểm trong saveNhap (~4019–4020), ca test A1 chưa kiểm fetch được gọi.
 - Trước đó đang chạy: 2.15.20, commit 788f2f3, image `quan-ly-kho:2.15.20` (id ab6f0e8e…). Giám sát sau triển khai 7/7 đạt (12/11/2026). Đường lui: `quan-ly-kho:pre-2.15.20` = 2.15.19 (id 8ba802fb…, commit 045cb44); `pre-2.15.19` = 2.15.18 (id 6cd4178e…, commit 845be1e).
 - 2.15.20 (sửa từ báo cáo review ngoài 12/11/2026, đã đối chiếu mã): `delOrder` cộng dồn qty NHAP theo vị trước khi kiểm tồn âm (đơn nhập 2 dòng cùng vị làm tồn âm); `openOrder` chặn đơn không còn; `saveLocal` ghi KEY/DIRTY/BASE độc lập nhưng khi ghi KEY lỗi thì KHÔNG ghi BASE (giữ base cũ để máy chủ trả 409, tránh đè lặng lẽ) và chỉ ghi DIRTY='1' khi dirty; dòng log cổng cho đúng. Bài học: bản sửa đầu của worker ghi BASE mới khi KEY lỗi, Auditor bắt được. Báo cáo ngoài còn mục chưa làm (đánh giá không cần): BUG-05 trần ~22k giao dịch (hiện 660), 06 Playwright, 07 CSP/HSTS, 08 err.message, 09 tải backup, 10 bàn phím, 11 Caddyfile IP, 12 confirm/đơn vị biểu đồ. Trước đó: `quan-ly-kho:pre-2.15.19` = 2.15.18 (id 6cd4178e…, commit 845be1e); `pre-2.15.18` = 2.15.17 (id 344fc595…, commit 3951ea7); `pre-2.15.17` = 2.15.16 (id 7b1d3f86…, commit 4348495); `pre-2.15.16` = 2.15.15 (id 6c2b04c1…, commit d22d096).
