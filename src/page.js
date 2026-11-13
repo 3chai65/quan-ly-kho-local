@@ -1996,13 +1996,6 @@ function dlgErrorBox(dlg){
 function clearDlgErr(dlg){ var box = dlg.querySelector('.dlg__err'); if (box && box.parentNode) box.parentNode.removeChild(box); }
 
 /* ================= GIAO DIỆN SÁNG/TỐI ================= */
-var YIN = 'M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0';
-function setFavicon(){
-  var link = $('#favicon');
-  if (!link) return;
-  var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><circle cx="256" cy="256" r="256" fill="#fff"/><path fill="#000" d="' + YIN + '"/></svg>';
-  link.href = 'data:image/svg+xml,' + encodeURIComponent(s);
-}
 function applyTheme(mode){
   var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   window.__THEME__ = mode;
@@ -2015,7 +2008,6 @@ function applyTheme(mode){
   });
   var meta = $('#themeColor');
   if (meta) meta.setAttribute('content', dark ? '#111620' : '#eceef2');
-  setFavicon();
   if ($('#chartBox') && $('#chartBox').open) renderChart();
 }
 /* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
