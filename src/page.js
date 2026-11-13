@@ -2702,7 +2702,7 @@ function saveRetail(){
     }
   }
   for (var rk = 0; rk < items.length; rk++) {
-    var rlim = checkLimits('money', items[rk].kg > 0 ? money(items[rk].amount / items[rk].kg) : 0);
+    var rlim = checkLimits('money', money(items[rk].amount / items[rk].kg));
     if (rlim) { toast('Đơn giá vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng/kg)', 'error'); return; }
   }
   items.forEach(function(it){
@@ -2710,7 +2710,7 @@ function saveRetail(){
     p.stock = dec(p.stock - it.kg);
     var tx = {
       id: uid('TX'), date: date, type: 'BAN', productId: it.pid,
-      qty: dec(it.kg), price: it.kg > 0 ? money(it.amount / it.kg) : 0,
+      qty: dec(it.kg), price: money(it.amount / it.kg),
       total: money(it.amount), cost: money(it.kg * num(p.costPrice)), ts: ts,
       retail: true
     };
@@ -2775,10 +2775,10 @@ function saveRemedy(){
       id: uid('TX'), date: date, type: 'BAN', productId: it.pid,
       qty: kg, price: kg > 0 ? money(amount / kg) : 0,
       total: amount, cost: balanced[idx].cost,
-      rx: true, g: dec(it.g), thang: thang, unitPrice: thang > 0 ? money(grand / thang) : 0,
+      rx: true, g: dec(it.g), thang: thang, unitPrice: money(grand / thang),
       ts: ts
     };
-    if (oid) { tx.oid = oid; tx.oname = oname; }
+    tx.oid = oid; tx.oname = oname;
     db.transactions.push(tx);
   });
   resetRemedy();
