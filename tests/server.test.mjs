@@ -758,3 +758,9 @@ test('2.16.0 PWA: manifest/icon/sw công khai đúng Content-Type, không chứa
   assert.equal((await fetch(`${BASE}/api/state`)).status, 401);
   assert.equal((await fetch(`${BASE}/manifest.webmanifest`, { method: 'POST', body: 'x' })).status === 200, false);
 });
+
+test('2.16.0 PWA: CSP của "/" cho phép manifest và service worker cùng gốc', async () => {
+  const csp = (await fetch(`${BASE}/`, { headers: { Cookie: deviceCookie } })).headers.get('content-security-policy');
+  assert.ok(csp.includes("manifest-src 'self'"), csp);
+  assert.ok(csp.includes("worker-src 'self'"), csp);
+});
