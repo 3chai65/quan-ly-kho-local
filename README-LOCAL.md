@@ -150,6 +150,13 @@ docker compose logs
 
 Lệnh chỉ xóa bảng thiết bị và toàn bộ mã mời chưa dùng (bảng `invites`), không đụng `app.db`. Tên cookie `qlk_dev_…` giữ nguyên. Mã thiết lập mới nằm trong log.
 
+## Cài như ứng dụng
+
+Từ 2.16.0 có thể cài app lên màn hình chính (chạy toàn màn hình, không cache dữ liệu kho). Cần tin cậy chứng chỉ `caddy-root.crt` trước.
+
+- iPhone: cài hồ sơ `caddy-root.crt`, rồi bật tin cậy tại Cài đặt > Cài đặt chung > Giới thiệu > Cài đặt tin cậy chứng chỉ. Mở Safari > Chia sẻ > Thêm vào MH chính.
+- Windows/Mac: Edge hoặc Chrome > menu > Cài đặt ứng dụng (Install app).
+
 ## Xác thực thiết bị
 
 Từ 2.8.0, chỉ thiết bị đã được duyệt mới vào được kho. Thiết bị lạ trong cùng mạng chỉ thấy trang "chưa được duyệt".

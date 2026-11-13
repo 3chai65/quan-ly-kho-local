@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.16.0] - 2026-11-13
+
+### Added
+- PWA: `/manifest.webmanifest`, icon 192/512/180 (sinh bằng mã trong `pwa.js`), `/sw.js` (không cache gì, chỉ passthrough), các thẻ `apple-mobile-web-app-*`. Các đường này công khai chỉ GET/HEAD (`PUBLIC` trong `auth.js`), không chứa dữ liệu kho; `/` và `/api/*` vẫn cần thiết bị đã duyệt.
+
 ## [2.15.21] - 2026-11-13
 
 ### Fixed
