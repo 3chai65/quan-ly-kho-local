@@ -118,8 +118,6 @@ details>.card__head{cursor:pointer;list-style:none;user-select:none}
 details>.card__head::-webkit-details-marker{display:none}
 details[open]>.card__head{border-bottom:1px solid var(--border2)}
 details>.card__head:hover{background:var(--surface2)}
-.chev{transition:transform .18s;color:var(--muted)}
-details[open] .chev{transform:rotate(90deg)}
 /* ---------- stats ---------- */
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--surface);
@@ -527,7 +525,6 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 .main>details.card:not([open]),.main>.grid2>details.card:not([open]){display:none}
 .main>details.card[open]>summary.card__head,.main>.grid2>details.card[open]>summary.card__head{cursor:default}
 .main>details.card[open]>summary.card__head:hover,.main>.grid2>details.card[open]>summary.card__head:hover{background:var(--surface)}
-.main>details.card>summary.card__head>.chev,.main>.grid2>details.card>summary.card__head>.chev{display:none}
 .tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:0;min-height:44px;padding:5px 6px;
 border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text2);font:inherit;
@@ -591,7 +588,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></symbol>
 <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
 <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
-<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
 <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4 3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8"/></symbol>
 <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
 </svg>
@@ -656,7 +652,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   <div class="grid2">
     <details class="card" id="retailBox">
       <summary class="card__head sr-summary">
-        <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>
         <h2 class="card__title">Bán lẻ</h2>
       </summary>
@@ -717,7 +712,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 
     <details class="card" id="remedyBox">
       <summary class="card__head sr-summary">
-        <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>
         <h2 class="card__title">Thuốc chén</h2>
       </summary>
@@ -799,7 +793,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   </div>
   <details class="card mt-18" id="nhapBox">
     <summary class="card__head sr-summary">
-      <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
       <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
       <h2 class="card__title">Nhập hàng</h2>
     </summary>
@@ -857,7 +850,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   <div class="grid2 mt-18">
     <details class="card" id="chartBox">
       <summary class="card__head chart-head">
-        <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg>
         <h2 class="card__title">Thống kê</h2>
         <div class="chart-year">
@@ -884,7 +876,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 
     <details class="card" id="invBox">
       <summary class="card__head sr-summary">
-        <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>
         <h2 class="card__title">Kho tồn</h2>
       </summary>
@@ -921,7 +912,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
   <div class="grid2 mt-18">
     <details class="card" id="impBox">
       <summary class="card__head sr-summary">
-        <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
         <h2 class="card__title">Lịch sử nhập hàng</h2>
       </summary>
@@ -954,7 +944,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 
     <details class="card" id="expBox">
       <summary class="card__head sr-summary">
-        <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
         <svg class="ico txt-green" aria-hidden="true"><use href="#i-cash"/></svg>
         <h2 class="card__title">Lịch sử bán hàng</h2>
       </summary>
@@ -990,7 +979,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 
   <details class="card mt-18" id="backupBox">
     <summary class="card__head sr-summary">
-      <svg class="ico chev" aria-hidden="true"><use href="#i-chev-r"/></svg>
       <svg class="ico txt-brand" aria-hidden="true"><use href="#i-save"/></svg>
       <h2 class="card__title">Sao lưu &amp; khôi phục</h2>
     </summary>
