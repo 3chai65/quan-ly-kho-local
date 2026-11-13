@@ -299,11 +299,10 @@ function validateState(d) {
     if (r.thang != null && (!Number.isFinite(Number(r.thang)) || Number(r.thang) < 1 || Number(r.thang) > THANG_MAX)) fail(label + ' "' + name + '": số thang phải từ 1 đến ' + THANG_MAX);
     if (!Array.isArray(r.items) || !r.items.length) { fail(label + ' "' + name + '": chưa có vị thuốc'); return; }
     const id = String(r.id || randomId());
-    const nameKey = name;
     if (rxIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
-    if (rxNames.has(nameKey)) { fail(label + ': trùng tên đơn thuốc "' + name + '"'); return; }
+    if (rxNames.has(name)) { fail(label + ': trùng tên đơn thuốc "' + name + '"'); return; }
     rxIds.add(id);
-    rxNames.add(nameKey);
+    rxNames.add(name);
     const itemIds = new Set();
     const items = [];
     r.items.forEach((item, j) => {
