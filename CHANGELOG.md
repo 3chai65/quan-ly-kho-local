@@ -5,6 +5,24 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.15.21] - 2026-11-13
+
+### Fixed
+- A1 hẹn gửi lại: chỉ nhân đôi bước chờ khi thật sự gửi; đang ở ô nhập thì giữ nguyên.
+- A2 `delOrder`: kiểm "tồn sẽ âm" trước, rồi mới hỏi xác nhận (giống `delTx`).
+- A3 `saveTxEdit`: lỗi số lượng đưa con trỏ về ô số lượng (trước đây luôn về ô đơn giá).
+- A4/A5 tiêu chí "mới nhất" là ngày rồi giờ ghi, cùng cách tính giá vốn `lastImport`: bảng lịch sử xếp theo ngày trước, dòng "bán/nhập gần nhất" là hàng đầu bảng, giá trong ngoặc ở tờ bán lẻ (`latestImportMap`) khớp giá vốn. Ví dụ: nhập A ngày 10/11 ghi lúc 12/11 giá 120; nhập B ngày 11/11 ghi lúc 11/11 giá 135. Trước: ngoặc (120), vốn 135, bảng A trên B; sau: ngoặc (135), bảng B trên A, "gần nhất" 11/11.
+
+### Removed (không đổi hành vi; mỗi mục 0 tham chiếu theo `git grep -n` trong src, tests, server.js, tools)
+- `setFavicon` + `YIN` (ảnh đã nằm ở `<link id="favicon">`, giống hệt).
+- Mũi tên `.chev` (8 svg, symbol `i-chev-r`, CSS): luôn `display:none`.
+- `#txEditId` (chỉ ghi), `#retailTotal` ẩn (chỉ ghi) và tổng thừa trong `calcRetail` (vẫn gọi `renderNote`), `iEl/eEl` trong chú giải biểu đồ.
+- Hai khối kiểm số âm không bao giờ tới (`commitRetailRow`, `saveTxEdit`): `checkLimits` chặn trước, thông báo "Tiền không được âm".
+- `kg > 0 ?`, `thang > 0 ?`, `if (oid)` chết trong `saveRetail`/`saveRemedy`; 4 khai báo CSS thừa; biến `nameKey` ở đơn thuốc trong `server.js`.
+
+### Không làm (giữ có chủ ý)
+- Các kiểm số âm đứng trước `checkLimits` (có thông báo/con trỏ riêng), `refreshAllQtyHints()` cuối `saveNhap` (một test cấu trúc đòi), nhánh `!name` của `savePreset` (test gọi thẳng), `kInput/fmtMoney/fmtMoneyInt/qtyHintText`, nhánh else của `init`, CSS `table.ord` min-width/`details>.card__head:hover`/`mt-18`, `try` quanh `JSON.stringify`, `DELETE FROM prescription_items` và `state.updatedAt` ở `server.js` (vùng ghi dữ liệu, lợi nhỏ), bộ gỡ lỗi `?kbdebug=1`, `GET /api/backups`, 4 chỉ mục `transactions`, `migrateMoneyToDong`.
+
 ## [2.15.20] - 2026-11-12
 
 ### Fixed

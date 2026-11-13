@@ -19,7 +19,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `Caddyfile` + dịch vụ `caddy` — HTTPS cổng 443; ứng dụng nghe `0.0.0.0` trong container, docker-compose chỉ mở cổng ra `127.0.0.1:8787` (chạy `npm start` trực tiếp thì mở ra LAN, không dùng cách đó).
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
-- Phiên bản hiện tại: 2.15.20.
+- Phiên bản hiện tại: 2.15.21 (chuẩn bị, chưa triển khai; đang chạy 2.15.20).
 
 ## Vùng nhạy cảm
 Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
@@ -63,6 +63,7 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
+- CHUẨN BỊ 2.15.21 (chưa triển khai): A1–A5 (hẹn gửi lại, delOrder kiểm trước hỏi sau, focus saveTxEdit, "mới nhất" theo ngày rồi giờ ghi) + dọn mã chết (xem CHANGELOG). Đường lui: `quan-ly-kho:pre-2.15.21` = image đang chạy 2.15.20 (id ab6f0e8e…). Sau khi triển khai sẽ ghi "đang chạy 2.15.21".
 - Đang chạy: 2.15.20, commit 788f2f3, image `quan-ly-kho:2.15.20` (id ab6f0e8e…). Giám sát sau triển khai 7/7 đạt (12/11/2026). Đường lui: `quan-ly-kho:pre-2.15.20` = 2.15.19 (id 8ba802fb…, commit 045cb44); `pre-2.15.19` = 2.15.18 (id 6cd4178e…, commit 845be1e).
 - 2.15.20 (sửa từ báo cáo review ngoài 12/11/2026, đã đối chiếu mã): `delOrder` cộng dồn qty NHAP theo vị trước khi kiểm tồn âm (đơn nhập 2 dòng cùng vị làm tồn âm); `openOrder` chặn đơn không còn; `saveLocal` ghi KEY/DIRTY/BASE độc lập nhưng khi ghi KEY lỗi thì KHÔNG ghi BASE (giữ base cũ để máy chủ trả 409, tránh đè lặng lẽ) và chỉ ghi DIRTY='1' khi dirty; dòng log cổng cho đúng. Bài học: bản sửa đầu của worker ghi BASE mới khi KEY lỗi, Auditor bắt được. Báo cáo ngoài còn mục chưa làm (đánh giá không cần): BUG-05 trần ~22k giao dịch (hiện 660), 06 Playwright, 07 CSP/HSTS, 08 err.message, 09 tải backup, 10 bàn phím, 11 Caddyfile IP, 12 confirm/đơn vị biểu đồ. Trước đó: `quan-ly-kho:pre-2.15.19` = 2.15.18 (id 6cd4178e…, commit 845be1e); `pre-2.15.18` = 2.15.17 (id 344fc595…, commit 3951ea7); `pre-2.15.17` = 2.15.16 (id 7b1d3f86…, commit 4348495); `pre-2.15.16` = 2.15.15 (id 6c2b04c1…, commit d22d096).
 - 2.15.19 (không đổi hành vi): dọn code chết đợt 2.15.12–2.15.18 (chỉ 3 mục nhỏ; rà 0 hàm/CSS/id/icon mồ côi; đo giao diện trước/sau 0 khác biệt) + thêm test (log từ chối 400 JSON/header, 200 không log; 5xx/mạng không toast; Hủy tên trùng). Đã nghi nhưng giữ: `class="cg-name"` trên 6 `<col>`, `html{scroll-padding-bottom:230px}`, `tr[data-pid]{scroll-margin-*}`, selector thead `#remedyNote` chồng nhau, khai báo CSS trùng bộ chọn (`.chart-tip`, `.tab__ic`, `.note__row--aux/--btns`). Chưa làm: không xóa tờ đơn khi lưu thất bại (chờ gặp "Chưa lưu được" thật).
