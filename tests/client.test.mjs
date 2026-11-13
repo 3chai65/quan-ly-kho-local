@@ -1106,7 +1106,7 @@ function stockDom(){
     }
     return els.get(id);
   }
-  const need = new Set(['txEditId', 'txEditName', 'txEditQty', 'txEditPrice', 'remedyUnitPrice', 'remedyThang']);
+  const need = new Set(['txEditName', 'txEditQty', 'txEditPrice', 'remedyUnitPrice', 'remedyThang']);
   const document = {
     readyState: 'loading',
     documentElement: ensure('html'),
@@ -2588,7 +2588,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 16, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 164); // 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 163); // 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -4284,7 +4284,7 @@ test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');

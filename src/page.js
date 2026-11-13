@@ -1065,7 +1065,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
       <h2 class="card__title" id="txEditTitle">Sửa giao dịch</h2>
     </div>
     <div class="card__body">
-      <input type="hidden" id="txEditId">
       <div class="field">
         <label class="lbl" for="txEditName">Vị thuốc</label>
         <input class="inp" id="txEditName" type="text" readonly>
@@ -4229,7 +4228,6 @@ function openTxEdit(id){
   if (!t) return;
   txEditCur = t;
   var p = findProduct(t.productId);
-  $('#txEditId').value = t.id;
   $('#txEditName').value = p ? p.name : 'Đã xóa';
   var isRx = !!t.rx;
   var lbl = $('#txEditQtyLbl');
