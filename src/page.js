@@ -335,6 +335,7 @@ td.c-qty{position:relative}
 .note__row+.note__row{margin-top:8px}
 .note__row:first-child{justify-content:flex-start}
 .note__row--aux:not(:has(.btn:not([hidden]))){display:none}
+.note__row--aux{margin-top:8px}
 .note__name{flex:1 1 160px;min-width:0}
 .note__lbl{font-size:13px;color:var(--text2)}
 /* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
