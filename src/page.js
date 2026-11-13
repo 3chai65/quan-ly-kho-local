@@ -1601,12 +1601,12 @@ function refPrice(p){
   return l ? l.price : num(p.costPrice);
 }
 function latestImportMap(){
-  var m = {}, stamps = {};
+  var m = {}, stamps = {}, dates = {};
   db.transactions.forEach(function(t){
     if (t.type !== 'NHAP' || !(num(t.price) > 0)) return;
     var pid = String(t.productId);
-    var s = txStamp(t);
-    if (!(pid in m) || s >= stamps[pid]) { m[pid] = num(t.price); stamps[pid] = s; }
+    var s = txStamp(t), d = String(t.date);
+    if (!(pid in m) || d > dates[pid] || (d === dates[pid] && s >= stamps[pid])) { m[pid] = num(t.price); stamps[pid] = s; dates[pid] = d; }
   });
   return m;
 }
@@ -1868,10 +1868,9 @@ function scheduleSyncRetry(){
   var wait = syncRetryDelay;
   syncRetryTimer = setTimeout(function(){
     syncRetryTimer = null;
-    syncRetryDelay = Math.min(syncRetryDelay * 2, SYNC_RETRY_MAX);
     if ((dirty || syncErrorShown) && !syncRejected && !conflictOpen && !pushing) {
       if (busyEditing()) scheduleSyncRetry();
-      else pushState(false);
+      else { syncRetryDelay = Math.min(syncRetryDelay * 2, SYNC_RETRY_MAX); pushState(false); }
     }
   }, wait);
 }
@@ -3293,23 +3292,14 @@ function historyData(kind, month, q){
     });
   }
 
-  var latestDate = '', latestTs = -Infinity, latestHasTime = false;
-  rows.forEach(function(r){
-    if (!r.date) return;
-    if (r.date > latestDate || (r.date === latestDate && r.ts > latestTs)) {
-      latestDate = r.date;
-      latestTs = r.ts;
-      latestHasTime = r.hasTime;
-    }
-  });
-
   rows.sort(function(a, b){
-    if (b.ts !== a.ts) return b.ts - a.ts;
     if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    if (b.ts !== a.ts) return b.ts - a.ts;
     return 0;
   });
+  var top = rows.length && rows[0].date ? rows[0] : null;
 
-  return { rows: rows, latestDate: latestDate, latestTs: latestTs, latestHasTime: latestHasTime };
+  return { rows: rows, latestDate: top ? top.date : '', latestTs: top ? top.ts : -Infinity, latestHasTime: top ? top.hasTime : false };
 }
 function renderHistory(kind){
   var isImp = kind === 'imp';
@@ -4213,7 +4203,6 @@ function delOrder(oid){
   var label = (items[0].oname && items[0].oname !== items[0].oid) ? items[0].oname : (items[0].type === 'NHAP'
     ? 'đơn nhập ngày ' + dateVN(items[0].date)
     : 'đơn');
-  if (!confirm('Xóa cả ' + label + '? Tồn kho sẽ được điều chỉnh lại.')) return;
   /* Kiểm tra trước toàn bộ đơn nhập: không được để tồn âm. */
   var needOut = {};
   for (var i = 0; i < items.length; i++) {
@@ -4229,6 +4218,7 @@ function delOrder(oid){
       return;
     }
   }
+  if (!confirm('Xóa cả ' + label + '? Tồn kho sẽ được điều chỉnh lại.')) return;
   items.forEach(function(t){
     var p = findProduct(t.productId);
     if (!p) return;
@@ -4305,7 +4295,7 @@ function saveTxEdit(){
   var limTx = checkLimits('q', q) || checkLimits('money', price) || (!isRx && checkLimits('money', money(q * price)));
   if (limTx) {
     toast(limTx, 'error');
-    var ep = $('#txEditPrice'); if (ep) ep.focus();
+    var ep = $(checkLimits('q', q) ? '#txEditQty' : '#txEditPrice'); if (ep) ep.focus();
     return;
   }
   if (!isRx && price < 0) { toast('Đơn giá không được âm', 'error'); ep = $('#txEditPrice'); if (ep) { ep.focus(); ep.select(); } return; }
