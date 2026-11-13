@@ -5739,3 +5739,23 @@ test('2.15.21 B8 saveTxEdit: đơn giá âm bị chặn, "Tiền không được
   assert.equal(JSON.stringify(c.getDb()), before);
   assert.equal(f, 'price');
 });
+
+/* ===== 2.16.0 PWA ===== */
+test('2.16.0 PWA: head có manifest/apple-touch-icon/meta; đăng ký sw.js bọc try/catch và chỉ khi có serviceWorker', async () => {
+  const { PAGE } = await import('../src/page.js');
+  assert.match(PAGE, /<link rel="manifest" href="\/manifest\.webmanifest">/);
+  assert.match(PAGE, /<link rel="apple-touch-icon" href="\/apple-touch-icon\.png">/);
+  assert.match(PAGE, /<meta name="apple-mobile-web-app-capable" content="yes">/);
+  assert.match(PAGE, /name="apple-mobile-web-app-title"/);
+  assert.match(PAGE, /name="apple-mobile-web-app-status-bar-style"/);
+  assert.match(PAGE, /try \{ if \('serviceWorker' in navigator\) navigator\.serviceWorker\.register\('\/sw\.js'\)/);
+});
+test('2.16.0 PWA: manifest JSON hợp lệ; sw.js không cache, không nhắc /api; icon là PNG đúng cỡ', async () => {
+  const { MANIFEST, SW_JS, makeIcon } = await import('../pwa.js');
+  const m = JSON.parse(MANIFEST);
+  assert.equal(m.name, 'Quản Lý Kho'); assert.equal(m.short_name, 'Kho'); assert.equal(m.scope, '/');
+  assert.equal(m.background_color, '#eceef2');
+  assert.ok(!/\/api|caches\.|respondWith/.test(SW_JS));
+  const b = makeIcon(192);
+  assert.equal(b.subarray(1, 4).toString(), 'PNG'); assert.equal(b.readUInt32BE(16), 192); assert.equal(b.readUInt32BE(20), 192);
+});

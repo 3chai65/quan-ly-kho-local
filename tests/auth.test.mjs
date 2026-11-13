@@ -299,3 +299,18 @@ test('tên cookie giữ nguyên sau khi khởi động lại và sau khi xóa h�
     assert.equal(again.hasOwner(), false);
   } finally { again.close(); fs.rmSync(s.dir, { recursive: true, force: true }); }
 });
+
+test('2.16.0 PWA: manifest/sw/icon công khai chỉ GET/HEAD; đường khác vẫn bị chặn', () => {
+  const s = setup();
+  try {
+    for (const p of ['/manifest.webmanifest', '/sw.js', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']) {
+      assert.equal(runGate(s.auth, mkReq('GET', p)).passed, true, p);
+      assert.equal(runGate(s.auth, mkReq('HEAD', p)).passed, true, p);
+      assert.equal(runGate(s.auth, mkReq('POST', p)).passed, false, p + ' POST');
+      assert.equal(runGate(s.auth, mkReq('PUT', p)).passed, false, p + ' PUT');
+    }
+    for (const p of ['/', '/api/state', '/sw.js/x', '/manifest.webmanifest/', '/SW.JS', '/icon-192.png.bak']) {
+      assert.equal(runGate(s.auth, mkReq('GET', p)).passed, false, p);
+    }
+  } finally { s.cleanup(); }
+});

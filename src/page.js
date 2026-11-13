@@ -12,6 +12,11 @@ export const PAGE = String.raw`<!doctype html>
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" id="themeColor" content="#eceef2">
 <meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kho">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23fff'/%3E%3Cpath fill='%23000' d='M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0'/%3E%3C/svg%3E">
 <style>
 *,*::before,*::after{box-sizing:border-box}
@@ -5427,6 +5432,8 @@ function init(){
   doc.addEventListener('pointerdown', firstUse);
   doc.addEventListener('keydown', firstUse);
 }
+
+try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){}); } catch (e) {}
 
 if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init);
 else init();

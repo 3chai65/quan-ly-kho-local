@@ -28,6 +28,7 @@ import Database from 'better-sqlite3';
 
 import { PAGE } from './src/page.js';
 import { createAuth } from './auth.js';
+import { mountPwa } from './pwa.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -495,6 +496,7 @@ app.use(auth.gate);
 auth.mount(app, express.text({ type: '*/*', limit: '2kb' }));
 app.use(express.text({ type: '*/*', limit: MAX_BODY }));
 
+mountPwa(app);
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send('User-agent: *\nDisallow: /\n');

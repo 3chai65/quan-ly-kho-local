@@ -17,7 +17,7 @@ WORKDIR /app
 
 COPY --from=build /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
-COPY server.js auth.js ./
+COPY server.js auth.js pwa.js ./
 COPY src ./src
 COPY scripts ./scripts
 COPY tests ./tests

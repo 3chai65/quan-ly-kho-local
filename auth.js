@@ -46,6 +46,11 @@ const PUBLIC = {
   '/healthz': ['GET', 'HEAD'],
   '/favicon.ico': ['GET', 'HEAD'],
   '/robots.txt': ['GET', 'HEAD'],
+  '/manifest.webmanifest': ['GET', 'HEAD'],
+  '/sw.js': ['GET', 'HEAD'],
+  '/icon-192.png': ['GET', 'HEAD'],
+  '/icon-512.png': ['GET', 'HEAD'],
+  '/apple-touch-icon.png': ['GET', 'HEAD'],
   '/auth/setup': ['GET', 'POST'],
   '/auth/join': ['GET', 'POST']
 };

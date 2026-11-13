@@ -730,3 +730,31 @@ test('server.js: log từ chối có dòng cho 400 "JSON không hợp lệ" và 
   assert.equal(lines.length, 2, 'PUT 200 không được ghi dòng từ chối: ' + serverErr.slice(start));
   assert.ok(!serverErr.slice(start).includes(SECRET), 'log lộ dữ liệu');
 });
+
+test('2.16.0 PWA: manifest/icon/sw công khai đúng Content-Type, không chứa dữ liệu; "/" và /api/state vẫn bị chặn', async () => {
+  const m = await fetch(`${BASE}/manifest.webmanifest`);
+  assert.equal(m.status, 200);
+  assert.match(m.headers.get('content-type'), /^application\/manifest\+json/);
+  const mj = JSON.parse(await m.text());
+  assert.equal(mj.display, 'standalone');
+  assert.equal(mj.start_url, '/');
+  assert.ok(mj.icons.some(i => i.sizes === '192x192') && mj.icons.some(i => i.sizes === '512x512' && i.purpose === 'maskable'));
+  for (const [p, n] of [['/icon-192.png', 192], ['/icon-512.png', 512], ['/apple-touch-icon.png', 180]]) {
+    const r = await fetch(`${BASE}${p}`);
+    assert.equal(r.status, 200, p);
+    assert.equal(r.headers.get('content-type'), 'image/png');
+    const b = Buffer.from(await r.arrayBuffer());
+    assert.equal(b.subarray(1, 4).toString(), 'PNG');
+    assert.equal(b.readUInt32BE(16), n);
+  }
+  const sw = await fetch(`${BASE}/sw.js`);
+  assert.equal(sw.status, 200);
+  assert.match(sw.headers.get('content-type'), /javascript/);
+  assert.equal(sw.headers.get('cache-control'), 'no-cache');
+  assert.equal(sw.headers.get('service-worker-allowed'), '/');
+  const swText = await sw.text();
+  assert.ok(!/\/api|caches\.|respondWith/.test(swText), 'sw.js không cache và không đụng /api');
+  assert.equal((await fetch(`${BASE}/`)).status === 200, false);
+  assert.equal((await fetch(`${BASE}/api/state`)).status, 401);
+  assert.equal((await fetch(`${BASE}/manifest.webmanifest`, { method: 'POST', body: 'x' })).status === 200, false);
+});
