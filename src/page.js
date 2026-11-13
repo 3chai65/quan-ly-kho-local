@@ -701,7 +701,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
           <div class="foot" id="retailNotePager" hidden></div>
           <div class="note__foot">
             <span class="note__tot">Tổng <b class="txt-green" id="retailNoteTotal">0</b></span>
-            <span class="sr" id="retailTotal">0</span>
             <button class="btn btn--green" type="button" data-action="save-retail" data-keep-focus>
               <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
             </button>
@@ -2424,11 +2423,6 @@ function noteSave(){
   calcRetail();
 }
 function calcRetail(){
-  var total = 0;
-  retailItems.forEach(function(it){ total += num(it.amount); });
-  $$('#retailBody .retail-money').forEach(function(i){ total += kToDong(i.value); });
-  var out = $('#retailTotal');
-  if (out) out.textContent = fmtMoney(total);
   renderNote();
 }
 function remedyThang(){
