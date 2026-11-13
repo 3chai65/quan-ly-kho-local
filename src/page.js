@@ -105,7 +105,6 @@ color:var(--text);border-radius:8px;font:inherit;font-size:14px;cursor:pointer;t
 .rowmenu{position:static;display:inline-flex}
 .rowmenu__list{position:fixed;z-index:120;min-width:180px;background:var(--surface);
 border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px rgba(15,23,42,.18);padding:6px}
-.rowmenu__list[hidden]{display:none}
 .menu__item--danger{color:var(--red-text)}
 .menu__item--danger:hover{background:var(--red-soft);color:var(--red-text)}
 /* ---------- cards ---------- */
@@ -162,7 +161,6 @@ select.inp{cursor:pointer}
 /* 2.12.0: nút + thêm vào tờ ghi (cạnh Giá nhập), vùng bấm ≥ 44×44. */
 .nhap-add{width:44px;min-width:44px;min-height:44px;height:44px;padding:0}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-.grid2+.grid2{margin-top:18px}
 /* ---------- table ---------- */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -337,7 +335,6 @@ td.c-qty{position:relative}
 .note__row+.note__row{margin-top:8px}
 .note__row:first-child{justify-content:flex-start}
 .note__row--aux:not(:has(.btn:not([hidden]))){display:none}
-.note__row--aux{margin-top:8px}
 .note__name{flex:1 1 160px;min-width:0}
 .note__lbl{font-size:13px;color:var(--text2)}
 /* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
@@ -349,7 +346,6 @@ td.c-qty{position:relative}
 #nhapListBox col.cg-act{width:52px}
 #nhapListBox .note__pending thead{display:none}
 #nhapListBox .note__pending{margin:0}
-#nhapListBox .note__foot{padding:10px 12px}
 .nhap-pend__name{font-weight:600;overflow-wrap:anywhere}
 .nhap-pend__name.is-muted{color:var(--muted);font-weight:400}
 .nhap-pend__tot{float:right;font-size:13px}
