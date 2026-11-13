@@ -5708,3 +5708,34 @@ test('2.15.21 A5 latestImportMap: nhập ghi lùi ngày không thắng nhập ng
   ]));
   assert.equal(c.latestImportMap()['p1'], 135000);
 });
+
+/* ===== 2.15.21 B8: hai khối kiểm âm đã xóa (checkLimits chặn trước) ===== */
+test('2.15.21 B8 commitRetailRow: thành tiền âm bị chặn, thông báo "Tiền không được âm", con trỏ ở ô thành tiền', () => {
+  const qEl = { value: '1' }, mEl = { value: '-5' };
+  const row = { getAttribute() { return 'p1'; }, querySelector(sel) { return sel === '.retail-qty' ? qEl : sel === '.retail-money' ? mEl : { value: '0' }; } };
+  const ids = { '#retailBody': { querySelector() { return row; } }, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const doc = trackDoc(ids);
+  doc.track(qEl); doc.track(mEl);
+  doc.activeElement = mEl;
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  assert.equal(c.commitRetailRow(), false);
+  assert.equal(ids['#toastMsg'].textContent, 'Tiền không được âm');
+  assert.equal(c.getRetailItems().length, 0);
+  assert.equal(doc.activeElement, mEl);
+});
+
+test('2.15.21 B8 saveTxEdit: đơn giá âm bị chặn, "Tiền không được âm", db không đổi, con trỏ ở ô giá', () => {
+  const dom = limitStock();
+  const tx = { id: 'n1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000 };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 200000 }], [tx]);
+  c.openTxEdit('n1');
+  let f = '';
+  dom.document.querySelector('#txEditPrice').focus = () => { f = 'price'; };
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '-5');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(toastText(dom), 'Tiền không được âm');
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.equal(f, 'price');
+});
