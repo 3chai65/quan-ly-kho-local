@@ -13,7 +13,8 @@
     "test": "node --test --test-timeout=120000 tests/server.test.mjs",
     "test:client": "node --test --test-timeout=120000 tests/client.test.mjs",
     "test:auth": "node --test --test-timeout=120000 tests/auth.test.mjs tests/auth.devices.test.mjs",
-    "lint:client": "node scripts/lint-client.mjs"
+    "lint:client": "node scripts/lint-client.mjs",
+    "lint": "node --check server.js && node --check auth.js && node --check pwa.js && node tools/kiem-cu-phap.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",

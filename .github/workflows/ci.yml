@@ -47,3 +47,19 @@ jobs:
 
       - name: Run auth tests in container
         run: docker run --rm -e DATA_DIR=/tmp/qlk-ci quan-ly-kho-local:ci npm run test:auth
+
+  # Kiểm cú pháp server/auth/pwa và script client (không cần dependency).
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Lint cú pháp
+        run: npm run lint
