@@ -790,3 +790,19 @@ test('2.17.4 isNonNegNumber/isPositiveNumber: boolean, chuỗi rỗng, khoảng 
     assert.equal(r.status, 200, 'stock hợp lệ=' + JSON.stringify(v));
   }
 });
+
+test('2.17.5 thang của giao dịch và đơn thuốc dùng cùng luật số: true, chuỗi rỗng, 0x10 → 400; 2 và "2" → 200', async () => {
+  const prod = [{ id: 'TH1', name: 'Thang Mot', stock: 10, costPrice: 1 }];
+  for (const v of [true, '', ' ', '0x10', [], 'abc']) {
+    const r1 = await put(emptyState({ products: prod, transactions: [{ id: 'THT', date: '2026-11-06', type: 'NHAP', productId: 'TH1', qty: 1, price: 1, total: 1, thang: v }] }), { 'X-Force': '1' });
+    assert.equal(r1.status, 400, 'tx.thang=' + JSON.stringify(v));
+    const r2 = await put(emptyState({ products: prod, prescriptions: [{ id: 'THR', name: 'Don Thang', total: 1, thang: v, items: [{ productId: 'TH1', grams: 1 }] }] }), { 'X-Force': '1' });
+    assert.equal(r2.status, 400, 'rx.thang=' + JSON.stringify(v));
+  }
+  for (const v of [2, '2']) {
+    const r1 = await put(emptyState({ products: prod, transactions: [{ id: 'THT', date: '2026-11-06', type: 'NHAP', productId: 'TH1', qty: 1, price: 1, total: 1, thang: v }] }), { 'X-Force': '1' });
+    assert.equal(r1.status, 200, 'tx.thang hợp lệ=' + JSON.stringify(v));
+    const r2 = await put(emptyState({ products: prod, prescriptions: [{ id: 'THR', name: 'Don Thang', total: 1, thang: v, items: [{ productId: 'TH1', grams: 1 }] }] }), { 'X-Force': '1' });
+    assert.equal(r2.status, 200, 'rx.thang hợp lệ=' + JSON.stringify(v));
+  }
+});

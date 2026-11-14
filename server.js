@@ -280,7 +280,7 @@ function validateState(d) {
     if (t.cost != null && !isNonNegNumber(t.cost, MONEY_MAX)) fail(label + ': giá vốn phải từ 0 đến ' + MONEY_MAX);
     if (t.ts != null && !Number.isFinite(Number(t.ts))) fail(label + ': ts không hợp lệ');
     if (t.g != null && !isNonNegNumber(t.g, GRAMS_MAX)) fail(label + ': grams phải từ 0 đến ' + GRAMS_MAX);
-    if (t.thang != null && (!Number.isFinite(Number(t.thang)) || Number(t.thang) < 1 || Number(t.thang) > THANG_MAX)) fail(label + ': số thang phải từ 1 đến ' + THANG_MAX);
+    if (t.thang != null && (!isNumLike(t.thang) || Number(t.thang) < 1 || Number(t.thang) > THANG_MAX)) fail(label + ': số thang phải từ 1 đến ' + THANG_MAX);
     if (t.unitPrice != null && !isNonNegNumber(t.unitPrice, MONEY_MAX)) fail(label + ': giá 1 thang phải từ 0 đến ' + MONEY_MAX);
     const id = String(t.id || randomId());
     if (txIds.has(id)) { fail(label + ': trùng id giao dịch ' + id); return; }
@@ -308,7 +308,7 @@ function validateState(d) {
     if (!name) { fail(label + ': thiếu tên'); return; }
     if (name.length > NAME_MAX) fail(label + ' "' + name.slice(0, 40) + '…": tên quá dài (tối đa ' + NAME_MAX + ' ký tự)');
     if (!isNonNegNumber(r.total, MONEY_MAX)) fail(label + ' "' + name + '": tổng tiền phải từ 0 đến ' + MONEY_MAX);
-    if (r.thang != null && (!Number.isFinite(Number(r.thang)) || Number(r.thang) < 1 || Number(r.thang) > THANG_MAX)) fail(label + ' "' + name + '": số thang phải từ 1 đến ' + THANG_MAX);
+    if (r.thang != null && (!isNumLike(r.thang) || Number(r.thang) < 1 || Number(r.thang) > THANG_MAX)) fail(label + ' "' + name + '": số thang phải từ 1 đến ' + THANG_MAX);
     if (!Array.isArray(r.items) || !r.items.length) { fail(label + ' "' + name + '": chưa có vị thuốc'); return; }
     const id = String(r.id || randomId());
     if (rxIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
