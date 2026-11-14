@@ -3,14 +3,14 @@
  */
 
 export const PAGE = String.raw`<!doctype html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quản Lý Kho — Sổ kho, đơn bán và doanh thu</title>
 <meta name="description" content="Quản lý kho dược liệu: đơn bán lẻ, đơn thuốc chén, nhập hàng, tồn kho, lịch sử giao dịch và thống kê doanh thu 12 tháng. Đồng bộ mạng nội bộ (LAN).">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" id="themeColor" content="#eceef2">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#eceef2">
 <meta name="robots" content="noindex, nofollow">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -33,19 +33,6 @@ color-scheme:light;
 --sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.05);
 --chart-imp:#5b5fd0;--chart-exp:#2f9e76;
 --ring:0 0 0 3px rgba(79,70,229,.30);
-}
-html[data-theme=dark]{
-color-scheme:dark;
---bg:#111620;--surface:#171e2b;--surface2:#1f2736;--border:#2d3850;--border2:#242e41;
---text:#cdd5e1;--text2:#aab4c4;--muted:#8f9bb0;
---brand:#5b5fd9;--brand-text:#b4bcf2;--brand-soft:#222545;
---green-text:#7fd6ad;--tab-ico:#7fd6ad;
---amber:#d99a2b;--amber-soft:#2e2412;--amber-text:#e6b964;
---red:#e0566f;--red-soft:#3a1a22;--red-text:#ec8294;
---blue-text:#a7c7ea;
---sh:0 1px 2px rgba(0,0,0,.35);
---chart-imp:#7f83e0;--chart-exp:#4fb991;
---ring:0 0 0 3px rgba(129,140,248,.35);
 }
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);
@@ -71,7 +58,6 @@ a{color:var(--brand-text)}
 .brand__yin.is-shake{animation:yinShake .4s ease-in-out}
 @keyframes yinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){.brand__yin.is-shake{animation:none;box-shadow:0 0 0 2px var(--red-text)}}
-.menu__item--sub{font-size:12px;color:var(--muted)}
 .bar__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
 border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber-text);
@@ -97,15 +83,9 @@ transition:background .15s,border-color .15s,color .15s}
 .btn--danger:hover{background:var(--red-soft)}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 /* ---------- menu ---------- */
-.menu{position:relative}
-/* 2.13.1: menu neo mép trái (nút âm dương ở bên trái header); không tràn khỏi màn hình 320–375px. */
-.menu__list{position:absolute;left:0;right:auto;top:calc(100% + 6px);min-width:178px;max-width:calc(100vw - 24px);background:var(--surface);
-border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px rgba(15,23,42,.18);padding:6px;z-index:60}
 .menu__item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;background:transparent;
 color:var(--text);border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
 .menu__item:hover{background:var(--surface2)}
-.menu__item[aria-checked=true]{background:var(--brand-soft);color:var(--brand-text);font-weight:700}
-.menu__item[aria-checked=true]::after{content:"✓";margin-left:auto;font-weight:800}
 /* ---------- row action menu (···) ---------- */
 .rowmenu{position:static;display:inline-flex}
 .rowmenu__list{position:fixed;z-index:120;min-width:180px;background:var(--surface);
@@ -559,11 +539,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 </style>
 <script>
 (function(){
-  var d=document.documentElement,m='system';
-  try{m=localStorage.getItem('theme_mode')||'system';}catch(e){}
-  var dark=m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
-  d.setAttribute('data-theme',dark?'dark':'light');
-  window.__THEME__=m;
   window.__DB__=%%BOOT%%;
   window.__NEED_FETCH__=%%NEEDFETCH%%;
 })();
@@ -576,8 +551,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
-<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
-<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
 <symbol id="i-warehouse" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></symbol>
 <symbol id="i-chart-col" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-4"/></symbol>
 <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"/><path d="M9 7h6M9 11h6"/></symbol>
@@ -596,21 +569,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 <header class="top">
   <div class="wrap bar">
     <div class="brand-wrap">
-      <div class="menu">
-        <button class="brand__yin" type="button" id="themeBtn" data-action="theme-menu" aria-haspopup="true" aria-expanded="false" aria-controls="themeMenu" aria-label="Đổi giao diện sáng hoặc tối" title="Sáng / Tối">
-          <svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg>
-        </button>
-        <span class="sr" id="themeLabel">Theo máy</span>
-        <div class="menu__list" id="themeMenu" role="menu" aria-labelledby="themeBtn" hidden>
-          <button class="menu__item" type="button" role="menuitemradio" data-theme-set="light" aria-checked="false">
-            <svg class="ico" aria-hidden="true"><use href="#i-sun"/></svg>Sáng
-          </button>
-          <button class="menu__item" type="button" role="menuitemradio" data-theme-set="dark" aria-checked="false">
-            <svg class="ico" aria-hidden="true"><use href="#i-moon"/></svg>Tối
-          </button>
-          <button class="menu__item menu__item--sub" type="button" role="menuitemradio" data-theme-set="system" aria-checked="true">Theo máy</button>
-        </div>
-      </div>
+      <span class="brand__yin" id="themeBtn" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg></span>
       <button class="brand" type="button" id="brandBtn" data-action="brand-devices" aria-describedby="brandNote">Quản Lý Kho</button>
     </div>
     <div class="bar__actions">
@@ -1983,21 +1942,6 @@ function dlgErrorBox(dlg){
 }
 function clearDlgErr(dlg){ var box = dlg.querySelector('.dlg__err'); if (box && box.parentNode) box.parentNode.removeChild(box); }
 
-/* ================= GIAO DIỆN SÁNG/TỐI ================= */
-function applyTheme(mode){
-  var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  window.__THEME__ = mode;
-  doc.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  try { localStorage.setItem('theme_mode', mode); } catch (e) {}
-  var lbl = $('#themeLabel');
-  if (lbl) lbl.textContent = mode === 'dark' ? 'Tối' : mode === 'light' ? 'Sáng' : 'Theo máy';
-  $$('#themeMenu [data-theme-set]').forEach(function(b){
-    b.setAttribute('aria-checked', b.getAttribute('data-theme-set') === mode ? 'true' : 'false');
-  });
-  var meta = $('#themeColor');
-  if (meta) meta.setAttribute('content', dark ? '#111620' : '#eceef2');
-  if ($('#chartBox') && $('#chartBox').open) renderChart();
-}
 /* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
 var brandBusy = false;
 function denyDevices(){
@@ -2015,11 +1959,6 @@ function brandDevicesClick(){
     if (r && r.status === 200) location.href = '/auth/devices';
     else denyDevices();
   }, denyDevices).then(function(){ brandBusy = false; });
-}
-function closeThemeMenu(){
-  var m = $('#themeMenu'), b = $('#themeBtn');
-  if (m) m.hidden = true;
-  if (b) b.setAttribute('aria-expanded', 'false');
 }
 /* ================= DÒNG ĐƠN HÀNG ================= */
 function renumber(tbody, base){
@@ -4780,13 +4719,6 @@ function handleAction(btn){
   var a = btn.getAttribute('data-action');
   var id = btn.getAttribute('data-id');
   switch (a) {
-    case 'theme-menu': {
-      var menu = $('#themeMenu');
-      var open = menu.hidden;
-      menu.hidden = !open;
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      break;
-    }
     case 'nhap-add': addNhapItem(); break;
     case 'save-retail': saveRetail(); break;
     case 'save-remedy': saveRemedy(); break;
@@ -4869,21 +4801,6 @@ function bindEvents(){
   doc.addEventListener('click', function(e){
     var t = e.target.closest ? e.target.closest('[data-action]') : null;
     if (t) handleAction(t);
-    if (!e.target.closest || !e.target.closest('.menu')) closeThemeMenu();
-  });
-
-  $$('#themeMenu [data-theme-set]').forEach(function(b){
-    b.addEventListener('click', function(){
-      applyTheme(b.getAttribute('data-theme-set'));
-      closeThemeMenu();
-    });
-  });
-  /* 2.13.1: Esc đóng menu chế độ và đưa focus về nút âm dương. */
-  doc.addEventListener('keydown', function(e){
-    var tm = $('#themeMenu');
-    if (e.key !== 'Escape' || !tm || tm.hidden) return;
-    closeThemeMenu();
-    var yb = $('#themeBtn'); if (yb) yb.focus();
   });
 
   var nf = $('#nhapForm');
@@ -5007,13 +4924,6 @@ function bindEvents(){
     clearTimeout(rt);
     rt = setTimeout(function(){ if (cb && cb.open) renderChart(); }, 160);
   });
-
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-  var onMq = function(){
-    var m = window.__THEME__ || 'system';
-    if (m === 'system') applyTheme('system');
-  };
-  if (mq.addEventListener) mq.addEventListener('change', onMq);
 
   var dlg = $('#editDlg');
   if (dlg) dlg.addEventListener('click', function(e){ if (e.target === dlg) closeEdit(); });
@@ -5393,9 +5303,6 @@ function init(){
     cloudBase = 0;
     dirty = false;
   }
-
-  var m = window.__THEME__ || 'system';
-  applyTheme(m);
 
   var t = todayISO();
   setDateInput('retailDate', t);

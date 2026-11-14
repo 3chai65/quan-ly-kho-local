@@ -2587,8 +2587,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 16, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 162); // 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
+  assert.equal(PAGE.match(/ id="/g).length, 157); // 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3257,26 +3257,12 @@ test('2.13.0 N5 tìm tên ở Lịch sử bán: "dang sam" khớp "Đảng sâm"
 });
 
 /* 2.13.1: menu chế độ neo mép trái nút âm dương (không tràn 320–375px); tick cho lựa chọn; toast lỗi có biểu tượng cảnh báo; Esc đóng menu. */
-test('2.13.1 menu chế độ neo mép trái: .menu__list có left:0 và right:auto, không còn right:0', () => {
-  assert.match(PAGE, /\.menu__list\{position:absolute;left:0;right:auto;/, 'thiếu left:0');
-  assert.doesNotMatch(PAGE, /\.menu__list\{[^}]*right:0[;}]/, 'còn right:0 ở .menu__list');
-  assert.match(PAGE, /\.menu__list\{[^}]*max-width:calc\(100vw - 24px\)/, 'thiếu giới hạn chiều rộng theo khung nhìn');
-});
-
-test('2.13.1 lựa chọn hiện tại có dấu tick (aria-checked=true)', () => {
-  assert.match(PAGE, /\.menu__item\[aria-checked=true\]::after\{content:"✓"/);
-});
-
 test('2.13.1 toast lỗi dùng biểu tượng cảnh báo; thông báo thường vẫn dấu ✓', () => {
   assert.match(PAGE, /<symbol id="i-warn"/);
   assert.match(PAGE, /<svg class="ico toast__warn" aria-hidden="true"><use href="#i-warn"\/><\/svg>/);
   assert.match(PAGE, /<svg class="ico toast__ok" aria-hidden="true"><use href="#i-check"\/><\/svg>/);
   assert.match(PAGE, /\.toast\[data-kind=error\] \.toast__warn\{display:inline-block\}/);
   assert.match(PAGE, /\.toast\[data-kind=error\] \.toast__ok\{display:none\}/);
-});
-
-test('2.13.1 Esc đóng menu chế độ khi đang mở và đưa focus về nút âm dương', () => {
-  assert.match(PAGE, /if \(e\.key !== 'Escape' \|\| !tm \|\| tm\.hidden\) return;\n    closeThemeMenu\(\);\n    var yb = \$\('#themeBtn'\); if \(yb\) yb\.focus\(\);/);
 });
 
 /* 2.13.2: Thống kê – số liệu ở đầu thẻ; ô năm một khung; dòng dữ liệu hai ô màu; tháng mặc định; bấm lại về mặc định. */
@@ -3889,17 +3875,15 @@ test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu t
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
-test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là button mở menu sáng/tối', () => {
+test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là span trang trí (2.17.0: không còn menu sáng/tối)', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
   assert.doesNotMatch(head, /href="\/auth\/devices"/, 'còn liên kết /auth/devices trong header');
   assert.doesNotMatch(head, /<a class="brand"/, 'brand vẫn là thẻ a');
   assert.doesNotMatch(head, />\s*Thiết bị\s*</, 'còn nút chữ Thiết bị');
   assert.doesNotMatch(head, /Hệ thống/, 'còn chữ Hệ thống trong header');
   assert.match(head, /<button class="brand" type="button" id="brandBtn" data-action="brand-devices"[^>]*>Quản Lý Kho<\/button>/);
-  assert.match(head, /<button class="brand__yin" type="button" id="themeBtn" data-action="theme-menu"[^>]*aria-label="Đổi giao diện sáng hoặc tối"/);
-  assert.match(head, /data-theme-set="light"/);
-  assert.match(head, /data-theme-set="dark"/);
-  assert.match(head, /data-theme-set="system"[^>]*>Theo máy</);
+  assert.match(head, /<span class="brand__yin" id="themeBtn" aria-hidden="true">/);
+  assert.doesNotMatch(head, /data-theme-set|theme-menu/, '2.17.0: chỉ một theme sáng, không còn menu giao diện');
 });
 
 test('2.13.0 N4 CSS: keyframes rung và nhánh prefers-reduced-motion cho icon; tiêu đề là nút không viền', () => {
@@ -4146,9 +4130,9 @@ test('2.12.0 nhãn tab: mỗi nút đúng 2 span tab__l1/tab__l2 không rỗng; 
 const C_TOKENS = ['--bg', '--surface', '--surface2', '--text', '--text2', '--muted', '--brand', '--brand-text', '--brand-soft',
   '--green-text', '--amber-soft', '--amber-text', '--red-soft', '--red-text', '--blue-text', '--chart-imp', '--chart-exp'];
 function tokenBlocks() {
-  const r0 = PAGE.indexOf(':root{'), d0 = PAGE.indexOf('html[data-theme=dark]{');
-  assert.ok(r0 >= 0 && d0 > r0, 'thiếu :root hoặc html[data-theme=dark]');
-  return { root: PAGE.slice(r0, PAGE.indexOf('}', r0)), dark: PAGE.slice(d0, PAGE.indexOf('}', d0)) };
+  const r0 = PAGE.indexOf(':root{');
+  assert.ok(r0 >= 0, 'thiếu :root');
+  return { root: PAGE.slice(r0, PAGE.indexOf('}', r0)) };
 }
 function tokenVal(block, name) {
   const m = block.match(new RegExp('(?:^|[;{\\s])' + name + ':(#[0-9a-fA-F]{3,6})'));
@@ -4162,9 +4146,10 @@ function lumC(h) {
 }
 function ratioC(a, b) { const x = lumC(a), y = lumC(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
 
-test('2.12.0 token giảm chói có ở cả :root và html[data-theme=dark]; không còn --surface:#fff', () => {
-  const { root, dark } = tokenBlocks();
-  for (const t of C_TOKENS) { tokenVal(root, t); tokenVal(dark, t); }
+test('2.12.0 token giảm chói có ở :root (2.17.0: một theme sáng); không còn --surface:#fff', () => {
+  const { root } = tokenBlocks();
+  for (const t of C_TOKENS) tokenVal(root, t);
+  assert.doesNotMatch(PAGE, /data-theme=dark|prefers-color-scheme/, '2.17.0: không còn nhánh tối');
   assert.doesNotMatch(PAGE, /--surface:#fff[;}]/, '--surface vẫn là #fff');
   assert.doesNotMatch(PAGE, /background:#fff(fff)?[;}"]/, 'còn nền #fff cứng');
 });
@@ -4180,11 +4165,11 @@ test('2.12.0 không có màu cứng #fff/#000 ngoài danh sách cho phép (chữ
 });
 
 test('2.12.0 tương phản WCAG AA: chữ ≥ 4.5:1, chữ trắng trên nút màu ≥ 4.5:1 (cả hai chế độ)', () => {
-  const { root, dark } = tokenBlocks();
+  const { root } = tokenBlocks();
   const pairs = [['--text', '--surface'], ['--text2', '--surface'], ['--muted', '--surface'], ['--brand-text', '--brand-soft'],
     ['--brand-text', '--surface'], ['--green-text', '--surface'], ['--amber-text', '--amber-soft'], ['--red-text', '--red-soft'],
     ['--blue-text', '--surface']];
-  for (const [blockName, block] of [['root', root], ['dark', dark]]) {
+  for (const [blockName, block] of [['root', root]]) {
     for (const [a, b] of pairs) {
       const r = ratioC(tokenVal(block, a), tokenVal(block, b));
       assert.ok(r >= 4.5, blockName + ' ' + a + ' / ' + b + ' = ' + r.toFixed(2));
@@ -4258,7 +4243,7 @@ const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
-const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge'];
+const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
   'del-preset', 'latest-exp', 'latest-imp', 'merge-do', 'merge-do', 'merge-old', 'rec-fix-all', 'reconcile',
   'restore-file', 'save-edit', 'save-preset', 'save-remedy', 'save-retail', 'save-tx', 'sync-discard', 'theme-menu'];
@@ -4284,7 +4269,7 @@ test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
@@ -5512,9 +5497,8 @@ test('2.15.8 tab máy tính có icon: 8 nút mỗi nút 1 svg aria-hidden trỏ 
     assert.match(b, /role="tab"/); assert.match(b, /aria-selected="false"/);
   }
   assert.match(PAGE, /\.tab__ic\{color:var\(--tab-ico\);/, 'mọi icon tab dùng một biến màu --tab-ico');
-  assert.equal((PAGE.match(/--tab-ico:#/g) || []).length, 2, '--tab-ico khai báo đúng 1 lần ở sáng, 1 lần ở tối');
+  assert.equal((PAGE.match(/--tab-ico:#/g) || []).length, 1, '--tab-ico khai báo đúng 1 lần (2.17.0: một theme sáng)');
   assert.equal(PAGE.match(/--tab-ico:(#\w+)/)[1], PAGE.match(/:root\{[\s\S]*?--green-text:(#\w+)/)[1], 'sáng: --tab-ico = màu icon Bán lẻ');
-  assert.equal(PAGE.match(/--tab-ico:(#\w+)/g)[1].slice(10), PAGE.match(/html\[data-theme=dark\]\{[\s\S]*?--green-text:(#\w+)/)[1], 'tối: --tab-ico = màu icon Bán lẻ');
   assert.match(PAGE, /\.tab\.is-active \.tab__ic\{background:var\(--brand-soft\);box-shadow:0 0 0 3px var\(--brand-soft\)\}/, 'tab đang chọn: icon xanh trên chip --brand-soft');
   assert.match(PAGE, /\.tab__ic\{display:none\}[\s\S]*?@media \(min-width:641px\)\{[\s\S]*?\.tab__ic\{display:block/, 'icon ẩn mặc định (<=640px), chỉ hiện từ 641px');
 });
