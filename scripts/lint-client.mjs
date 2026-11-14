@@ -22,7 +22,7 @@ const browserGlobals = {
   location: 'readonly', addEventListener: 'readonly', removeEventListener: 'readonly',
   innerWidth: 'readonly', innerHeight: 'readonly', scrollX: 'readonly', scrollY: 'readonly',
   devicePixelRatio: 'readonly', matchMedia: 'readonly', crypto: 'readonly',
-  setInterval: 'readonly', clearInterval: 'readonly'
+  setInterval: 'readonly', clearInterval: 'readonly', AbortController: 'readonly'
 };
 const linter = new Linter();
 const messages = linter.verify(code, {

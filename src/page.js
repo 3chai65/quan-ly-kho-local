@@ -1534,10 +1534,10 @@ function indexTx(){
 }
 function tsFromId(id){
   var s = String(id || ''), v;
-  var m = s.match(/_(\d{13})(?:_|$)/);
-  if (m) { v = Number(m[1]); if (v > 946684800000 && v < 4102444800000) return v; }
+  var m = s.match(/_(\d{13})(?:_|$)/) || s.match(/(\d{13})$/);
+  if (m) { v = Number(m[1]); if (v >= 1735689600000 && v < 2051222400000) return v; }
   m = s.match(/^[A-Za-z]+_([0-9a-z]{8})[0-9a-z]*$/);
-  if (m) { v = parseInt(m[1], 36); if (v > 946684800000 && v < 4102444800000) return v; }
+  if (m) { v = parseInt(m[1], 36); if (v >= 1735689600000 && v < 2051222400000 && v <= Date.now() + 86400000) return v; }
   return 0;
 }
 function txStamp(t){
@@ -1717,7 +1717,6 @@ function sanitize(d, drops){
       }
       if (oid) tx.oid = oid;
       if (oname && oname !== oid) tx.oname = oname;
-      else if (oid) tx.oid = oid;
       if (t.retail) tx.retail = true;
       if (t.rx) tx.rx = true;
       if (t.g != null) tx.g = dec(t.g);
@@ -4310,7 +4309,16 @@ function apiFetch(url, opts){
   var ac = new AbortController();
   o.signal = ac.signal;
   var tm = setTimeout(function(){ ac.abort(); }, 15000);
-  return fetch(url, o).then(function(r){ clearTimeout(tm); return r; }, function(e){ clearTimeout(tm); throw e; });
+  /* Timer chạy tới khi đọc xong thân: json()/text() treo cũng bị ngắt sau 15 giây. */
+  return fetch(url, o).then(function(r){
+    var j = r && r.json, t = r && r.text;
+    if (typeof j !== 'function' && typeof t !== 'function') { clearTimeout(tm); return r; }
+    var done = function(v){ clearTimeout(tm); return v; };
+    var fail = function(e){ clearTimeout(tm); throw e; };
+    if (typeof j === 'function') r.json = function(){ return j.call(r).then(done, fail); };
+    if (typeof t === 'function') r.text = function(){ return t.call(r).then(done, fail); };
+    return r;
+  }, function(e){ clearTimeout(tm); throw e; });
 }
 /* ================= ĐỒNG BỘ ================= */
 function cloudConflict(){
@@ -4708,6 +4716,7 @@ function restoreFromFile(file){
       backupParseError = 'File sao lưu không phải JSON hợp lệ';
     }
     if (!bak) { toast(backupParseError || 'File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
+    if (JSON.stringify(bak).length > 4 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
     var drops = bak._drops || [];
     var moneyNote = bak._moneyNote || '';
     delete bak._drops;

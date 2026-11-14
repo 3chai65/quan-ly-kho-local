@@ -584,13 +584,15 @@ test('W4 apiFetch: mạng treo thì sau 15 s bị AbortError; PUT timeout nhả 
 test('W4 apiFetch: phản hồi nhanh thì không abort và timer bị xóa; hết giờ thì reject AbortError', async () => {
   const timers = [];
   const ok = loadClient({
-    fetch: async () => ({ status: 200 }),
+    fetch: async () => ({ status: 200, json: async () => ({}) }),
     setTimeout(fn, ms) { timers.push({ fn, ms, cleared: false }); return timers.length - 1; },
     clearTimeout(id) { if (timers[id]) timers[id].cleared = true; }
   });
   const r = await ok.apiFetch('/x');
   assert.equal(r.status, 200);
   assert.equal(timers[0].ms, 15000);
+  assert.equal(timers[0].cleared, false, 'chưa đọc thân thì timer còn chạy');
+  await r.json();
   assert.equal(timers[0].cleared, true);
   const t2 = [];
   const hang = loadClient({
@@ -6078,4 +6080,66 @@ test('W6 restoreFromFile: 5 MB không bị từ chối ở client, > 12 MB bị 
   assert.equal(run(5 * 1024 * 1024), 1);
   assert.equal(run(12 * 1024 * 1024), 1);
   assert.equal(run(12 * 1024 * 1024 + 1), 0);
+});
+
+test('W4b: header nhanh nhưng json() treo thì sau 15 s bị AbortError, pushing/GET nhả', async () => {
+  const mk = (timers) => {
+    const hangBody = (opts) => ({ status: 200, json: () => new Promise((res, rej) => {
+      opts.signal.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; rej(e); });
+    }) });
+    return loadClient({
+      fetch: async (url, opts = {}) => hangBody(opts),
+      setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length - 1; },
+      clearTimeout(id) { if (timers[id]) timers[id].cleared = true; }
+    });
+  };
+  const timers = [];
+  const client = mk(timers);
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  client.setDirty(true);
+  const p = client.pushState(false, false);
+  await new Promise(r => setImmediate(r));
+  const t = timers.find(x => x.ms === 15000);
+  assert.ok(t && !t.cleared, 'timer phải còn chạy khi thân chưa đọc xong');
+  assert.equal(client.isPushing(), true);
+  t.fn();
+  assert.equal(await p, false);
+  assert.equal(client.isPushing(), false);
+  const t2 = [];
+  const c2 = mk(t2);
+  const g = c2.pullState(false, false);
+  await new Promise(r => setImmediate(r));
+  assert.ok(t2[0] && !t2[0].cleared);
+  t2[0].fn();
+  assert.equal(await g, false);
+});
+
+test('W5b tsFromId: khoảng 2025-2035 cả hai nhánh, id 13 số không gạch dưới', () => {
+  const c = limitClient(limitStock(), []);
+  assert.equal(c.tsFromId('OD_hoadon01'), 0);
+  assert.equal(c.tsFromId('TX_nguyenvan'), 0);
+  assert.equal(c.tsFromId('TX1731500000000'), 0);
+  assert.equal(c.tsFromId('TX1793519408528'), 1793519408528);
+  assert.equal(c.tsFromId('1793519408528'), 1793519408528);
+  assert.equal(c.tsFromId('TX_1000000000000_x'), 0);
+  assert.equal(c.tsFromId('TX_' + parseInt('00000001', 36).toString(36).padStart(8, '0') + 'x'), 0);
+});
+
+test('W6b restoreFromFile: JSON gọn > 4 MB bị từ chối trước xác nhận; thụt lề 5 MB nhưng gọn < 4 MB vẫn qua', () => {
+  const mkData = (n, pad) => ({ products: Array.from({ length: n }, (_, i) => ({ id: 'P' + i, name: 'Vi ' + i + ' ' + pad, stock: 1, costPrice: 1000 })), transactions: [], prescriptions: [], moneyUnit: 'dong' });
+  const run = (text) => {
+    let asked = 0;
+    class FR { readAsText() { this.result = text; this.onload(); } }
+    const c = loadClient({ FileReader: FR, confirm: () => { asked++; return false; } });
+    c.restoreFromFile({ size: text.length });
+    return asked;
+  };
+  const big = mkData(30000, 'x'.repeat(120));
+  assert.ok(JSON.stringify(big).length > 4 * 1024 * 1024);
+  assert.equal(run(JSON.stringify(big)), 0);
+  const small = mkData(3000, 'x');
+  const txt = JSON.stringify(small, null, 8);
+  assert.ok(txt.length > 400 * 1024 && JSON.stringify(small).length < 4 * 1024 * 1024);
+  assert.equal(run(txt), 1);
 });
