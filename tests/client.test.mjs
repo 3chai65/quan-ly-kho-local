@@ -42,7 +42,7 @@ globalThis.__test = {
   footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), kbLockTop: (typeof kbLockTop === 'function' ? kbLockTop : null), kbLock: (typeof kbLock === 'function' ? kbLock : null), kbUnlock: (typeof kbUnlock === 'function' ? kbUnlock : null), kbRelease: (typeof kbRelease === 'function' ? kbRelease : null), compactAvail: (typeof compactAvail === 'function' ? compactAvail : null), compactFitHeight: (typeof compactFitHeight === 'function' ? compactFitHeight : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), wholeWordMatch: (typeof wholeWordMatch === 'function' ? wholeWordMatch : null), sugWhole: (typeof sugWhole === 'function' ? sugWhole : null), sugListMaxHeight: (typeof sugListMaxHeight === 'function' ? sugListMaxHeight : null), sugReveal: (typeof sugReveal === 'function' ? sugReveal : null), matchProducts: (typeof matchProducts === 'function' ? matchProducts : null), focusNS: (typeof focusNS === 'function' ? focusNS : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
-  sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
+  pendEntryH: (typeof pendEntryH === 'function' ? pendEntryH : null), sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
   reconcileList: (typeof reconcileList === 'function' ? reconcileList : null), findProduct: (typeof findProduct === 'function' ? findProduct : null), renderStats: (typeof renderStats === 'function' ? renderStats : null),
   loadPreset: (typeof loadPreset === 'function' ? loadPreset : null), remedyPresetPick: typeof remedyPresetPick === 'function' ? remedyPresetPick : null, recFix: (typeof recFix === 'function' ? recFix : null), resetDrafts: (typeof resetDrafts === 'function' ? resetDrafts : null), checkLimits: (typeof checkLimits === 'function' ? checkLimits : null),
   backupLastDate: (typeof backupLastDate === 'function' ? backupLastDate : null), commitRetailRow: (typeof commitRetailRow === 'function' ? commitRetailRow : null),
@@ -5764,4 +5764,26 @@ test('2.17.4 inRange qua checkLimits/sanitize: boolean, chuỗi rỗng, khoảng
     const out = c.sanitize({ products: [{ id: 'p1', name: 'A', stock: v, costPrice: 1 }], transactions: [], prescriptions: [], moneyUnit: 'dong' });
     assert.equal(out.products.length, 1, 'sanitize phải giữ stock=' + JSON.stringify(v));
   }
+});
+
+/* 2.17.5: hàng Tổng (tfoot) nằm trong .note__pending không được làm dòng nhập trống bị coi là có dòng (compactAvail trừ ENTRY_BLOCK_H). */
+test('2.17.5 pendEntryH: chỉ có tfoot (dòng nhập trống) = 0; có dòng nhập thì trừ đúng chiều cao tfoot', () => {
+  const c = loadClient({ setTimeout() { return 0; }, clearTimeout() {} });
+  const mkPend = (total, tfootH) => ({ getBoundingClientRect: () => ({ height: total }), querySelector: sel => (sel === 'tfoot' && tfootH != null ? { getBoundingClientRect: () => ({ height: tfootH }) } : null) });
+  assert.equal(c.pendEntryH(mkPend(40, 40)), 0, 'chỉ tfoot -> 0');
+  assert.equal(c.pendEntryH(mkPend(0, 0)), 0, 'tfoot ẩn, dòng nhập ẩn');
+  assert.equal(c.pendEntryH(mkPend(100, 40)), 60, 'dòng nhập 60 + tfoot 40');
+  assert.equal(c.pendEntryH(mkPend(60, null)), 60, 'không có tfoot');
+  assert.equal(c.pendEntryH(null), 0);
+});
+
+/* 2.17.5: server từ chối thiếu moneyUnit, nên thân PUT của client phải luôn mang moneyUnit: 'dong'. */
+test('2.17.5 pushState: thân PUT có moneyUnit "dong"', async () => {
+  let sentBody = null;
+  const fetchStub = async (url, opts) => { sentBody = opts && opts.body; return { json: async () => ({ success: true, updatedAt: 9 }) }; };
+  const client = loadClient({ fetch: fetchStub });
+  client.setDb(client.sanitize({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 }));
+  client.setBase(1);
+  assert.equal(await client.pushState(false, false), true);
+  assert.equal(JSON.parse(sentBody).moneyUnit, 'dong');
 });

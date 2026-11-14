@@ -5066,6 +5066,14 @@ function compactFitHeight(hs, n, avail, natural){
   }
   return Math.max(1, Math.floor(avail));
 }
+/* Chiều cao phần dòng nhập thật của .note__pending: không tính hàng Tổng (tfoot) nằm cùng bảng (2.17.5), nếu không dòng nhập trống bị coi là có dòng và compactAvail trừ ENTRY_BLOCK_H. */
+function pendEntryH(pend){
+  if (!pend || !pend.getBoundingClientRect) return 0;
+  var h = pend.getBoundingClientRect().height;
+  var tf = pend.querySelector ? pend.querySelector('tfoot') : null;
+  if (tf && tf.getBoundingClientRect) h -= tf.getBoundingClientRect().height;
+  return h > 0 ? h : 0;
+}
 /* Đặt max-height danh sách gọn theo ngân sách; trả true nếu đổi. */
 function compactFit(box, list){
   var tb = list.querySelector('tbody');
@@ -5075,7 +5083,7 @@ function compactFit(box, list){
   if (box.getBoundingClientRect && list.getBoundingClientRect) {
     var vv = window.visualViewport, vvH = (vv && vv.height) || window.innerHeight || 0;
     var pend = box.querySelector ? box.querySelector('.note__pending') : null;
-    var pr = pend && pend.getBoundingClientRect ? pend.getBoundingClientRect().height : 0;
+    var pr = pendEntryH(pend);
     avail = compactAvail(vvH, list.getBoundingClientRect().top - box.getBoundingClientRect().top, pr);
   }
   var h = compactFitHeight(hs, COMPACT_ROWS, avail, list.scrollHeight);
