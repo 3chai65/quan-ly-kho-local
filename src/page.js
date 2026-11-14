@@ -1177,7 +1177,9 @@ var QTY_MAX = 1e6;
 var GRAMS_MAX = 1e9;
 var THANG_MAX = 1e4;
 var MONEY_MAX = 1e12;
-function inRange(v, min, max){ var n = Number(v); return isFinite(n) && n >= min && n <= max; }
+/* Cùng luật với isNonNegNumber ở server.js: chỉ nhận number hữu hạn hoặc chuỗi số thập phân; loại boolean, '', ' ', null, mảng, '0x10'. */
+function isNumLike(v){ return typeof v === 'number' ? isFinite(v) : (typeof v === 'string' && /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(v.trim())); }
+function inRange(v, min, max){ if (!isNumLike(v)) return false; var n = Number(v); return n >= min && n <= max; }
 
   /* Kiểm trần giới hạn, dùng đúng hằng hiện có. Trả về null (hợp lệ) hoặc chuỗi lỗi. */
   function checkLimits(kind, v){
@@ -1194,7 +1196,7 @@ function inRange(v, min, max){ var n = Number(v); return isFinite(n) && n >= min
         if (neg) return 'Số thang không được âm';
         return inRange(v, 1, THANG_MAX) ? null : 'Số thang vượt giới hạn (' + THANG_MAX + ')';
       case 'money':
-        /* Ô nhập là nghìn đồng; MONEY_MAX là đồng, đổi sang nghìn để hiển thị. */
+        /* v là ĐỒNG (đã qua kToDong); MONEY_MAX là đồng; chỉ thông báo đổi sang nghìn đồng để hiển thị. */
         if (!isFinite(n)) return 'Số tiền không hợp lệ';
         if (n < 0) return 'Tiền không được âm';
         return n <= MONEY_MAX ? null : 'Tiền vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng)';
@@ -4130,7 +4132,7 @@ function findTx(id){
   return null;
 }
 function delOrder(oid){
-  var items = db.transactions.filter(function(x){ return x.oid === oid; });
+  var items = db.transactions.filter(function(x){ return String(x.oid) === String(oid); });
   if (!items.length) return;
   var label = (items[0].oname && items[0].oname !== items[0].oid) ? items[0].oname : (items[0].type === 'NHAP'
     ? 'đơn nhập ngày ' + dateVN(items[0].date)
@@ -4167,7 +4169,7 @@ function delOrder(oid){
     if (!items.some(function(x){ return x.type === 'NHAP' && String(x.id) === String(lt.id); })) return;
     if (resetPids.indexOf(String(t.productId)) < 0) resetPids.push(String(t.productId));
   });
-  db.transactions = db.transactions.filter(function(x){ return x.oid !== oid; });
+  db.transactions = db.transactions.filter(function(x){ return String(x.oid) !== String(oid); });
   resetPids.forEach(function(pid){ resetCostFromImports(findProduct(pid)); });
   commit('Đã xóa đơn');
 }

@@ -200,14 +200,21 @@ function readState() {
   };
 }
 
+/* Cùng luật với inRange ở src/page.js: chỉ nhận number hữu hạn hoặc chuỗi số thập phân; loại boolean, '', ' ', null, mảng, '0x10'. */
+const DEC_STR_RE = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i;
+function isNumLike(value) {
+  if (typeof value === 'number') return Number.isFinite(value);
+  return typeof value === 'string' && DEC_STR_RE.test(value.trim());
+}
 function isNonNegNumber(value, max) {
-  if (value == null || value === '') return false;
+  if (!isNumLike(value)) return false;
   const n = Number(value);
-  return Number.isFinite(n) && n >= 0 && n <= max;
+  return n >= 0 && n <= max;
 }
 function isPositiveNumber(value, max) {
+  if (!isNumLike(value)) return false;
   const n = Number(value);
-  return Number.isFinite(n) && n > 0 && n <= max;
+  return n > 0 && n <= max;
 }
 /* Ngày thật, không chỉ đúng hình dạng. Dùng UTC để không phụ thuộc TZ máy chạy. */
 function isRealDate(value) {
@@ -226,6 +233,10 @@ function validateState(d) {
   const state = { products: [], transactions: [], prescriptions: [], updatedAt: 0 };
   if (!d || typeof d !== 'object' || Array.isArray(d)) {
     return { state, errors: ['Dữ liệu không phải object'], warnings, stockDrift };
+  }
+  /* Tiền là đồng nguyên; thiếu cờ hoặc cờ khác 'dong' (bản cũ đơn vị nghìn) bị từ chối, không tự nhân 1000. */
+  if (d.moneyUnit !== 'dong') {
+    return { state, errors: ['Thiếu hoặc sai moneyUnit (phải là "dong")'], warnings, stockDrift };
   }
   const fail = msg => { if (errors.length < 20) errors.push(msg); };
   const warn = msg => { if (warnings.length < 50) warnings.push(msg); };

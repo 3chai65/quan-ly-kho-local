@@ -5750,3 +5750,18 @@ test('2.16.0 PWA: manifest JSON hợp lệ; sw.js không cache, không nhắc /a
   const b = makeIcon(192);
   assert.equal(b.subarray(1, 4).toString(), 'PNG'); assert.equal(b.readUInt32BE(16), 192); assert.equal(b.readUInt32BE(20), 192);
 });
+
+/* 2.17.4: inRange cùng luật với isNonNegNumber ở server.js (chỉ number hữu hạn hoặc chuỗi số thập phân). */
+test('2.17.4 inRange qua checkLimits/sanitize: boolean, chuỗi rỗng, khoảng trắng, null, mảng, 0x10 bị từ chối; số và chuỗi số được nhận', () => {
+  const c = loadClient({ setTimeout() { return 0; }, clearTimeout() {} });
+  for (const v of [true, false, '', ' ', null, [], [5], '0x10', 'abc', NaN, Infinity]) {
+    assert.ok(c.checkLimits('q', v), 'phải từ chối ' + JSON.stringify(v));
+    const out = c.sanitize({ products: [{ id: 'p1', name: 'A', stock: v, costPrice: 1 }], transactions: [], prescriptions: [], moneyUnit: 'dong' });
+    assert.equal(out.products.length, 0, 'sanitize phải bỏ stock=' + JSON.stringify(v));
+  }
+  for (const v of [0, 5, '5', '5.5', ' 7 ', 1e6]) {
+    assert.equal(c.checkLimits('q', v), null, 'phải nhận ' + JSON.stringify(v));
+    const out = c.sanitize({ products: [{ id: 'p1', name: 'A', stock: v, costPrice: 1 }], transactions: [], prescriptions: [], moneyUnit: 'dong' });
+    assert.equal(out.products.length, 1, 'sanitize phải giữ stock=' + JSON.stringify(v));
+  }
+});

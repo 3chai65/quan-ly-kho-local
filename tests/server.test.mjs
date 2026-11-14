@@ -78,7 +78,7 @@ async function put(state, headers = {}) {
   const r = await fetch(`${BASE}/api/state`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...headers, Cookie: deviceCookie },
-    body: JSON.stringify(state)
+    body: JSON.stringify({ moneyUnit: 'dong', ...state })
   });
   let body = null;
   try { body = await r.json(); } catch (e) {}
@@ -763,4 +763,30 @@ test('2.16.0 PWA: CSP của "/" cho phép manifest và service worker cùng gố
   const csp = (await fetch(`${BASE}/`, { headers: { Cookie: deviceCookie } })).headers.get('content-security-policy');
   assert.ok(csp.includes("manifest-src 'self'"), csp);
   assert.ok(csp.includes("worker-src 'self'"), csp);
+});
+
+/* 2.17.4: moneyUnit bắt buộc là 'dong'; số phải là number hữu hạn hoặc chuỗi số thập phân (cùng luật với client). */
+test('2.17.4 PUT thiếu moneyUnit hoặc moneyUnit sai → 400 và KHÔNG ghi đè DB; cờ đúng → 200', async () => {
+  const ok = await put(emptyState({ products: [{ id: 'MU1', name: 'Mu Mot', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  assert.equal(ok.status, 200);
+  const before = JSON.stringify(await getState());
+  for (const unit of [undefined, 'nghin', 'k', 1, null]) {
+    const r = await put(emptyState({ moneyUnit: unit, products: [{ id: 'MU2', name: 'Mu Hai', stock: 5, costPrice: 5 }] }), { 'X-Force': '1' });
+    assert.equal(r.status, 400, 'moneyUnit=' + String(unit));
+  }
+  assert.equal(JSON.stringify(await getState()), before, '400 không được đổi dữ liệu');
+});
+
+test('2.17.4 isNonNegNumber/isPositiveNumber: boolean, chuỗi rỗng, khoảng trắng, null, mảng, 0x10 bị từ chối; số và chuỗi số thập phân được nhận', async () => {
+  const bad = [true, false, '', ' ', null, [], [5], '0x10', 'abc', {}];
+  for (const v of bad) {
+    const r1 = await put(emptyState({ products: [{ id: 'NB1', name: 'So Mot', stock: v, costPrice: 1 }] }), { 'X-Force': '1' });
+    assert.equal(r1.status, 400, 'stock=' + JSON.stringify(v));
+    const r2 = await put(emptyState({ products: [{ id: 'NB2', name: 'So Hai', stock: 1, costPrice: 1 }], transactions: [{ id: 'NT', date: '2026-11-06', type: 'NHAP', productId: 'NB2', qty: v, price: 1, total: 1 }] }), { 'X-Force': '1' });
+    assert.equal(r2.status, 400, 'qty=' + JSON.stringify(v));
+  }
+  for (const v of [5, '5', '5.5', 0, ' 7 ']) {
+    const r = await put(emptyState({ products: [{ id: 'NG1', name: 'So Ba', stock: v, costPrice: 1 }] }), { 'X-Force': '1' });
+    assert.equal(r.status, 200, 'stock hợp lệ=' + JSON.stringify(v));
+  }
 });
