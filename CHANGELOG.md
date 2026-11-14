@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.0] - 2026-11-14
+
+### Changed
+- Chỉ còn một giao diện sáng: bỏ nhánh tối và menu Sáng/Tối/Theo máy (icon âm dương giờ chỉ là biểu tượng, vẫn rung khi không phải thiết bị chủ), `color-scheme: light`.
+- "Liquid glass nhẹ" chỉ bằng CSS: nền gradient nhẹ (`body::before`), thẻ/dải số liệu nền bán trong + bóng nhiều tầng, tab/nút có viền sáng; `backdrop-filter` chỉ ở header, thanh chân tờ ghi, toast, nền hộp thoại; lưới lui `@supports not` và `prefers-reduced-motion`/`prefers-reduced-transparency`.
+
 ## [2.16.0] - 2026-11-13
 
 ### Added
