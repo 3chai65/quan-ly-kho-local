@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.5] - 2026-11-14
+
+### Fixed
+- Điện thoại (chế độ gọn khi nhập, Bán lẻ và Thuốc chén): hàng Tổng nằm trong bảng dòng nhập từ 2.17.4 làm dòng nhập trống bị đo cao 40px, nên ngân sách chiều cao trừ thêm 104px và tờ ghi gọn chỉ còn 1 dòng thay vì 2; `compactFit` nay đo chiều cao dòng nhập không kể tfoot (`pendEntryH`).
+- Server: `thang` của giao dịch/đơn thuốc dùng cùng `isNumLike` như các trường số khác (trước đó `thang: true` vẫn qua); thêm test thân PUT của client luôn có `moneyUnit: 'dong'`.
+
 ## [2.17.4] - 2026-11-14
 
 ### Fixed
