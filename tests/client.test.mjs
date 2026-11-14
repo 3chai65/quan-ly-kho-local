@@ -2588,7 +2588,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 157); // 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 158); // 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3618,13 +3618,13 @@ assert.match(box, /<option value="">Đơn mới<\/option>/);
 test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, nút); tên đơn ẩn mặc định; Lưu đơn, Bán đơn (2.15.5 bỏ Lưu tên mới); id/data-action giữ nguyên', () => {
   const note = PAGE.slice(PAGE.indexOf('id="remedyNote"'), PAGE.indexOf('id="nhapBox"'));
   const foot = note.slice(note.indexOf('class="note__foot"'));
-  assert.equal((foot.match(/class="note__row/g) || []).length, 3, 'chân phải đúng 3 hàng (tổng, Xóa, nút chính)');
+  assert.equal((foot.match(/class="note__row/g) || []).length, 2, 'chân phải đúng 2 hàng (thang × giá = tiền; nút)');
   assert.ok(foot.indexOf('id="remedyName"') < foot.indexOf('note__row--btns'), 'ô tên nằm trên hàng nút');
   assert.match(foot, /<input[^>]*id="remedyName"[^>]*\shidden[^>]*>/, 'ô tên đơn phải ẩn mặc định');
   assert.doesNotMatch(PAGE, /remedyNewName|preset-newname|__new__|nm-full|nm-short|Lưu tên mới/, '2.15.5: không còn nút/action/option cũ');
   assert.match(foot, /data-action="save-preset"/);
   assert.match(foot, /data-action="save-remedy"/);
-  for (const id of ['remedyNoteTotal', 'remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedySavePreset', 'remedySaveLabel', 'remedyDelPreset']) assert.match(foot, new RegExp('id="' + id + '"'), 'chân thiếu ' + id);
+  for (const id of ['remedyThang', 'remedyUnitPrice', 'remedyTotal', 'remedySavePreset', 'remedySaveLabel', 'remedyDelPreset']) assert.match(foot, new RegExp('id="' + id + '"'), 'chân thiếu ' + id);
   assert.equal((PAGE.match(/id="remedyPreset"/g) || []).length, 1);
   assert.equal((PAGE.match(/id="remedySearch"/g) || []).length, 1);
   assert.equal((PAGE.match(/id="remedyName"/g) || []).length, 1);
@@ -3738,7 +3738,7 @@ test('2.15.17 savePreset: đơn mới (chưa chọn) trùng tên không phân bi
   for (const typed of ['đơn cũ', 'ĐƠN CŨ', '  đƠn   cŨ  ', 'Đơn Cũ']) {
     let r = runSave({ name: typed, ok: true });
     assert.equal(r.st.confirms.length, 1);
-    assert.equal(r.st.confirms[0], 'Đã có đơn "Đơn Cũ". Cập nhật đơn này bằng nội dung đang nhập?');
+    assert.equal(r.st.confirms[0], 'Đã có đơn "Đơn Cũ". Sửa đơn này bằng nội dung đang nhập?');
     assert.equal(r.rx.length, 1, 'không tạo đơn thứ hai trùng tên');
     assert.equal(r.rx[0].id, 'RX1'); assert.equal(r.rx[0].name, 'Đơn Cũ'); assert.equal(r.rx[0].items[0].grams, 5);
     r = runSave({ name: typed, ok: false });
@@ -3746,7 +3746,7 @@ test('2.15.17 savePreset: đơn mới (chưa chọn) trùng tên không phân bi
     assert.equal(r.rx.length, 1); assert.equal(r.rx[0].items[0].grams, 1, 'Hủy: không đổi gì'); assert.equal(r.rx[0].name, 'Đơn Cũ');
   }
   const lg = runSave({ rxName: 'đơn  cŨ ', name: 'ĐƠN CŨ', ok: true });
-  assert.equal(lg.st.confirms[0], 'Đã có đơn "đơn  cŨ ". Cập nhật đơn này bằng nội dung đang nhập?', 'hiện tên đang lưu trong máy');
+  assert.equal(lg.st.confirms[0], 'Đã có đơn "đơn  cŨ ". Sửa đơn này bằng nội dung đang nhập?', 'hiện tên đang lưu trong máy');
   assert.equal(lg.rx.length, 1); assert.equal(lg.rx[0].name, 'đơn  cŨ ', 'giữ tên cũ nguyên văn'); assert.equal(lg.rx[0].items[0].grams, 5);
   const r = runSave({ name: 'đơn mới hẳn' });
   assert.equal(r.st.confirms.length, 0); assert.equal(r.rx.length, 2); assert.equal(r.rx[1].name, 'Đơn Mới Hẳn');
@@ -4823,14 +4823,16 @@ test('2.15.0 thanh tiêu đề điện thoại: ô tìm/ô chọn đơn không c
 
 test('2.15.0 chân Thuốc chén: Lưu đơn | Bán đơn một hàng không xuống dòng; Xóa đơn ở hàng phụ riêng; id/action/aria-label giữ', () => {
   assert.match(PAGE, /#remedyNote \.note__row--btns\{flex-wrap:nowrap;gap:6px\}/);
-  const foot = PAGE.slice(PAGE.indexOf('<div class="note__row note__row--aux">'), PAGE.indexOf('id="remedyBox"') > 0 ? PAGE.indexOf('id="nhapBox"') : undefined);
-  const aux = foot.slice(0, foot.indexOf('note__row--btns'));
-  assert.match(aux, /id="remedyDelPreset" hidden/);
-  assert.doesNotMatch(aux, /save-preset|save-remedy/);
-  const btns = foot.slice(foot.indexOf('note__row--btns'));
+  const foot = PAGE.slice(PAGE.indexOf('<div class="note__row note__row--btns">'), PAGE.indexOf('id="nhapBox"'));
+  assert.doesNotMatch(PAGE, /note__row--aux/, '2.17.2: không còn hàng phụ');
+  const btns = foot;
+  assert.match(btns, /^[\s\S]*?<button[^>]*data-action="del-preset" id="remedyDelPreset" hidden>[\s\S]*?data-action="save-preset"[\s\S]*?data-action="save-remedy"/, '3 nút cùng một hàng: Xóa đơn, Lưu/Sửa đơn, Bán đơn');
+  assert.doesNotMatch(PAGE, /Cập nhật đơn \(/, '2.17.2: nhãn Sửa đơn không kèm tên');
+  assert.match(PAGE, /lbl\.textContent = 'Sửa đơn';/);
+  assert.doesNotMatch(PAGE.slice(PAGE.indexOf('<div class="note__foot">', PAGE.indexOf('id="remedyNote"')), PAGE.indexOf('id="nhapBox"')), /Tổng <b|id="remedyQty"/, '2.17.2: chân không còn dòng Tổng g / số vị');
+  assert.match(PAGE, /<tfoot id="remedyNoteFoot" hidden><tr><td><\/td><td class="b">Tổng 1 thang <span class="hint" id="remedyQty">[\s\S]*?id="remedyNoteTotal"/, '2.17.2: hàng tổng cuối bảng ghi');
   assert.match(btns, /data-action="save-preset" id="remedySavePreset"/);
   assert.match(btns, /data-action="save-remedy"/);
-  assert.match(PAGE, /\.note__row--aux:not\(:has\(\.btn:not\(\[hidden\]\)\)\)\{display:none\}/);
 });
 
 /* 2.15.0 (Removed): bỏ hẳn chức năng Gộp đơn thuốc lẻ cũ; dữ liệu cũ có oid/oname vẫn được đọc và hiển thị. */

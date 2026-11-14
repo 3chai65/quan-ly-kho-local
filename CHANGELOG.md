@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.2] - 2026-11-14
+
+### Changed
+- Thuốc chén: chân màn hình chỉ còn `[số thang] thang × [giá] = tiền` và 3 nút một dòng (Xóa đơn, Sửa đơn, Bán đơn); nhãn "Cập nhật đơn (tên)" đổi thành "Sửa đơn" (hộp xác nhận cũng ghi "Sửa đơn này"). "Tổng 1 thang" (g), số vị và tổng N thang (kg) chuyển thành hàng cuối của tờ ghi; bỏ "lạng/thang". Không đổi logic tiền.
+
 ## [2.17.1] - 2026-11-14
 
 ### Changed

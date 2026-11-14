@@ -321,8 +321,6 @@ td.c-qty{position:relative}
 .note__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end}
 .note__row+.note__row{margin-top:8px}
 .note__row:first-child{justify-content:flex-start}
-.note__row--aux:not(:has(.btn:not([hidden]))){display:none}
-.note__row--aux{margin-top:8px}
 .note__name{flex:1 1 160px;min-width:0}
 .note__lbl{font-size:13px;color:var(--text2)}
 /* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
@@ -364,29 +362,22 @@ td.c-qty{position:relative}
 .pager .btn--sm{min-height:36px}
 }
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
+#remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
+#remedyNote tfoot .hint{font-weight:400;margin-left:4px}
 #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead{display:table-header-group}
 @media (max-width:600px){
 #remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
 /* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
-/* 2.15.0: điện thoại – Lưu đơn | Bán đơn đúng một hàng; Xóa đơn hàng phụ nhỏ ở trên (chỉ hiện khi có nút). */
-#remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
+/* 2.17.2: Xóa đơn | Lưu/Sửa đơn | Bán đơn đúng một hàng (mọi cỡ màn hình). */
 #remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:44px;padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
 #remedyNote .note__row--btns .btn .ico{display:none}
 #remedyNote .note__row--btns #remedySaveLabel{overflow:hidden;min-width:0}
-#remedyNote .note__row--aux .btn{flex:1 1 0;min-height:34px}
-#remedyNote .note__row--aux{margin-top:6px}
-#remedyNote .note__row--aux .btn{white-space:nowrap;padding-left:8px;padding-right:8px}
-#remedyNote .note__row--aux .btn .ico{display:none}
 #remedyNote .note__row--btns{margin-top:3px}
-/* dòng 1 của chân: [Tổng · vị]  [= tiền]; dòng 2: thang × giá (tối đa 2 dòng thay vì 3). */
 #remedyNote .note__row:first-child{gap:6px 8px}
-#remedyNote .note__row:first-child .note__tot{order:1}
-#remedyNote .note__row:first-child #remedyQty{order:2}
-#remedyNote .note__row:first-child .note__eq{order:3;margin-left:auto}
-#remedyNote .note__row:first-child #remedyTotal{order:4}
-#remedyNote .note__row:first-child .inline-row{order:5;flex:1 0 100%}
+#remedyNote .note__row:first-child #remedyTotal{margin-left:auto}
 }
+@media (max-width:360px){#remedyNote #remedyThang{width:60px}#remedyNote #remedyUnitPrice{width:100px}}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 122px;margin-left:auto}
 .card__bar-date .inp{padding-left:8px;padding-right:26px}
@@ -713,6 +704,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="remedyNoteBody"></tbody>
+            <tfoot id="remedyNoteFoot" hidden><tr><td></td><td class="b">Tổng 1 thang <span class="hint" id="remedyQty"></span></td><td class="num b txt-brand" id="remedyNoteTotal">0 g</td><td></td></tr></tfoot>
           </table>
           </div>
           <div class="tw note__pending">
@@ -731,8 +723,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
           <div class="foot" id="remedyNotePager" hidden></div>
           <div class="note__foot">
             <div class="note__row">
-              <span class="note__tot">Tổng <b class="txt-brand" id="remedyNoteTotal">0 g</b></span>
-              <span class="hint" id="remedyQty">0 vị · 0 g</span>
               <span class="inline-row">
                 <input class="inp inp--sm inp--num w-70" id="remedyThang" type="number" step="1" min="1" max="10000" inputmode="numeric" value="1" aria-label="Số thang">
                 <span class="note__lbl" aria-hidden="true">thang ×</span>
@@ -742,12 +732,10 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
               <span class="b txt-brand num" id="remedyTotal" aria-live="polite">0</span>
             </div>
             <input class="inp inp--sm note__name" id="remedyName" type="text" autocomplete="off" placeholder="Tên đơn mới" aria-label="Tên đơn mới" maxlength="200" hidden>
-            <div class="note__row note__row--aux">
+            <div class="note__row note__row--btns">
               <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
                 <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
               </button>
-            </div>
-            <div class="note__row note__row--btns">
               <button class="btn btn--sm" type="button" data-action="save-preset" id="remedySavePreset">
                 <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
               </button>
@@ -2121,6 +2109,8 @@ function renderRemedyNote(){
   }
   var tot = $('#remedyNoteTotal');
   if (tot) tot.textContent = fmtGram(sum);
+  var tf = $('#remedyNoteFoot');
+  if (tf) tf.hidden = !remedyItems.length;
   var pg = $('#remedyNotePg');
   if (pg) pg.textContent = 'Trang ' + remedyNotePage + ' / ' + pages;
   var host = $('#remedyNotePager');
@@ -2421,8 +2411,8 @@ function calcRemedy(){
   });
   var out = $('#remedyQty');
   var th = remedyThang();
-  if (out) out.textContent = items + ' vị · ' + (grams > 0 ? fmtQty(grams / 1000) : '0 g') + '/thang'
-    + (th > 1 && grams > 0 ? ' · tổng ' + th + ' thang: ' + fmtQty(grams * th / 1000) : '');
+  if (out) out.textContent = items + ' vị'
+    + (th > 1 && grams > 0 ? ' · ' + th + ' thang: ' + fmtQty(grams * th / 1000) : '');
   var tot = $('#remedyTotal');
   if (tot) tot.textContent = fmtMoney(grand);
   renderRemedyNote();
@@ -2480,7 +2470,7 @@ function updatePresetUI(){
   var name = capWords(nameInp ? nameInp.value : '');
   var target = name ? presetByName(name) : null;
   if (lbl) {
-    if (cur) lbl.textContent = 'Cập nhật đơn (' + cur.name + ')';
+    if (cur) lbl.textContent = 'Sửa đơn';
     else if (name) lbl.textContent = (target ? 'Tên đã dùng (' : 'Lưu đơn (') + name + ')';
     else lbl.textContent = 'Lưu đơn';
   }
@@ -2586,7 +2576,7 @@ function savePreset(){
     var byName = presetByName(name);
     if (byName) {
       /* Đơn mới nhưng tên trùng (không phân biệt hoa/thường, khoảng trắng): hỏi cập nhật đơn cũ, giữ tên cũ. */
-      if (!confirm('Đã có đơn "' + byName.name + '". Cập nhật đơn này bằng nội dung đang nhập?')) return;
+      if (!confirm('Đã có đơn "' + byName.name + '". Sửa đơn này bằng nội dung đang nhập?')) return;
       cur = byName;
     }
   }
