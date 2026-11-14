@@ -20,7 +20,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
 - `pwa.js` — manifest, icon PNG sinh bằng mã, sw.js passthrough (không cache); các đường này công khai GET/HEAD trong PUBLIC của `auth.js`; CSP của "/" có manifest-src/worker-src 'self'.
-- Phiên bản hiện tại: 2.17.1.
+- Phiên bản hiện tại: 2.17.5.
 - `BAO-CAO-REVIEW.md` — tổng hợp lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI ở `G:\quan-ly-kho-gpui` dùng chung schema SQLite, hiện chỉ-đọc trên `datapp.db` (ghi thử trên bản chép); không đụng `data/` từ app đó khi chưa có duyệt.
 
@@ -66,7 +66,9 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- Đang chạy: 2.17.1, commit fba0826, image `quan-ly-kho:2.17.1` (id 589e52ea…), Giám sát sau triển khai đạt (14/11/2026), iPhone người dùng xác nhận ổn. Đường lui: `quan-ly-kho:pre-2.17.1` = 2.17.0 (id 49ad7730…, commit c3ef03a, chưa tag git), `pre-2.17.0` = 2.16.0 (id 223d52b8…, commit 2627fb6).
+- Đang chạy: 2.17.5, commit b247a5a, image `quan-ly-kho:2.17.5` (id 4ab08faa…), bật 14/11/2026 (người dùng báo đã bật và push; gộp 2.17.2 đến 2.17.5, 2.17.3 và 2.17.4 không bật riêng); Giám sát sau triển khai đang chạy, chưa ghi kết quả. Đường lui: `quan-ly-kho:pre-2.17.5` = `pre-2.17.4` = `pre-2.17.3` = 2.17.2 (id bb77e95d…, commit de7577e); `pre-2.17.2` = 2.17.1 (id 589e52ea…, commit fba0826).
+- 2.17.2 đến 2.17.5: Thuốc chén gọn chân (hàng "Tổng 1 thang", nút Xóa/Sửa/Bán một dòng); tổng tiền là hàng cuối bảng thẳng cột tiền (Bán lẻ, Nhập hàng, Thuốc chén); nhãn "Giá bán" (Bán lẻ) và "Giá nhập" (Nhập hàng); server trả 400 khi `moneyUnit` sai; luật số `isNumLike` hai phía; `pendEntryH` sửa tờ ghi gọn trên iPhone; thêm `BAO-CAO-REVIEW.md`. Việc nhỏ chờ: iPhone chưa xác nhận tờ ghi gọn 2 dòng sau 2.17.5 và hàng Tổng/cột tên ở Nhập hàng. Mục "Chờ/biết chưa sửa" xem thêm `BAO-CAO-REVIEW.md` mục 4.
+- Trước đó đang chạy: 2.17.1, commit fba0826, image `quan-ly-kho:2.17.1` (id 589e52ea…), Giám sát sau triển khai đạt (14/11/2026), iPhone người dùng xác nhận ổn. Đường lui: `quan-ly-kho:pre-2.17.1` = 2.17.0 (id 49ad7730…, commit c3ef03a, chưa tag git), `pre-2.17.0` = 2.16.0 (id 223d52b8…, commit 2627fb6).
 - 2.17.0/2.17.1: một theme sáng (bỏ menu Sáng/Tối, logo id `brandLogo`, trang đăng nhập chỉ sáng); liquid glass nhẹ; nền gradient dịu theo app desktop (token `--glass` .90, `--glass-bar` .93/.95; blur chỉ header, thanh chân, toast, nền hộp thoại); tương phản điểm xấu nhất ≥4,5 (muted thẻ 4,66, header trên tím đặc 4,54). Chưa đo FPS trên iPhone; Edge có GPU ~200/s. Bài học: bản chỉnh nền lần 1 vẫn trắng vì nền gần trắng; người dùng muốn nền màu dịu như desktop.
 - Trước đó đang chạy: 2.16.0, commit 2627fb6, image `quan-ly-kho:2.16.0` (id 223d52b8…), Giám sát sau triển khai 5/5 đạt (13/11/2026). Đường lui: `quan-ly-kho:pre-2.16.0` = 2.15.21 (id 07fade33…, commit 8f391c5).
 - 2.16.0: PWA. Đã xác nhận cài được trên Windows Edge (13/11/2026, "App installed", cửa sổ riêng); iPhone người dùng vẫn dùng biểu tượng cũ, chưa thử Thêm vào MH chính bản mới; Mac chưa thử. Bài học: CSP default-src 'none' chặn manifest/SW và lỗi bị .catch nuốt, test tĩnh không bắt được; Auditor bắt bằng Edge headless. Icon chưa ai xem trên iPhone; fetch handler rỗng trong sw.js giữ nguyên (cảnh báo no-op của Chrome chưa đo). Việc nhỏ chờ: thêm `*.out` vào .gitignore.
