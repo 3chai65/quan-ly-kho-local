@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.1] - 2026-11-14
+
+### Changed
+- Phông nền theo app desktop: xám-kem ấm dịu, hồng phấn góc trên, quầng kem vàng giữa, xanh sage góc dưới (radial-gradient chồng trên `body::before`); token nền/bề mặt chuyển sang tông ấm, kính thẻ .90, header/thanh chân .95 (chữ muted >= 4,5). Chỉ CSS.
+
 ## [2.17.0] - 2026-11-14
 
 ### Changed

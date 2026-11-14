@@ -10,7 +10,7 @@ export const PAGE = String.raw`<!doctype html>
 <title>Quản Lý Kho — Sổ kho, đơn bán và doanh thu</title>
 <meta name="description" content="Quản lý kho dược liệu: đơn bán lẻ, đơn thuốc chén, nhập hàng, tồn kho, lịch sử giao dịch và thống kê doanh thu 12 tháng. Đồng bộ mạng nội bộ (LAN).">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#eceef2">
+<meta name="theme-color" content="#e3dad5">
 <meta name="robots" content="noindex, nofollow">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -22,7 +22,7 @@ export const PAGE = String.raw`<!doctype html>
 *,*::before,*::after{box-sizing:border-box}
 :root{
 color-scheme:light;
---bg:#eceef2;--surface:#f6f7f9;--surface2:#eaedf2;--border:#d7dde6;--border2:#e6eaf0;
+--bg:#e3dad5;--surface:#f6f2ef;--surface2:#e9e2de;--border:#d8ccc7;--border2:#e4dad6;
 --text:#1e293b;--text2:#475569;--muted:#5b6b81;
 --brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#e8ebf8;
 --green-text:#047857;--tab-ico:#047857;
@@ -31,12 +31,12 @@ color-scheme:light;
 --blue-text:#1d4ed8;
 --r:14px;--r-sm:10px;
 --sh:inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.06),0 14px 28px rgba(15,23,42,.05);
---glass:rgba(246,247,249,.88);--glass-bar:rgba(246,247,249,.93);--glass-dark:rgba(17,24,39,.84);--blur:saturate(1.3) blur(14px);
+--glass:rgba(246,242,239,.90);--glass-bar:rgba(246,242,239,.95);--glass-dark:rgba(17,24,39,.84);--blur:saturate(1.3) blur(14px);
 --chart-imp:#5b5fd0;--chart-exp:#2f9e76;
 --ring:0 0 0 3px rgba(79,70,229,.30);
 }
 html{-webkit-text-size-adjust:100%}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 50% at 10% 0%,rgba(79,70,229,.13),transparent 70%),radial-gradient(55% 45% at 100% 35%,rgba(47,158,118,.10),transparent 70%),radial-gradient(60% 50% at 40% 100%,rgba(180,83,9,.06),transparent 70%)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(40% 40% at 82% 16%,rgba(217,152,171,.48),transparent),radial-gradient(45% 45% at 10% 88%,rgba(126,167,138,.43),transparent),radial-gradient(38% 38% at 45% 42%,rgba(220,200,149,.48),transparent),radial-gradient(40% 40% at 88% 85%,rgba(140,178,174,.39),transparent),radial-gradient(32% 32% at 8% 14%,rgba(219,165,180,.35),transparent),radial-gradient(36% 30% at 55% 95%,rgba(164,194,171,.35),transparent),linear-gradient(135deg,#e6d8d1,#d3ddd4)}
 body{margin:0;background:var(--bg);color:var(--text);
 font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
 padding-bottom:48px;-webkit-font-smoothing:antialiased}
