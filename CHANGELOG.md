@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.6] - 2026-11-14
+
+- Thuốc chén: hàng tổng gram cuối tờ ghi chỉ còn nhãn `1 thang` và số gram (ví dụ `1 thang  147 g`); bỏ chữ "Tổng", "x vị", "x thang: xx kg". Bỏ id `remedyQty`, mã tính chữ đó trong `calcRemedy` và CSS `.hint` của tfoot. Không đổi logic tiền.
+
 ## [2.17.5] - 2026-11-14
 
 ### Fixed

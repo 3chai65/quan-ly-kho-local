@@ -363,7 +363,6 @@ td.c-qty{position:relative}
 }
 #remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
 #remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
-#remedyNote tfoot .hint{font-weight:400;margin-left:4px}
 #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thead{display:none}
 #remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead{display:table-header-group}
 @media (max-width:600px){
@@ -738,7 +737,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
                 <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
               </tr></thead>
               <tbody id="remedyBody"></tbody>
-              <tfoot id="remedyNoteFoot" hidden><tr><td></td><td class="b">Tổng 1 thang <span class="hint" id="remedyQty"></span></td><td class="num b txt-brand" id="remedyNoteTotal">0 g</td><td></td></tr></tfoot>
+              <tfoot id="remedyNoteFoot" hidden><tr><td></td><td class="b">1 thang</td><td class="num b txt-brand" id="remedyNoteTotal">0 g</td><td></td></tr></tfoot>
             </table>
           </div>
           <div class="foot" id="remedyNotePager" hidden></div>
@@ -2426,18 +2425,6 @@ function allocateRemedyByCost(grand, lines){
 }
 function calcRemedy(){
   var grand = remedyGrand();
-  var items = 0, grams = 0;
-  remedyItems.forEach(function(it){
-    if (num(it.grams) > 0) { items++; grams += num(it.grams); }
-  });
-  $$('#remedyBody tr[data-pid]').forEach(function(tr){
-    var g = num($('.remedy-qty', tr).value);
-    if (g > 0) { items++; grams += g; }
-  });
-  var out = $('#remedyQty');
-  var th = remedyThang();
-  if (out) out.textContent = items + ' vị'
-    + (th > 1 && grams > 0 ? ' · ' + th + ' thang: ' + fmtQty(grams * th / 1000) : '');
   var tot = $('#remedyTotal');
   if (tot) tot.textContent = fmtMoney(grand);
   renderRemedyNote();

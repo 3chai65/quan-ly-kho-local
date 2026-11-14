@@ -83,7 +83,7 @@ Cập nhật: 14/11/2026, phiên bản 2.17.5 (HEAD b247a5a). Nguồn: báo cáo
 - `data/` không bao giờ bị đụng bởi công cụ phát triển; `auth.db` không nằm trong sao lưu.
 - Mọi thứ client nằm trong một file `src/page.js` nhúng inline, không build step; tài nguyên ngoài bị CSP chặn.
 - Một theme sáng duy nhất (từ 2.17.0), không công tắc dark.
-- Tổng tiền là hàng cuối bảng (tfoot) ở Bán lẻ, Nhập hàng, Thuốc chén, thẳng cột tiền; chân cố định trên điện thoại chỉ còn nút.
+- Tổng tiền là hàng cuối bảng (tfoot) ở Bán lẻ, Nhập hàng, Thuốc chén (hàng gram ghi "1 thang xxx g"), thẳng cột tiền; chân cố định trên điện thoại chỉ còn nút.
 
 ## 6. Cách thêm mục mới
 
