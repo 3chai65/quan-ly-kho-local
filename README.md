@@ -70,6 +70,7 @@ Máy tính (máy chủ)                          Điện thoại / PC khác (cù
 | `data/` | Dữ liệu SQLite + backup — **không commit** (gitignore) |
 | `README-LOCAL.md` | Hướng dẫn vận hành chi tiết (chạy, backup, khôi phục) |
 | `CHANGELOG.md` | Lịch sử thay đổi (Keep a Changelog + SemVer) |
+| `BAO-CAO-REVIEW.md` | Lỗi reviewer đã báo: đã sửa/không sửa và lý do |
 
 ## Chạy
 

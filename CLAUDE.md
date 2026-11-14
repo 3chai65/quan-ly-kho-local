@@ -21,6 +21,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
 - `pwa.js` — manifest, icon PNG sinh bằng mã, sw.js passthrough (không cache); các đường này công khai GET/HEAD trong PUBLIC của `auth.js`; CSP của "/" có manifest-src/worker-src 'self'.
 - Phiên bản hiện tại: 2.17.1.
+- `BAO-CAO-REVIEW.md` — tổng hợp lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI ở `G:\quan-ly-kho-gpui` dùng chung schema SQLite, hiện chỉ-đọc trên `datapp.db` (ghi thử trên bản chép); không đụng `data/` từ app đó khi chưa có duyệt.
 
 ## Vùng nhạy cảm
