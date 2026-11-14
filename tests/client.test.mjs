@@ -61,7 +61,7 @@ globalThis.__test = {
   wrapRenderInventory: function(fn){ var orig = renderInventory; renderInventory = function(){ fn(); return orig.apply(this, arguments); }; },
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
-  setDirty: function(v){ dirty = !!v; },
+  setDirty: function(v){ dirty = !!v; }, isPushing: function(){ return pushing; }, apiFetch: (typeof apiFetch === 'function' ? apiFetch : null),
   isDirty: function(){ return dirty; },
   setBase: function(v){ cloudBase = dec(v); },
   getBase: function(){ return cloudBase; },
@@ -138,7 +138,7 @@ globalThis.__test = {
   };
   const sandbox = {
     console, Intl, Date, Math, JSON, Number, String, Array, Object,
-    parseFloat, isFinite, NaN, Infinity, Map, Set, Promise,
+    parseFloat, isFinite, NaN, Infinity, Map, Set, Promise, AbortController,
     setTimeout() { return 0; }, clearTimeout() {},
     localStorage, document,
     navigator: {}, location: { href: 'https://example.test/' },
@@ -545,6 +545,64 @@ test('W3 pushState gửi X-Op-Id, giữ nguyên khi thử lại cùng snapshot, 
   assert.notEqual(ops[3], ops[2]);
 });
 
+function hangFetch(log) {
+  return (url, opts = {}) => {
+    log.push({ method: opts.method || 'GET', op: opts.headers && opts.headers['X-Op-Id'], signal: opts.signal });
+    return new Promise((res, rej) => {
+      opts.signal.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; rej(e); });
+    });
+  };
+}
+
+test('W4 apiFetch: mạng treo thì sau 15 s bị AbortError; PUT timeout nhả pushing, giữ dirty, gửi lại cùng X-Op-Id', async () => {
+  const timers = [];
+  const log = [];
+  const client = loadClient({
+    fetch: hangFetch(log),
+    setTimeout(fn, ms) { timers.push({ fn, ms, cleared: false }); return timers.length - 1; },
+    clearTimeout(id) { if (timers[id]) timers[id].cleared = true; }
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  client.setDirty(true);
+  const p = client.pushState(false, false);
+  assert.equal(client.isPushing(), true);
+  const t = timers.find(x => x.ms === 15000);
+  assert.ok(t, 'phải đặt timer 15000 ms');
+  t.fn();
+  assert.equal(await p, false);
+  assert.equal(client.isPushing(), false);
+  assert.equal(client.isDirty(), true);
+  assert.match(client.getSyncDetail(), /15 giây/);
+  const p2 = client.pushState(false, false);
+  timers.filter(x => x.ms === 15000 && !x.cleared && x !== t).forEach(x => x.fn());
+  await p2;
+  assert.equal(log.length, 2);
+  assert.equal(log[0].op, log[1].op);
+});
+
+test('W4 apiFetch: phản hồi nhanh thì không abort và timer bị xóa; hết giờ thì reject AbortError', async () => {
+  const timers = [];
+  const ok = loadClient({
+    fetch: async () => ({ status: 200 }),
+    setTimeout(fn, ms) { timers.push({ fn, ms, cleared: false }); return timers.length - 1; },
+    clearTimeout(id) { if (timers[id]) timers[id].cleared = true; }
+  });
+  const r = await ok.apiFetch('/x');
+  assert.equal(r.status, 200);
+  assert.equal(timers[0].ms, 15000);
+  assert.equal(timers[0].cleared, true);
+  const t2 = [];
+  const hang = loadClient({
+    fetch: hangFetch([]),
+    setTimeout(fn, ms) { t2.push(fn); return 0; },
+    clearTimeout() {}
+  });
+  const q = hang.apiFetch('/x');
+  t2[0]();
+  await assert.rejects(q, e => e.name === 'AbortError');
+});
+
 test('nút bỏ thay đổi 4xx lấy bản máy chủ và không gửi lại bản hỏng', async () => {
   let puts = 0;
   const fetchStub = async (url, opts = {}) => {
@@ -612,7 +670,7 @@ test('sau PUT thành công lần lỗi sau bắt đầu lại ở 4 giây', asyn
   timers.length = 0;
   assert.equal(await client.pushState(false, false), false);
   assert.equal(timers.some(t => t.ms === 4000), true);
-  assert.equal(timers.some(t => t.ms > 4000), false);
+  assert.equal(timers.some(t => t.ms > 4000 && t.ms !== 15000), false);
 });
 
 test('parseBackup báo nhân 1000 khi file thiếu cờ moneyUnit', () => {

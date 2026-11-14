@@ -4304,7 +4304,10 @@ function apiFetch(url, opts){
   for (var k2 in sh) h[k2] = sh[k2];
   o.headers = h;
   o.cache = 'no-store';
-  return fetch(url, o);
+  var ac = new AbortController();
+  o.signal = ac.signal;
+  var tm = setTimeout(function(){ ac.abort(); }, 15000);
+  return fetch(url, o).then(function(r){ clearTimeout(tm); return r; }, function(e){ clearTimeout(tm); throw e; });
 }
 /* ================= ĐỒNG BỘ ================= */
 function cloudConflict(){
@@ -4433,8 +4436,8 @@ function pushState(manual, force){
       }
     }
     return ok;
-  }).catch(function(){
-    noteSyncFailure('Mất kết nối — dữ liệu vẫn giữ trên máy này.', true);
+  }).catch(function(e){
+    noteSyncFailure(e && e.name === 'AbortError' ? 'Máy chủ không phản hồi sau 15 giây — dữ liệu vẫn giữ trên máy này.' : 'Mất kết nối — dữ liệu vẫn giữ trên máy này.', true);
     return false;
   }).then(function(ok){
     pushing = false;
@@ -4470,7 +4473,7 @@ function pullState(manual, forceLatest){
       if (manual) toast('Dữ liệu trên máy chưa gửi — đang lưu lên máy chủ');
       return true;
     })
-    .catch(function(){ if (manual) toast('Không tải được dữ liệu', 'error'); return false; });
+    .catch(function(e){ if (manual) toast(e && e.name === 'AbortError' ? 'Máy chủ không phản hồi sau 15 giây' : 'Không tải được dữ liệu', 'error'); return false; });
 }
 /* Tự làm mới: chỉ tải khi server có bản mới hơn và máy không có thay đổi
    chưa gửi. Không hiện toast, không render nếu dữ liệu không đổi. */
