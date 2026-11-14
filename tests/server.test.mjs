@@ -224,6 +224,29 @@ test('server.js: X-Base-Updated cũ trả 409 conflict', async () => {
   assert.equal(stale.body.updatedAt, currentUpdatedAt);
 });
 
+test('server.js: W3 X-Op-Id trùng lần ghi gần nhất trả lại success, không ghi lại, không 409', async () => {
+  const st = emptyState({ products: [{ id: 'OPA', name: 'OpA', stock: 1, costPrice: 1 }] });
+  const first = await put(st, { 'X-Force': '1', 'X-Op-Id': 'OP_test1' });
+  assert.equal(first.status, 200);
+  const base = first.body.updatedAt;
+  const again = await put(st, { 'X-Base-Updated': '0', 'X-Op-Id': 'OP_test1' });
+  assert.equal(again.status, 200);
+  assert.equal(again.body.success, true);
+  assert.equal(again.body.updatedAt, base);
+  assert.equal((await getState()).updatedAt, base);
+  // op khác với base cũ vẫn 409
+  const other = await put(st, { 'X-Base-Updated': '0', 'X-Op-Id': 'OP_test2' });
+  assert.equal(other.status, 409);
+  // không gửi X-Op-Id: hành vi cũ
+  assert.equal((await put(st, { 'X-Base-Updated': '0' })).status, 409);
+  // op sai định dạng bị bỏ qua
+  assert.equal((await put(st, { 'X-Base-Updated': '0', 'X-Op-Id': 'OP test!' })).status, 409);
+  // ghi khác chen vào thì op cũ không còn được coi là đã ghi
+  const w = await put(emptyState({ products: [{ id: 'OPB', name: 'OpB', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  assert.equal(w.status, 200);
+  assert.equal((await put(st, { 'X-Base-Updated': '0', 'X-Op-Id': 'OP_test1' })).status, 409);
+});
+
 test('server.js: X-Base-Updated không phải số bị từ chối (vá lỗi NaN)', async () => {
   const res = await put(emptyState({
     products: [{ id: 'P1', name: 'A', stock: 1, costPrice: 1 }]

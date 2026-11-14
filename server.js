@@ -401,9 +401,22 @@ const writeStateTx = db.transaction((state, now) => {
   }
 });
 
-function writeState(state) {
+/* opId (tùy chọn, X-Op-Id): lưu cùng lần ghi gần nhất để PUT gửi lại (mất phản hồi) không bị 409.
+   Ghi không có opId thì xóa dấu cũ. */
+const OP_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+function getLastOp() {
+  const g = k => db.prepare('SELECT value FROM app_meta WHERE key = ?').get(k);
+  const id = g('last_op_id'), at = g('last_op_updated_at');
+  return id && at ? { id: id.value, updatedAt: Number(at.value) } : null;
+}
+function writeState(state, opId) {
   const now = Date.now();
-  writeStateTx(state, now);
+  db.transaction(() => {
+    writeStateTx(state, now);
+    const up = db.prepare('INSERT INTO app_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+    if (opId) { up.run('last_op_id', opId); up.run('last_op_updated_at', String(now)); }
+    else db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
+  })();
   return now;
 }
 
@@ -544,6 +557,13 @@ app.put('/api/state', (req, res) => {
       warnReject(400, 'Dữ liệu không hợp lệ (' + checked.errors.length + ' lỗi)');
       return res.status(400).json({ success: false, error: 'Dữ liệu không hợp lệ', details: checked.errors });
     }
+    const opHdr = req.get('X-Op-Id');
+    const opId = opHdr && OP_ID_RE.test(opHdr) ? opHdr : null;
+    const lastOp = opId ? getLastOp() : null;
+    if (lastOp && lastOp.id === opId) {
+      // PUT gửi lại sau khi mất phản hồi: đã ghi rồi, trả kết quả cũ, không ghi lại.
+      return res.json({ success: true, updatedAt: lastOp.updatedAt });
+    }
     const force = req.get('X-Force') === '1';
     const baseHdr = req.get('X-Base-Updated');
     if (!force && baseHdr == null) {
@@ -566,7 +586,7 @@ app.put('/api/state', (req, res) => {
     // Chụp TRƯỚC khi ghi: bản của ngày = trạng thái trước lần ghi đầu tiên trong ngày.
     runDailyBackup();
     if (force) snapshotBeforeForce();
-    const updatedAt = writeState(checked.state);
+    const updatedAt = writeState(checked.state, opId);
     const reply = { success: true, updatedAt };
     if (checked.warnings.length) reply.warnings = checked.warnings;
     if (checked.stockDrift.length) reply.stockDrift = checked.stockDrift;

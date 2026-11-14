@@ -2329,6 +2329,13 @@ function renderNote(){
     if (pages > 1) renderPager(host, notePage, pages, 'note');
   }
 }
+/* Cảnh báo (cho phép tiếp tục) khi giá bán/kg <= giá nhập gần nhất; không có giá nhập thì bỏ qua. */
+function confirmBelowImport(pid, q, m){
+  var l = lastImport(pid);
+  if (!l || !(q > 0) || kToDong(m) / q > l.price) return true;
+  var p = findProduct(pid);
+  return confirm('Giá bán "' + (p ? p.name : '?') + '" không cao hơn giá nhập gần nhất (' + fmtNum(l.price / DONG_PER_K) + ' nghìn đồng/kg). Vẫn lưu?');
+}
 function commitRetailRow(){
   var tb = $('#retailBody');
   if (!tb) return true;
@@ -2350,6 +2357,13 @@ function commitRetailRow(){
     if (qi) focusNS(qi);
     return false;
   }
+  if (!(kToDong(m) > 0)) {
+    toast('Nhập thành tiền lớn hơn 0', 'error');
+    var mi = $('.retail-money', row);
+    if (mi) focusNS(mi);
+    return false;
+  }
+  if (!confirmBelowImport(row.getAttribute('data-pid'), q, m)) return false;
   retailItems.push({ pid: row.getAttribute('data-pid'), kg: dec(q), amount: kToDong(m) });
   notePage = 1e9;
   tb.textContent = '';
@@ -2372,9 +2386,10 @@ function noteSave(){
   var q = num(($('#noteEditQty') || {}).value);
   var m = num(($('#noteEditMoney') || {}).value);
   if (q <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
-  if (m < 0) { toast('Thành tiền không được âm', 'error'); return; }
+  if (!(kToDong(m) > 0)) { toast('Nhập thành tiền lớn hơn 0', 'error'); focusNS($('#noteEditMoney')); return; }
   var limNs = checkLimits('q', q) || checkLimits('money', kToDong(m));
   if (limNs) { toast(limNs, 'error'); return; }
+  if (!confirmBelowImport(it.pid, q, m)) return;
   it.kg = dec(q);
   it.amount = kToDong(m);
   noteEditIdx = -1;
@@ -2636,7 +2651,7 @@ function saveRetail(){
   if (!items.length) { toast('Chọn vị thuốc và nhập số lượng hợp lệ', 'error'); return; }
   for (var k = 0; k < items.length; k++) {
     if (items[k].kg <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
-    if (items[k].amount < 0) { toast('Thành tiền không được âm', 'error'); return; }
+    if (!(items[k].amount > 0)) { toast('Nhập thành tiền lớn hơn 0', 'error'); return; }
   }
 
   var oname = 'Bán lẻ';
@@ -4218,6 +4233,10 @@ function saveTxEdit(){
     var ep = $(checkLimits('q', q) ? '#txEditQty' : '#txEditPrice'); if (ep) ep.focus();
     return;
   }
+  if (t.type === 'BAN' && !isRx) {
+    if (!(price > 0)) { toast('Nhập thành tiền lớn hơn 0', 'error'); var epz = $('#txEditPrice'); if (epz) epz.focus(); return; }
+    if (!confirmBelowImport(t.productId, 1, $('#txEditPrice').value)) return;
+  }
 
   var p = findProduct(t.productId);
   var oldQty = num(t.qty);
@@ -4347,13 +4366,17 @@ function noteStockWarnings(list){
   stockWarnText += '.';
   toast(stockWarnText, 'error');
 }
+var pendingOpSig = '', pendingOpId = '';
 function pushState(manual, force){
   if (pushing) return Promise.resolve(false);
   pushing = true;
   touch();
   renderSyncBadge();
   var sent = num(db.updatedAt);
-  var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase) };
+  /* opId theo nội dung (bỏ updatedAt, vì touch() đổi mỗi lần): thử lại cùng snapshot giữ nguyên. */
+  var opSig = JSON.stringify(Object.assign({}, db, { updatedAt: 0 }));
+  if (opSig !== pendingOpSig) { pendingOpSig = opSig; pendingOpId = uid('OP'); }
+  var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase), 'X-Op-Id': pendingOpId };
   if (force) headers['X-Force'] = '1';
   return apiFetch('/api/state', {
     method: 'PUT',
@@ -4377,6 +4400,7 @@ function pushState(manual, force){
     var ok = !!(d && d.success);
     if (ok) {
       authLost = false;
+      pendingOpSig = '';
       cloudBase = num(d.updatedAt) || sent;
       if (num(db.updatedAt) === sent) {
         db.updatedAt = cloudBase;

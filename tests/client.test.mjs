@@ -519,6 +519,32 @@ test('pushState 409 mở xung đột và không hẹn gửi lại', async () => 
   assert.equal(client.isSyncRejected(), false);
 });
 
+test('W3 pushState gửi X-Op-Id, giữ nguyên khi thử lại cùng snapshot, đổi sau khi thành công và khi nội dung đổi', async () => {
+  const ops = [];
+  let n = 0;
+  const fetchStub = async (url, opts = {}) => {
+    if ((opts.method || 'GET') === 'PUT') {
+      ops.push(opts.headers['X-Op-Id']);
+      n++;
+      if (n === 1) return { status: 500, json: async () => ({ success: false }) };
+      return { status: 200, json: async () => ({ success: true, updatedAt: 100 + n }) };
+    }
+    return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' } }) };
+  };
+  const client = loadClient({ fetch: fetchStub, setTimeout(fn, ms) { return ms || 1; }, clearTimeout() {} });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1);
+  await client.pushState(false, false);   // 500
+  await client.pushState(false, false);   // thử lại, thành công
+  assert.match(ops[0], /^OP_[A-Za-z0-9_-]+$/);
+  assert.equal(ops[0], ops[1]);
+  await client.pushState(false, false);   // CÙNG nội dung sau thành công: opId mới
+  assert.notEqual(ops[2], ops[1]);
+  client.setDb({ products: [{ id: 'X', name: 'x', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
+  await client.pushState(false, false);
+  assert.notEqual(ops[3], ops[2]);
+});
+
 test('nút bỏ thay đổi 4xx lấy bản máy chủ và không gửi lại bản hỏng', async () => {
   let puts = 0;
   const fetchStub = async (url, opts = {}) => {
@@ -5786,4 +5812,128 @@ test('2.17.5 pushState: thân PUT có moneyUnit "dong"', async () => {
   client.setBase(1);
   assert.equal(await client.pushState(false, false), true);
   assert.equal(JSON.parse(sentBody).moneyUnit, 'dong');
+});
+
+/* W1: bán lẻ thành tiền trống/0 bị chặn; giá bán <= giá nhập gần nhất thì hỏi confirm */
+function w1Client(qty, money, confirmFn, withImport = true) {
+  const mk = v => ({ value: v, focus() {}, select() {} });
+  const row = { getAttribute() { return 'p1'; }, querySelector(sel) { return sel === '.retail-qty' ? mk(qty) : sel === '.retail-money' ? mk(money) : mk('0'); } };
+  const tb = { textContent: 'giu', children: [], querySelector(s) { return s === 'tr[data-pid]' ? row : null; }, appendChild() {} };
+  const els = { '#retailBody': tb, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const c = loadClient({ document: limitDoc(els), confirm: confirmFn,
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  const transactions = withImport ? [{ id: 'T1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 5, price: 100000, total: 500000 }] : [];
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 100000 }], transactions, prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  return c;
+}
+test('W1 saveRetail: amount=0 không tạo giao dịch, tồn không đổi', () => {
+  const dom = limitStock();
+  const c = limitClient(dom, [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 1 }]);
+  c.setRetailItems([{ pid: 'p1', kg: 1, amount: 0 }]);
+  const before = JSON.stringify(c.getDb());
+  c.saveRetail();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.match(toastText(dom), /thành tiền lớn hơn 0/);
+});
+test('W1 commitRetailRow: ô tiền trống hoặc 0 không thêm dòng', () => {
+  for (const v of ['', '0']) {
+    const c = w1Client('1', v, () => true);
+    assert.equal(c.commitRetailRow(), false);
+    assert.equal(c.getRetailItems().length, 0);
+  }
+});
+test('W1 commitRetailRow: giá bán <= giá nhập gần nhất thì hỏi confirm', () => {
+  let asked = 0;
+  let c = w1Client('1', '100', () => { asked++; return false; });
+  assert.equal(c.commitRetailRow(), false);
+  assert.equal(asked, 1);
+  assert.equal(c.getRetailItems().length, 0);
+  asked = 0;
+  c = w1Client('1', '100', () => { asked++; return true; });
+  assert.equal(c.commitRetailRow(), true);
+  assert.equal(asked, 1);
+  assert.equal(c.getRetailItems().length, 1);
+  asked = 0;
+  c = w1Client('1', '101', () => { asked++; return false; });
+  assert.equal(c.commitRetailRow(), true);
+  assert.equal(asked, 0);
+  c = w1Client('1', '50', () => { asked++; return false; }, false);
+  assert.equal(c.commitRetailRow(), true);
+  assert.equal(asked, 0);
+});
+
+/* W1b: noteSave / commitRetailRow / saveTxEdit(BAN) chặn thành tiền 0 và hỏi khi giá <= giá nhập */
+function w1bClient(dom, confirmFn, tx = []) {
+  const c = loadClient({ document: dom.document, confirm: confirmFn,
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  const imp = { id: 'T1', date: '2026-11-01', type: 'NHAP', productId: 'p1', qty: 5, price: 100000, total: 500000, ts: 1 };
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 5, costPrice: 100000 }], transactions: [imp].concat(tx), prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  return c;
+}
+test('W1b noteSave: thành tiền 0 hoặc 0.0004 bị chặn; giá <= nhập hỏi confirm', () => {
+  for (const v of ['0', '0.0004']) {
+    const dom = limitStock();
+    const c = w1bClient(dom, () => true);
+    c.setRetailItems([{ pid: 'p1', kg: 1, amount: 150000 }]);
+    c.setNoteEditIdx(0);
+    dom.set('noteEditQty', '1'); dom.set('noteEditMoney', v);
+    c.noteSave();
+    assert.equal(c.getRetailItems()[0].amount, 150000);
+    assert.match(toastText(dom), /thành tiền lớn hơn 0/);
+  }
+  let asked = 0;
+  let dom = limitStock();
+  let c = w1bClient(dom, () => { asked++; return false; });
+  c.setRetailItems([{ pid: 'p1', kg: 1, amount: 150000 }]);
+  c.setNoteEditIdx(0);
+  dom.set('noteEditQty', '1'); dom.set('noteEditMoney', '100');
+  c.noteSave();
+  assert.equal(asked, 1);
+  assert.equal(c.getRetailItems()[0].amount, 150000);
+  dom = limitStock();
+  c = w1bClient(dom, () => { asked++; return true; });
+  c.setRetailItems([{ pid: 'p1', kg: 1, amount: 150000 }]);
+  c.setNoteEditIdx(0);
+  dom.set('noteEditQty', '1'); dom.set('noteEditMoney', '100');
+  c.noteSave();
+  assert.equal(c.getRetailItems()[0].amount, 100000);
+});
+test('W1b commitRetailRow: ô tiền 0.0004 (ra 0 đồng) bị chặn', () => {
+  const c = w1Client('1', '0.0004', () => true);
+  assert.equal(c.commitRetailRow(), false);
+  assert.equal(c.getRetailItems().length, 0);
+});
+test('W1b saveTxEdit BAN lẻ: giá 0 bị chặn; giá <= nhập hỏi confirm; NHAP giá 0 vẫn lưu', () => {
+  const ban = { id: 'b1', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 150000, total: 150000, cost: 100000, ts: 2 };
+  let dom = limitStock();
+  let c = w1bClient(dom, () => true, [ban]);
+  c.openTxEdit('b1');
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '0');
+  const before = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(JSON.stringify(c.getDb()), before);
+  assert.match(toastText(dom), /thành tiền lớn hơn 0/);
+  let asked = 0;
+  dom = limitStock();
+  c = w1bClient(dom, () => { asked++; return false; }, [ban]);
+  c.openTxEdit('b1');
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '100');
+  const b2 = JSON.stringify(c.getDb());
+  c.saveTxEdit();
+  assert.equal(asked, 1);
+  assert.equal(JSON.stringify(c.getDb()), b2);
+  dom = limitStock();
+  c = w1bClient(dom, () => true, [ban]);
+  c.openTxEdit('b1');
+  dom.set('txEditQty', '1'); dom.set('txEditPrice', '120');
+  c.saveTxEdit();
+  assert.equal(c.getDb().transactions.find(t => t.id === 'b1').price, 120000);
+  dom = limitStock();
+  c = w1bClient(dom, () => true);
+  c.openTxEdit('T1');
+  dom.set('txEditQty', '5'); dom.set('txEditPrice', '0');
+  c.saveTxEdit();
+  assert.equal(c.getDb().transactions.find(t => t.id === 'T1').price, 0);
 });
