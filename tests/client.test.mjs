@@ -1086,6 +1086,24 @@ test('autoRefresh: KHÔNG tải khi đang gõ trong ô nhập', async () => {
   assert.equal(calls, 0, 'không được gọi mạng khi đang nhập');
   assert.equal(client.getDb().products[0].name, 'DangNhap', 'giữ nguyên nội dung đang nhập');
 });
+test('W7: sanitize giữ oname khi thiếu oid', () => {
+  const out = app.sanitize({
+    products: [{ id: 'p1', name: 'Cam thảo', stock: 10, costPrice: 50 }],
+    transactions: [{ id: 't1', date: '2026-11-06', type: 'BAN', productId: 'p1', qty: 1, price: 60, total: 60, oname: 'Bán lẻ' }],
+    prescriptions: []
+  });
+  assert.equal(out.transactions[0].oname, 'Bán lẻ');
+  assert.equal(out.transactions[0].oid, undefined);
+});
+test('W8: khóa tên sản phẩm gộp khoảng trắng và NFC (trùng bị loại)', () => {
+  const mk = (a, b) => app.sanitize({
+    products: [{ id: 'p1', name: a, stock: 1, costPrice: 1 }, { id: 'p2', name: b, stock: 1, costPrice: 1 }],
+    transactions: [], prescriptions: []
+  }).products.length;
+  assert.equal(mk('Cam  Thảo', 'Cam Thảo'), 1);
+  assert.equal(mk('Thảo', 'Thảo'), 1);
+  assert.equal(mk('Cam Thảo', 'Cam Thao'), 2);
+});
 test('sanitize: loại bỏ oname khi trùng với oid (tránh hiển thị ID thay vì ngày nhập)', () => {
   const out = app.sanitize({
     products: [{ id: 'p1', name: 'Cam thảo', stock: 10, costPrice: 50 }],

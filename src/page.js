@@ -1659,7 +1659,7 @@ function sanitize(d, drops){
         if (drops) drops.push('Vị thuốc không hợp lệ: ' + name);
         return;
       }
-      var nameKey = capWords(name).toLowerCase();
+      var nameKey = name.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
       if (seenPid[id] || seenPname[nameKey]) {
         if (drops) drops.push('Vị thuốc trùng: ' + name);
         return;
@@ -1715,7 +1715,8 @@ function sanitize(d, drops){
         if (drops) drops.push('Tên đơn quá dài: ' + oname.slice(0, 40) + '…');
         oname = oname.slice(0, NAME_MAX);
       }
-      if (oid && oname && oname !== oid) { tx.oid = oid; tx.oname = oname; }
+      if (oid) tx.oid = oid;
+      if (oname && oname !== oid) tx.oname = oname;
       else if (oid) tx.oid = oid;
       if (t.retail) tx.retail = true;
       if (t.rx) tx.rx = true;

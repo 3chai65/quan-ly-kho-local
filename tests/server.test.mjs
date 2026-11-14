@@ -408,6 +408,22 @@ test('server.js: thiếu X-Base-Updated (và không X-Force) bị từ chối 42
   assert.deepEqual(data.products.map(p => p.id), ['H1']);
 });
 
+test('W7/W8: khóa tên khớp client (khoảng trắng, NFC → 400); oname thiếu oid được giữ', async () => {
+  await put(emptyState({ products: [{ id: 'W0', name: 'Goc', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  const hdr = { 'X-Base-Updated': String((await getState()).updatedAt) };
+  const mkP = (a, b) => emptyState({ products: [{ id: 'W1', name: a, stock: 1, costPrice: 1 }, { id: 'W2', name: b, stock: 1, costPrice: 1 }] });
+  const sp = await put(mkP('Cam  Thảo', 'cam thảo'), hdr);
+  assert.equal(sp.status, 400);
+  const nfc = await put(mkP('Thảo', 'Thảo'), hdr);
+  assert.equal(nfc.status, 400);
+  const ok = await put(emptyState({
+    products: [{ id: 'W1', name: 'A', stock: 5, costPrice: 1 }],
+    transactions: [{ id: 'TW', date: '2026-11-06', type: 'BAN', productId: 'W1', qty: 1, price: 1, total: 1, ts: 1, oname: 'Bán lẻ' }]
+  }), hdr);
+  assert.equal(ok.status, 200);
+  assert.equal((await getState()).transactions[0].oname, 'Bán lẻ');
+});
+
 test('server.js: trùng tên/id bị 400 thay vì âm thầm bỏ dòng, dữ liệu cũ còn nguyên', async () => {
   await put(emptyState({ products: [{ id: 'D0', name: 'Goc', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
   const base = (await getState()).updatedAt;

@@ -257,7 +257,7 @@ function validateState(d) {
     if (!isNonNegNumber(p.stock, QTY_MAX)) fail(label + ' "' + name + '": tồn kho phải từ 0 đến ' + QTY_MAX);
     if (!isNonNegNumber(p.costPrice, MONEY_MAX)) fail(label + ' "' + name + '": giá nhập phải từ 0 đến ' + MONEY_MAX);
     const id = String(p.id || randomId());
-    const nameKey = name.toLowerCase();
+    const nameKey = name.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
     if (productIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
     if (productNames.has(nameKey)) { fail(label + ': trùng tên sản phẩm "' + name + '"'); return; }
     productIds.add(id);
