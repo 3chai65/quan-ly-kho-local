@@ -11,3 +11,4 @@ kho-nhap-bi-tu-choi-*.json
 .claude/
 *.crt
 reports-claude/
+*.out
