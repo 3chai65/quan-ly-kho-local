@@ -291,7 +291,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 #retailNote col.cg-act{width:52px}
 #retailNote .note__pending thead{display:none}
 #retailNote .note__pending{margin:0}
-.note__foot{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--border2)}
+.note__foot{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border2)}
 .note__tot{font-size:14px;color:var(--text2)}
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (chỉ hiển thị; không đổi giá trị). */
 .qty-host{position:relative;display:block}
@@ -639,10 +639,11 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
               <th class="c-num" scope="col">STT</th>
               <th scope="col">Tên</th>
               <th scope="col">SL</th>
-              <th scope="col" class="r">Thành tiền</th>
+              <th scope="col" class="r">Giá bán</th>
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="retailNoteBody"></tbody>
+            <tfoot id="retailNoteFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-green" id="retailNoteTotal">0</td><td></td></tr></tfoot>
           </table>
           </div>
           <div class="tw note__pending">
@@ -653,7 +654,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
                 <th class="c-num" scope="col">STT</th>
                 <th scope="col">Tên</th>
                 <th class="c-qty" scope="col">SL (kg)</th>
-                <th class="c-money" scope="col">Thành tiền</th>
+                <th class="c-money" scope="col">Giá bán</th>
                 <th class="c-del" scope="col"><span class="sr">Thêm</span></th>
               </tr></thead>
               <tbody id="retailBody"></tbody>
@@ -661,7 +662,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
           </div>
           <div class="foot" id="retailNotePager" hidden></div>
           <div class="note__foot">
-            <span class="note__tot">Tổng <b class="txt-green" id="retailNoteTotal">0</b></span>
             <button class="btn btn--green" type="button" data-action="save-retail" data-keep-focus>
               <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
             </button>
@@ -774,6 +774,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
             <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
           </tr></thead>
           <tbody id="nhapListBody"></tbody>
+          <tfoot id="nhapListFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-blue" id="nhapListTotal">0</td><td></td></tr></tfoot>
         </table>
         <div class="tw note__pending">
           <table class="ord">
@@ -788,7 +789,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
             </tr></thead>
             <tbody id="nhapPendingBody"><tr class="is-row">
               <td class="c-num num muted"></td>
-              <td><span id="nhapPendName" class="nhap-pend__name is-muted">Chọn vị thuốc ở ô trên</span> <span class="note__tot nhap-pend__tot">Thành tiền <b class="txt-blue num" id="nhapTotal">0</b></span><p class="hint nhap-hint" id="nhapHint" hidden></p></td>
+              <td><span id="nhapPendName" class="nhap-pend__name is-muted">Chọn vị thuốc ở ô trên</span> <span class="note__tot nhap-pend__tot">Giá nhập <b class="txt-blue num" id="nhapTotal">0</b></span><p class="hint nhap-hint" id="nhapHint" hidden></p></td>
               <td class="c-qty" data-label="SL (kg)"><input class="inp inp--sm inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0" aria-label="Số lượng (kg)"></td>
               <td class="c-money" data-label="Giá nhập (k/kg)"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"></td>
               <td class="c-del"><button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button></td>
@@ -796,7 +797,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
           </table>
         </div>
         <div class="note__foot">
-          <span class="note__tot">Tổng <b class="txt-blue" id="nhapListTotal">0</b></span>
           <button class="btn btn--dark" type="submit" data-keep-focus>
             <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
           </button>
@@ -2144,11 +2144,11 @@ function addOrderRow(kind, pid){
 
   if (isRetail) {
     var tdM = el('td', 'c-money');
-    tdM.setAttribute('data-label', 'Thành tiền');
+    tdM.setAttribute('data-label', 'Giá bán');
     var mi = el('input', 'inp inp--sm inp--num retail-money');
     mi.type = 'number'; mi.step = 'any'; mi.min = '0'; mi.inputMode = 'decimal'; mi.placeholder = '0';
     mi.max = '1000000000';
-    mi.setAttribute('aria-label', 'Thành tiền');
+    mi.setAttribute('aria-label', 'Giá bán');
     tdM.appendChild(mi);
     tr.appendChild(tdM);
   }
@@ -2266,7 +2266,7 @@ function renderNote(){
       var mi = el('input', 'inp inp--sm inp--num');
       mi.id = 'noteEditMoney'; mi.type = 'number'; mi.step = 'any'; mi.min = '0'; mi.inputMode = 'decimal';
       mi.value = kInput(it.amount);
-      mi.setAttribute('aria-label', 'Thành tiền');
+      mi.setAttribute('aria-label', 'Giá bán');
       tdm.appendChild(mi);
       var bs = el('button', 'btn btn--icon');
       bs.type = 'button'; bs.setAttribute('data-action', 'note-save'); bs.setAttribute('aria-label', 'Lưu dòng');
@@ -2297,6 +2297,8 @@ function renderNote(){
   }
   var tot = $('#retailNoteTotal');
   if (tot) tot.textContent = fmtMoney(sum);
+  var tf = $('#retailNoteFoot');
+  if (tf) tf.hidden = !retailItems.length;
   var pg = $('#retailNotePg');
   if (pg) pg.textContent = 'Trang ' + notePage + ' / ' + pages;
   var host = $('#retailNotePager');
@@ -3844,6 +3846,8 @@ function renderNhapList(){
   });
   var tot = $('#nhapListTotal');
   if (tot) tot.textContent = fmtMoney(sum);
+  var tf = $('#nhapListFoot');
+  if (tf) tf.hidden = !nhapList.length;
   var cnt = $('#nhapListCount');
   if (cnt) cnt.textContent = nhapList.length ? nhapList.length + ' vị' : '';
   var lbl = $('#nhapSaveLabel');

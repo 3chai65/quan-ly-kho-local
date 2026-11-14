@@ -2588,7 +2588,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 158); // 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 160); // 2.17.3 thêm retailNoteFoot, nhapListFoot: 158 -> 160; 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -3495,7 +3495,10 @@ test('2.14.0 Bán lẻ: bảng nhập (retailBody) nằm trong tờ ghi, sau dan
   assert.ok(at('id="retailNote"') < at('id="retailBody"') && at('id="retailBody"') < at('id="retailNotePager"'), 'retailBody phải nằm trong tờ ghi');
   assert.ok(at('id="retailNoteBody"') < at('id="retailBody"'), 'dòng đang nhập đứng sau danh sách dòng đã thêm');
   assert.equal(PAGE.split('data-action="save-retail"').length - 1, 1);
-  assert.match(PAGE, /<div class="note__foot">[\s\S]*?id="retailNoteTotal"[\s\S]*?Bán đơn\s*<\/button>/);
+  assert.match(PAGE, /<tfoot id="retailNoteFoot" hidden><tr><td><\/td><td class="b">Tổng<\/td><td><\/td><td class="num b r txt-green" id="retailNoteTotal">[\s\S]*?<div class="note__foot">\s*<button[^>]*data-action="save-retail"[\s\S]*?Bán đơn\s*<\/button>/);
+  assert.doesNotMatch(PAGE.slice(PAGE.indexOf('<div class="note__foot">'), PAGE.indexOf('id="remedyBox"')), /Tổng/, '2.17.3: chân Bán lẻ chỉ còn nút');
+  assert.match(PAGE, /<th scope="col" class="r">Giá bán<\/th>/);
+  assert.doesNotMatch(PAGE.slice(PAGE.indexOf('id="retailBox"'), PAGE.indexOf('id="remedyBox"')), /Thành tiền/, '2.17.3: Bán lẻ đổi Thành tiền -> Giá bán');
 });
 
 test('2.14.0 Bán lẻ: renderNote không vẽ dòng trống (chỉ dòng thật)', () => {
@@ -3786,7 +3789,9 @@ test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) n�
   for (const id of ['nhapQty', 'nhapPrice', 'nhapTotal', 'nhapPendingBody']) assert.match(pend, new RegExp('id="' + id + '"'), 'dòng nhập thiếu ' + id);
   assert.match(pend, /data-action="nhap-add"/);
   const foot = note.slice(iFoot);
-  assert.match(foot, /id="nhapListTotal"/);
+  assert.match(note, /<tfoot id="nhapListFoot" hidden>[\s\S]*?id="nhapListTotal"/, '2.17.3: Tổng là hàng cuối bảng');
+  assert.doesNotMatch(foot, /Tổng/, '2.17.3: chân Nhập hàng chỉ còn nút');
+  assert.doesNotMatch(PAGE, /nhap-pend__tot">Thành tiền/);
   assert.match(foot, /<button class="btn btn--dark" type="submit"[^>]*>[\s\S]*?id="nhapSaveLabel"/);
   assert.equal((PAGE.match(/id="nhapTotal"/g) || []).length, 1);
   assert.match(PAGE, /renumber\(pendTb, nhapList\.length\);/);

@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.3] - 2026-11-14
+
+### Changed
+- Bán lẻ và Nhập hàng: "Tổng" chuyển thành hàng cuối bảng ghi (tfoot), số tổng cùng mép phải với số tiền các dòng (đo sai số 0 px ở 320/375/800/1300); chân chỉ còn nút Bán đơn / Lưu nhập hàng căn phải (chân cố định trên điện thoại thấp hơn).
+- Bán lẻ: nhãn "Thành tiền" đổi thành "Giá bán" (tiêu đề cột, aria-label ô nhập); Nhập hàng: nhãn "Thành tiền" ở dòng nhập đổi thành "Giá nhập". Không đổi logic tiền.
+
 ## [2.17.2] - 2026-11-14
 
 ### Changed
