@@ -5,6 +5,19 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.7] - 2026-11-14
+
+Không đổi định dạng dữ liệu.
+
+- W1: chặn bán lẻ thành tiền 0 (nút +, Bán đơn, sửa dòng, sửa giao dịch); cảnh báo khi giá/kg ≤ giá nhập gần nhất.
+- W3: header `X-Op-Id` chống 409 giả khi mất phản hồi; server lưu `last_op_id`/`last_op_updated_at` trong `app_meta` (không migration); client cũ không gửi vẫn chạy.
+- W4: fetch có timeout 15 giây.
+- W5: `tsFromId` đọc id của app (giá nhập tham chiếu cùng ngày thiếu giờ ghi có thể đổi).
+- W6: lời báo sao lưu là "Đã tạo file sao lưu"; trần khôi phục 12 MB kèm kiểm JSON gọn ≤ 4 MB.
+- W7: client giữ `oname` khi thiếu `oid`.
+- W8: khóa tên sản phẩm chung hai phía (dữ liệu cũ trùng khác khoảng trắng/NFC sẽ bị 400).
+- W9: CI thêm job lint; thêm `.nvmrc`.
+
 ## [2.17.6] - 2026-11-14
 
 - Thuốc chén: hàng tổng gram cuối tờ ghi chỉ còn nhãn `1 thang` và số gram (ví dụ `1 thang  147 g`); bỏ chữ "Tổng", "x vị", "x thang: xx kg". Bỏ id `remedyQty`, mã tính chữ đó trong `calcRemedy` và CSS `.hint` của tfoot. Không đổi logic tiền.
