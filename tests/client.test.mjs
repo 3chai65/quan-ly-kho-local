@@ -6024,3 +6024,40 @@ test('W5 txStamp/lastImport: hai giao dịch cùng ngày thiếu ts xếp theo m
   assert.equal(l.price, 200000);
   assert.equal(l.hasTime, true);
 });
+
+test('W6 downloadBackup: click ném lỗi thì không đóng dấu, trả false; thành công thì đóng dấu + lời báo mới', () => {
+  const mk = (clickFn) => {
+    const toastEl = makeEl(), msgEl = makeEl();
+    const localStorage = { m: new Map(), getItem(k) { return this.m.has(k) ? this.m.get(k) : null; }, setItem(k, v) { this.m.set(k, String(v)); }, removeItem() {} };
+    const document = {
+      readyState: 'loading', documentElement: makeEl(), body: makeEl(),
+      querySelector(s) { return s === '#toast' ? toastEl : s === '#toastMsg' ? msgEl : null; },
+      querySelectorAll() { return []; },
+      createElement() { const e = makeEl(); e.click = clickFn; return e; },
+      addEventListener() {}, removeEventListener() {}
+    };
+    const c = loadClient({ Blob: class {}, document, localStorage });
+    c.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+    return { c, msgEl, localStorage };
+  };
+  const bad = mk(() => { throw new Error('blocked'); });
+  assert.equal(bad.c.downloadBackup(true), false);
+  assert.equal(bad.localStorage.m.size, 0);
+  assert.equal(bad.msgEl.textContent, 'Không tạo được bản sao lưu');
+  const ok = mk(() => {});
+  assert.equal(ok.c.downloadBackup(true), true);
+  assert.equal(ok.localStorage.m.size, 1);
+  assert.equal(ok.msgEl.textContent, 'Đã tạo file sao lưu');
+});
+
+test('W6 restoreFromFile: 5 MB không bị từ chối ở client, > 12 MB bị từ chối', () => {
+  const run = (size) => {
+    let reads = 0;
+    const c = loadClient({ FileReader: class { readAsText() { reads++; } } });
+    c.restoreFromFile({ size });
+    return reads;
+  };
+  assert.equal(run(5 * 1024 * 1024), 1);
+  assert.equal(run(12 * 1024 * 1024), 1);
+  assert.equal(run(12 * 1024 * 1024 + 1), 0);
+});

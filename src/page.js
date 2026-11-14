@@ -4580,7 +4580,7 @@ function downloadBackup(manual, filename, skipStamp){
   }
   try { if (!skipStamp) localStorage.setItem(BAK_LAST, todayISO()); } catch (e) {}
   if (!skipStamp) renderBackupInfo();
-  if (manual) toast('Đã tải file sao lưu về máy');
+  if (manual) toast('Đã tạo file sao lưu');
   return true;
 }
 function backupStamp(){
@@ -4699,7 +4699,7 @@ function parseBackup(text){
 }
 function restoreFromFile(file){
   if (!file) return;
-  if (file.size > 4 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
+  if (file.size > 12 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
   var fr = new FileReader();
   fr.onload = function(){
     var bak = null;
