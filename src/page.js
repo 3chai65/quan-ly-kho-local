@@ -30,11 +30,13 @@ color-scheme:light;
 --red:#be123c;--red-soft:#f8e7ea;--red-text:#be123c;
 --blue-text:#1d4ed8;
 --r:14px;--r-sm:10px;
---sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.05);
+--sh:inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.06),0 14px 28px rgba(15,23,42,.05);
+--glass:rgba(246,247,249,.88);--glass-dark:rgba(17,24,39,.84);--blur:saturate(1.3) blur(14px);
 --chart-imp:#5b5fd0;--chart-exp:#2f9e76;
 --ring:0 0 0 3px rgba(79,70,229,.30);
 }
 html{-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 50% at 10% 0%,rgba(79,70,229,.13),transparent 70%),radial-gradient(55% 45% at 100% 35%,rgba(47,158,118,.10),transparent 70%),radial-gradient(60% 50% at 40% 100%,rgba(180,83,9,.06),transparent 70%)}
 body{margin:0;background:var(--bg);color:var(--text);
 font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
 padding-bottom:48px;-webkit-font-smoothing:antialiased}
@@ -49,7 +51,7 @@ a{color:var(--brand-text)}
 :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 /* ---------- layout ---------- */
 .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
-.top{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--border)}
+.top{position:sticky;top:0;z-index:30;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--border)}
 .bar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;min-height:60px}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em;background:none;border:0;padding:0;font-family:inherit;cursor:pointer}
 .brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
@@ -67,7 +69,7 @@ font:inherit;font-size:12px;font-weight:700;line-height:1.35;text-align:left;whi
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 14px;
 border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);
-font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;
+font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(15,23,42,.07);
 transition:background .15s,border-color .15s,color .15s}
 .btn:hover{background:var(--surface2)}
 .btn:active{transform:translateY(1px)}
@@ -79,7 +81,7 @@ transition:background .15s,border-color .15s,color .15s}
 .btn--dark:hover{background:#1e293b;border-color:#1e293b}
 .btn--icon{min-width:38px;min-height:38px;padding:6px}
 .btn--sm{min-height:34px;padding:5px 11px;font-size:13px}
-.btn--danger{color:var(--red-text);background:transparent;border-color:transparent}
+.btn--danger{color:var(--red-text);background:transparent;border-color:transparent;box-shadow:none}
 .btn--danger:hover{background:var(--red-soft)}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 /* ---------- menu ---------- */
@@ -93,7 +95,7 @@ border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px rgba(15
 .menu__item--danger{color:var(--red-text)}
 .menu__item--danger:hover{background:var(--red-soft);color:var(--red-text)}
 /* ---------- cards ---------- */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
 .card__head{display:flex;align-items:center;gap:10px;padding:13px 16px;flex-wrap:wrap}
 .card__title{font-size:15px;font-weight:700;letter-spacing:-.01em}
 .card__body{padding:16px}
@@ -104,7 +106,7 @@ details[open]>.card__head{border-bottom:1px solid var(--border2)}
 details>.card__head:hover{background:var(--surface2)}
 /* ---------- stats ---------- */
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--surface);
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
@@ -252,7 +254,7 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .toast{position:fixed;z-index:120;left:50%;bottom:22px;transform:translate(-50%,150%);
 opacity:0;visibility:hidden;
 display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);
-padding:11px 16px;border-radius:12px;background:#111827;color:#f8fafc;font-size:14px;font-weight:500;
+padding:11px 16px;border-radius:12px;background:var(--glass-dark);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);color:#f8fafc;font-size:14px;font-weight:500;
 box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .26s ease,opacity .26s ease;pointer-events:none}
 .toast.is-on{transform:translate(-50%,0);opacity:1;visibility:visible}
 .toast .ico{color:#34d399}
@@ -267,7 +269,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .26s ease,opacity .2
 /* ---------- dialog ---------- */
 .dlg{border:0;padding:0;background:transparent;max-width:min(440px,calc(100% - 24px));width:100%;
 max-height:calc(100dvh - 24px);overflow:auto}
-.dlg::backdrop{background:rgba(10,15,26,.6)}
+.dlg::backdrop{background:rgba(10,15,26,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .dlg__card{width:100%}
 .dlg--wide{max-width:min(640px,calc(100% - 24px))}
 .note td.num{white-space:nowrap}
@@ -419,7 +421,7 @@ td.c-qty{position:relative}
 #retailBox,#remedyBox{overflow:visible}
 #retailNote{overflow:visible}
 #retailBox.foot-fixed>.card__body,#remedyBox.foot-fixed>.card__body{padding-bottom:calc(var(--foot-h,72px) + 8px)}
-#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -2px 10px rgba(15,23,42,.12);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-top:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 -2px 10px rgba(15,23,42,.12);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 #retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
 #remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
@@ -510,7 +512,7 @@ table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
 .tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:0;min-height:44px;padding:5px 6px;
 border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text2);font:inherit;
-font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
+font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(15,23,42,.07)}
 .tab:hover{background:var(--surface2);color:var(--text)}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
@@ -532,6 +534,13 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer}
 /* 2.14.0 S1 (máy tính): cột SL của tờ ghi và dòng đang nhập rộng 152px → ô nhập 132px, vùng chữ ≥ 56px khi có gợi ý. Đặt SAU mọi quy tắc cg-qty ở trên. */
 @media (min-width:601px){
 #retailNote col.cg-qty,#remedyNote col.cg-qty,#nhapListBox col.cg-qty{width:152px;min-width:152px}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+:root{--glass:var(--surface);--glass-dark:#111827}
+}
+@media (prefers-reduced-motion:reduce),(prefers-reduced-transparency:reduce){
+:root{--glass:var(--surface);--glass-dark:#111827;--blur:none}
+.dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}

@@ -4123,7 +4123,7 @@ test('2.12.0 nhãn tab: mỗi nút đúng 2 span tab__l1/tab__l2 không rỗng; 
   }
   assert.match(PAGE, /\.tab\{display:flex;flex-direction:column;[^}]*min-height:44px/);
   assert.match(PAGE, /\.tab\{padding:4px 2px;font-size:12px\}/);
-  assert.match(PAGE, /font-size:13px;font-weight:600;line-height:1\.2;text-align:center;cursor:pointer\}/);
+  assert.match(PAGE, /font-size:13px;font-weight:600;line-height:1\.2;text-align:center;cursor:pointer[;}]/);
 });
 
 /* 2.12.0 (C): giảm chói – token màu đổi ở cả :root và html[data-theme=dark]; không nền #fff; tương phản đạt AA. */
