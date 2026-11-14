@@ -11,7 +11,7 @@ Cập nhật: 14/11/2026, phiên bản 2.17.5 (HEAD b247a5a). Nguồn: báo cáo
 | E1 | ngoài 14/11 (mục 1) | `tsFromId` luôn trả 0 với id `uid()` | ĐÚNG | KHÔNG SỬA | Ảnh hưởng nhỏ, chạm `lastImport`/giá nhập tham chiếu (xem 3.1) |
 | E2 | ngoài 14/11 (mục 2) | Server không kiểm `moneyUnit` | MỘT PHẦN | ĐÃ SỬA 2.17.4 (f5b4b5d) | Không có luồng thật gửi số nghìn; chặn bằng 400 cho chắc |
 | E3 | ngoài 14/11 (mục 3) | `inRange`/`isNonNegNumber` nhận boolean, chuỗi rỗng, `0x10` | ĐÚNG (hậu quả mô tả sai một phần) | ĐÃ SỬA 2.17.4 (f5b4b5d); `thang` ở 2.17.5 (263bd02) | Cùng luật `isNumLike` hai phía |
-| E4 | ngoài 14/11 (mục 4) | `allocateRemedyByCost` khi tổng khách trả < tổng vốn | SAI | KHÔNG SỬA | Cả hai nơi gọi đã kiểm trước (xem 3.2) |
+| E4 | ngoài 14/11 (mục 4) | `allocateRemedyByCost` khi tổng khách trả < tổng vốn | ĐÚNG về hàm, không phải lỗi thật | KHÔNG SỬA | Cả hai nơi gọi đã kiểm trước (xem 3.2) |
 | E5 | ngoài 14/11 (mục 5) | `delOrder` so `oid` bằng `===` | SAI về hậu quả | ĐÃ SỬA 2.17.4 (f5b4b5d) cho nhất quán | `oid` luôn là chuỗi ở mọi đường |
 | E6 | ngoài 14/11 (mục 6) | `txIndex` cache có thể cũ | ĐIỂM DỄ VỠ, chưa lỗi | KHÔNG SỬA | `renderAll` luôn gọi `indexTx` (xem 3.3) |
 | E7 | ngoài 14/11 (mục 7) | Đơn bán lẻ 1 vị không có `oid` | CHỦ Ý | KHÔNG SỬA | CHANGELOG ghi rõ hiển thị như dòng giao dịch thường |
@@ -23,9 +23,9 @@ Cập nhật: 14/11/2026, phiên bản 2.17.5 (HEAD b247a5a). Nguồn: báo cáo
 | E10 | ngoài 14/11 | File rác `tests/client.test.mjs;C` | ĐÚNG | ĐÃ SỬA 2.17.4 (f5b4b5d) | Xóa; `.dockerignore` thêm `tests/*;*` |
 | A1 | Auditor 2.15.20 | Bản sửa đầu `saveLocal` ghi BASE mới khi ghi KEY lỗi | ĐÚNG | ĐÃ SỬA 2.15.20 (788f2f3) | Không ghi BASE khi KEY lỗi để máy chủ trả 409, tránh đè lặng lẽ |
 | A2 | Auditor 2.16.0 | CSP `default-src 'none'` chặn manifest và service worker, lỗi bị `.catch` nuốt | ĐÚNG | ĐÃ SỬA 2.16.0 (2627fb6) | Thêm `manifest-src`, `worker-src 'self'`; test tĩnh không bắt được, bắt bằng Edge |
-| A3 | Auditor 2.17.0 | Logo âm dương còn là `themeBtn`, menu theme thành nút chết | ĐÚNG | ĐÃ SỬA 2.17.0 (428be32, 9bc4150) | Đổi id `brandLogo`, bỏ menu Sáng/Tối |
-| A4 | Auditor 2.17.0 | Trang đăng nhập (`auth.js`) còn nhánh dark | ĐÚNG | ĐÃ SỬA 2.17.0 (c3ef03a) | Máy bật dark thấy đăng nhập tối rồi vào app sáng |
-| A5 | Auditor 2.17.0 | Tương phản chữ muted dưới kính header/thanh chân < 4,5 | ĐÚNG | ĐÃ SỬA (428be32, fba0826) | Alpha kính `--glass-bar` .95; đo ở điểm xấu nhất của gradient |
+| A3 | duyệt vòng 2 (2.17.0) | Logo âm dương còn là `themeBtn`, menu theme thành nút chết | ĐÚNG | ĐÃ SỬA 2.17.0 (428be32, 9bc4150) | Đổi id `brandLogo`, bỏ menu Sáng/Tối |
+| A4 | duyệt vòng 2 (2.17.0) | Trang đăng nhập (`auth.js`) còn nhánh dark | ĐÚNG | ĐÃ SỬA 2.17.0 (c3ef03a) | Máy bật dark thấy đăng nhập tối rồi vào app sáng |
+| A5 | duyệt vòng 2 (2.17.0) | Tương phản chữ muted dưới kính header/thanh chân < 4,5 | ĐÚNG | ĐÃ SỬA (428be32, fba0826) | Alpha kính `--glass-bar` .95; đo ở điểm xấu nhất của gradient |
 | A6 | Auditor 2.17.4 | Hàng Tổng (tfoot) trong `.note__pending` làm `compactFit` đo `pendH`=40, tờ ghi gọn còn 1 dòng | ĐÚNG | ĐÃ SỬA 2.17.5 (880e699) | Hàm `pendEntryH` không tính tfoot; lỗi do f9f051d |
 | A7 | Auditor 2.17.4 | `thang: true` vẫn qua ở `server.js` | NIT ĐÚNG | ĐÃ SỬA 2.17.5 (263bd02) | Dùng `isNumLike` như các trường khác |
 | A8 | Auditor 2.17.4 | Thiếu test thân PUT của client có `moneyUnit: 'dong'` | NIT ĐÚNG | ĐÃ SỬA 2.17.5 (880e699) | Test mới |
@@ -36,7 +36,7 @@ Cập nhật: 14/11/2026, phiên bản 2.17.5 (HEAD b247a5a). Nguồn: báo cáo
 ## 2. Đã sửa (tóm tắt theo phiên bản)
 
 - 2.15.20 (bd47e4b, 788f2f3): `delOrder` cộng dồn số lượng NHẬP theo vị trước khi kiểm tồn âm; `openOrder` chặn đơn không còn; `saveLocal` ghi KEY/DIRTY/BASE độc lập, khi ghi KEY lỗi thì KHÔNG ghi BASE (giữ base cũ để máy chủ trả 409); dòng log cổng nói đúng (0.0.0.0 trong container, compose chỉ mở 127.0.0.1). Bài học: bản sửa đầu của worker bị Auditor bắt (A1).
-- 2.15.21 (604904f và các commit cùng đợt): A1 đến A5 (hẹn gửi lại không giãn khi bận, `delOrder` kiểm trước hỏi sau, focus `saveTxEdit`, "mới nhất" theo ngày rồi giờ ghi, cùng cách tính giá vốn `lastImport`) và dọn mã chết.
+- 2.15.21 (604904f và các commit cùng đợt): các mục CL-A1 đến CL-A5 của CHANGELOG 2.15.21 (hẹn gửi lại không giãn khi bận, `delOrder` kiểm trước hỏi sau, focus `saveTxEdit`, "mới nhất" theo ngày rồi giờ ghi, cùng cách tính giá vốn `lastImport`) và dọn mã chết.
 - 2.16.0 (2627fb6): CSP của `/` thêm `manifest-src` và `worker-src 'self'`.
 - 2.17.0 đến 2.17.1: một theme sáng, logo `brandLogo`, trang đăng nhập chỉ sáng, kính nhẹ, nền gradient ấm, alpha header/thanh chân .95 (9bc4150, d9b9132, 428be32, c3ef03a, fba0826).
 - 2.17.2 đến 2.17.3: Thuốc chén gọn chân, hàng Tổng thành tfoot, nhãn "Sửa đơn", "Giá bán"/"Giá nhập" (de7577e, c9b12fc).
@@ -47,7 +47,7 @@ Cập nhật: 14/11/2026, phiên bản 2.17.5 (HEAD b247a5a). Nguồn: báo cáo
 
 3.1 `tsFromId` (E1): đúng và tái hiện được (200k id `uid()` đều ra 0), nhưng `ts` có từ 1.4.0 (4/11/2026); chỉ bản ghi cũ hơn thiếu giờ, server trả theo rowid nên thứ tự gần đúng. Không sửa vì ưu tiên thấp và chạm `lastImport`/giá nhập tham chiếu (hai lần nhập cùng ngày thiếu `ts` có thể đổi giá tham chiếu). Xét lại khi có sai thứ tự thật; nếu sửa phải theo luật ở `tools/kiem-tra-ngay.mjs` (dòng 35-42) kèm test giá vốn.
 
-3.2 `allocateRemedyByCost` (E4): hàm đúng như mô tả, nhưng hai nơi gọi (`page.js` ~2387 và ~4046 ở HEAD 2.17.1) đã kiểm `g0 < totalCost` trước khi gọi. Không phải lỗi thật. Xét lại nếu thêm nơi gọi thứ ba.
+3.2 `allocateRemedyByCost` (E4): hàm đúng như mô tả (tái hiện: 999 chia cho vốn [300,300,400] ra [299,299,401], tức dòng cuối nhận phần âm), nhưng cả hai nơi gọi đã kiểm trước khi gọi (số dòng ở HEAD 2.17.5, đã mở mã xác nhận): `balanceRemedyMoney` (`page.js` ~2396-2403) có `if (g0 < totalCost) return null;` ngay trước lời gọi ở ~2403, và `applyRemedyBalance` (~4058-4064) có `if (g0 < totalCost) return false;` ngay trước lời gọi ở ~4064. Không phải lỗi thật. Xét lại nếu thêm nơi gọi thứ ba.
 
 3.3 `txIndex` (E6): `renderAll` luôn gọi `indexTx`, chỉ dùng cho bản ghi thiếu `ts`. Dễ vỡ nếu ai thêm đường sửa giao dịch bỏ qua `renderAll`; hiện không có lỗi. Xét lại khi thêm đường đó.
 
