@@ -31,7 +31,7 @@ color-scheme:light;
 --blue-text:#1d4ed8;
 --r:14px;--r-sm:10px;
 --sh:inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.06),0 14px 28px rgba(15,23,42,.05);
---glass:rgba(246,247,249,.88);--glass-dark:rgba(17,24,39,.84);--blur:saturate(1.3) blur(14px);
+--glass:rgba(246,247,249,.88);--glass-bar:rgba(246,247,249,.93);--glass-dark:rgba(17,24,39,.84);--blur:saturate(1.3) blur(14px);
 --chart-imp:#5b5fd0;--chart-exp:#2f9e76;
 --ring:0 0 0 3px rgba(79,70,229,.30);
 }
@@ -51,11 +51,11 @@ a{color:var(--brand-text)}
 :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 /* ---------- layout ---------- */
 .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
-.top{position:sticky;top:0;z-index:30;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--border)}
+.top{position:sticky;top:0;z-index:30;background:var(--glass-bar);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--border)}
 .bar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;min-height:60px}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em;background:none;border:0;padding:0;font-family:inherit;cursor:pointer}
 .brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
-.brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text);cursor:pointer}
+.brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text)}
 .brand__yin .ico{width:24px;height:24px}
 .brand__yin.is-shake{animation:yinShake .4s ease-in-out}
 @keyframes yinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
@@ -421,7 +421,7 @@ td.c-qty{position:relative}
 #retailBox,#remedyBox{overflow:visible}
 #retailNote{overflow:visible}
 #retailBox.foot-fixed>.card__body,#remedyBox.foot-fixed>.card__body{padding-bottom:calc(var(--foot-h,72px) + 8px)}
-#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-top:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 -2px 10px rgba(15,23,42,.12);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--glass-bar);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-top:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 -2px 10px rgba(15,23,42,.12);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 #retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
 #remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
@@ -536,10 +536,10 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 #retailNote col.cg-qty,#remedyNote col.cg-qty,#nhapListBox col.cg-qty{width:152px;min-width:152px}
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-:root{--glass:var(--surface);--glass-dark:#111827}
+:root{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827}
 }
 @media (prefers-reduced-motion:reduce),(prefers-reduced-transparency:reduce){
-:root{--glass:var(--surface);--glass-dark:#111827;--blur:none}
+:root{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 @media (prefers-reduced-motion:reduce){
@@ -578,7 +578,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 <header class="top">
   <div class="wrap bar">
     <div class="brand-wrap">
-      <span class="brand__yin" id="themeBtn" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg></span>
+      <span class="brand__yin" id="brandLogo" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg></span>
       <button class="brand" type="button" id="brandBtn" data-action="brand-devices" aria-describedby="brandNote">Quản Lý Kho</button>
     </div>
     <div class="bar__actions">
@@ -1954,7 +1954,7 @@ function clearDlgErr(dlg){ var box = dlg.querySelector('.dlg__err'); if (box && 
 /* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
 var brandBusy = false;
 function denyDevices(){
-  var yin = $('#themeBtn');
+  var yin = $('#brandLogo');
   if (yin) { yin.classList.remove('is-shake'); void yin.offsetWidth; yin.classList.add('is-shake'); }
   var note = $('#brandNote');
   if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';

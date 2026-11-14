@@ -3882,7 +3882,7 @@ test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand
   assert.doesNotMatch(head, />\s*Thiết bị\s*</, 'còn nút chữ Thiết bị');
   assert.doesNotMatch(head, /Hệ thống/, 'còn chữ Hệ thống trong header');
   assert.match(head, /<button class="brand" type="button" id="brandBtn" data-action="brand-devices"[^>]*>Quản Lý Kho<\/button>/);
-  assert.match(head, /<span class="brand__yin" id="themeBtn" aria-hidden="true">/);
+  assert.match(head, /<span class="brand__yin" id="brandLogo" aria-hidden="true">/);
   assert.doesNotMatch(head, /data-theme-set|theme-menu/, '2.17.0: chỉ một theme sáng, không còn menu giao diện');
 });
 
@@ -3897,7 +3897,7 @@ test('2.13.0 N4 brandDevicesClick: fetch 200 → vào /auth/devices; 403, lỗi 
   const yinClasses = new Set();
   const yin = { classList: { add: c => yinClasses.add(c), remove: c => yinClasses.delete(c), contains: c => yinClasses.has(c) }, offsetWidth: 0 };
   const note = { textContent: '' };
-  const els = { '#themeBtn': yin, '#brandNote': note, '#toast': makeEl(), '#toastMsg': makeEl() };
+  const els = { '#brandLogo': yin, '#brandNote': note, '#toast': makeEl(), '#toastMsg': makeEl() };
   const mkDoc = () => ({
     readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
     querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; },
@@ -4269,7 +4269,7 @@ test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Btn|Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
