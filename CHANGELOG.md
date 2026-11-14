@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.4] - 2026-11-14
+
+### Fixed
+- Hàng "Tổng" (Bán lẻ, Nhập hàng, Thuốc chén) nằm dưới dòng nhập, thẳng cột tiền (đo sai số 0 px ở 320/375/800/1300); điện thoại: cột tên rộng hơn (trước đây bị bẻ từng chữ vì SL/Giá chiếm hết chỗ).
+- Máy chủ từ chối PUT /api/state thiếu hoặc sai `moneyUnit` (phải là "dong") bằng 400, không ghi đè, không tự nhân 1000: tránh ghi nhầm dữ liệu đơn vị nghìn cũ thành đồng. Client luôn gửi cờ này nên luồng thường không đổi.
+- Luật số chặt hơn, dùng chung client (`inRange`) và server (`isNonNegNumber`/`isPositiveNumber`): chỉ nhận number hữu hạn hoặc chuỗi số thập phân; boolean, chuỗi rỗng/khoảng trắng, null, mảng, "0x10" bị loại (trước đây Number() cho phép true = 1, [] = 0). Đối chiếu bản sao lưu mới nhất: 163 sản phẩm / 723 giao dịch / 17 đơn thuốc không mất bản ghi nào.
+- `delOrder` so `oid` dạng chuỗi như các chỗ khác; sửa chú thích `checkLimits('money')` (giá trị là đồng); `.dockerignore` loại `tests/*;*` (thư mục rác do Docker tạo trên Windows).
+
 ## [2.17.3] - 2026-11-14
 
 ### Changed
