@@ -1533,10 +1533,12 @@ function indexTx(){
   db.transactions.forEach(function(t, i){ txIndex[t.id] = i; });
 }
 function tsFromId(id){
-  var m = String(id || '').match(/(\d{10,13})$/);
-  if (!m) return 0;
-  var v = Number(m[1]);
-  return (v > 946684800000 && v < 4102444800000) ? v : 0;
+  var s = String(id || ''), v;
+  var m = s.match(/_(\d{13})(?:_|$)/);
+  if (m) { v = Number(m[1]); if (v > 946684800000 && v < 4102444800000) return v; }
+  m = s.match(/^[A-Za-z]+_([0-9a-z]{8})[0-9a-z]*$/);
+  if (m) { v = parseInt(m[1], 36); if (v > 946684800000 && v < 4102444800000) return v; }
+  return 0;
 }
 function txStamp(t){
   var ts = num(t.ts);

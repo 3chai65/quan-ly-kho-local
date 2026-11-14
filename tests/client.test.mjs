@@ -62,7 +62,7 @@ globalThis.__test = {
   setDb: function(v){ db = v; },
   getDb: function(){ return db; },
   setDirty: function(v){ dirty = !!v; }, isPushing: function(){ return pushing; }, apiFetch: (typeof apiFetch === 'function' ? apiFetch : null),
-  isDirty: function(){ return dirty; },
+  isDirty: function(){ return dirty; }, tsFromId: tsFromId, txStamp: txStamp, lastImport: lastImport, uid: uid,
   setBase: function(v){ cloudBase = dec(v); },
   getBase: function(){ return cloudBase; },
   saveLocal: (typeof saveLocal === 'function' ? saveLocal : null), readDirty: (typeof readDirty === 'function' ? readDirty : null), readBase: (typeof readBase === 'function' ? readBase : null),
@@ -5994,4 +5994,33 @@ test('W1b saveTxEdit BAN lẻ: giá 0 bị chặn; giá <= nhập hỏi confirm;
   dom.set('txEditQty', '5'); dom.set('txEditPrice', '0');
   c.saveTxEdit();
   assert.equal(c.getDb().transactions.find(t => t.id === 'T1').price, 0);
+});
+
+test('W5 tsFromId: id cũ 13 số, id uid() base36, id rác', () => {
+  const c = limitClient(limitStock(), []);
+  assert.equal(c.tsFromId('TX_1793519408528_x'), 1793519408528);
+  const ms = parseInt('mw77m3ci', 36);
+  assert.ok(ms > 946684800000 && ms < 4102444800000);
+  assert.equal(c.tsFromId('TX_mw77m3ci8nn9e'), ms);
+  assert.equal(c.tsFromId('OD_mw77m3ci8nn9e'), ms);
+  const t0 = Date.now(), id = c.uid('TX');
+  assert.ok(Math.abs(c.tsFromId(id) - t0) < 5000, 'id sinh bằng uid thật phải ra mốc gần Date.now()');
+  ['', null, 'abc', 'TX_zzz', 'TX_00000000x', 'n_a', 'TX_12345'].forEach(x => assert.equal(c.tsFromId(x), 0, String(x)));
+});
+
+test('W5 txStamp/lastImport: hai giao dịch cùng ngày thiếu ts xếp theo mốc từ id', () => {
+  const dom = limitStock();
+  const a = 'NH_' + (1790000000000).toString(36) + 'aaaaa', b = 'NH_' + (1790000100000).toString(36) + 'bbbbb';
+  /* b nằm TRƯỚC a trong mảng: nếu chỉ theo date+index thì a thắng; theo id thì b mới hơn */
+  const txs = [
+    { id: b, date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 200000, total: 200000 },
+    { id: a, date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 150000, total: 150000 }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 2, costPrice: 1 }], txs);
+  assert.equal(c.txStamp(txs[0]), 1790000100000);
+  assert.ok(c.txStamp(txs[0]) > c.txStamp(txs[1]));
+  const l = c.lastImport('p1');
+  assert.equal(l.id, b);
+  assert.equal(l.price, 200000);
+  assert.equal(l.hasTime, true);
 });
