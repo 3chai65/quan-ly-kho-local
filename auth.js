@@ -110,8 +110,7 @@ const CSS = 'body{font:16px/1.5 system-ui,sans-serif;max-width:30rem;margin:12vh
   'body.wide{max-width:44rem;margin-top:6vh}select{font:inherit;padding:.6rem;width:100%;box-sizing:border-box;margin:.3rem 0}' +
   '.dev{border:1px solid #8886;border-radius:8px;padding:.6rem .8rem;margin:.5rem 0}.dev form{margin-top:.4rem}' +
   '.tag{font-size:.8rem;background:#8883;border-radius:4px;padding:0 .4rem}.box{border:2px solid #1b7f3b;border-radius:8px;padding:.4rem .9rem;margin:.8rem 0}' +
-  '.code{font:700 1.6rem/1.4 ui-monospace,Consolas,monospace;letter-spacing:.1em}small{opacity:.75}' +
-  '@media(prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#8ab4ff}input,select{background:#222;color:#eee;border:1px solid #555}button.danger{background:#d93025}.err{color:#ff8a80}.ok{color:#7ee2a0}}';
+  '.code{font:700 1.6rem/1.4 ui-monospace,Consolas,monospace;letter-spacing:.1em}small{opacity:.75}:root{color-scheme:light}';
 
 function sendHtml(res, status, title, body, opts) {
   res.status(status).set({
@@ -126,7 +125,7 @@ function sendHtml(res, status, title, body, opts) {
     'Referrer-Policy': 'same-origin',
     'X-Robots-Tag': 'noindex, nofollow'
   }).send('<!doctype html><html lang="vi"><head><meta charset="utf-8">' +
-    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">' +
     '<title>' + title + '</title><style>' + CSS + '</style></head><body' + (opts && opts.wide ? ' class="wide"' : '') + '>' + body + '</body></html>');
 }
 function lockedPage(res, ownerExists) {

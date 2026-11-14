@@ -448,7 +448,8 @@ test('giao diện: nút Thu hồi có kiểu nguy hiểm; liên kết có màu �
     join(s, invite(s, owner), 'Điện thoại');
     const page = String(call(s, 'GET', '/auth/devices', { cookie: owner }).body);
     assert.match(page, /<button type="submit" class="danger">Thu hồi<\/button>/);
-    assert.match(page, /prefers-color-scheme:dark\)\{[\s\S]*?a\{color:#8ab4ff\}/);
+    assert.doesNotMatch(page, /prefers-color-scheme/);
+    assert.match(page, /:root\{color-scheme:light\}/);
     assert.doesNotMatch(page, /<button type="submit" class="danger">Tạo mã mời/);
   } finally { s.cleanup(); }
 });
