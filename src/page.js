@@ -526,6 +526,27 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 @media (min-width:601px){
 #retailNote col.cg-qty,#remedyNote col.cg-qty,#nhapListBox col.cg-qty{width:152px;min-width:152px}
 }
+@media (max-width:600px){
+#retailNote col.cg-qty,#retailNote col.cg-money{width:84px}
+#nhapListBox col.cg-qty{width:64px}
+#nhapListBox col.cg-money{width:84px}
+/* Hàng Tổng nằm trong bảng dòng nhập (table.ord là block trên điện thoại): dựng lại lưới cùng độ rộng cột với bảng tờ ghi để số tổng thẳng cột tiền. */
+.note__pending tfoot{display:block}
+.note__pending tfoot tr{display:grid}
+.note__pending tfoot td{display:block;padding:4px 5px;border-top:2px solid var(--border)}
+#retailNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 84px 52px}
+#nhapListBox .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 64px 84px 52px}
+#remedyNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 52px}
+}
+@media (max-width:400px){
+#retailNote col.cg-num,#nhapListBox col.cg-num{width:28px}
+#retailNote col.cg-qty{width:70px}
+#nhapListBox col.cg-qty{width:56px}
+#retailNote col.cg-money,#nhapListBox col.cg-money{width:72px}
+#retailNote col.cg-act,#nhapListBox col.cg-act{width:46px}
+#retailNote .note__pending tfoot tr{grid-template-columns:28px minmax(0,1fr) 70px 72px 46px}
+#nhapListBox .note__pending tfoot tr{grid-template-columns:28px minmax(0,1fr) 56px 72px 46px}
+}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
 :root{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827}
 }
@@ -643,7 +664,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="retailNoteBody"></tbody>
-            <tfoot id="retailNoteFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-green" id="retailNoteTotal">0</td><td></td></tr></tfoot>
           </table>
           </div>
           <div class="tw note__pending">
@@ -658,6 +678,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
                 <th class="c-del" scope="col"><span class="sr">Thêm</span></th>
               </tr></thead>
               <tbody id="retailBody"></tbody>
+              <tfoot id="retailNoteFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-green" id="retailNoteTotal">0</td><td></td></tr></tfoot>
             </table>
           </div>
           <div class="foot" id="retailNotePager" hidden></div>
@@ -704,7 +725,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="remedyNoteBody"></tbody>
-            <tfoot id="remedyNoteFoot" hidden><tr><td></td><td class="b">Tổng 1 thang <span class="hint" id="remedyQty"></span></td><td class="num b txt-brand" id="remedyNoteTotal">0 g</td><td></td></tr></tfoot>
           </table>
           </div>
           <div class="tw note__pending">
@@ -718,6 +738,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
                 <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
               </tr></thead>
               <tbody id="remedyBody"></tbody>
+              <tfoot id="remedyNoteFoot" hidden><tr><td></td><td class="b">Tổng 1 thang <span class="hint" id="remedyQty"></span></td><td class="num b txt-brand" id="remedyNoteTotal">0 g</td><td></td></tr></tfoot>
             </table>
           </div>
           <div class="foot" id="remedyNotePager" hidden></div>
@@ -774,7 +795,6 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
             <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
           </tr></thead>
           <tbody id="nhapListBody"></tbody>
-          <tfoot id="nhapListFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-blue" id="nhapListTotal">0</td><td></td></tr></tfoot>
         </table>
         <div class="tw note__pending">
           <table class="ord">
@@ -794,6 +814,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
               <td class="c-money" data-label="Giá nhập (k/kg)"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"></td>
               <td class="c-del"><button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button></td>
             </tr></tbody>
+            <tfoot id="nhapListFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-blue" id="nhapListTotal">0</td><td></td></tr></tfoot>
           </table>
         </div>
         <div class="note__foot">
