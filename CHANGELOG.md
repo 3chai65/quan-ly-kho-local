@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.6] - 2026-11-16
+
+### Sửa (chỉ html.desktop)
+- Mọi ô số ngắn (SL/giá dòng nhập Bán lẻ, Thuốc chén, Nhập hàng; số thang, giá thang; hộp thoại sửa giá/số lượng) rộng 80px cao 28px căn phải; ô năm Thống kê 64px; ô giá cột Giá căn phải thẳng cột.
+- Thanh đầu Thuốc chén: tiêu đề, ô nhập tên, chọn đơn, ngày (ô nhập tên dời lên bằng JS desktop, giữ id và luồng gợi ý; HTML gốc và điện thoại không đổi).
+
 ## [2.20.5] - 2026-11-16
 
 ### Sửa (chỉ html.desktop; gộp cả 2.20.4 chưa phát hành: khung gợi ý 3 hàng x 38px)

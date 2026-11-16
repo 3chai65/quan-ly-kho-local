@@ -6182,7 +6182,7 @@ test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS 
 });
 
 test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
-  const a = PAGE.indexOf('/* 2.20.5 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
+  const a = PAGE.indexOf('/* 2.20.6 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
   assert.ok(a > 0 && b > a);
   const block = PAGE.slice(a, b);
   const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
@@ -6265,7 +6265,7 @@ function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh 
   const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
   let ready = null;
   const wrapEl = { nextSibling: null, parentNode: null }; const bar = { children: [wrapEl], insertBefore(n, ref) { if (ref) this.children.splice(this.children.indexOf(ref), 0, n); else this.children.push(n); } }; wrapEl.parentNode = bar;
-  const document = { documentElement: R, createElement: mk, body: mk(), querySelector: q => (q === '.top .brand-wrap' ? wrapEl : q === '.szpick' ? bar.children.find(c => c.className === 'szpick') || null : null), addEventListener(e, f) { if (e === 'DOMContentLoaded') ready = f; } };
+  const document = { documentElement: R, getElementById: () => null, createElement: mk, body: mk(), querySelector: q => (q === '.top .brand-wrap' ? wrapEl : q === '.szpick' ? bar.children.find(c => c.className === 'szpick') || null : null), addEventListener(e, f) { if (e === 'DOMContentLoaded') ready = f; } };
   const store = { ...ls };
   const localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
   const win = {};
@@ -6275,7 +6275,7 @@ function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh 
   return { props, attrs, store, win, resize, ctx, body: document.body, bar };
 }
 function deskBlock() {
-  const a = PAGE.indexOf('/* 2.20.5 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
+  const a = PAGE.indexOf('/* 2.20.6 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
   return PAGE.slice(a, b);
 }
 
@@ -6339,7 +6339,7 @@ test('2.20.1 tờ ghi đồng bộ kính: không nền kem/amber, không viền 
   assert.ok(block.includes('html.desktop .note__head{padding:5px 12px;background:none;color:var(--text2)'));
   assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__foot{display:flex'), 'chân gọn một hàng, không nền riêng');
   assert.ok(block.includes('html.desktop .note__row{flex-wrap:nowrap'));
-  assert.ok(block.includes('html.desktop #remedyNote .note__search{padding:5px 10px;border-bottom:1px solid var(--border)}'));
+  assert.ok(!block.includes('#remedyNote .note__search'), '2.20.6: ô tên Thuốc chén đã lên thanh đầu');
 });
 
 test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll trong desktop; ngoại lệ duy nhất là khung gợi ý (ẩn thanh cuộn)', () => {
@@ -6358,7 +6358,7 @@ test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn)
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .chart-head__stats{display:none}'));
   assert.ok(PAGE.includes('id="statImport"') && PAGE.includes('id="statStock"'), 'DOM giữ cho iPhone/PWA');
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.5 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.6 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
   assert.ok(block.includes('html.desktop .chart-year__box{background:rgba(255,255,255,.62);border-color:var(--vien);border-radius:999px}'));
   assert.ok(block.includes('html.desktop{--chart-imp:#3f7fb0}') && PAGE.includes("cs.getPropertyValue('--chart-imp')"));
   assert.ok(block.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
@@ -6396,7 +6396,7 @@ test('2.20.2 biểu đồ: bỏ dải nền tháng hiện tại ở desktop bằ
   const block = deskBlock();
   assert.ok(block.includes('--chart-hi:rgba(0,0,0,0)'));
   assert.ok(PAGE.includes("ctx.fillStyle = cs.getPropertyValue('--chart-hi').trim() || 'rgba(99,102,241,.14)';"));
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.5 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.6 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
 });
 
 test('2.20.2 khung phủ kín viewport: --vw/--vh = cỡ cửa sổ / zoom; thẻ lấp đầy chiều cao; Sao lưu co theo nội dung; vùng kéo cửa sổ quanh logo', () => {
@@ -6521,7 +6521,7 @@ test('2.20.4 desktop: mọi khung gợi ý/lọc cao đúng 3 hàng x 38px, gu�
   assert.ok(/padding:0/.test(m[1]) && /scroll-snap-type:y mandatory/.test(m[1]) && /scroll-snap-align:start/.test(r[1]));
   assert.ok(/if \(sugWhole\(key\) && !isDesk\(\)\)/.test(PAGE), 'desktop không để JS đo ghi đè chiều cao');
   assert.ok(/sugListMaxHeight\(hs, SUG_ROWS, 10\)/.test(PAGE), 'điện thoại giữ nguyên');
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.5 chế độ desktop')).includes('scroll-snap-type'), 'snap chỉ trong desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.6 chế độ desktop')).includes('scroll-snap-type'), 'snap chỉ trong desktop');
 });
 
 test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ một kiểu, kính như danh mục, nút chính xanh lá chung', () => {
@@ -6543,5 +6543,17 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   // (4) nút chính (green/primary/dark/trang hiện tại) cùng một kiểu kính nhuộm xanh lá, mọi .btn/ô nhập dùng --kb/--spec/--k3d
   assert.ok(block.includes('html.desktop :is(.btn--green,.btn--primary,.btn--dark,.pager__num[aria-current]){color:#065f46') && /rgba\(52,211,153,\.3\);background-image:var\(--spec\)[^}]*box-shadow:var\(--k3d\)/.test(block));
   assert.ok(block.includes('html.desktop :is(.tab,.szpick button,.s4,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not('));
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.5 chế độ desktop')).includes('col.cg-name{width:290px}'), 'chỉ trong desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.6 chế độ desktop')).includes('col.cg-name{width:290px}'), 'chỉ trong desktop');
+});
+
+test('2.20.6 desktop: ô số ngắn 80px cao 28 căn phải trong cột; ô tên Thuốc chén lên thanh đầu (chỉ desktop, giữ id)', () => {
+  const block = deskBlock();
+  const m = /html\.desktop input\.inp--num\{width:(\d+)px;max-width:100%;height:(\d+)px;min-height:\2px/.exec(block);
+  assert.ok(m && +m[1] === 80 && +m[2] === 28, 'mọi ô số 80x28');
+  assert.ok(block.includes('html.desktop td.c-money .inp--num{margin-left:auto}') && /html\.desktop \.chart-year__in\{width:64px\}/.test(block));
+  // thanh đầu Thuốc chén: tiêu đề, ô nhập tên, chọn đơn, ngày; dời ở JS desktop, không đổi HTML gốc (điện thoại)
+  assert.ok(/<span class="card__bar-title"[^>]*>[\s\S]{0,200}?Thuốc chén<\/span>\s*<select class="inp card__bar-preset" id="remedyPreset"/.test(PAGE), 'HTML gốc giữ nguyên thứ tự (iPhone)');
+  assert.ok(PAGE.includes("rs = rs.parentNode; rs.className = 'sug card__bar-search'; rb.insertBefore(rs, rp)") && /if \(rs && rb && rp\)/.test(PAGE));
+  const head = PAGE.slice(PAGE.indexOf("document.addEventListener('DOMContentLoaded', function(){\n      var w = document.createElement('div'); w.className = 'bgdots'"));
+  assert.ok(head.indexOf("getElementById('remedySearch')") > 0 && head.indexOf("getElementById('remedySearch')") < head.indexOf('mark();'), 'dời nằm trong nhánh desktop');
 });

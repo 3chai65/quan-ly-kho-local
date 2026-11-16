@@ -558,7 +558,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* 2.20.5 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
+/* 2.20.6 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
 html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30);--surface:#fbfaf9;--surface2:#eef0ee;--border:rgba(71,85,105,.30);--border2:rgba(71,85,105,.18);--vien:rgba(71,85,105,.34);--kinh:rgba(255,255,255,.46);--kb:rgba(255,255,255,.9) rgba(58,42,51,.24) rgba(58,42,51,.24) rgba(255,255,255,.9);--spec:linear-gradient(120deg,rgba(255,255,255,.55),rgba(255,255,255,0) 35%);--k3d:inset 2px 2px 0 rgba(255,255,255,.22),inset 0 0 12px rgba(255,255,255,.5),inset 0 -6px 10px rgba(58,42,51,.1),0 1px 1px rgba(58,42,51,.14),0 6px 14px rgba(58,42,51,.1),0 14px 30px rgba(58,42,51,.08);--k3h:inset 2px 2px 0 rgba(255,255,255,.32),inset 0 0 14px rgba(255,255,255,.65),inset 0 -6px 10px rgba(58,42,51,.1),0 2px 2px rgba(58,42,51,.14),0 10px 20px rgba(58,42,51,.12),0 18px 36px rgba(58,42,51,.09);--k3a:inset 0 3px 6px rgba(58,42,51,.26),inset 0 0 10px rgba(58,42,51,.1),0 1px 0 rgba(255,255,255,.6);--chart-hi:rgba(0,0,0,0)}
@@ -627,9 +627,11 @@ html.desktop .note__blank td{height:25px}
 html.desktop .btn{min-height:30px;padding:3px 14px;font-size:13px}
 html.desktop .btn--icon{min-width:32px;padding:3px}
 html.desktop .pager .btn{min-height:26px;min-width:26px;padding:2px 9px}
+html.desktop input.inp--num{width:80px;max-width:100%;height:28px;min-height:28px;padding-top:2px;padding-bottom:2px}
+html.desktop td.c-money .inp--num{margin-left:auto}
+html.desktop .chart-year__in{width:64px}
 html.desktop .note .inp{height:28px;min-height:28px;padding-top:2px;padding-bottom:2px;font-size:13px}
 html.desktop .note td .btn--icon{min-height:22px;height:22px;width:32px}
-html.desktop #remedyNote .note__search{padding:5px 10px;border-bottom:1px solid var(--border)}
 html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__foot{display:flex;align-items:center;gap:10px;padding:4px 12px;background:none;border-top:1px solid var(--border)}
 html.desktop .note__foot>.btn{margin-left:auto;height:30px}
@@ -714,6 +716,8 @@ html.desktop[data-bg=tim],html.desktop .bgd[data-bg=tim]{--bt:rgba(221,214,254,.
       });
       if (bw && bw.parentNode) bw.parentNode.insertBefore(sz, bw.nextSibling);
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
+      var rs = document.getElementById('remedySearch'), rb = document.querySelector('#remedyBox .card__bar'), rp = document.getElementById('remedyPreset'); /* 2.20.6: ô nhập tên Thuốc chén lên thanh đầu như Bán lẻ/Nhập hàng (chỉ dời nút, giữ id) */
+      if (rs && rb && rp) { rs = rs.parentNode; rs.className = 'sug card__bar-search'; rb.insertBefore(rs, rp); }
       mark();
     });
   }
