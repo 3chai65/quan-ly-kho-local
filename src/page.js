@@ -185,8 +185,10 @@ box-shadow:0 16px 36px rgba(15,23,42,.20);padding:4px}
 .sug__item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:8px 10px;
 border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:14px;cursor:pointer;text-align:left}
 .sug__item:hover,.sug__item[aria-selected=true]{background:var(--brand-soft)}
-.sug__name{font-weight:600}
-.sug__meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.sug__name{font-weight:600;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sug__meta{font-size:12px;color:var(--muted);white-space:nowrap;flex:none}
+/* 2.17.8: điện thoại – khung gợi ý rộng bằng cả thanh thẻ, mỗi vị 1 dòng cao ~40px */
+@media (max-width:600px){.sug{position:static}.card__bar{position:relative}.sug__list{top:calc(100% + 2px)}.sug__item{padding:9px 10px;gap:8px}}
 .sug__empty{padding:10px;font-size:13px;color:var(--muted)}
 /* ---------- misc ---------- */
 .mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-18{margin-top:18px}
@@ -5231,7 +5233,8 @@ function kbTouch(e){
   var t = e && e.target, box = kbBoxOf(t);
   kbEvRec('pointerdown');
   kbPS = false;
-  if (kbLockBox && box === kbLockBox && t !== doc.activeElement && e.cancelable !== false && e.preventDefault) {
+  /* 2.17.8: PWA iPhone (standalone) không bật bàn phím khi focus từ touchstart: để iOS xử lý chạm/focus mặc định. */
+  if (!isStandaloneMode() && kbLockBox && box === kbLockBox && t !== doc.activeElement && e.cancelable !== false && e.preventDefault) {
     e.preventDefault();
     kbPS = true;
     focusNS(t);
@@ -5269,7 +5272,15 @@ function initFootBars(){
     window.visualViewport.addEventListener('resize', onVvChange);
     window.visualViewport.addEventListener('scroll', onVvChange);
   }
-  try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
+  try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || '') || localStorage.getItem('kbdebug') === '1'; } catch (e) {}
+  /* 2.17.8: PWA không có thanh địa chỉ: chạm 5 lần logo trong 3 giây để bật/tắt kbdebug (cờ localStorage). */
+  var logo = $('#brandLogo'), logoN = 0, logoT = 0;
+  if (logo) logo.addEventListener('click', function(){
+    var n = Date.now(); if (!logoN || n - logoT > 3000) { logoN = 0; logoT = n; }
+    if (++logoN < 5) return;
+    logoN = 0;
+    try { if (localStorage.getItem('kbdebug') === '1') localStorage.removeItem('kbdebug'); else localStorage.setItem('kbdebug', '1'); window.location.reload(); } catch (e) {}
+  });
   if (kbDebug) {
     kbDbg('mo-trang');
     doc.addEventListener('focusin', function(){ kbEvRec(kbTouchAt && Date.now() - kbTouchAt < 800 ? 'focusin' : 'next'); kbDbg(); });

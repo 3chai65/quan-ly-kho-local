@@ -4801,7 +4801,8 @@ test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn v�
   assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(2 l)')), JSON.stringify(['(2 l)', '2 l', 'l']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
-  assert.doesNotMatch(PAGE, /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý');
+  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
+  assert.match(PAGE, /.sug__name{[^}]*white-space:nowrap[^}]*}/, '2.17.8 gợi ý tên mỗi vị 1 dòng');
 });
 
 test('2.14.0 M4 điện thoại ẩn tiêu đề cột tờ ghi (.note>table>thead) trong khối ≤600px', () => {
@@ -5215,18 +5216,19 @@ function lockRig(opts = {}) {
   const box = { id: 'retailBox', classList: bcls, contains: e => inBox.has(e), getBoundingClientRect() { return { top: st.abs - st.y }; }, querySelector: sel => (sel === '.note__pending' && opts.pend > 0 ? { getBoundingClientRect() { return { height: opts.pend }; } } : null), addEventListener(t, fn) { (boxL[t] ||= []).push(fn); } };
   const input = { tagName: 'INPUT', type: 'text', closest: () => box, focus(o) { st.focusArgs.push(o); }, select() {}, setAttribute() {}, value: '' };
   inBox.add(input);
-  const els = { '#retailBox': box, '#retailNoteList': list, '#retailSearch': input };
+  const logoL = {}, logo = { addEventListener(t, fn) { (logoL[t] ||= []).push(fn); } };
+  const els = { '#retailBox': box, '#retailNoteList': list, '#retailSearch': input, '#brandLogo': logo };
   const doc = limitDoc(els); doc.activeElement = input; doc.visibilityState = 'visible';
   doc.body = { style: {}, classList: mkCls(), children: [], appendChild() {} };
   doc.documentElement = { style: {}, classList: mkCls(), children: [], appendChild(ch) { this.children.push(ch); return ch; } };
   doc.addEventListener = (t, fn, o) => { (docL[t] ||= []).push({ fn, o }); };
-  const c = loadClient({ document: doc, innerHeight: 695, innerWidth: 393, get pageYOffset() { return st.y; }, visualViewport: vv,
-    matchMedia: () => ({ matches: mm.v }), addEventListener(t, fn) { (winL[t] ||= []).push(fn); },
-    scrollTo(x, y) { st.to.push(y); st.y = y; }, location: { search: opts.search || '' },
+  const c = loadClient({ ...(opts.nav ? { navigator: opts.nav } : {}), ...(opts.ls ? { localStorage: opts.ls } : {}), document: doc, innerHeight: 695, innerWidth: 393, get pageYOffset() { return st.y; }, visualViewport: vv,
+    matchMedia: (q) => ({ matches: /display-mode/.test(q) ? !!opts.standalone : mm.v }), addEventListener(t, fn) { (winL[t] ||= []).push(fn); },
+    scrollTo(x, y) { st.to.push(y); st.y = y; }, location: { search: opts.search || '', reload() { st.reloads = (st.reloads || 0) + 1; } },
     setTimeout(fn, ms) { timers.push({ fn, ms, dead: false }); return timers.length; }, clearTimeout(id) { if (timers[id - 1]) timers[id - 1].dead = true; } });
   const fire = () => { const t = timers.splice(0); t.forEach(x => { if (!x.dead) x.fn(); }); };
   const lock = () => { doc.activeElement = input; c.compactSync(false); };
-  return { c, doc, box, list, input, st, vv, vvL, winL, boxL, docL, mm, timers, fire, lock, body: doc.body, html: doc.documentElement, els, bcls };
+  return { c, doc, box, list, input, st, vv, vvL, winL, boxL, docL, mm, timers, fire, lock, body: doc.body, html: doc.documentElement, els, bcls, logoL };
 }
 
 test('2.15.10 kbLockTop: top âm = vvTop - (đỉnh thẻ - 8); thẻ gần đỉnh trang thì 0; vvTop âm bỏ qua; không trả -0', () => {
@@ -5496,6 +5498,34 @@ test('2.15.11 không bật kbdebug: chạm/vv không tạo DOM hay ghi sự ki�
   k.docL.touchstart.filter(l => l.fn.name === 'kbTouch')[0].fn(mk(other));
   k.vv.offsetTop = 50; k.vvL.scroll.forEach(fn => fn());
   assert.equal(k.html.children.length, 0);
+});
+test('2.17.8 standalone (matchMedia hoặc navigator.standalone): touchstart sang ô khác KHÔNG preventDefault/focus; Safari giữ nguyên', () => {
+  for (const o of [{ standalone: true }, { nav: { standalone: true } }, { standalone: false }]) {
+    const k = lockRig(o); k.c.initFootBars(); k.lock();
+    const { other, mk } = touchRig(k); k.st.focusArgs.length = 0;
+    const e = mk(other); k.docL.touchstart.filter(l => l.fn.name === 'kbTouch')[0].fn(e);
+    const sa = !!(o.standalone || o.nav);
+    assert.equal(e.defaultPrevented, !sa, JSON.stringify(o));
+    assert.equal(k.st.focusArgs.length, sa ? 0 : 1);
+  }
+});
+test('2.17.8 kbdebug đọc từ localStorage; chạm 5 lần logo trong 3 giây đảo cờ và tải lại', () => {
+  const store = new Map(), ls = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+  const off = lockRig({ ls }); off.c.initFootBars(); assert.equal(off.html.children.length, 0, 'chưa có cờ: không gỡ lỗi');
+  const real = Date.now; let now = 1e12; Date.now = () => now;
+  try {
+    const k = lockRig({ ls }); k.c.initFootBars();
+    const click = k.logoL.click[0];
+    for (let i = 0; i < 4; i++) { click(); now += 500; }
+    assert.equal(store.get('kbdebug'), undefined); assert.equal(k.st.reloads || 0, 0, '4 chạm chưa đủ');
+    click(); assert.equal(store.get('kbdebug'), '1'); assert.equal(k.st.reloads, 1);
+    const on = lockRig({ ls }); on.c.initFootBars(); assert.ok(on.html.children.length > 0, 'cờ localStorage bật dòng gỡ lỗi');
+    const c2 = on.logoL.click[0];
+    for (let i = 0; i < 5; i++) { c2(); now += 4000; } assert.equal(store.get('kbdebug'), '1', 'chạm cách >3 giây không đủ 5');
+    for (let i = 0; i < 5; i++) { c2(); now += 100; } assert.equal(store.has('kbdebug'), false, 'đủ 5 chạm: xóa cờ'); assert.equal(on.st.reloads, 1);
+    const bad = { getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); }, removeItem() {} };
+    const b = lockRig({ ls: bad }); b.c.initFootBars(); for (let i = 0; i < 5; i++) b.logoL.click[0]();
+  } finally { Date.now = real; }
 });
 
 /* ===== 2.15.9 gợi ý tên: gõ trọn một từ (mọi thiết bị), khung tối đa 3 mục ===== */

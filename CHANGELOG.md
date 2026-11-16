@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.8] - 2026-11-16
+
+Không đổi định dạng dữ liệu.
+
+- Gợi ý tên trên điện thoại rộng bằng thanh thẻ, mỗi vị 1 dòng.
+- PWA iPhone: không dùng preventDefault/touchstart khi chạy standalone (sửa lỗi không hiện bàn phím khi sửa ô trong thẻ khóa); Safari giữ nguyên.
+- Bật kbdebug trong PWA bằng chạm 5 lần logo (cờ localStorage `kbdebug`).
+
 ## [2.17.7] - 2026-11-14
 
 Không đổi định dạng dữ liệu.
