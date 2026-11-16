@@ -558,7 +558,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* 2.20.2 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
+/* 2.20.3 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
 html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30);--surface:#fbfaf9;--surface2:#eef0ee;--border:rgba(71,85,105,.30);--border2:rgba(71,85,105,.18);--vien:rgba(71,85,105,.34);--kinh:rgba(255,255,255,.46);--kb:rgba(255,255,255,.9) rgba(58,42,51,.24) rgba(58,42,51,.24) rgba(255,255,255,.9);--spec:linear-gradient(120deg,rgba(255,255,255,.55),rgba(255,255,255,0) 35%);--k3d:inset 2px 2px 0 rgba(255,255,255,.22),inset 0 0 12px rgba(255,255,255,.5),inset 0 -6px 10px rgba(58,42,51,.1),0 1px 1px rgba(58,42,51,.14),0 6px 14px rgba(58,42,51,.1),0 14px 30px rgba(58,42,51,.08);--k3h:inset 2px 2px 0 rgba(255,255,255,.32),inset 0 0 14px rgba(255,255,255,.65),inset 0 -6px 10px rgba(58,42,51,.1),0 2px 2px rgba(58,42,51,.14),0 10px 20px rgba(58,42,51,.12),0 18px 36px rgba(58,42,51,.09);--k3a:inset 0 3px 6px rgba(58,42,51,.26),inset 0 0 10px rgba(58,42,51,.1),0 1px 0 rgba(255,255,255,.6);--chart-hi:rgba(0,0,0,0)}
@@ -582,15 +582,15 @@ html.desktop .tab.is-active .tab__ic{background:none;box-shadow:none}
 html.desktop .szpick{display:flex;gap:6px}
 html.desktop .szpick button{flex:1;min-height:24px;border-radius:999px;border:1px solid;color:var(--text);font:700 12px/1 inherit;cursor:pointer}
 html.desktop .szpick button[aria-pressed=true]{color:#065f46}
-html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;grid-area:1/2;margin:0;align-self:start}
+html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;grid-area:1/2;margin:12px 0 0;align-self:start}
 html.desktop .s4{display:flex;flex-direction:column;gap:1px;min-width:0;padding:7px 13px;border:1px solid;border-radius:16px}
 html.desktop .s4__k{font-size:12px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--text);white-space:nowrap}
 html.desktop .s4__v{font-size:28px;font-weight:800;line-height:1.12;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
 html.desktop .s4__sub{display:flex;gap:12px;margin-top:auto;font-size:14px;color:var(--text);white-space:nowrap}
 html.desktop .s4__sub b{font-weight:700;font-variant-numeric:tabular-nums}
-html.desktop #tb{height:28px}
-html.desktop #tb span{line-height:28px}
-html.desktop #tb button{width:40px}
+html.desktop #tb{height:24px}
+html.desktop #tb span{line-height:24px}
+html.desktop #tb button{width:36px}
 html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:10px 0 0;overflow:hidden}
 html.desktop .card:not(.dlg__card){border-radius:16px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid;border-color:var(--kb);background:linear-gradient(120deg,rgba(255,255,255,.3),rgba(255,255,255,0) 35%) top left/100% 40% no-repeat,var(--glass);box-shadow:inset 2px 2px 0 rgba(255,255,255,.18),inset 0 0 12px rgba(255,255,255,.3),inset 0 -6px 10px rgba(58,42,51,.06),0 1px 1px rgba(58,42,51,.08),0 6px 14px rgba(58,42,51,.07),0 14px 30px rgba(58,42,51,.06)}
 html.desktop .card__body{padding:0}

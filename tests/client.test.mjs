@@ -6182,7 +6182,7 @@ test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS 
 });
 
 test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
-  const a = PAGE.indexOf('/* 2.20.2 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
+  const a = PAGE.indexOf('/* 2.20.3 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
   assert.ok(a > 0 && b > a);
   const block = PAGE.slice(a, b);
   const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
@@ -6275,7 +6275,7 @@ function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh 
   return { props, attrs, store, win, resize, ctx, body: document.body, bar };
 }
 function deskBlock() {
-  const a = PAGE.indexOf('/* 2.20.2 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
+  const a = PAGE.indexOf('/* 2.20.3 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
   return PAGE.slice(a, b);
 }
 
@@ -6350,15 +6350,15 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
   assert.ok(block.includes('html.desktop *{scrollbar-width:thin;scrollbar-color:rgba(71,85,105,.4) transparent}'));
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
   assert.ok(block.includes('padding:14px var(--g) var(--g)}'), 'thanh tiêu đề nổi: nội dung cách mép trên 14px');
-  assert.ok(block.includes('html.desktop #tb{height:28px}') && block.includes('html.desktop #tb button{width:40px}'));
-  assert.ok(block.includes('margin:98px 0 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:14px}'));
+  assert.ok(block.includes('html.desktop #tb{height:24px}') && block.includes('html.desktop #tb button{width:36px}'));
+  assert.ok(block.includes('grid-area:1/2;margin:12px 0 0;align-self:start}') && block.includes('margin:98px 0 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:14px}'));
 });
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .chart-head__stats{display:none}'));
   assert.ok(PAGE.includes('id="statImport"') && PAGE.includes('id="statStock"'), 'DOM giữ cho iPhone/PWA');
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.2 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.3 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
   assert.ok(block.includes('html.desktop .chart-year__box{background:rgba(255,255,255,.62);border-color:var(--vien);border-radius:999px}'));
   assert.ok(block.includes('html.desktop{--chart-imp:#3f7fb0}') && PAGE.includes("cs.getPropertyValue('--chart-imp')"));
   assert.ok(block.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
@@ -6396,7 +6396,7 @@ test('2.20.2 biểu đồ: bỏ dải nền tháng hiện tại ở desktop bằ
   const block = deskBlock();
   assert.ok(block.includes('--chart-hi:rgba(0,0,0,0)'));
   assert.ok(PAGE.includes("ctx.fillStyle = cs.getPropertyValue('--chart-hi').trim() || 'rgba(99,102,241,.14)';"));
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.2 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.3 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
 });
 
 test('2.20.2 khung phủ kín viewport: --vw/--vh = cỡ cửa sổ / zoom; thẻ lấp đầy chiều cao; Sao lưu co theo nội dung; vùng kéo cửa sổ quanh logo', () => {

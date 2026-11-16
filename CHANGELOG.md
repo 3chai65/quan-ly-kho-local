@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.3] - 2026-11-16
+
+Không đổi dữ liệu/logic tiền; chỉ `html.desktop`. Đi kèm `"shadow": false` ở `tauri.conf.json` (repo app Tauri) để hết viền xám 9px native quanh cửa sổ.
+
+- Ba nút Thu nhỏ/Phóng to/Đóng không còn đè lên ô "Tổng tồn kho": thanh tiêu đề nổi 24px, nút 36px; hàng 4 ô bắt đầu cách mép trên 26px (đo ở 1280x720, 1600x900, 1920x1080: 0 phần tử giao nhau).
+
 ## [2.20.2] - 2026-11-16
 
 Không đổi định dạng dữ liệu, không đổi logic tiền. Chỉ thay đổi khi `html.desktop`; PWA/iPhone/Safari không đổi (trừ màu dải biểu đồ đọc từ biến CSS, mặc định giữ màu cũ).
