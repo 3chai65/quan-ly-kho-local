@@ -5,6 +5,18 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.19.0] - 2026-11-16
+
+Không đổi định dạng dữ liệu. Chỉ thay đổi khi `html.desktop` (app Tauri); PWA/iPhone không đổi vì `section.stats4` ẩn mặc định (`.stats4{display:none}`).
+
+- Chế độ desktop v2: bố cục thanh bên kiểu app GPUI (logo + tab dọc bên trái, khung cố định 1280x720 đến 1920x1080, thẻ đang mở cuộn trong khung, thanh `.card__bar` dính trên), thẻ nhuộm màu bo 22px, đường kẻ hàng ở tờ ghi, tab/nút/ô tìm kiếm dạng viên.
+- 4 ô lớn: lợi nhuận hôm nay/tháng/năm và tổng tồn. Chỉ hiển thị lại số `computeStats` đã tính, qua `fmtMoneyInt`/`fmtQtyInt` (không logic tiền mới).
+- Màu nhấn desktop đổi từ tím sang xanh lá `#047857` (tab chọn, phân trang, nút chính, viền focus, liên kết), chữ trắng trên nền này 5,48.
+- Nút "Bán đơn" ở tờ ghi dính đáy khung (`html.desktop .note{overflow:clip}` + `.note__foot{position:sticky}`), vẫn thấy khi tờ ghi dài.
+- Số đo (Edge headless, nền mô phỏng acrylic đen và trắng, 1280x720 và 1920x1080, 6 tab): 24/24 ca không tràn trang; tương phản pixel thấp nhất 5,48 (chữ trắng trên xanh), chữ phụ 5,66, tab 7,65, ô số 7,01; frame time cuộn Lịch sử 5,0 ms (đo vòng trước).
+- Chưa làm được bằng CSS thuần: icon tìm kiếm cạnh logo, phân trang dính đáy khung, nút Bán đơn giữ nguyên vị trí cũ trong tờ ghi (chỉ dính đáy).
+- Rủi ro hiển thị tiền: `fmtMoneyInt` cắt phần lẻ nghìn đồng như dải số cũ, nên ô lớn có thể lệch dưới 1 nghìn đồng so với số lẻ thật.
+
 ## [2.18.0] - 2026-11-16
 
 Không đổi định dạng dữ liệu.

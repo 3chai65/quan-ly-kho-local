@@ -108,6 +108,7 @@ details>.card__head:hover{background:var(--surface2)}
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
+.stats4{display:none}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
@@ -557,15 +558,48 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* 2.18.0 chế độ desktop (app Tauri, WebView2 + acrylic): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Cửa sổ trong suốt; kính ở header, dải số, thẻ, tab; bảng/tờ ghi/ô nhập/nút chính giữ nền đục. Tối đa 3 phần tử backdrop-filter. */
+/* 2.19.0 chế độ desktop (app Tauri, WebView2 + acrylic): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Cửa sổ trong suốt; kính ở header, dải số, thẻ, tab; bảng/tờ ghi/ô nhập/nút chính giữ nền đục. Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent)}
-html.desktop{--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569}
-html.desktop .top{border-bottom-color:rgba(255,255,255,.8);box-shadow:inset 0 -1px 0 rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.08)}
-html.desktop .card:not(.dlg__card),html.desktop .stats{-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-color:rgba(255,255,255,.85);background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 44px),var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.3),0 10px 28px rgba(15,23,42,.12)}
-html.desktop .tab:not(.is-active){background:rgba(255,255,255,.5);border-color:rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 2px 8px rgba(15,23,42,.08)}
+html.desktop{--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30)}
+html.desktop .btn--primary{background:#047857;border-color:#047857}
+html.desktop .btn--primary:hover{background:#065f46;border-color:#065f46}
+html.desktop{--sw:clamp(208px,16vw,300px);--g:clamp(12px,1.2vw,20px)}
+html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:var(--g);height:100vh;box-sizing:border-box;overflow:hidden;padding:var(--g) var(--g) var(--g)}
+html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.desktop .top .wrap{padding:0 6px}
+html.desktop .top .bar{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;min-height:0}
+html.desktop .main{display:contents}
+html.desktop .stats{grid-area:1/2;margin:0;align-self:start}
+html.desktop .tabs{grid-area:2/1;display:flex;flex-direction:column;gap:10px;margin:0;align-self:start;margin-top:8px}
+html.desktop .tab{display:flex;flex-direction:row;justify-content:flex-start;min-height:clamp(46px,5vh,58px);padding:8px 16px;text-align:left;font-size:clamp(14px,.95vw,17px)}
+html.desktop .tab__ic{margin-right:12px;flex:none}
+html.desktop .tab__l2{margin-left:.15em}
+html.desktop .s4__v{font-size:clamp(22px,2vw,32px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:0;overflow:auto;margin-top:8px}
+html.desktop .card__bar{position:sticky;top:0;z-index:3;background:var(--surface)}
+html.desktop .note td{border-bottom:1px solid rgba(15,23,42,.18)}
+html.desktop .note{overflow:clip}
+html.desktop .note__foot{position:sticky;bottom:0;z-index:2;background:var(--surface)}
+html.desktop .card:not(.dlg__card){border-radius:22px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0) 44px),var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,1),inset 0 0 0 2px rgba(255,255,255,.3),0 1px 2px rgba(15,23,42,.06),0 8px 18px rgba(15,23,42,.08),0 18px 36px rgba(15,23,42,.08)}
+html.desktop .stats{display:none}
+html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;grid-area:1/2;margin:0;align-self:start}
+html.desktop .s4{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:8px;min-width:0;border:1px solid rgba(255,255,255,.9);border-radius:22px;padding:10px 14px;background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0) 50%),var(--tint);box-shadow:inset 0 1px 0 rgba(255,255,255,1),inset 0 0 0 2px rgba(255,255,255,.3),inset 0 -10px 18px var(--tint2),0 1px 2px rgba(15,23,42,.06),0 8px 18px rgba(15,23,42,.08),0 18px 36px rgba(15,23,42,.08)}
+html.desktop .s4:nth-child(1){--tint:rgba(251,207,232,.78);--tint2:rgba(244,114,182,.16)}
+html.desktop .s4:nth-child(2){--tint:rgba(165,243,252,.74);--tint2:rgba(34,211,238,.16)}
+html.desktop .s4:nth-child(3){--tint:rgba(253,230,138,.7);--tint2:rgba(245,158,11,.16)}
+html.desktop .s4:nth-child(4){--tint:rgba(191,219,254,.78);--tint2:rgba(59,130,246,.16)}
+html.desktop .s4__k{font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap}
+html.desktop .s4__n{grid-column:1/-1;margin:2px 0 0;white-space:nowrap}
+html.desktop .s4__u{font-size:12px;color:var(--text2)}
+html.desktop .s4__ic{padding:5px;box-sizing:content-box;border-radius:8px;background:rgba(255,255,255,.6)}
+html.desktop .tab{border-radius:22px}
+html.desktop .tab:not(.is-active){background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
+html.desktop .pager .btn,html.desktop .card__bar .btn{border-radius:999px}
+html.desktop :is(.pager,.card__bar) .btn:not(.btn--primary):not(.btn--green):not(.btn--dark):not(.btn--danger):not([aria-current]){border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,1),var(--surface2));box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
+html.desktop .card__bar .inp{border-radius:999px;box-shadow:inset 0 1px 3px rgba(15,23,42,.14),0 1px 0 rgba(255,255,255,.9)}
 html.desktop .tab:not(.is-active):hover{background:rgba(255,255,255,.8)}
-html.desktop .tab.is-active{background:#047857;border-color:#065f46;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 12px rgba(4,120,87,.3)}
+html.desktop .tab.is-active{background:linear-gradient(180deg,#059669,#047857);border-color:#065f46;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 2px rgba(255,255,255,.12),0 6px 16px rgba(4,120,87,.35)}
 html.desktop .tab.is-active .tab__ic{background:#ecfdf5;box-shadow:0 0 0 3px #ecfdf5}
 html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surface)}
 @media (prefers-reduced-motion:reduce){
@@ -635,6 +669,13 @@ html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surf
       <p class="stat__v" id="statProfit">0</p>
       <p class="stat__sub"><span>Hôm nay <b id="statProfitDay">0</b></span><span>Năm <b id="statProfitYear">0</b></span></p>
     </div>
+  </section>
+
+  <section class="stats4" aria-label="Lợi nhuận và tổng tồn">
+    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="s4__k">Lợi nhuận hôm nay</span><p class="s4__n"><b class="s4__v" data-s4="day">0</b> <span class="s4__u">nghìn đ</span></p></div>
+    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-calendar"/></svg><span class="s4__k">Lợi nhuận tháng</span><p class="s4__n"><b class="s4__v" data-s4="month">0</b> <span class="s4__u">nghìn đ</span></p></div>
+    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="s4__k">Lợi nhuận năm</span><p class="s4__n"><b class="s4__v" data-s4="year">0</b> <span class="s4__u">nghìn đ</span></p></div>
+    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="s4__k">Tổng tồn</span><p class="s4__n"><b class="s4__v" data-s4="stock">0</b></p></div>
   </section>
 
   <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
@@ -2826,6 +2867,12 @@ function renderStats(){
     pn.className = 'stat__v ' + (s.profitMonth < 0 ? 'txt-red' : '');
   }
   set('statStock', fmtQtyInt(s.stock));
+  /* 2.19.0 desktop: 4 ô lớn chỉ HIỂN THỊ lại các số vừa tính ở trên (cùng hàm định dạng), không tính thêm. */
+  var s4 = function(k, t, neg){ var n = $('[data-s4="' + k + '"]'); if (n) { n.textContent = t; n.className = 's4__v' + (neg ? ' txt-red' : ''); } };
+  s4('day', fmtMoneyInt(s.profitDay), s.profitDay < 0);
+  s4('month', fmtMoneyInt(s.profitMonth), s.profitMonth < 0);
+  s4('year', fmtMoneyInt(s.profitYear), s.profitYear < 0);
+  s4('stock', fmtQtyInt(s.stock));
 }
 /* ================= PHÂN TRANG ================= */
 function mkPageBtn(label, target, disabled, kind, current){

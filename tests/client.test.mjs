@@ -6179,16 +6179,18 @@ test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS 
   assert.ok(PAGE.includes("/[?&]glass=0/") && PAGE.includes("classList.add('noglass')"));
 });
 
-test('2.18.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤4 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
-  const a = PAGE.indexOf('/* 2.18.0 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
+test('2.19.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤4 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
+  const a = PAGE.indexOf('/* 2.19.0 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
   assert.ok(a > 0 && b > a);
   const block = PAGE.slice(a, b);
   const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
   assert.ok(rules.length >= 7 && rules.every(l => l.startsWith('html.desktop')), 'mọi quy tắc phải bắt đầu bằng html.desktop');
-  assert.ok(Buffer.byteLength(block) <= 4096, 'CSS thêm ≤ 4 KB');
+  assert.ok(Buffer.byteLength(block) <= 6144, 'CSS desktop ≤ 6 KB (vòng 3 thêm ≤ 3 KB)');
   assert.ok((block.match(/backdrop-filter:/g) || []).length <= 6 && !/feDisplacementMap/.test(PAGE));
   assert.ok(/html\.desktop \.card table:not\(\.ord\),html\.desktop \.dlg__card\{background:var\(--surface\)\}/.test(block));
-  assert.ok(block.includes('.card:not(.dlg__card)') && !/\.btn/.test(block) && !/\.note/.test(block));
+  assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note')).every(x => x.startsWith('html.desktop .note')) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.btn--primary')));
+  // 2.19.0: màu nhấn xanh lá (phân trang, nút chính, focus) và nút Bán đơn dính đáy khung
+  assert.ok(block.includes('--brand:#047857;--brand-text:#065f46') && block.includes('html.desktop .btn--primary{background:#047857') && block.includes('html.desktop .note{overflow:clip}') && block.includes('html.desktop .note__foot{position:sticky;bottom:0'));
   assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.removeItem\('desktop'\)/.test(PAGE));
   assert.ok(/\[\?&\]desktop=1\/\.test\(q\)\) localStorage\.setItem\('desktop', '1'\)/.test(PAGE));
   assert.ok(PAGE.includes("getItem('desktop') === '1') document.documentElement.classList.add('desktop')"));
@@ -6196,5 +6198,44 @@ test('2.18.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤4 KB, 
   const g = block.match(/--glass:rgba\(255,255,255,(\.\d+)\);--glass-bar:rgba\(255,255,255,(\.\d+)\)/);
   assert.ok(g && +g[1] >= .5 && +g[1] <= .58 && +g[2] >= .5 && +g[2] <= .6, 'độ đục kính trong khoảng .50-.58');
   assert.ok(block.includes('--muted:#475569'));
-  assert.ok(/html\.desktop \.tab\.is-active\{background:#047857;/.test(block) && !/html\.desktop[^\n]*(--brand|#4f46e5)/.test(block));
+  assert.ok(block.includes('html.desktop .tab.is-active{background:linear-gradient(180deg,#059669,#047857);') && !block.includes('#4f46e5'));
+});
+
+test('2.19.0 vòng 3 kính liquid glass: thẻ số nhuộm tông riêng, bo 22px, viền rim, nút/ô tìm kiếm dạng viên, chỉ dưới html.desktop', () => {
+  const a = PAGE.indexOf('/* 2.19.0 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
+  const block = PAGE.slice(a, b);
+  assert.ok(block.includes('html.desktop .s4:nth-child(1){--tint:rgba(251,207,232') && block.includes('html.desktop .s4:nth-child(2){--tint:rgba(165,243,252') && block.includes('html.desktop .s4:nth-child(4){--tint:rgba(191,219,254'));
+  assert.ok(block.includes('html.desktop .stats{display:none}') && block.includes('html.desktop .stats4{display:grid;grid-template-columns:repeat(4'), 'dải số tách thành các thẻ riêng');
+  assert.ok(block.split('border-radius:22px').length > 3 && block.includes('html.desktop .card__bar .inp{border-radius:999px'));
+  assert.ok(block.includes('inset 0 0 0 2px rgba(255,255,255,.3)') && !block.split(String.fromCharCode(10)).some(l => l.includes('.stats') && l.includes('backdrop-filter')));
+  assert.ok(!PAGE.slice(0, a).includes('border-radius:999px;box-shadow:inset 0 1px 3px'));
+  // bố cục khung cố định: thanh bên (tabs) + hàng thẻ số + vùng nội dung cuộn trong, không thêm DOM
+  assert.ok(block.includes('height:100vh') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:2/1;display:flex;flex-direction:column') && block.includes('html.desktop .stats4{display:grid;grid-template-columns:repeat(4') && block.includes('html.desktop .main details.card{grid-area:2/2') && block.includes('overflow:auto'));
+  assert.ok(block.includes('html.desktop .note td{border-bottom:1px solid'));
+});
+
+test('2.19.0 vòng 3: 4 ô lớn desktop chỉ hiển thị lại số của computeStats (hôm nay/tháng/năm/tồn), ẩn khi không desktop', () => {
+  assert.ok(PAGE.includes('<section class="stats4" aria-label="Lợi nhuận và tổng tồn">') && PAGE.includes('.stats4{display:none}'));
+  for (const k of ['day', 'month', 'year', 'stock']) assert.ok(PAGE.includes('data-s4="' + k + '"'), k);
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  for (const id of STAT_IDS) els['#' + id] = { id, textContent: '', className: '' };
+  for (const k of ['day', 'month', 'year', 'stock']) els['[data-s4="' + k + '"]'] = { textContent: '', className: '' };
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({
+    products: [{ id: 'p1', name: 'A', stock: 1.5, costPrice: 100000 }, { id: 'p2', name: 'B', stock: 2, costPrice: 50000 }], prescriptions: [], updatedAt: 1, moneyUnit: 'dong',
+    transactions: [
+      { id: 't1', date: '2026-11-07', type: 'BAN', productId: 'p1', qty: 1, price: 300000, total: 300000, cost: 100000 },
+      { id: 't3', date: '2026-11-03', type: 'BAN', productId: 'p2', qty: 1, price: 90000, total: 90000, cost: 50000 },
+      { id: 't2', date: '2026-03-01', type: 'BAN', productId: 'p2', qty: 1, price: 80000, total: 80000, cost: 50000 }
+    ]
+  });
+  client.renderStats();
+  const t = k => els['[data-s4="' + k + '"]'].textContent;
+  assert.equal(t('day'), '200');
+  assert.equal(t('month'), '240');
+  assert.equal(t('year'), '270');
+  assert.equal(t('stock'), '3 kg');
+  assert.equal(t('day'), els['#statProfitDay'].textContent);
+  assert.equal(t('year'), els['#statProfitYear'].textContent);
 });
