@@ -108,7 +108,7 @@ details>.card__head:hover{background:var(--surface2)}
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
-.stats4{display:none}
+.stats4,.szpick{display:none}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
@@ -558,54 +558,78 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* 2.20.0 chế độ desktop (app Tauri, WebView2 + acrylic): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Cửa sổ trong suốt; kính ở header, dải số, thẻ, tab; bảng/tờ ghi/ô nhập/nút chính giữ nền đục. Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
+/* 2.20.1 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
-html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30)}
+html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30);--surface:#fbfaf9;--surface2:#eef0ee;--border:rgba(71,85,105,.30);--border2:rgba(71,85,105,.18);--vien:rgba(71,85,105,.34);--kinh:rgba(255,255,255,.46)}
 html.desktop .btn--primary{background:#047857;border-color:#047857}
 html.desktop .btn--primary:hover{background:#065f46;border-color:#065f46}
 html.desktop{--sw:208px;--g:15px;zoom:var(--z,1);overflow:hidden}
+html.desktop *{scrollbar-width:thin;scrollbar-color:rgba(71,85,105,.4) transparent}
 html.desktop .dlg{max-height:696px}
-html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:var(--g);width:1280px;height:720px;margin:0 auto;box-sizing:border-box;overflow:hidden;padding:var(--g) var(--g) var(--g)}
+html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:var(--g);width:1280px;height:720px;margin:0 auto;box-sizing:border-box;overflow:hidden;padding:38px var(--g) var(--g)}
 html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop .top .wrap{padding:0 6px}
-html.desktop .top .bar{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;min-height:0}
+html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0}
 html.desktop .main{display:contents}
-html.desktop .stats{grid-area:1/2;margin:0;align-self:start}
-html.desktop .tabs{grid-area:2/1;display:flex;flex-direction:column;gap:10px;margin:0;align-self:start;margin-top:8px}
-html.desktop .tab{display:flex;flex-direction:row;justify-content:flex-start;min-height:46px;padding:8px 16px;text-align:left;font-size:14px}
+html.desktop .stats{display:none}
+html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:8px;margin:84px 0 0;align-self:start}
+html.desktop .tab{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;min-height:37px;padding:6px 16px;border-radius:999px;border:1px solid var(--vien);background:rgba(255,255,255,.14);color:var(--text);font-size:14px;font-weight:600;text-align:left;box-shadow:none}
 html.desktop .tab__ic{margin-right:12px;flex:none}
 html.desktop .tab__l2{margin-left:.15em}
-html.desktop .s4__v{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:0;overflow:auto;margin-top:8px}
-html.desktop .card__bar{position:sticky;top:0;z-index:3;background:var(--surface)}
-html.desktop .note td{height:27px;padding:1px 10px;border-bottom:1px solid rgba(15,23,42,.18)}
-html.desktop .note .foot{padding:1px 12px}
+html.desktop .tab:hover{background:var(--kinh)}
+html.desktop .tab.is-active{background:var(--kinh);border-color:#047857;color:#065f46;font-weight:800}
+html.desktop .tab.is-active .tab__ic{background:none;box-shadow:none}
+html.desktop .szpick{display:flex;gap:6px}
+html.desktop .szpick button{flex:1;min-height:24px;border-radius:999px;border:1px solid var(--vien);background:rgba(255,255,255,.14);color:var(--text);font:700 12px/1 inherit;cursor:pointer}
+html.desktop .szpick button[aria-pressed=true]{border-color:#047857;color:#065f46;background:var(--kinh)}
+html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;grid-area:1/2;margin:0;align-self:start}
+html.desktop .s4{display:flex;flex-direction:column;gap:1px;min-width:0;padding:7px 13px;border:1px solid var(--vien);border-radius:16px;background:var(--kinh);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+html.desktop .s4__k{font-size:12px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--text);white-space:nowrap}
+html.desktop .s4__v{font-size:28px;font-weight:800;line-height:1.12;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
+html.desktop .s4__sub{display:flex;gap:12px;margin-top:auto;font-size:14px;color:var(--text);white-space:nowrap}
+html.desktop .s4__sub b{font-weight:700;font-variant-numeric:tabular-nums}
+html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:10px 0 0;overflow:hidden}
+html.desktop .card:not(.dlg__card){border-radius:16px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--vien);background:var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+html.desktop .card__body{padding:0}
+html.desktop .card__bar{position:static;background:none;padding:6px 12px;border-bottom:0}
+html.desktop .card__bar .inp{min-height:34px;padding-top:5px;padding-bottom:5px;border-radius:999px;box-shadow:none}
+html.desktop .pager .btn,html.desktop .card__bar .btn,html.desktop .note__foot .btn{border-radius:999px}
+html.desktop :is(.pager,.card__bar,.note__foot) .btn:not(.btn--primary):not(.btn--green):not(.btn--dark):not(.btn--danger):not([aria-current]){border-color:var(--vien);background:rgba(255,255,255,.6);box-shadow:none}
+html.desktop :is(.pager,.card__bar,.note__foot) .btn:not(.btn--primary):not(.btn--green):not(.btn--dark):not(.btn--danger):not([aria-current]):hover{background:rgba(255,255,255,.85)}
+html.desktop .dlg__card{background:var(--surface)}
+html.desktop .card table:not(.ord){background:rgba(255,255,255,.5)}
+html.desktop .inp{background:rgba(255,255,255,.62)}
+html.desktop .inp:focus{background:rgba(255,255,255,.85)}
+html.desktop .main details.card[open]>summary.card__head:hover{background:rgba(255,255,255,.14)}
+html.desktop tbody tr:hover{background:rgba(255,255,255,.35)}
+html.desktop .note{margin:2px 12px 12px;border:1px solid var(--vien);border-radius:14px;background:rgba(255,255,255,.5)}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
+html.desktop .note__head{padding:5px 12px;background:none;color:var(--text2);border-bottom:1px solid var(--border)}
+html.desktop .note td{height:25px;padding:1px 10px;border-bottom:1px solid var(--border)}
+html.desktop .note th{padding:4px 10px;border-bottom:1px solid var(--border)}
+html.desktop .note__blank td{height:25px}
+html.desktop .pager .btn{min-height:28px;min-width:28px;padding-top:2px;padding-bottom:2px}
+html.desktop .note .inp{min-height:32px}
 html.desktop .note td .btn--icon{min-height:24px;height:24px}
-html.desktop .note__blank td{height:27px}
-html.desktop .note{overflow:clip}
-html.desktop .note__foot{position:sticky;bottom:0;z-index:2;background:var(--surface)}
-html.desktop .card:not(.dlg__card){border-radius:22px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0) 44px),var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,1),inset 0 0 0 2px rgba(255,255,255,.3),0 1px 2px rgba(15,23,42,.06),0 8px 18px rgba(15,23,42,.08),0 18px 36px rgba(15,23,42,.08)}
-html.desktop .stats{display:none}
-html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;grid-area:1/2;margin:0;align-self:start}
-html.desktop .s4{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:8px;min-width:0;border:1px solid rgba(255,255,255,.9);border-radius:22px;padding:10px 14px;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
-html.desktop .s4__k{font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap}
-html.desktop .s4__n{grid-column:1/-1;margin:2px 0 0;white-space:nowrap}
-html.desktop .s4__u{font-size:12px;color:var(--text2)}
-html.desktop .s4__ic{padding:5px;box-sizing:content-box;border-radius:8px;background:rgba(255,255,255,.6);color:var(--brand)}
-html.desktop .s4__v:not(.txt-red){color:var(--brand-text)}
-html.desktop .tab{border-radius:22px}
-html.desktop .tab:not(.is-active){background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
-html.desktop .pager .btn,html.desktop .card__bar .btn{border-radius:999px}
-html.desktop :is(.pager,.card__bar) .btn:not(.btn--primary):not(.btn--green):not(.btn--dark):not(.btn--danger):not([aria-current]){border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,1),var(--surface2));box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
-html.desktop .card__bar .inp{border-radius:999px;box-shadow:inset 0 1px 3px rgba(15,23,42,.14),0 1px 0 rgba(255,255,255,.9)}
-html.desktop .tab:not(.is-active):hover{background:rgba(255,255,255,.8)}
-html.desktop .tab.is-active{background:linear-gradient(180deg,#059669,#047857);border-color:#065f46;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 2px rgba(255,255,255,.12),0 6px 16px rgba(4,120,87,.35)}
-html.desktop .tab.is-active .tab__ic{background:#ecfdf5;box-shadow:0 0 0 3px #ecfdf5}
-html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surface)}
+html.desktop #remedyNote .note__search{padding:5px 10px;border-bottom:1px solid var(--border)}
+html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__foot{display:flex;align-items:center;gap:10px;padding:4px 12px;background:none;border-top:1px solid var(--border)}
+html.desktop .note__foot>.btn{margin-left:auto}
+html.desktop .note__row{flex-wrap:nowrap;justify-content:flex-start}
+html.desktop .note__row--btns{margin:0 0 0 auto}
+html.desktop .sug__list{scrollbar-width:none;background:var(--surface);border:1px solid var(--vien);border-radius:12px}
+html.desktop .sug__list::-webkit-scrollbar{display:none}
+html.desktop{--chart-imp:#3f7fb0}
+html.desktop .chart-head__stats{display:none}
+html.desktop #chartBox .card__body{padding:0 16px 12px}
+html.desktop .chart{height:400px}
+html.desktop .chart-year__box:hover{background:rgba(255,255,255,.8)}
+html.desktop .chart-year__box{background:rgba(255,255,255,.62);border-color:var(--vien);border-radius:999px}
 html.desktop .bgd{--bt:rgba(255,255,255,.9);width:18px;height:18px;padding:0;border-radius:50%;border:1px solid #64748b;background:var(--bt);cursor:pointer}
 html.desktop .bgd[aria-pressed=true]{box-shadow:0 0 0 2px rgba(255,255,255,1),0 0 0 4px #047857}
-html.desktop .bgdots{grid-area:2/1;align-self:end;display:flex;flex-wrap:wrap;gap:6px;padding:0 6px 4px}
+html.desktop .bgdots{grid-area:2/1;align-self:end;display:flex;flex-wrap:wrap;gap:5px;padding:0 4px 4px}
+html.desktop[data-bg=gpui],html.desktop .bgd[data-bg=gpui]{--bt:radial-gradient(34% 38% at 84% 14%,rgba(222,190,196,.55),transparent),radial-gradient(36% 40% at 46% 46%,rgba(224,214,190,.5),transparent),radial-gradient(34% 40% at 90% 90%,rgba(190,212,204,.45),transparent),linear-gradient(165deg,#e3cfcb,#dcd7ce 45%,#bfcabb)}
 html.desktop[data-bg=hong],html.desktop .bgd[data-bg=hong]{--bt:rgba(251,207,232,.6)}
 html.desktop[data-bg=dao],html.desktop .bgd[data-bg=dao]{--bt:rgba(254,215,170,.6)}
 html.desktop[data-bg=vang],html.desktop .bgd[data-bg=vang]{--bt:rgba(253,230,138,.55)}
@@ -624,11 +648,12 @@ html.desktop[data-bg=tim],html.desktop .bgd[data-bg=tim]{--bt:rgba(221,214,254,.
   var R = document.documentElement;
   if (R.classList.contains('desktop')) {
     /* 2.20.0: khung vẽ 1280x720, phóng đều theo cửa sổ (zoom); 7 màu nền nhớ bằng localStorage 'desktopBg' */
-    var fit = function(){ var z = Math.min(innerWidth / 1280, innerHeight / 720); window.__dz = z; R.style.setProperty('--z', z); };
+    var mark = function(){ var g = document.querySelector('.szpick'), pw = innerWidth * (devicePixelRatio || 1); if (g) [].forEach.call(g.children, function(b){ b.setAttribute('aria-pressed', Math.abs(pw - +b.getAttribute('data-w')) <= 6 ? 'true' : 'false'); }); };
+    var fit = function(){ var z = Math.min(innerWidth / 1280, innerHeight / 720); window.__dz = z; R.style.setProperty('--z', z); mark(); };
     fit(); addEventListener('resize', fit);
-    var BGS = ['suong', 'hong', 'dao', 'vang', 'la', 'duong', 'tim'], NM = ['Sương trắng', 'Hồng nhạt', 'Đào nhạt', 'Vàng kem', 'Xanh lá nhạt', 'Xanh dương nhạt', 'Tím nhạt'], cur = 'suong';
-    try { cur = localStorage.getItem('desktopBg') || 'suong'; } catch (e) {}
-    if (BGS.indexOf(cur) < 0) cur = 'suong';
+    var BGS = ['gpui', 'suong', 'hong', 'dao', 'vang', 'la', 'duong', 'tim'], NM = ['Nền GPUI', 'Sương trắng', 'Hồng nhạt', 'Đào nhạt', 'Vàng kem', 'Xanh lá nhạt', 'Xanh dương nhạt', 'Tím nhạt'], cur = 'gpui';
+    try { cur = localStorage.getItem('desktopBg') || 'gpui'; } catch (e) {}
+    if (BGS.indexOf(cur) < 0) cur = 'gpui';
     R.setAttribute('data-bg', cur);
     document.addEventListener('DOMContentLoaded', function(){
       var w = document.createElement('div'); w.className = 'bgdots'; w.setAttribute('role', 'group'); w.setAttribute('aria-label', 'Màu nền');
@@ -640,6 +665,19 @@ html.desktop[data-bg=tim],html.desktop .bgd[data-bg=tim]{--bt:rgba(221,214,254,.
         w.appendChild(b);
       });
       document.body.appendChild(w);
+      /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */
+      var bw = document.querySelector('.top .brand-wrap'), sz = document.createElement('div');
+      sz.className = 'szpick'; sz.setAttribute('role', 'group'); sz.setAttribute('aria-label', 'Cỡ cửa sổ');
+      [['HD', 1280, 720], ['FHD', 1920, 1080]].forEach(function(p){
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = p[0]; b.title = p[0] + ' ' + p[1] + '×' + p[2]; b.setAttribute('data-w', p[1]);
+        b.onclick = function(){ var T = window.__TAURI__; if (!T || !T.window) return; var cw = p[1], ch = p[2], aw = screen.availWidth * (devicePixelRatio || 1), ah = screen.availHeight * (devicePixelRatio || 1);
+          if (cw > aw || ch > ah) { ch = Math.min(ah, Math.floor(aw * 9 / 16)); cw = Math.round(ch * 16 / 9); }
+          var win = T.window.getCurrentWindow(), S = T.window.PhysicalSize || (T.dpi && T.dpi.PhysicalSize);
+          Promise.resolve(win.unmaximize()).then(function(){ return win.setSize(new S(cw, ch)); }).catch(function(){}); };
+        sz.appendChild(b);
+      });
+      if (bw && bw.parentNode) bw.parentNode.insertBefore(sz, bw.nextSibling);
+      mark();
     });
   }
   window.__DB__=%%BOOT%%;
@@ -702,11 +740,11 @@ html.desktop[data-bg=tim],html.desktop .bgd[data-bg=tim]{--bt:rgba(221,214,254,.
     </div>
   </section>
 
-  <section class="stats4" aria-label="Lợi nhuận và tổng tồn">
-    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="s4__k">Lợi nhuận hôm nay</span><p class="s4__n"><b class="s4__v" data-s4="day">0</b> <span class="s4__u">nghìn đ</span></p></div>
-    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-calendar"/></svg><span class="s4__k">Lợi nhuận tháng</span><p class="s4__n"><b class="s4__v" data-s4="month">0</b> <span class="s4__u">nghìn đ</span></p></div>
-    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="s4__k">Lợi nhuận năm</span><p class="s4__n"><b class="s4__v" data-s4="year">0</b> <span class="s4__u">nghìn đ</span></p></div>
-    <div class="s4"><svg class="ico s4__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="s4__k">Tổng tồn</span><p class="s4__n"><b class="s4__v" data-s4="stock">0</b></p></div>
+  <section class="stats4" aria-label="Nhập, bán, lợi nhuận tháng và tổng tồn kho">
+    <div class="s4"><span class="s4__k">Nhập trong tháng</span><b class="s4__v" data-s4="imp">0</b></div>
+    <div class="s4"><span class="s4__k">Bán trong tháng</span><b class="s4__v" data-s4="exp">0</b><p class="s4__sub"><span>Hôm nay <b data-s4="expDay">0</b></span><span>Năm <b data-s4="expYear">0</b></span></p></div>
+    <div class="s4"><span class="s4__k">Lợi nhuận tháng</span><b class="s4__v" data-s4="profit">0</b><p class="s4__sub"><span>Hôm nay <b data-s4="profitDay">0</b></span><span>Năm <b data-s4="profitYear">0</b></span></p></div>
+    <div class="s4"><span class="s4__k">Tổng tồn kho</span><b class="s4__v" data-s4="stock">0</b></div>
   </section>
 
   <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
@@ -2907,11 +2945,15 @@ function renderStats(){
     pn.className = 'stat__v ' + (s.profitMonth < 0 ? 'txt-red' : '');
   }
   set('statStock', fmtQtyInt(s.stock));
-  /* 2.19.0 desktop: 4 ô lớn chỉ HIỂN THỊ lại các số vừa tính ở trên (cùng hàm định dạng), không tính thêm. */
-  var s4 = function(k, t, neg){ var n = $('[data-s4="' + k + '"]'); if (n) { n.textContent = t; n.className = 's4__v' + (neg ? ' txt-red' : ''); } };
-  s4('day', fmtMoneyInt(s.profitDay), s.profitDay < 0);
-  s4('month', fmtMoneyInt(s.profitMonth), s.profitMonth < 0);
-  s4('year', fmtMoneyInt(s.profitYear), s.profitYear < 0);
+  /* 2.20.1 desktop: 4 ô lớn chỉ HIỂN THỊ lại các số vừa tính ở trên (cùng hàm định dạng), không tính thêm. */
+  var s4 = function(k, v, neg){ var n = $('[data-s4="' + k + '"]'); if (n) { n.textContent = v; n.className = n.className.replace(/ ?txt-red/, '') + (neg ? ' txt-red' : ''); } };
+  s4('imp', fmtMoneyInt(s.mImp));
+  s4('exp', fmtMoneyInt(s.mExp));
+  s4('expDay', fmtMoneyInt(s.dExp));
+  s4('expYear', fmtMoneyInt(s.yExp));
+  s4('profit', fmtMoneyInt(s.profitMonth), s.profitMonth < 0);
+  s4('profitDay', fmtMoneyInt(s.profitDay), s.profitDay < 0);
+  s4('profitYear', fmtMoneyInt(s.profitYear), s.profitYear < 0);
   s4('stock', fmtQtyInt(s.stock));
 }
 /* ================= PHÂN TRANG ================= */

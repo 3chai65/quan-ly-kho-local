@@ -5,6 +5,18 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.1] - 2026-11-16
+
+Không đổi định dạng dữ liệu, không đổi logic tiền. Chỉ thay đổi khi `html.desktop` (app Tauri); PWA/iPhone/Safari không đổi.
+
+- Khớp app GPUI thật: bốn ô lớn Nhập/Bán/Lợi nhuận/Tồn kho (nhãn HOA, số lớn, bỏ "nghìn đ", hàng phụ "Hôm nay/Năm" ở Bán và Lợi nhuận, dùng lại `computeStats`), cùng một kiểu kính trong viền mảnh trung tính.
+- Thanh bên như GPUI: logo, hai viên HD/FHD (Tauri: `setSize` vật lý, kẹp theo vùng làm việc, thêm quyền `allow-set-size`/`allow-unmaximize`), nút danh mục là viên viền mảnh; mục chọn chữ và viền xanh lá, không tô đặc.
+- Nền mặc định kiểu GPUI (gradient hồng nhạt đến xanh lá nhạt) là chấm đầu; thêm 7 màu cũ thành 8 chấm.
+- Tờ ghi (Bán lẻ, Thuốc chén, Nhập hàng) đồng bộ kính, bỏ nền kem/viền đỏ/chữ nâu; chân gọn một hàng; hover/focus của tiêu đề thẻ, ô năm, ô nhập, hàng bảng, nút cùng họ kính (độ trong thân thẻ giữ .50).
+- Không cuộn: thẻ `overflow:hidden`, nội dung vừa khung 1280x720/1920x1080 (ngoại lệ duy nhất: khung gợi ý tên 3 dòng, ẩn thanh cuộn); nội dung bắt đầu dưới thanh tiêu đề tự vẽ.
+- Thống kê: ẩn khối Nhập/Tồn ở đầu thẻ (CSS, DOM còn), ô năm kính, biểu đồ cao vừa khung, cột Nhập xanh dương dịu (biến `--chart-imp`).
+- Tauri: thanh tiêu đề trong suốt, bỏ chữ tiêu đề.
+
 ## [2.20.0] - 2026-11-16
 
 Không đổi định dạng dữ liệu. Chỉ thay đổi khi `html.desktop` (app Tauri); PWA/iPhone/Safari không đổi (trừ hiệu chỉnh vị trí menu dòng vô hại khi z=1).
