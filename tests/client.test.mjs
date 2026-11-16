@@ -6178,3 +6178,23 @@ test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS 
   assert.ok(/html\.noglass\{--glass:var\(--surface\);--glass-bar:var\(--surface\);[^}]*--blur:none\}/.test(PAGE));
   assert.ok(PAGE.includes("/[?&]glass=0/") && PAGE.includes("classList.add('noglass')"));
 });
+
+test('2.18.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤4 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
+  const a = PAGE.indexOf('/* 2.18.0 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
+  assert.ok(a > 0 && b > a);
+  const block = PAGE.slice(a, b);
+  const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
+  assert.ok(rules.length >= 7 && rules.every(l => l.startsWith('html.desktop')), 'mọi quy tắc phải bắt đầu bằng html.desktop');
+  assert.ok(Buffer.byteLength(block) <= 4096, 'CSS thêm ≤ 4 KB');
+  assert.ok((block.match(/backdrop-filter:/g) || []).length <= 6 && !/feDisplacementMap/.test(PAGE));
+  assert.ok(/html\.desktop \.card table:not\(\.ord\),html\.desktop \.dlg__card\{background:var\(--surface\)\}/.test(block));
+  assert.ok(block.includes('.card:not(.dlg__card)') && !/\.btn/.test(block) && !/\.note/.test(block));
+  assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.removeItem\('desktop'\)/.test(PAGE));
+  assert.ok(/\[\?&\]desktop=1\/\.test\(q\)\) localStorage\.setItem\('desktop', '1'\)/.test(PAGE));
+  assert.ok(PAGE.includes("getItem('desktop') === '1') document.documentElement.classList.add('desktop')"));
+  // vòng 2: kính trong hơn (.50-.58), tab chọn xanh lá thay indigo, --muted đậm để giữ tương phản >= 4,5
+  const g = block.match(/--glass:rgba\(255,255,255,(\.\d+)\);--glass-bar:rgba\(255,255,255,(\.\d+)\)/);
+  assert.ok(g && +g[1] >= .5 && +g[1] <= .58 && +g[2] >= .5 && +g[2] <= .6, 'độ đục kính trong khoảng .50-.58');
+  assert.ok(block.includes('--muted:#475569'));
+  assert.ok(/html\.desktop \.tab\.is-active\{background:#047857;/.test(block) && !/html\.desktop[^\n]*(--brand|#4f46e5)/.test(block));
+});

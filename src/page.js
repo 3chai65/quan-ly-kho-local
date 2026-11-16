@@ -557,12 +557,26 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
+/* 2.18.0 chế độ desktop (app Tauri, WebView2 + acrylic): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Cửa sổ trong suốt; kính ở header, dải số, thẻ, tab; bảng/tờ ghi/ô nhập/nút chính giữ nền đục. Tối đa 3 phần tử backdrop-filter. */
+html.desktop,html.desktop body{background:transparent}
+html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent)}
+html.desktop{--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569}
+html.desktop .top{border-bottom-color:rgba(255,255,255,.8);box-shadow:inset 0 -1px 0 rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.08)}
+html.desktop .card:not(.dlg__card),html.desktop .stats{-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-color:rgba(255,255,255,.85);background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 44px),var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.3),0 10px 28px rgba(15,23,42,.12)}
+html.desktop .tab:not(.is-active){background:rgba(255,255,255,.5);border-color:rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 2px 8px rgba(15,23,42,.08)}
+html.desktop .tab:not(.is-active):hover{background:rgba(255,255,255,.8)}
+html.desktop .tab.is-active{background:#047857;border-color:#065f46;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 12px rgba(4,120,87,.3)}
+html.desktop .tab.is-active .tab__ic{background:#ecfdf5;box-shadow:0 0 0 3px #ecfdf5}
+html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surface)}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
 </style>
 <script>
 (function(){
+  try { var q = location.search || '';
+    if (/[?&]desktop=0/.test(q)) localStorage.removeItem('desktop'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
+    if (localStorage.getItem('desktop') === '1') document.documentElement.classList.add('desktop'); } catch (e) {}
   window.__DB__=%%BOOT%%;
   window.__NEED_FETCH__=%%NEEDFETCH%%;
 })();

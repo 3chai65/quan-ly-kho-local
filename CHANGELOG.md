@@ -5,12 +5,20 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.18.0] - 2026-11-16
+
+Không đổi định dạng dữ liệu.
+
+- Chế độ desktop `html.desktop`: bật bằng `?desktop=1`, nhớ bằng localStorage, `?desktop=0` tắt; chỉ dành cho app Tauri trên Windows 10 (acrylic). Mọi CSS nằm dưới `html.desktop` nên PWA/iPhone/Safari không đổi.
+- Độ đục .50/.52, tab chọn xanh #047857; 4 phần tử `backdrop-filter`; vùng số, bảng, hộp thoại nền đục.
+- Số đo: frame time cuộn Lịch sử mean 5,0 ms khi bật và tắt như nhau; tương phản tối thiểu ≥ 4,5 (theo `bao-cao-kinh-desktop.md`).
+
 ## [2.17.9] - 2026-11-16
 
 Không đổi định dạng dữ liệu. Gộp cả nội dung 2.17.8 (chưa từng triển khai riêng).
 
 - Cờ `?glass=0`: trả giao diện nền đục, tắt blur (header, thanh chân, toast, nền hộp thoại); `prefers-reduced-transparency`/`@supports` đã có từ trước.
-- Số đo: iPhone 14 Pro, Safari Web Inspector, bản mặc định FPS phần lớn 52–60 (rAF trần 60), 2 giây tụt 49/46, không chuỗi <45. CHƯA đo so với `?glass=0`, chưa đo Chế độ nguồn điện thấp / dữ liệu lớn.
+- Số đo: iPhone 14 Pro, Safari Web Inspector, bản mặc định FPS phần lớn 52–60 (rAF trần 60), 2 giây tụt 49/46, không chuỗi <45. Sau triển khai đã đo so với `?glass=0` (tab Lịch sử, 3+3 lần xen kẽ): TB 58 so 57 fps, 39 so 42 khung chậm, chênh 0,7 fps, ĐẠT; chưa đo Chế độ nguồn điện thấp / dữ liệu lớn.
 - 4 phần tử `backdrop-filter` là chủ ý của người dùng (vượt mốc ≤2).
 
 ## [2.17.8] - 2026-11-16
