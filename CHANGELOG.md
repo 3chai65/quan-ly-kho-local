@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.7] - 2026-11-16
+
+### Sửa (chỉ html.desktop)
+- Viên kính chung: HD/FHD, phân trang, Lưu đơn + Bán đơn (Thuốc chén); kính mỏng hơn (viền tối .16, bóng đáy 0 8px 18px, thêm --k3t); icon tab một màu #334155 nét 1,75.
+- Nút "+" Nhập hàng (.nhap-add) lỗi méo/lệch: nay cùng luật tròn 28x28 với Bán lẻ/Thuốc chén.
+- Số trong ô nhập số to đậm (15px/700, tabular-nums), ô vẫn 80x28.
+- Gợi ý đơn vị SL thành ô riêng bên trái ô số (cột SL 176, Tên 270), không chồng ô nhập; chỉ đổi giao diện/vị trí.
+- Nền thứ 9 navy (mẫu thanh Safari #142844) với token chữ sáng.
+
 ## [2.20.6] - 2026-11-16
 
 ### Sửa (chỉ html.desktop)
