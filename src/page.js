@@ -558,7 +558,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* 2.20.3 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
+/* 2.20.5 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
 html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30);--surface:#fbfaf9;--surface2:#eef0ee;--border:rgba(71,85,105,.30);--border2:rgba(71,85,105,.18);--vien:rgba(71,85,105,.34);--kinh:rgba(255,255,255,.46);--kb:rgba(255,255,255,.9) rgba(58,42,51,.24) rgba(58,42,51,.24) rgba(255,255,255,.9);--spec:linear-gradient(120deg,rgba(255,255,255,.55),rgba(255,255,255,0) 35%);--k3d:inset 2px 2px 0 rgba(255,255,255,.22),inset 0 0 12px rgba(255,255,255,.5),inset 0 -6px 10px rgba(58,42,51,.1),0 1px 1px rgba(58,42,51,.14),0 6px 14px rgba(58,42,51,.1),0 14px 30px rgba(58,42,51,.08);--k3h:inset 2px 2px 0 rgba(255,255,255,.32),inset 0 0 14px rgba(255,255,255,.65),inset 0 -6px 10px rgba(58,42,51,.1),0 2px 2px rgba(58,42,51,.14),0 10px 20px rgba(58,42,51,.12),0 18px 36px rgba(58,42,51,.09);--k3a:inset 0 3px 6px rgba(58,42,51,.26),inset 0 0 10px rgba(58,42,51,.1),0 1px 0 rgba(255,255,255,.6);--chart-hi:rgba(0,0,0,0)}
@@ -595,35 +595,56 @@ html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:10
 html.desktop .card:not(.dlg__card){border-radius:16px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid;border-color:var(--kb);background:linear-gradient(120deg,rgba(255,255,255,.3),rgba(255,255,255,0) 35%) top left/100% 40% no-repeat,var(--glass);box-shadow:inset 2px 2px 0 rgba(255,255,255,.18),inset 0 0 12px rgba(255,255,255,.3),inset 0 -6px 10px rgba(58,42,51,.06),0 1px 1px rgba(58,42,51,.08),0 6px 14px rgba(58,42,51,.07),0 14px 30px rgba(58,42,51,.06)}
 html.desktop .card__body{padding:0}
 html.desktop .card__bar{position:static;background:none;padding:6px 12px;border-bottom:0}
-html.desktop .card__bar .inp{min-height:34px;padding-top:5px;padding-bottom:5px;border-radius:999px;box-shadow:none}
+html.desktop .card__bar .inp{min-height:30px;padding-top:3px;padding-bottom:3px}
 html.desktop .pager .btn,html.desktop .card__bar .btn,html.desktop .note__foot .btn{border-radius:999px}
-html.desktop :is(.tab,.szpick button,.s4),html.desktop :is(.pager,.card__bar,.note__foot) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:rgba(255,255,255,.16);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d);transition:transform .15s,box-shadow .15s,background-color .15s}
-html.desktop :is(.tab,.szpick button,.s4):hover,html.desktop :is(.pager,.card__bar,.note__foot) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{transform:translateY(-1px);background-color:rgba(255,255,255,.3);box-shadow:var(--k3h)}
-html.desktop :is(.tab,.szpick button):active,html.desktop :is(.pager,.card__bar,.note__foot) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):active{transform:translateY(0);box-shadow:var(--k3a)}
+html.desktop :is(.tab,.szpick button,.s4,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:rgba(255,255,255,.16);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d);transition:transform .15s,box-shadow .15s,background-color .15s}
+html.desktop :is(.tab,.szpick button,.s4):hover,html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{transform:translateY(-1px);background-color:rgba(255,255,255,.3);box-shadow:var(--k3h)}
+html.desktop :is(.tab,.szpick button):active,html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):active{transform:translateY(0);box-shadow:var(--k3a)}
 html.desktop :is(.tab.is-active,.szpick button[aria-pressed=true]){background-color:rgba(52,211,153,.28);border-color:rgba(255,255,255,.95) rgba(4,120,87,.5) rgba(4,120,87,.5) rgba(255,255,255,.95)}
 html.desktop :is(.tab.is-active,.szpick button[aria-pressed=true]):hover{background-color:rgba(52,211,153,.38)}
+html.desktop :is(.btn--green,.btn--primary,.btn--dark,.pager__num[aria-current]){color:#065f46;font-weight:800;border-color:rgba(255,255,255,.95) rgba(4,120,87,.5) rgba(4,120,87,.5) rgba(255,255,255,.95);background-color:rgba(52,211,153,.3);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d)}
+html.desktop :is(.btn--green,.btn--primary,.btn--dark,.pager__num[aria-current]):hover{background-color:rgba(52,211,153,.4);transform:translateY(-1px);box-shadow:var(--k3h)}
+html.desktop :is(.btn--green,.btn--primary,.btn--dark,.pager__num[aria-current]):active{transform:translateY(0);box-shadow:var(--k3a)}
+html.desktop :is(.card__bar .inp,.note .inp,.chart-year__box){background-color:rgba(255,255,255,.4)}
+html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}
+html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:24px;height:24px}
+html.desktop :is(.card__bar,.note) .inp:focus{background-color:rgba(255,255,255,.85)}
 html.desktop .dlg__card{background:var(--surface)}
-html.desktop .card table:not(.ord){background:rgba(255,255,255,.5)}
+html.desktop .card table:not(.ord){background:none}
 html.desktop .inp{background:rgba(255,255,255,.62)}
 html.desktop .inp:focus{background:rgba(255,255,255,.85)}
 html.desktop .main details.card[open]>summary.card__head:hover{background:rgba(255,255,255,.14)}
 html.desktop tbody tr:hover{background:rgba(255,255,255,.35)}
-html.desktop .note{margin:2px 12px 12px;border:1px solid var(--vien);border-radius:14px;background:rgba(255,255,255,.5)}
+html.desktop .note{margin:2px 12px 12px;border:1px solid;border-color:var(--kb);border-radius:14px;background:var(--spec) top/100% 55% no-repeat,rgba(255,255,255,.2);box-shadow:var(--k3d)}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
 html.desktop .note__head{padding:5px 12px;background:none;color:var(--text2);border-bottom:1px solid var(--border)}
 html.desktop .note td{height:25px;padding:1px 10px;border-bottom:1px solid var(--border)}
+html.desktop .note tfoot td{border-top:1px solid var(--border);border-bottom:0}
+html.desktop .note .c-act .inline-row{justify-content:flex-start}
+html.desktop .note__pending tfoot td{border-top:0}
 html.desktop .note th{padding:4px 10px;border-bottom:1px solid var(--border)}
 html.desktop .note__blank td{height:25px}
-html.desktop .pager .btn{min-height:28px;min-width:28px;padding-top:2px;padding-bottom:2px}
-html.desktop .note .inp{min-height:32px}
-html.desktop .note td .btn--icon{min-height:24px;height:24px}
+html.desktop .btn{min-height:30px;padding:3px 14px;font-size:13px}
+html.desktop .btn--icon{min-width:32px;padding:3px}
+html.desktop .pager .btn{min-height:26px;min-width:26px;padding:2px 9px}
+html.desktop .note .inp{height:28px;min-height:28px;padding-top:2px;padding-bottom:2px;font-size:13px}
+html.desktop .note td .btn--icon{min-height:22px;height:22px;width:32px}
 html.desktop #remedyNote .note__search{padding:5px 10px;border-bottom:1px solid var(--border)}
 html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__foot{display:flex;align-items:center;gap:10px;padding:4px 12px;background:none;border-top:1px solid var(--border)}
-html.desktop .note__foot>.btn{margin-left:auto}
+html.desktop .note__foot>.btn{margin-left:auto;height:30px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-num{width:40px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-name{width:290px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:110px;min-width:110px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-money{width:100px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-act{width:auto}
+html.desktop .note :is(td,th):is(.c-num,.c-qty,.c-money,.c-act,.c-del){width:auto}
+html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__pending :is(.btn--icon,.nhap-add){width:28px;min-width:28px;height:28px;min-height:28px;margin-left:0}
 html.desktop .note__row{flex-wrap:nowrap;justify-content:flex-start}
 html.desktop .note__row--btns{margin:0 0 0 auto}
-html.desktop .sug__list{scrollbar-width:none;background:var(--surface);border:1px solid var(--vien);border-radius:12px}
+html.desktop .sug__list{scrollbar-width:none;background:var(--surface);border:1px solid var(--vien);border-radius:12px;padding:0;max-height:116px;scroll-snap-type:y mandatory}
+html.desktop .sug__item{height:38px;scroll-snap-align:start}
 html.desktop .sug__list::-webkit-scrollbar{display:none}
 html.desktop{--chart-imp:#3f7fb0}
 html.desktop .chart-head__stats{display:none}
@@ -3803,7 +3824,7 @@ function openSuggest(key){
   if (!list.children.length) list.appendChild(el('div', 'sug__empty', 'Không tìm thấy vị thuốc nào'));
   list.hidden = false;
   list.style.maxHeight = '';
-  if (sugWhole(key)) {
+  if (sugWhole(key) && !isDesk()) { /* desktop: CSS cố định 3 hàng x 38px */
     var hs = [];
     for (var hi = 0; hi < list.children.length; hi++) hs.push(list.children[hi].getBoundingClientRect().height);
     var mh = sugListMaxHeight(hs, SUG_ROWS, 10); /* đệm 4+4 và viền 1+1 của .sug__list */

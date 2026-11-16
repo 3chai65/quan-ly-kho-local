@@ -5,6 +5,17 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.5] - 2026-11-16
+
+### Sửa (chỉ html.desktop; gộp cả 2.20.4 chưa phát hành: khung gợi ý 3 hàng x 38px)
+- Tờ ghi gọn: nút 30px, phân trang 26px, "..." 32x22, "+" 28px, ô nhập 28px; cột STT 40 / Tên 290 / SL 110 / Giá 100, cột thao tác auto, nút sát trái; mọi đường ngang 1px cùng màu (bỏ viền 2px trước Tổng, bỏ chồng viền).
+- Tờ ghi là kính (trắng .2, vệt sáng, --kb, --k3d), bảng trong suốt; mọi .btn và ô nhập/chọn/năm cùng họ kính 3D, bo 999px; nút chính (green/primary/dark, trang hiện tại) cùng kính nhuộm xanh lá. Không thêm backdrop-filter.
+
+## [2.20.4] - 2026-11-16
+
+### Sửa (chỉ html.desktop)
+- Khung gợi ý/lọc tên (Bán lẻ, Thuốc chén, Nhập hàng, Kho tồn, Lịch sử nhập/bán) cao đúng 3 hàng x 38px + viền 2px = 116px, đệm 0, cuộn guồng (scroll-snap), không nửa dòng. Nguyên nhân: JS đo hàng bằng getBoundingClientRect bị nhân zoom (z khác 1 làm khung quá cao); Kho tồn/Lịch sử không có giới hạn 3 hàng. Desktop bỏ đo JS, dùng CSS; điện thoại/PWA không đổi.
+
 ## [2.20.3] - 2026-11-16
 
 Không đổi dữ liệu/logic tiền; chỉ `html.desktop`. Đi kèm `"shadow": false` ở `tauri.conf.json` (repo app Tauri) để hết viền xám 9px native quanh cửa sổ.
