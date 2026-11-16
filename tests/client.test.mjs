@@ -6173,3 +6173,8 @@ test('W6b restoreFromFile: JSON gọn > 4 MB bị từ chối trước xác nh�
   assert.ok(txt.length > 400 * 1024 && JSON.stringify(small).length < 4 * 1024 * 1024);
   assert.equal(run(txt), 1);
 });
+
+test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS bật theo ?glass=0', () => {
+  assert.ok(/html\.noglass\{--glass:var\(--surface\);--glass-bar:var\(--surface\);[^}]*--blur:none\}/.test(PAGE));
+  assert.ok(PAGE.includes("/[?&]glass=0/") && PAGE.includes("classList.add('noglass')"));
+});

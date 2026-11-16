@@ -4,6 +4,11 @@ Repo này là **bản chạy local** của app Quản Lý Kho: server Node (Expr
 better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứng. Xem
 `README-LOCAL.md` để chạy và `CHANGELOG.md` cho lịch sử thay đổi.
 
+## Vị trí chạy (cập nhật 16/11/2026)
+Hub chạy trên **Mac mini M1** `192.168.2.46` (Node 22 + Caddy native, không Docker; dữ liệu `~/kho/data`, sao lưu 19:00 sang Drive bằng `~/kho/sao-luu.sh`). Windows là `192.168.2.47`, Docker kho đã dừng; `G:\...\data` + volume `caddy_data` giữ làm **bản lùi, đóng băng** từ 16/11/2026 (đừng sửa, đừng bật cùng lúc với Mac). Quy trình: `D:\Soft\quy-trinh-chuyen-hub-sang-mac.md`. Các mục "Triển khai"/"Dữ liệu" dưới đây mô tả bản Docker cũ; triển khai bản mới lên Mac cần quy trình riêng (chưa viết).
+
+Kính: người dùng chốt 16/11/2026 giữ 4 phần tử `backdrop-filter` (header, thanh chân, toast, nền hộp thoại), vượt mốc ≤ 2 của báo cáo kính có chủ ý; cờ `?glass=0` tắt hết. Chưa đo FPS iPhone; nếu giật thì gỡ toast và nền hộp thoại trước.
+
 ## Kiến trúc
 - `server.js` — Express + better-sqlite3. API `GET/PUT /api/state`. Tiền lưu bằng
   đồng nguyên, `moneyUnit: "dong"`. Backup mỗi ngày (`VACUUM INTO`) trước lần ghi
@@ -20,7 +25,7 @@ better-sqlite3) chạy trong Docker, dữ liệu là file SQLite trên ổ cứn
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
 - `pwa.js` — manifest, icon PNG sinh bằng mã, sw.js passthrough (không cache); các đường này công khai GET/HEAD trong PUBLIC của `auth.js`; CSP của "/" có manifest-src/worker-src 'self'.
-- Phiên bản hiện tại: 2.17.8.
+- Phiên bản hiện tại: 2.17.9.
 - `BAO-CAO-REVIEW.md` — tổng hợp lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI ở `G:\quan-ly-kho-gpui` dùng chung schema SQLite, hiện chỉ-đọc trên `datapp.db` (ghi thử trên bản chép); không đụng `data/` từ app đó khi chưa có duyệt.
 

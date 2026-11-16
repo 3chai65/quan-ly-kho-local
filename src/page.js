@@ -555,6 +555,8 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 :root{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
+html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
+html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -5272,6 +5274,7 @@ function initFootBars(){
     window.visualViewport.addEventListener('resize', onVvChange);
     window.visualViewport.addEventListener('scroll', onVvChange);
   }
+  try { if (/[?&]glass=0/.test(window.location.search || '')) document.documentElement.classList.add('noglass'); } catch (e) {}
   try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || '') || localStorage.getItem('kbdebug') === '1'; } catch (e) {}
   /* 2.17.8: PWA không có thanh địa chỉ: chạm 5 lần logo trong 3 giây để bật/tắt kbdebug (cờ localStorage). */
   var logo = $('#brandLogo'), logoN = 0, logoT = 0;

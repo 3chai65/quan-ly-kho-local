@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.17.9] - 2026-11-16
+
+Không đổi định dạng dữ liệu. Gộp cả nội dung 2.17.8 (chưa từng triển khai riêng).
+
+- Cờ `?glass=0`: trả giao diện nền đục, tắt blur (header, thanh chân, toast, nền hộp thoại); `prefers-reduced-transparency`/`@supports` đã có từ trước.
+- Số đo: iPhone 14 Pro, Safari Web Inspector, bản mặc định FPS phần lớn 52–60 (rAF trần 60), 2 giây tụt 49/46, không chuỗi <45. CHƯA đo so với `?glass=0`, chưa đo Chế độ nguồn điện thấp / dữ liệu lớn.
+- 4 phần tử `backdrop-filter` là chủ ý của người dùng (vượt mốc ≤2).
+
 ## [2.17.8] - 2026-11-16
 
 Không đổi định dạng dữ liệu.
