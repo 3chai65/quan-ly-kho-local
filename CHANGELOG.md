@@ -5,6 +5,16 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.2] - 2026-11-16
+
+Không đổi định dạng dữ liệu, không đổi logic tiền. Chỉ thay đổi khi `html.desktop`; PWA/iPhone/Safari không đổi (trừ màu dải biểu đồ đọc từ biến CSS, mặc định giữ màu cũ).
+
+- Kính 3D bằng CSS thuần (bám `glass.rs`): viền 4 cạnh sáng trên-trái (trắng .9) / tối dưới-phải (mực .24), highlight inset, quầng sáng trong, bóng trong đáy, specular chéo 120 độ, bóng rơi 3 tầng; hover nổi (translateY -1px, sáng hơn), nhấn lõm; mục chọn là kính nhuộm xanh lá nhạt, chữ xanh lá đậm. Áp cho viên danh mục, HD/FHD, 4 ô lớn, nút phân trang/thanh thẻ/chân tờ ghi, chấm màu nền; thẻ nội dung nhẹ hơn. Không thêm backdrop-filter, transition chỉ transform/box-shadow/background-color.
+- Thống kê: bỏ dải nền tháng hiện tại (biến `--chart-hi` trong suốt ở desktop); biểu đồ giãn đầy chiều cao thẻ.
+- Thanh tiêu đề tự vẽ nổi lên trên cùng (28px, nút 40px), nội dung cách mép trên 14px; vùng trống quanh logo kéo được cửa sổ.
+- Khung phủ kín viewport (`--vw`/`--vh` = cỡ cửa sổ / zoom) nên không còn dải hở khi tỉ lệ cửa sổ lệch 16:9.
+- Bán lẻ, Thuốc chén, Nhập hàng, Thống kê lấp đầy chiều cao thẻ (hàng bảng giãn đều); Sao lưu co theo nội dung.
+
 ## [2.20.1] - 2026-11-16
 
 Không đổi định dạng dữ liệu, không đổi logic tiền. Chỉ thay đổi khi `html.desktop` (app Tauri); PWA/iPhone/Safari không đổi.

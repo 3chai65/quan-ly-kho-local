@@ -6182,7 +6182,7 @@ test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS 
 });
 
 test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
-  const a = PAGE.indexOf('/* 2.20.1 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
+  const a = PAGE.indexOf('/* 2.20.2 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
   assert.ok(a > 0 && b > a);
   const block = PAGE.slice(a, b);
   const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
@@ -6200,7 +6200,7 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   const g = block.match(/--glass:rgba\(255,255,255,(\.\d+)\);--glass-bar:rgba\(255,255,255,(\.\d+)\)/);
   assert.ok(g && +g[1] === .5 && +g[2] === .52, 'độ đục thân thẻ giữ đúng .50 (chuẩn người dùng chốt từ thẻ Thống kê)');
   assert.ok(block.includes('--muted:#475569'));
-  assert.ok(block.includes('html.desktop .tab.is-active{background:var(--kinh);border-color:#047857;color:#065f46') && !block.includes('#4f46e5'), 'tab chọn: chữ xanh lá + viền xanh lá, không tô đặc');
+  assert.ok(block.includes('html.desktop .tab.is-active{color:#065f46;font-weight:800}') && block.includes('html.desktop :is(.tab.is-active,.szpick button[aria-pressed=true]){background-color:rgba(52,211,153,.28)') && !block.includes('#4f46e5'), 'tab chọn: kính nhuộm xanh lá nhạt + chữ xanh lá đậm, không tô đặc');
 });
 
 test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22px, viền rim, nút/ô tìm kiếm dạng viên, chỉ dưới html.desktop', () => {
@@ -6211,7 +6211,7 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   assert.ok(block.includes('border-radius:16px') && block.includes('border-radius:999px;box-shadow:none'));
   assert.ok(!block.split(String.fromCharCode(10)).some(l => l.includes('.stats') && l.includes('backdrop-filter')));
   // bố cục khung cố định: thanh bên (tabs) + hàng thẻ số + vùng nội dung cuộn trong, không thêm DOM
-  assert.ok(block.includes('height:720px') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .stats4{display:grid;grid-template-columns:repeat(4') && block.includes('html.desktop .main details.card{grid-area:2/2') && block.includes('overflow:hidden'));
+  assert.ok(block.includes('var(--vh,720px)') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .stats4{display:grid;grid-template-columns:repeat(4') && block.includes('html.desktop .main details.card{grid-area:2/2') && block.includes('overflow:hidden'));
   assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;border-bottom:1px solid'));
 });
 
@@ -6275,13 +6275,13 @@ function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh 
   return { props, attrs, store, win, resize, ctx, body: document.body, bar };
 }
 function deskBlock() {
-  const a = PAGE.indexOf('/* 2.20.1 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
+  const a = PAGE.indexOf('/* 2.20.2 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
   return PAGE.slice(a, b);
 }
 
 test('2.20.0 khung vẽ 1280x720: CSS cố định (không vw/vh/clamp) + zoom theo --z; JS tính --z = min(w/1280, h/720) và cập nhật khi resize', () => {
   const block = deskBlock();
-  assert.ok(block.includes('zoom:var(--z,1)') && block.includes('width:1280px;height:720px;margin:0 auto'));
+  assert.ok(block.includes('zoom:var(--z,1)') && block.includes('width:var(--vw,1280px);height:var(--vh,720px);margin:0'));
   assert.ok(!/\d(vw|vh|dvh)\b|clamp\(/.test(block), 'desktop không dùng đơn vị theo cửa sổ');
   for (const [w, h, z] of [[1280, 720, 1], [1600, 900, 1.25], [1920, 1080, 1.5], [1920, 1040, 1040 / 720]]) {
     const r = runHead({ iw: w, ih: h });
@@ -6324,7 +6324,7 @@ test('2.20.1 8 nền: GPUI mặc định + 7 màu nhẹ (6 quy tắc data-bg + s
 test('2.20.1 4 ô lớn: một kiểu kính trong viền mảnh trung tính (không màu riêng từng ô), nhãn HOA đậm, số lớn, hàng phụ', () => {
   const block = deskBlock();
   assert.ok(!/--tint|\.s4:nth-child/.test(block));
-  assert.ok(/html\.desktop \.s4\{[^}]*border:1px solid var\(--vien\)[^}]*background:var\(--kinh\)/.test(block));
+  assert.ok(/html\.desktop \.s4\{[^}]*padding:7px 13px;border:1px solid;border-radius:16px\}/.test(block) && block.includes('html.desktop :is(.tab,.szpick button,.s4),'), 'ô lớn dùng chung khối kính 3D với viên danh mục');
   assert.ok(block.includes('html.desktop .s4__k{font-size:12px;font-weight:800;letter-spacing:.02em;text-transform:uppercase') && /\.s4__v\{font-size:28px;font-weight:800/.test(block));
   assert.ok(!block.includes('.s4__v:not(.txt-red)'), 'số ô lớn màu chữ chuẩn, chỉ số âm đỏ');
   assert.equal((PAGE.match(/class="s4"/g) || []).length, 4);
@@ -6349,18 +6349,19 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
   assert.ok(block.includes('html.desktop .sug__list{scrollbar-width:none') && block.includes('html.desktop .sug__list::-webkit-scrollbar{display:none}'));
   assert.ok(block.includes('html.desktop *{scrollbar-width:thin;scrollbar-color:rgba(71,85,105,.4) transparent}'));
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
-  assert.ok(block.includes('padding:38px var(--g) var(--g)}'), 'nội dung bắt đầu dưới thanh tiêu đề 32px');
-  assert.ok(block.includes('margin:84px 0 0') && block.includes('grid-area:1/1/3/2'));
+  assert.ok(block.includes('padding:14px var(--g) var(--g)}'), 'thanh tiêu đề nổi: nội dung cách mép trên 14px');
+  assert.ok(block.includes('html.desktop #tb{height:28px}') && block.includes('html.desktop #tb button{width:40px}'));
+  assert.ok(block.includes('margin:98px 0 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:14px}'));
 });
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .chart-head__stats{display:none}'));
   assert.ok(PAGE.includes('id="statImport"') && PAGE.includes('id="statStock"'), 'DOM giữ cho iPhone/PWA');
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.1 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.2 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
   assert.ok(block.includes('html.desktop .chart-year__box{background:rgba(255,255,255,.62);border-color:var(--vien);border-radius:999px}'));
   assert.ok(block.includes('html.desktop{--chart-imp:#3f7fb0}') && PAGE.includes("cs.getPropertyValue('--chart-imp')"));
-  assert.ok(block.includes('html.desktop .chart{height:400px}'));
+  assert.ok(block.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
 });
 
 test('2.20.1 mọi trạng thái (thường/hover/focus/mở) cùng họ kính trắng trong, không be/đục: tiêu đề thẻ, ô năm, ô nhập, hàng bảng, nút viên', () => {
@@ -6369,9 +6370,46 @@ test('2.20.1 mọi trạng thái (thường/hover/focus/mở) cùng họ kính t
   assert.ok(block.includes('html.desktop .chart-year__box:hover{background:rgba(255,255,255,.8)}'));
   assert.ok(block.includes('html.desktop .inp{background:rgba(255,255,255,.62)}') && block.includes('html.desktop .inp:focus{background:rgba(255,255,255,.85)}'));
   assert.ok(block.includes('html.desktop tbody tr:hover{background:rgba(255,255,255,.35)}'));
-  assert.ok(block.includes(':not([aria-current]):hover{background:rgba(255,255,255,.85)}'));
+  assert.ok(block.includes('transform:translateY(-1px);background-color:rgba(255,255,255,.3);box-shadow:var(--k3h)}'));
   assert.ok(!/var\(--surface2\)|#f6f2ef|#e9e2de/.test(block), 'không màu be trong khối desktop');
   assert.ok(PAGE.includes('.main>details.card[open]>summary.card__head:hover,.main>.grid2>details.card[open]>summary.card__head:hover{background:var(--surface)}'));
+});
+
+test('2.20.2 kính 3D bám glass.rs: viền chuyển sắc trắng trên-trái/mực dưới-phải, quầng sáng trong, bóng trong đáy, specular chéo, bóng rơi 3 tầng, hover nổi/active lõm, không thêm blur', () => {
+  const block = deskBlock();
+  assert.ok(block.includes('--kb:rgba(255,255,255,.9) rgba(58,42,51,.24) rgba(58,42,51,.24) rgba(255,255,255,.9)'), 'viền 4 cạnh: sáng trên/trái, tối dưới/phải');
+  assert.ok(block.includes('--spec:linear-gradient(120deg,rgba(255,255,255,.55),rgba(255,255,255,0) 35%)'));
+  const d3 = block.match(/--k3d:([^;]*);/)[1];
+  assert.ok(d3.includes('inset 2px 2px 0 rgba(255,255,255,.22)') && d3.includes('inset 0 0 12px rgba(255,255,255,.5)') && d3.includes('inset 0 -6px 10px rgba(58,42,51,.1)'), 'highlight, quầng sáng, bóng trong đáy');
+  assert.ok(d3.includes('0 1px 1px') && d3.includes('0 6px 14px') && d3.includes('0 14px 30px'), 'bóng rơi 3 tầng');
+  assert.equal((d3.match(/rgba\(/g) || []).length, 6, 'đúng 6 lớp bóng (3 trong + 3 ngoài)');
+  assert.ok(block.includes('--k3a:inset 0 3px 6px') && block.includes('background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d)'));
+  assert.ok(block.includes('html.desktop :is(.tab,.szpick button):active,') && block.includes('transform:translateY(0);box-shadow:var(--k3a)}'));
+  for (const m of block.matchAll(/transition:([^;}]*)/g)) assert.ok(/^(transform|box-shadow|background-color|opacity)( [\d.]+s)?(,(transform|box-shadow|background-color|opacity)( [\d.]+s)?)*$/.test(m[1].trim()), 'transition chỉ transform/box-shadow/background-color: ' + m[1]);
+  assert.ok((block.match(/backdrop-filter:/g) || []).length <= 4, 'không thêm backdrop-filter mới (2.20.1: 4 lần ghi = thẻ + tắt ở .top, mỗi lần kèm -webkit-)');
+  assert.ok(!/(^|[^-])filter:\s*blur|feGaussian/.test(block));
+  assert.ok(block.includes('html.desktop .bgd:hover{transform:translateY(-1px)}') && block.includes('html.desktop .bgd[aria-pressed=true]{box-shadow:inset 1px 1px 1px'));
+  assert.ok(block.includes('html.desktop .card:not(.dlg__card){border-radius:16px') && block.includes('border-color:var(--kb);background:linear-gradient(120deg,rgba(255,255,255,.3)'), 'thẻ nội dung nhẹ hơn nút');
+});
+
+test('2.20.2 biểu đồ: bỏ dải nền tháng hiện tại ở desktop bằng biến --chart-hi (trong suốt); ngoài desktop giữ màu cũ', () => {
+  const block = deskBlock();
+  assert.ok(block.includes('--chart-hi:rgba(0,0,0,0)'));
+  assert.ok(PAGE.includes("ctx.fillStyle = cs.getPropertyValue('--chart-hi').trim() || 'rgba(99,102,241,.14)';"));
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.2 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
+});
+
+test('2.20.2 khung phủ kín viewport: --vw/--vh = cỡ cửa sổ / zoom; thẻ lấp đầy chiều cao; Sao lưu co theo nội dung; vùng kéo cửa sổ quanh logo', () => {
+  const block = deskBlock();
+  for (const [w, h] of [[1280, 720], [1300, 740], [1366, 768], [1280, 690], [1920, 1080]]) {
+    const r = runHead({ iw: w, ih: h });
+    const z = Math.min(w / 1280, h / 720);
+    assert.ok(Math.abs(parseFloat(r.props['--vw']) * z - w) < 1e-6 && Math.abs(parseFloat(r.props['--vh']) * z - h) < 1e-6, w + 'x' + h + ': khung x zoom = viewport (không letterbox)');
+  }
+  assert.ok(block.includes('details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
+  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}'));
+  assert.ok(block.includes('html.desktop #backupBox{align-self:start}'));
+  assert.ok(PAGE.includes("['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); });"));
 });
 
 test('2.20.1 viên HD/FHD: dựng dưới logo (chỉ desktop), đánh dấu cỡ hiện tại, bấm gọi unmaximize rồi setSize PhysicalSize, kẹp theo vùng làm việc', async () => {
