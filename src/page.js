@@ -558,41 +558,42 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-/* 2.19.0 chế độ desktop (app Tauri, WebView2 + acrylic): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Cửa sổ trong suốt; kính ở header, dải số, thẻ, tab; bảng/tờ ghi/ô nhập/nút chính giữ nền đục. Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
+/* 2.20.0 chế độ desktop (app Tauri, WebView2 + acrylic): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Cửa sổ trong suốt; kính ở header, dải số, thẻ, tab; bảng/tờ ghi/ô nhập/nút chính giữ nền đục. Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
-html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent)}
-html.desktop{--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30)}
+html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
+html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:#065f46;--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30)}
 html.desktop .btn--primary{background:#047857;border-color:#047857}
 html.desktop .btn--primary:hover{background:#065f46;border-color:#065f46}
-html.desktop{--sw:clamp(208px,16vw,300px);--g:clamp(12px,1.2vw,20px)}
-html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:var(--g);height:100vh;box-sizing:border-box;overflow:hidden;padding:var(--g) var(--g) var(--g)}
+html.desktop{--sw:208px;--g:15px;zoom:var(--z,1);overflow:hidden}
+html.desktop .dlg{max-height:696px}
+html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:var(--g);width:1280px;height:720px;margin:0 auto;box-sizing:border-box;overflow:hidden;padding:var(--g) var(--g) var(--g)}
 html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop .top .wrap{padding:0 6px}
 html.desktop .top .bar{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;min-height:0}
 html.desktop .main{display:contents}
 html.desktop .stats{grid-area:1/2;margin:0;align-self:start}
 html.desktop .tabs{grid-area:2/1;display:flex;flex-direction:column;gap:10px;margin:0;align-self:start;margin-top:8px}
-html.desktop .tab{display:flex;flex-direction:row;justify-content:flex-start;min-height:clamp(46px,5vh,58px);padding:8px 16px;text-align:left;font-size:clamp(14px,.95vw,17px)}
+html.desktop .tab{display:flex;flex-direction:row;justify-content:flex-start;min-height:46px;padding:8px 16px;text-align:left;font-size:14px}
 html.desktop .tab__ic{margin-right:12px;flex:none}
 html.desktop .tab__l2{margin-left:.15em}
-html.desktop .s4__v{font-size:clamp(22px,2vw,32px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+html.desktop .s4__v{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:0;overflow:auto;margin-top:8px}
 html.desktop .card__bar{position:sticky;top:0;z-index:3;background:var(--surface)}
-html.desktop .note td{border-bottom:1px solid rgba(15,23,42,.18)}
+html.desktop .note td{height:27px;padding:1px 10px;border-bottom:1px solid rgba(15,23,42,.18)}
+html.desktop .note .foot{padding:1px 12px}
+html.desktop .note td .btn--icon{min-height:24px;height:24px}
+html.desktop .note__blank td{height:27px}
 html.desktop .note{overflow:clip}
 html.desktop .note__foot{position:sticky;bottom:0;z-index:2;background:var(--surface)}
 html.desktop .card:not(.dlg__card){border-radius:22px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0) 44px),var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,1),inset 0 0 0 2px rgba(255,255,255,.3),0 1px 2px rgba(15,23,42,.06),0 8px 18px rgba(15,23,42,.08),0 18px 36px rgba(15,23,42,.08)}
 html.desktop .stats{display:none}
 html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;grid-area:1/2;margin:0;align-self:start}
-html.desktop .s4{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:8px;min-width:0;border:1px solid rgba(255,255,255,.9);border-radius:22px;padding:10px 14px;background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0) 50%),var(--tint);box-shadow:inset 0 1px 0 rgba(255,255,255,1),inset 0 0 0 2px rgba(255,255,255,.3),inset 0 -10px 18px var(--tint2),0 1px 2px rgba(15,23,42,.06),0 8px 18px rgba(15,23,42,.08),0 18px 36px rgba(15,23,42,.08)}
-html.desktop .s4:nth-child(1){--tint:rgba(251,207,232,.78);--tint2:rgba(244,114,182,.16)}
-html.desktop .s4:nth-child(2){--tint:rgba(165,243,252,.74);--tint2:rgba(34,211,238,.16)}
-html.desktop .s4:nth-child(3){--tint:rgba(253,230,138,.7);--tint2:rgba(245,158,11,.16)}
-html.desktop .s4:nth-child(4){--tint:rgba(191,219,254,.78);--tint2:rgba(59,130,246,.16)}
+html.desktop .s4{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:8px;min-width:0;border:1px solid rgba(255,255,255,.9);border-radius:22px;padding:10px 14px;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
 html.desktop .s4__k{font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap}
 html.desktop .s4__n{grid-column:1/-1;margin:2px 0 0;white-space:nowrap}
 html.desktop .s4__u{font-size:12px;color:var(--text2)}
-html.desktop .s4__ic{padding:5px;box-sizing:content-box;border-radius:8px;background:rgba(255,255,255,.6)}
+html.desktop .s4__ic{padding:5px;box-sizing:content-box;border-radius:8px;background:rgba(255,255,255,.6);color:var(--brand)}
+html.desktop .s4__v:not(.txt-red){color:var(--brand-text)}
 html.desktop .tab{border-radius:22px}
 html.desktop .tab:not(.is-active){background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.08)}
 html.desktop .pager .btn,html.desktop .card__bar .btn{border-radius:999px}
@@ -602,6 +603,15 @@ html.desktop .tab:not(.is-active):hover{background:rgba(255,255,255,.8)}
 html.desktop .tab.is-active{background:linear-gradient(180deg,#059669,#047857);border-color:#065f46;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 2px rgba(255,255,255,.12),0 6px 16px rgba(4,120,87,.35)}
 html.desktop .tab.is-active .tab__ic{background:#ecfdf5;box-shadow:0 0 0 3px #ecfdf5}
 html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surface)}
+html.desktop .bgd{--bt:rgba(255,255,255,.9);width:18px;height:18px;padding:0;border-radius:50%;border:1px solid #64748b;background:var(--bt);cursor:pointer}
+html.desktop .bgd[aria-pressed=true]{box-shadow:0 0 0 2px rgba(255,255,255,1),0 0 0 4px #047857}
+html.desktop .bgdots{grid-area:2/1;align-self:end;display:flex;flex-wrap:wrap;gap:6px;padding:0 6px 4px}
+html.desktop[data-bg=hong],html.desktop .bgd[data-bg=hong]{--bt:rgba(251,207,232,.6)}
+html.desktop[data-bg=dao],html.desktop .bgd[data-bg=dao]{--bt:rgba(254,215,170,.6)}
+html.desktop[data-bg=vang],html.desktop .bgd[data-bg=vang]{--bt:rgba(253,230,138,.55)}
+html.desktop[data-bg=la],html.desktop .bgd[data-bg=la]{--bt:rgba(187,247,208,.6)}
+html.desktop[data-bg=duong],html.desktop .bgd[data-bg=duong]{--bt:rgba(186,230,253,.6)}
+html.desktop[data-bg=tim],html.desktop .bgd[data-bg=tim]{--bt:rgba(221,214,254,.6)}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -611,6 +621,27 @@ html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surf
   try { var q = location.search || '';
     if (/[?&]desktop=0/.test(q)) localStorage.removeItem('desktop'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
     if (localStorage.getItem('desktop') === '1') document.documentElement.classList.add('desktop'); } catch (e) {}
+  var R = document.documentElement;
+  if (R.classList.contains('desktop')) {
+    /* 2.20.0: khung vẽ 1280x720, phóng đều theo cửa sổ (zoom); 7 màu nền nhớ bằng localStorage 'desktopBg' */
+    var fit = function(){ var z = Math.min(innerWidth / 1280, innerHeight / 720); window.__dz = z; R.style.setProperty('--z', z); };
+    fit(); addEventListener('resize', fit);
+    var BGS = ['suong', 'hong', 'dao', 'vang', 'la', 'duong', 'tim'], NM = ['Sương trắng', 'Hồng nhạt', 'Đào nhạt', 'Vàng kem', 'Xanh lá nhạt', 'Xanh dương nhạt', 'Tím nhạt'], cur = 'suong';
+    try { cur = localStorage.getItem('desktopBg') || 'suong'; } catch (e) {}
+    if (BGS.indexOf(cur) < 0) cur = 'suong';
+    R.setAttribute('data-bg', cur);
+    document.addEventListener('DOMContentLoaded', function(){
+      var w = document.createElement('div'); w.className = 'bgdots'; w.setAttribute('role', 'group'); w.setAttribute('aria-label', 'Màu nền');
+      BGS.forEach(function(k, i){
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'bgd'; b.setAttribute('data-bg', k); b.title = b.ariaLabel = NM[i];
+        b.setAttribute('aria-pressed', k === cur ? 'true' : 'false');
+        b.onclick = function(){ cur = k; R.setAttribute('data-bg', k); try { localStorage.setItem('desktopBg', k); } catch (e) {}
+          [].forEach.call(w.children, function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); }); };
+        w.appendChild(b);
+      });
+      document.body.appendChild(w);
+    });
+  }
   window.__DB__=%%BOOT%%;
   window.__NEED_FETCH__=%%NEEDFETCH%%;
 })();
@@ -875,6 +906,7 @@ html.desktop .card table:not(.ord),html.desktop .dlg__card{background:var(--surf
             <tfoot id="nhapListFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-blue" id="nhapListTotal">0</td><td></td></tr></tfoot>
           </table>
         </div>
+        <div class="foot" id="nhapListPager" hidden></div>
         <div class="note__foot">
           <button class="btn btn--dark" type="submit" data-keep-focus>
             <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
@@ -1362,7 +1394,7 @@ function attachQtyHint(input, unit){
     var cs = window.getComputedStyle(input);
     var padR = parseFloat(cs.paddingRight) || 0;
     /* M1: bề rộng khung padding (gồm padding, không gồm viền) lấy từ getBoundingClientRect – không dùng clientWidth (tùy trình duyệt/loại ô). */
-    var rw = input.getBoundingClientRect ? input.getBoundingClientRect().width : 0;
+    var rw = input.getBoundingClientRect ? input.getBoundingClientRect().width / (window.__dz || 1) : 0;
     var cw = rw > 0 ? rw - (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0) : 0;
     var place = qtyHintPlacement(cw, padR, 0, !!h._want);
     if (place === 'hidden') { h.hidden = true; return; }
@@ -1653,6 +1685,14 @@ var KEY = 'kho_db_local_v1';
 var DIRTY_KEY = 'kho_db_dirty_v1';
 var BASE_KEY = 'kho_cloud_base_v1';
 var PAGE_SIZE = 10;
+/* 2.20.0: chỉ html.desktop: tờ ghi luôn đủ PAGE_SIZE hàng (hàng trống có đường kẻ) và thanh phân trang luôn hiện; nhập hàng cũng phân trang. */
+function isDesk(){ return !!(doc.documentElement && doc.documentElement.classList && doc.documentElement.classList.contains('desktop')); }
+function blankRow(tb){
+  var tr = el('tr', 'note__blank'), td = el('td', '', ' ');
+  td.colSpan = (tb.parentNode && tb.parentNode.querySelectorAll ? tb.parentNode.querySelectorAll('thead th').length : 0) || 1;
+  tr.appendChild(td);
+  return tr;
+}
 var db = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
 var invPage = 1, impPage = 1, expPage = 1;
 var cloudBase = 0;
@@ -2156,8 +2196,8 @@ function renderRemedyNote(){
     var i = (remedyNotePage - 1) * PAGE_SIZE + k;
     var it = remedyItems[i];
     var tr = el('tr');
-    /* 2.14.0: không vẽ dòng trống của tờ ghi, chỉ dòng thật. */
-    if (!it) continue;
+    /* 2.14.0: không vẽ dòng trống của tờ ghi, chỉ dòng thật (desktop 2.20.0: có hàng trống đủ PAGE_SIZE). */
+    if (!it) { if (isDesk()) tb.appendChild(blankRow(tb)); continue; }
     var p = findProduct(it.productId);
     tr.appendChild(el('td', 'c-num num muted', String(i + 1)));
     tr.appendChild(el('td', 'b', p ? p.name : 'Đã xóa'));
@@ -2198,8 +2238,8 @@ function renderRemedyNote(){
   if (pg) pg.textContent = 'Trang ' + remedyNotePage + ' / ' + pages;
   var host = $('#remedyNotePager');
   if (host) {
-    host.hidden = pages <= 1;
-    if (pages > 1) renderPager(host, remedyNotePage, pages, 'rnote');
+    host.hidden = pages <= 1 && !isDesk();
+    if (!host.hidden) renderPager(host, remedyNotePage, pages, 'rnote', isDesk());
   }
 }
 function addOrderRow(kind, pid){
@@ -2300,7 +2340,7 @@ function resetRemedy(){
 }
 /* Xóa mọi bản nháp đang giữ trong bộ nhớ sau khi đã lấy bản máy chủ/khôi phục. */
 function resetDrafts(){
-  nhapList = [];
+  nhapList = []; nhapNotePage = 1;
   retailItems = [];
   remedyItems = [];
   renderNhapList();
@@ -2330,8 +2370,8 @@ function renderNote(){
     var i = (notePage - 1) * PAGE_SIZE + k;
     var it = retailItems[i];
     var tr = el('tr');
-    /* 2.14.0 (giai đoạn 1): không vẽ dòng trống của tờ ghi, chỉ dòng thật. */
-    if (!it) continue;
+    /* 2.14.0 (giai đoạn 1): không vẽ dòng trống của tờ ghi, chỉ dòng thật (desktop 2.20.0: có hàng trống đủ PAGE_SIZE). */
+    if (!it) { if (isDesk()) tb.appendChild(blankRow(tb)); continue; }
     var p = findProduct(it.pid);
     tr.appendChild(el('td', 'c-num num muted', String(i + 1)));
     tr.appendChild(el('td', 'b', p ? p.name : 'Đã xóa'));
@@ -2386,8 +2426,8 @@ function renderNote(){
   if (pg) pg.textContent = 'Trang ' + notePage + ' / ' + pages;
   var host = $('#retailNotePager');
   if (host) {
-    host.hidden = pages <= 1;
-    if (pages > 1) renderPager(host, notePage, pages, 'note');
+    host.hidden = pages <= 1 && !isDesk();
+    if (!host.hidden) renderPager(host, notePage, pages, 'note', isDesk());
   }
 }
 /* Cảnh báo (cho phép tiếp tục) khi giá bán/kg <= giá nhập gần nhất; không có giá nhập thì bỏ qua. */
@@ -2885,10 +2925,10 @@ function mkPageBtn(label, target, disabled, kind, current){
   b.setAttribute('data-page', String(target));
   return b;
 }
-function renderPager(host, page, total, kind){
+function renderPager(host, page, total, kind, always){
   if (!host) return;
   host.textContent = '';
-  if (total <= 1) { host.appendChild(el('span', 'muted small', 'Hiển thị tất cả')); return; }
+  if (total <= 1 && !always) { host.appendChild(el('span', 'muted small', 'Hiển thị tất cả')); return; }
   host.appendChild(el('span', 'muted small', 'Trang ' + page + ' / ' + total));
   var nav = el('div', 'pager');
   nav.appendChild(mkPageBtn('Trước', page - 1, page <= 1, kind));
@@ -2921,15 +2961,21 @@ function toggleRowMenu(btn, list){
   if (rowMenuCur && rowMenuCur.btn === btn) { closeRowMenu(); return; }
   closeRowMenu();
   list.hidden = false;
-  var r = btn.getBoundingClientRect();
+  var r = btn.getBoundingClientRect(), z = window.__dz || 1;
   var w = list.offsetWidth, h = list.offsetHeight;
-  var left = r.right - w;
+  var left = r.right / z - w;
   if (left < 8) left = 8;
-  if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
-  var top = r.bottom + 6;
-  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+  if (left + w > window.innerWidth / z - 8) left = window.innerWidth / z - w - 8;
+  var top = r.bottom / z + 6;
+  if (top + h > window.innerHeight / z - 8) top = Math.max(8, r.top / z - h - 6);
   list.style.left = left + 'px';
   list.style.top = top + 'px';
+  /* 2.20.0 desktop: thẻ có backdrop-filter làm "khối chứa" của fixed và có zoom; hiệu chỉnh theo vị trí thật vừa đặt (không đổi gì khi z=1 và khối chứa là cửa sổ). */
+  var q = list.getBoundingClientRect ? list.getBoundingClientRect() : null;
+  if (q && q.left !== undefined && (Math.abs(q.left / z - left) > 0.5 || Math.abs(q.top / z - top) > 0.5)) {
+    list.style.left = (2 * left - q.left / z) + 'px';
+    list.style.top = (2 * top - q.top / z) + 'px';
+  }
   btn.setAttribute('aria-expanded', 'true');
   rowMenuCur = { btn: btn, list: list };
 }
@@ -3898,6 +3944,7 @@ function calcNhap(){
   if (pn) { var nm = String(($('#nhapSearch') || {}).value || '').trim(); pn.textContent = nm || 'Chọn vị thuốc ở ô trên'; pn.className = nm ? 'nhap-pend__name' : 'nhap-pend__name is-muted'; }
 }
 var nhapList = [];
+var nhapNotePage = 1;
 function nhapPriceOk(p, price){
   if (!p || !(price > 0)) return true;
   var l = lastImport(p.id);
@@ -3917,8 +3964,12 @@ function renderNhapList(){
   var pendTb = $('#nhapPendingBody');
   if (pendTb) renumber(pendTb, nhapList.length);
   var sum = 0;
+  var dk = isDesk(), npages = dk ? Math.max(1, Math.ceil(nhapList.length / PAGE_SIZE)) : 1;
+  if (nhapNotePage > npages) nhapNotePage = npages;
+  if (nhapNotePage < 1) nhapNotePage = 1;
   nhapList.forEach(function(it, i){
     sum += num(it.qty) * num(it.price);
+    if (dk && (i < (nhapNotePage - 1) * PAGE_SIZE || i >= nhapNotePage * PAGE_SIZE)) return;
     var tr = el('tr');
     tr.className = 'is-row';
     tr.appendChild(el('td', 'c-num num muted', String(i + 1)));
@@ -3936,6 +3987,11 @@ function renderNhapList(){
     tr.appendChild(td);
     tb.appendChild(tr);
   });
+  if (dk) {
+    for (var bk = Math.min(PAGE_SIZE, nhapList.length - (nhapNotePage - 1) * PAGE_SIZE); bk < PAGE_SIZE; bk++) tb.appendChild(blankRow(tb));
+    var nh = $('#nhapListPager');
+    if (nh) { nh.hidden = false; renderPager(nh, nhapNotePage, npages, 'nnote', true); }
+  }
   var tot = $('#nhapListTotal');
   if (tot) tot.textContent = fmtMoney(sum);
   var tf = $('#nhapListFoot');
@@ -3976,6 +4032,7 @@ function addNhapItem(){
   var p = nhapPid ? findProduct(nhapPid) : findByName(name);
   if (!nhapPriceOk(p, price)) { var pi = $('#nhapPrice'); if (pi) { pi.focus(); pi.select(); } return; }
   nhapList.push({ pid: p ? p.id : null, name: p ? p.name : name, qty: dec(qty), price: price });
+  nhapNotePage = 1e9;
   resetNhapInputs();
   renderNhapList();
   closeSuggest('nhap');
@@ -4050,7 +4107,7 @@ function saveNhap(e){
     impPage = 1;
     var _is = $('#impSearch'); if (_is) _is.value = '';
   }
-  nhapList = [];
+  nhapList = []; nhapNotePage = 1;
   resetNhapInputs();
   renderNhapList();
   commit(savedN === 0 ? 'Đã tạo vị thuốc' : savedN > 1 ? 'Đã lưu nhập ' + savedN + ' vị thuốc' : 'Đã lưu nhập hàng');
@@ -4908,6 +4965,7 @@ function handleAction(btn){
       else if (kind === 'exp') { expPage = page; renderHistory('exp'); }
       else if (kind === 'rnote') { remedyNotePage = page; renderRemedyNote(); }
       else if (kind === 'note') { notePage = page; renderNote(); }
+      else if (kind === 'nnote') { nhapNotePage = page; renderNhapList(); }
       else if (kind === 'order') { orderPage = page; renderOrder(); }
       break;
     }
@@ -5453,6 +5511,7 @@ function init(){
   resetRetail();
   resetRemedy();
   renderAll();
+  if (isDesk()) renderNhapList();
   renderBackupInfo();
   renderSyncBadge();
   renderReloadBtn();

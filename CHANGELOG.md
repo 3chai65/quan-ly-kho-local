@@ -5,6 +5,17 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.0] - 2026-11-16
+
+Không đổi định dạng dữ liệu. Chỉ thay đổi khi `html.desktop` (app Tauri); PWA/iPhone/Safari không đổi (trừ hiệu chỉnh vị trí menu dòng vô hại khi z=1).
+
+- Khung vẽ cố định 1280x720 phóng đều: `html.desktop{zoom:var(--z)}`, `--z = min(innerWidth/1280, innerHeight/720)` cập nhật khi resize; kích thước cố định (`--sw`, `--g`, 720px thay `100vh`/`clamp(vw)`), nên 1280x720, 1600x900, 1920x1080 cho cùng bố cục. Menu dòng (`toggleRowMenu`) và `rw` ô SL chia cho `window.__dz`; menu dòng còn tự hiệu chỉnh vì thẻ có backdrop-filter làm khối chứa của `fixed` (lệch cũ cả khi z=1).
+- 7 màu nền (sương trắng, hồng, đào, vàng kem, xanh lá, xanh dương, tím) bằng 7 chấm cuối thanh bên (JS dựng, `localStorage.desktopBg`, `html[data-bg]` đổi `--bt` của `body::before`). Pixel thật: tương phản thấp nhất toàn bộ 7 màu x nền sáng/tối = 5,48 (chữ trắng trên xanh); ô số 5,57.
+- 4 ô lớn đơn sắc: bỏ tông hồng/ngọc/kem/xanh, nền kính trắng như tab, icon và số xanh lá (số âm vẫn đỏ).
+- Tờ ghi (bán lẻ, thuốc chén, nhập hàng) desktop: mỗi trang đúng `PAGE_SIZE`=10 hàng (hàng trống có đường kẻ), thanh phân trang luôn hiện (Trước/Sau/số trang); nhập hàng được phân trang (trước đây không). Dòng mới thêm tự lật tới trang cuối; xóa làm trang cuối rỗng thì lùi trang. Thứ tự, tổng tiền, dữ liệu không đổi. Hàng cao 27px (nút icon 24px) để 10 hàng + phân trang + Bán đơn vừa thẻ ở Bán lẻ/Nhập hàng; Thuốc chén vẫn cuộn trong thẻ (nút Bán đơn dính đáy).
+- Rủi ro: tờ ghi desktop hàng thấp hơn trước (34 → 27px); phóng không chẵn (zoom 1,25) có chênh dưới 1px do làm tròn; cửa sổ phóng to không còn 16:9 thì khung căn giữa ngang và cắt phần thừa dọc (dùng min của hai tỉ lệ).
+- Phía app Tauri (repo riêng): thanh tiêu đề luôn chèn trong Tauri, khóa 16:9 ở sự kiện Resized, tray "HD 1280×720"/"Full HD 1920×1080".
+
 ## [2.19.0] - 2026-11-16
 
 Không đổi định dạng dữ liệu. Chỉ thay đổi khi `html.desktop` (app Tauri); PWA/iPhone không đổi vì `section.stats4` ẩn mặc định (`.stats4{display:none}`).
