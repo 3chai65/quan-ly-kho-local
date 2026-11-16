@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.8] - 2026-11-16
+
+### Sửa (chỉ html.desktop)
+- Nền mặc định là navy (đã lưu lựa chọn khác thì giữ); chấm navy là chấm thứ 9.
+- Nút không còn xanh lục: mục chọn/nút chính = kính sáng hơn + viền sáng + chữ đậm (token --sel-*), nút thường dịu hơn (--nb, --hv).
+- Số liệu (SL, giá, thành tiền, tổng) và icon cùng một màu chữ chính (--brand-text/--green-text/--blue-text = --text); số âm đỏ giữ nguyên.
+- Danh sách thả xuống của ô chọn có nền/chữ theo bảng màu (navy không còn nền trắng chữ sáng).
+- Hộp thoại: lề trong 16px, dòng phụ/tờ ghi/tham số cùng lề tiêu đề.
+
 ## [2.20.7] - 2026-11-16
 
 ### Sửa (chỉ html.desktop)
