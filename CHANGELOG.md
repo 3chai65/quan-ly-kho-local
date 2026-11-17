@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.11] - 2026-11-17
+
+### Thêm
+- Tab Sao lưu: nút "Mở thư mục" mở thư mục Tải xuống (nơi lưu file kho-backup-*.json) trong Explorer (chỉ hiện trong app Tauri).
+
 ## [2.20.10] - 2026-11-17
 
 ### Đổi (chỉ html.desktop)

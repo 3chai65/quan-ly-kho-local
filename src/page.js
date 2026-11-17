@@ -747,6 +747,7 @@ html.desktop .bgdots{grid-area:2/1;align-self:end;display:grid;grid-template-col
         w.appendChild(b);
       });
       document.body.appendChild(w);
+      var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false; /* 2.20.11 */
       /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */
       var bw = document.querySelector('.top .brand-wrap'), sz = document.createElement('div');
       sz.className = 'szpick'; sz.setAttribute('role', 'group'); sz.setAttribute('aria-label', 'Cỡ cửa sổ');
@@ -1189,6 +1190,9 @@ html.desktop .bgdots{grid-area:2/1;align-self:end;display:grid;grid-template-col
         </button>
         <button class="btn" type="button" data-action="restore-file">
           <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Khôi phục từ file
+        </button>
+        <button class="btn" type="button" data-action="open-backup-dir" hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-warehouse"/></svg>Mở thư mục
         </button>
         <input type="file" id="restoreInput" accept=".json,application/json" hidden>
       </div>
@@ -5124,6 +5128,11 @@ function handleAction(btn){
     case 'rec-fix': recFix(id); break;
     case 'rec-fix-all': recFixAll(); break;
     case 'backup-now': downloadBackup(true); break;
+    case 'open-backup-dir': {
+      var T = window.__TAURI__;
+      if (T && T.core) T.core.invoke('mo_thu_muc_sao_luu').catch(function(){ toast('Không thấy thư mục Tải xuống'); });
+      break;
+    }
     case 'restore-file': {
       var ri = $('#restoreInput');
       if (ri) ri.click();

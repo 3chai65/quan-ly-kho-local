@@ -4352,7 +4352,7 @@ const NEW_213 = ['nhap-add', 'brand-devices'];
 /* 2.14.0 thêm preset-newname; 2.15.5 bỏ lại. */
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
-const NEW_215 = ['reload-app'];
+const NEW_215 = ['reload-app', 'open-backup-dir'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -6628,4 +6628,10 @@ test('2.20.9 desktop: Thuốc chén có nửa phải danh sách đơn đã lưu 
   assert.match(PAGE, /function pickPresetRow\(id\)\{[\s\S]*?remedyPresetPick\(\)/);
   assert.ok(PAGE.includes("case 'pick-preset': pickPresetRow(id)") && PAGE.includes("kind === 'rpre'"));
   assert.ok(PAGE.includes('id="remedyPreset"'), 'select giữ nguyên');
+});
+
+test('2.20.11 nút Mở thư mục sao lưu: ẩn mặc định, chỉ hiện khi có __TAURI__, gọi mo_thu_muc_sao_luu', () => {
+  assert.match(PAGE, /data-action="open-backup-dir" hidden/);
+  assert.ok(PAGE.includes("case 'open-backup-dir'") && PAGE.includes("invoke('mo_thu_muc_sao_luu')"));
+  assert.ok(PAGE.includes("[data-action=\"open-backup-dir\"]'); if (obd && window.__TAURI__) obd.hidden = false"));
 });
