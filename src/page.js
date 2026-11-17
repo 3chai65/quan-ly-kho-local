@@ -186,7 +186,7 @@ box-shadow:0 16px 36px rgba(15,23,42,.20);padding:4px}
 .sug__item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:8px 10px;
 border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:14px;cursor:pointer;text-align:left}
 .sug__item:hover,.sug__item[aria-selected=true]{background:var(--brand-soft)}
-.sug__name{font-weight:600;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sug__name{font-weight:600;flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap}
 .sug__meta{font-size:12px;color:var(--muted);white-space:nowrap;flex:none}
 /* 2.17.8: điện thoại – khung gợi ý rộng bằng cả thanh thẻ, mỗi vị 1 dòng cao ~40px */
 @media (max-width:600px){.sug{position:static}.card__bar{position:relative}.sug__list{top:calc(100% + 2px)}.sug__item{padding:9px 10px;gap:8px}}
@@ -310,6 +310,7 @@ td.c-qty{position:relative}
 /* 2.14.0 (giai đoạn 2a) Thuốc chén: cùng mẫu Bán lẻ – summary ẩn, thanh tiêu đề, dòng nhập trong tờ ghi, chân một hàng. */
 #remedyBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
 .card__bar-preset{flex:1 1 180px;min-width:0}
+#remedyPresetBox{display:none}
 #remedyNote{overflow:visible}
 #remedyNote .note__search{padding:8px 10px;border-bottom:1px dashed var(--border)}
 #remedyNote .note__search .inp{width:100%}
@@ -676,6 +677,23 @@ html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;displ
 html.desktop :is(#retailNote,#remedyNote) .note__list{flex:1;min-height:0}
 html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}
 html.desktop #nhapListBox>table{flex:1}
+html.desktop #remedyBox>.card__body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+html.desktop #remedyBox .card__bar{grid-column:1/-1}
+html.desktop #remedyNote{margin-right:6px}
+html.desktop #remedyNote col.cg-name{width:auto}
+html.desktop #remedyNote col.cg-act{width:44px}
+html.desktop #remedyPresetBox{display:flex;flex-direction:column;min-height:0;margin-left:6px;overflow:clip}
+html.desktop #remedyPresetBox .rp-rows{flex:1;min-height:0;display:flex;flex-direction:column}
+html.desktop #remedyNote .note__foot{gap:6px;padding:4px 8px}
+html.desktop #remedyNote .note__foot input.inp.inp--num{width:70px}
+html.desktop #remedyNote :is(.note__lbl,.note__row--btns .btn){white-space:nowrap}
+html.desktop #remedyNote .note__row--btns .btn{padding:3px 8px}
+html.desktop #remedyNote .note__row--btns .btn .ico{display:none}
+html.desktop .rp-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;width:100%;flex:1 1 0;min-height:0;padding:0 10px;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+html.desktop .rp-row:disabled{cursor:default}
+html.desktop .rp-row:not(:disabled):hover{background:var(--hv)}
+html.desktop .rp-row[aria-current]{background:var(--sel-bg);font-weight:800}
+html.desktop .rp-row__name{overflow:hidden;white-space:nowrap}
 html.desktop #backupBox{align-self:start}
 html.desktop #backupBox .card__body{padding:4px 16px 16px}
 html.desktop .chart-year__box:hover{background:rgba(255,255,255,.8)}
@@ -950,6 +968,11 @@ html.desktop[data-bg=tim],html.desktop .bgd[data-bg=tim]{--bt:rgba(221,214,254,.
               </button>
             </div>
           </div>
+        </div>
+        <div class="note" id="remedyPresetBox">
+          <div class="note__head"><span>Đơn đã lưu</span></div>
+          <div class="rp-rows" id="remedyPresetRows"></div>
+          <div class="foot" id="remedyPresetPager"></div>
         </div>
       </div>
     </details>
@@ -2674,9 +2697,7 @@ function renderPresetOptions(){
   var o0 = el('option', null, 'Đơn mới');
   o0.value = '';
   sel.appendChild(o0);
-  db.prescriptions.slice().sort(function(a, b){
-    return a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' });
-  }).forEach(function(r){
+  sortedPresets().forEach(function(r){
     var o = el('option', null, r.name);
     o.value = r.id;
     sel.appendChild(o);
@@ -2684,6 +2705,46 @@ function renderPresetOptions(){
   if (cur && findPreset(cur)) sel.value = cur;
   else sel.value = '';
   updatePresetUI();
+}
+function sortedPresets(){
+  return db.prescriptions.slice().sort(function(a, b){
+    return a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' });
+  });
+}
+/* 2.20.9: nửa phải tờ ghi Thuốc chén (chỉ hiện dưới html.desktop): danh sách đơn đã lưu, cùng nguồn với #remedyPreset; bấm dòng = đổi select rồi gọi remedyPresetPick. */
+var presetPage = 1;
+function renderPresetList(){
+  var host = $('#remedyPresetRows');
+  if (!host) return;
+  var sel = $('#remedyPreset');
+  var cur = sel ? sel.value : '';
+  var list = sortedPresets();
+  var pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (presetPage > pages) presetPage = pages;
+  if (presetPage < 1) presetPage = 1;
+  host.textContent = '';
+  for (var k = 0; k < PAGE_SIZE; k++) {
+    var i = (presetPage - 1) * PAGE_SIZE + k, r = list[i];
+    var b = el('button', 'rp-row');
+    b.type = 'button';
+    if (!r) { b.disabled = true; b.tabIndex = -1; b.setAttribute('aria-hidden', 'true'); host.appendChild(b); continue; }
+    b.setAttribute('data-action', 'pick-preset');
+    b.setAttribute('data-id', r.id);
+    if (cur && String(r.id) === String(cur)) b.setAttribute('aria-current', 'true');
+    var g = 0;
+    (r.items || []).forEach(function(it){ g += num(it.grams); });
+    b.appendChild(el('span', 'rp-row__n', String(i + 1)));
+    b.appendChild(el('span', 'rp-row__name', r.name));
+    b.appendChild(el('span', 'rp-row__g num', g > 0 ? fmtGram(g) : ''));
+    host.appendChild(b);
+  }
+  renderPager($('#remedyPresetPager'), presetPage, pages, 'rpre', true);
+}
+function pickPresetRow(id){
+  var sel = $('#remedyPreset');
+  if (!sel || !findPreset(id)) return;
+  sel.value = id;
+  remedyPresetPick();
 }
 function updatePresetUI(){
   var sel = $('#remedyPreset');
@@ -2699,6 +2760,7 @@ function updatePresetUI(){
     else lbl.textContent = 'Lưu đơn';
   }
   if (del) del.hidden = !cur;
+  renderPresetList();
 }
 function loadPreset(id){
   var r = findPreset(id);
@@ -4998,6 +5060,7 @@ function handleAction(btn){
     case 'save-remedy': saveRemedy(); break;
     case 'save-preset': remedySavePresetClick(); break;
     case 'del-preset': delPreset(); break;
+    case 'pick-preset': pickPresetRow(id); break;
     case 'edit-prod': openEdit(id); break;
     case 'del-prod': delProduct(id); break;
     case 'del-nhap-item': {
@@ -5063,6 +5126,7 @@ function handleAction(btn){
       if (kind === 'inv') { invPage = page; renderInventory(); }
       else if (kind === 'imp') { impPage = page; renderHistory('imp'); }
       else if (kind === 'exp') { expPage = page; renderHistory('exp'); }
+      else if (kind === 'rpre') { presetPage = page; renderPresetList(); }
       else if (kind === 'rnote') { remedyNotePage = page; renderRemedyNote(); }
       else if (kind === 'note') { notePage = page; renderNote(); }
       else if (kind === 'nnote') { nhapNotePage = page; renderNhapList(); }

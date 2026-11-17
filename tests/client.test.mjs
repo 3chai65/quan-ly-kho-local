@@ -2694,7 +2694,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 160); // 2.20.0 thêm nhapListPager: 159 -> 160; 2.17.6 bỏ remedyQty: 160 -> 159; 2.17.3 thêm retailNoteFoot, nhapListFoot: 158 -> 160; 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 163); // 2.20.9 thêm remedyPresetBox, remedyPresetRows, remedyPresetPager: 160 -> 163;  2.20.0 thêm nhapListPager: 159 -> 160; 2.17.6 bỏ remedyQty: 160 -> 159; 2.17.3 thêm retailNoteFoot, nhapListFoot: 158 -> 160; 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -6618,4 +6618,13 @@ test('2.20.8 desktop: số liệu/icon một màu chữ chung (không xanh lục
   // hộp thoại: thân có lề 16px, tờ ghi trong hộp thoại không thụt thêm → dòng phụ, tờ ghi, tham số cùng lề
   assert.ok(block.includes('html.desktop .dlg__card .card__body{padding:0 16px 16px}') && block.includes('html.desktop .dlg__card .note{margin-left:0;margin-right:0}'));
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.8 chế độ desktop')).includes('padding:0 16px 16px'));
+});
+
+test('2.20.9 desktop: Thuốc chén có nửa phải danh sách đơn đã lưu (ẩn ngoài desktop, hook từ updatePresetUI, bấm dòng qua remedyPresetPick)', () => {
+  assert.ok(PAGE.includes('id="remedyPresetBox"') && PAGE.includes('id="remedyPresetRows"') && PAGE.includes('id="remedyPresetPager"'));
+  assert.ok(PAGE.includes('#remedyPresetBox{display:none}') && PAGE.includes('html.desktop #remedyPresetBox{display:flex'));
+  assert.match(PAGE, /function updatePresetUI\(\)\{[\s\S]*?renderPresetList\(\);\n\}/);
+  assert.match(PAGE, /function pickPresetRow\(id\)\{[\s\S]*?remedyPresetPick\(\)/);
+  assert.ok(PAGE.includes("case 'pick-preset': pickPresetRow(id)") && PAGE.includes("kind === 'rpre'"));
+  assert.ok(PAGE.includes('id="remedyPreset"'), 'select giữ nguyên');
 });

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.9] - 2026-11-17
+
+### Thêm (chỉ html.desktop)
+- Thuốc chén: tờ ghi chia đôi, nửa phải là danh sách đơn đã lưu (10 dòng/trang, bấm dòng để chọn đơn).
+
 ## [2.20.8] - 2026-11-16
 
 ### Sửa (chỉ html.desktop)
