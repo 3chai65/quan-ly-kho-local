@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.12] - 2026-11-17
+
+### Thêm
+- PWA Edge trên PC (standalone, chuột, rộng >= 900px) tự bật giao diện desktop; `?desktop=0` tắt và nhớ; viên HD/FHD chỉ có trong Tauri.
+
 ## [2.20.11] - 2026-11-17
 
 ### Thêm

@@ -725,8 +725,9 @@ html.desktop .bgdots{grid-area:2/1;align-self:end;display:grid;grid-template-col
 <script>
 (function(){
   try { var q = location.search || '';
-    if (/[?&]desktop=0/.test(q)) localStorage.removeItem('desktop'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
-    if (localStorage.getItem('desktop') === '1') document.documentElement.classList.add('desktop'); } catch (e) {}
+    if (/[?&]desktop=0/.test(q)) localStorage.setItem('desktop', '0'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
+    var dk = localStorage.getItem('desktop'); /* 2.20.12: PWA Edge trên PC (standalone, >=900px, chuột) tự bật; '0' = đã tắt */
+    if (dk === '1' || (dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900)) document.documentElement.classList.add('desktop'); } catch (e) {}
   var R = document.documentElement;
   if (R.classList.contains('desktop')) {
     /* 2.20.0: khung vẽ 1280x720, phóng đều theo cửa sổ (zoom); 7 nền nhớ bằng localStorage 'desktopBg' */
@@ -759,7 +760,7 @@ html.desktop .bgdots{grid-area:2/1;align-self:end;display:grid;grid-template-col
           Promise.resolve(win.unmaximize()).then(function(){ return win.setSize(new S(cw, ch)); }).catch(function(){}); };
         sz.appendChild(b);
       });
-      if (bw && bw.parentNode) bw.parentNode.insertBefore(sz, bw.nextSibling);
+      if (bw && bw.parentNode && window.__TAURI__) bw.parentNode.insertBefore(sz, bw.nextSibling); /* 2.20.12: ngoài Tauri không chèn (không để lại khoảng trống) */
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
       var rs = document.getElementById('remedySearch'), rb = document.querySelector('#remedyBox .card__bar'), rp = document.getElementById('remedyPreset'); /* 2.20.6: ô nhập tên Thuốc chén lên thanh đầu như Bán lẻ/Nhập hàng (chỉ dời nút, giữ id) */
       if (rs && rb && rp) { rs = rs.parentNode; rs.className = 'sug card__bar-search'; rb.insertBefore(rs, rp); }

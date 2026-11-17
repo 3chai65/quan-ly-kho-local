@@ -6193,9 +6193,9 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.szpick') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.szpick') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
   // 2.19.0: màu nhấn xanh lá (phân trang, nút chính, focus) và nút Bán đơn dính đáy khung
   assert.ok(block.includes('--brand:#047857;--brand-text:var(--text)') && block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}') && !block.includes('position:sticky'));
-  assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.removeItem\('desktop'\)/.test(PAGE));
+  assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.setItem\('desktop', '0'\)/.test(PAGE));
   assert.ok(/\[\?&\]desktop=1\/\.test\(q\)\) localStorage\.setItem\('desktop', '1'\)/.test(PAGE));
-  assert.ok(PAGE.includes("getItem('desktop') === '1') document.documentElement.classList.add('desktop')"));
+  assert.ok(PAGE.includes("dk === '1' || (dk !== '0'"));
   // vòng 2: kính trong hơn (.50-.58), tab chọn xanh lá thay indigo, --muted đậm để giữ tương phản >= 4,5
   const g = block.match(/--glass:rgba\(255,255,255,(\.\d+)\);--glass-bar:rgba\(255,255,255,(\.\d+)\)/);
   assert.ok(g && +g[1] === .5 && +g[2] === .52, 'độ đục thân thẻ giữ đúng .50 (chuẩn người dùng chốt từ thẻ Thống kê)');
@@ -6259,7 +6259,7 @@ function headScript() {
   const blocks = [...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
   return blocks.find(b => b.includes('__NEED_FETCH__') && b.includes("'desktop'"));
 }
-function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh = 2160, dpr = 1 } = {}) {
+function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh = 2160, dpr = 1, tauri = true } = {}) {
   const props = {}, attrs = {}, resize = [];
   const R = { classList: { contains: k => desktop && k === 'desktop', add() {} }, style: { setProperty(k, v) { props[k] = v; } }, setAttribute(k, v) { attrs[k] = v; } };
   const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
@@ -6268,7 +6268,7 @@ function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh 
   const document = { documentElement: R, getElementById: () => null, createElement: mk, body: mk(), querySelector: q => (q === '.top .brand-wrap' ? wrapEl : q === '.szpick' ? bar.children.find(c => c.className === 'szpick') || null : null), addEventListener(e, f) { if (e === 'DOMContentLoaded') ready = f; } };
   const store = { ...ls };
   const localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
-  const win = {};
+  const win = tauri ? { __TAURI__: {} } : {};
   const ctx = { document, localStorage, location: { search: '?desktop=1' }, window: win, screen: { availWidth: sw, availHeight: sh }, devicePixelRatio: dpr, innerWidth: iw, innerHeight: ih, addEventListener(e, f) { if (e === 'resize') resize.push(f); } };
   vm.runInNewContext(headScript().replace(/%%BOOT%%/g, 'null').replace(/%%NEEDFETCH%%/g, 'false'), ctx);
   if (ready) ready();
@@ -6425,6 +6425,7 @@ test('2.20.1 viên HD/FHD: dựng dưới logo (chỉ desktop), đánh dấu c�
   r = runHead({ iw: 1500, ih: 843 });
   assert.deepEqual(r.bar.children[1].children.map(b => b['aria-pressed']), ['false', 'false'], 'cỡ khác: không đánh dấu');
   assert.equal(runHead({ desktop: false }).bar.children.length, 1, 'không desktop: không dựng');
+  assert.equal(runHead({ tauri: false }).bar.children.length, 1, '2.20.12 ngoài Tauri: không chèn HD/FHD');
   const calls = [];
   class PS { constructor(w, h) { this.w = w; this.h = h; } }
   const mkTauri = () => ({ window: { PhysicalSize: PS, getCurrentWindow: () => ({ unmaximize: async () => { calls.push('un'); }, setSize: async s => { calls.push(['set', s.w, s.h]); } }) } });
@@ -6634,4 +6635,10 @@ test('2.20.11 nút Mở thư mục sao lưu: ẩn mặc định, chỉ hiện kh
   assert.match(PAGE, /data-action="open-backup-dir" hidden/);
   assert.ok(PAGE.includes("case 'open-backup-dir'") && PAGE.includes("invoke('mo_thu_muc_sao_luu')"));
   assert.ok(PAGE.includes("[data-action=\"open-backup-dir\"]'); if (obd && window.__TAURI__) obd.hidden = false"));
+});
+
+test('2.20.12 PWA standalone tự bật desktop; desktop=0 nhớ tắt; HD/FHD chỉ chèn trong Tauri', () => {
+  assert.ok(PAGE.includes("setItem('desktop', '0')"));
+  assert.ok(PAGE.includes("dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900"));
+  assert.ok(PAGE.includes('bw.parentNode && window.__TAURI__) bw.parentNode.insertBefore(sz'));
 });
