@@ -40,7 +40,7 @@ export function makeIcon(size) {
 
 export const MANIFEST = JSON.stringify({
   name: 'Quản Lý Kho', short_name: 'Kho', start_url: '/', scope: '/', display: 'standalone',
-  background_color: '#eceef2', theme_color: '#eceef2',
+  background_color: '#142844', theme_color: '#142844',
   icons: [
     { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
     { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

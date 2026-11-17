@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.13] - 2026-11-17
+
+### Thêm
+- iPhone/PWA (màn cảm ứng, hoặc `?pt=1`): dùng lớp màu/kính của desktop (nền navy + 6 nền, chữ sáng, nút/tab kính, bộ chọn nền cuối tab Sao lưu); không đổi bố cục, không thêm backdrop-filter; manifest màu navy.
+
 ## [2.20.12] - 2026-11-17
 
 ### Thêm

@@ -597,7 +597,7 @@ html.desktop .dlg__card .note{margin-left:0;margin-right:0}
 html.desktop .card__bar{position:static;background:none;padding:6px 12px;border-bottom:0}
 html.desktop .card__bar .inp{min-height:30px;padding-top:3px;padding-bottom:3px}
 html.desktop .pager .btn,html.desktop .card__bar .btn,html.desktop .note__foot .btn{border-radius:999px}
-html.desktop :is(.tab,.szpick button,.s4,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d);transition:transform .15s,box-shadow .15s,background-color .15s}
+html:is(.desktop,.pt) :is(.tab,.szpick button,.s4,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d);transition:transform .15s,box-shadow .15s,background-color .15s}
 html.desktop :is(.tab,.szpick button,.s4):hover,html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{transform:translateY(-1px);background-color:var(--hv);box-shadow:var(--k3h)}
 html.desktop :is(.tab,.szpick button):active,html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):active{transform:translateY(0);box-shadow:var(--k3a)}
 html.desktop :is(.tab.is-active,.szpick button[aria-pressed=true],.btn--green,.btn--primary,.btn--dark,.pager__num[aria-current]){color:var(--sel-fg);font-weight:800;border-color:var(--sel-bd);background-color:var(--sel-bg);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d)}
@@ -613,32 +613,32 @@ html.desktop #remedyNote .note__row--btns .btn{min-height:26px}
 html.desktop :is(.szpick button,.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
 html.desktop :is(.szpick button,.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
 html.desktop :is(.szpick,.pager,#remedyNote .note__row--btns) :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:var(--k3t)}
-html.desktop[data-bg=navy]{--bt:linear-gradient(160deg,#142844,#1a3356)}
-html.desktop .bgd[data-bg=navy]{--dc:#2f5d9a}
-html.desktop[data-bg=prism]{--bt:linear-gradient(160deg,#1d1745,#2c2166)}
-html.desktop .bgd[data-bg=prism]{--dc:#7c5cff}
-html.desktop[data-bg=cyan]{--bt:linear-gradient(160deg,#0d2a38,#123e50)}
-html.desktop .bgd[data-bg=cyan]{--dc:#5ec1e8}
-html.desktop[data-bg=emerald]{--bt:linear-gradient(160deg,#0c2a20,#123d2f)}
-html.desktop .bgd[data-bg=emerald]{--dc:#5cc08a}
-html.desktop[data-bg=gold]{--bt:linear-gradient(160deg,#34260c,#4c3711)}
-html.desktop .bgd[data-bg=gold]{--dc:#e8b84a}
-html.desktop[data-bg=rose]{--bt:linear-gradient(160deg,#3a1325,#561f38)}
-html.desktop .bgd[data-bg=rose]{--dc:#c2456a}
-html.desktop[data-bg=graphite]{--bt:linear-gradient(160deg,#1f2125,#34373d)}
-html.desktop .bgd[data-bg=graphite]{--dc:#e5e7eb}
-html.desktop[data-bg]{color-scheme:dark;--text:#f1f5f9;--text2:#dbe4f0;--muted:#c3d0e3;--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#fca5a5;--surface:#1b3253;--surface2:#223c61;--border:rgba(255,255,255,.16);--border2:rgba(255,255,255,.1);--vien:rgba(255,255,255,.22);--glass:rgba(255,255,255,.07);--glass-bar:rgba(255,255,255,.09);--ring:0 0 0 3px rgba(110,231,183,.35);--kb:rgba(255,255,255,.34) rgba(255,255,255,.1) rgba(255,255,255,.1) rgba(255,255,255,.34);--spec:linear-gradient(120deg,rgba(255,255,255,.07),rgba(255,255,255,0) 35%);--k3d:inset 1px 1px 0 rgba(255,255,255,.14),inset 0 0 10px rgba(255,255,255,.05),inset 0 -4px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.14),0 8px 18px rgba(0,0,0,.1);--k3h:inset 1px 1px 0 rgba(255,255,255,.2),inset 0 0 12px rgba(255,255,255,.08),inset 0 -4px 8px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.22),0 5px 12px rgba(0,0,0,.16),0 10px 22px rgba(0,0,0,.12);--k3t:inset 1px 1px 0 rgba(255,255,255,.16),inset 0 0 8px rgba(255,255,255,.06),0 1px 1px rgba(0,0,0,.2);--k3a:inset 0 3px 6px rgba(0,0,0,.3),inset 0 0 10px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.12);--chart-imp:#7cb7ee;--chart-exp:#34d399;--nb:rgba(255,255,255,.05);--hv:rgba(255,255,255,.12);--sel-bg:rgba(255,255,255,.14);--sel-hv:rgba(255,255,255,.21);--sel-bd:rgba(255,255,255,.85) rgba(255,255,255,.32) rgba(255,255,255,.32) rgba(255,255,255,.85);--sel-fg:#f8fafc}
-html.desktop[data-bg] body::before{background:var(--bt)}
-html.desktop[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}
-html.desktop[data-bg] .card:not(.dlg__card){background:var(--spec) top left/100% 40% no-repeat,var(--glass)}
-html.desktop[data-bg] .note{background:var(--spec) top/100% 55% no-repeat,rgba(255,255,255,.04)}
-html.desktop[data-bg] :is(.card__bar .inp,.note .inp,.chart-year__box){background-color:rgba(255,255,255,.07)}
-html.desktop[data-bg] :is(.card__bar,.note) .inp:focus{background-color:rgba(255,255,255,.2)}
-html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}
-html.desktop[data-bg] .tab__ic{color:#e2e8f0}
-html.desktop select option,html.desktop select optgroup{background:var(--surface);color:var(--text)}
+html:is(.desktop,.pt)[data-bg=navy]{--bt:linear-gradient(160deg,#142844,#1a3356)}
+html:is(.desktop,.pt) .bgd[data-bg=navy]{--dc:#2f5d9a}
+html:is(.desktop,.pt)[data-bg=prism]{--bt:linear-gradient(160deg,#1d1745,#2c2166)}
+html:is(.desktop,.pt) .bgd[data-bg=prism]{--dc:#7c5cff}
+html:is(.desktop,.pt)[data-bg=cyan]{--bt:linear-gradient(160deg,#0d2a38,#123e50)}
+html:is(.desktop,.pt) .bgd[data-bg=cyan]{--dc:#5ec1e8}
+html:is(.desktop,.pt)[data-bg=emerald]{--bt:linear-gradient(160deg,#0c2a20,#123d2f)}
+html:is(.desktop,.pt) .bgd[data-bg=emerald]{--dc:#5cc08a}
+html:is(.desktop,.pt)[data-bg=gold]{--bt:linear-gradient(160deg,#34260c,#4c3711)}
+html:is(.desktop,.pt) .bgd[data-bg=gold]{--dc:#e8b84a}
+html:is(.desktop,.pt)[data-bg=rose]{--bt:linear-gradient(160deg,#3a1325,#561f38)}
+html:is(.desktop,.pt) .bgd[data-bg=rose]{--dc:#c2456a}
+html:is(.desktop,.pt)[data-bg=graphite]{--bt:linear-gradient(160deg,#1f2125,#34373d)}
+html:is(.desktop,.pt) .bgd[data-bg=graphite]{--dc:#e5e7eb}
+html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f1f5f9;--text2:#dbe4f0;--muted:#c3d0e3;--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#fca5a5;--surface:#1b3253;--surface2:#223c61;--border:rgba(255,255,255,.16);--border2:rgba(255,255,255,.1);--vien:rgba(255,255,255,.22);--glass:rgba(255,255,255,.07);--glass-bar:rgba(255,255,255,.09);--ring:0 0 0 3px rgba(110,231,183,.35);--kb:rgba(255,255,255,.34) rgba(255,255,255,.1) rgba(255,255,255,.1) rgba(255,255,255,.34);--spec:linear-gradient(120deg,rgba(255,255,255,.07),rgba(255,255,255,0) 35%);--k3d:inset 1px 1px 0 rgba(255,255,255,.14),inset 0 0 10px rgba(255,255,255,.05),inset 0 -4px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.14),0 8px 18px rgba(0,0,0,.1);--k3h:inset 1px 1px 0 rgba(255,255,255,.2),inset 0 0 12px rgba(255,255,255,.08),inset 0 -4px 8px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.22),0 5px 12px rgba(0,0,0,.16),0 10px 22px rgba(0,0,0,.12);--k3t:inset 1px 1px 0 rgba(255,255,255,.16),inset 0 0 8px rgba(255,255,255,.06),0 1px 1px rgba(0,0,0,.2);--k3a:inset 0 3px 6px rgba(0,0,0,.3),inset 0 0 10px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.12);--chart-imp:#7cb7ee;--chart-exp:#34d399;--nb:rgba(255,255,255,.05);--hv:rgba(255,255,255,.12);--sel-bg:rgba(255,255,255,.14);--sel-hv:rgba(255,255,255,.21);--sel-bd:rgba(255,255,255,.85) rgba(255,255,255,.32) rgba(255,255,255,.32) rgba(255,255,255,.85);--sel-fg:#f8fafc}
+html:is(.desktop,.pt)[data-bg] body::before{background:var(--bt)}
+html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}
+html:is(.desktop,.pt)[data-bg] .card:not(.dlg__card){background:var(--spec) top left/100% 40% no-repeat,var(--glass)}
+html:is(.desktop,.pt)[data-bg] .note{background:var(--spec) top/100% 55% no-repeat,rgba(255,255,255,.04)}
+html:is(.desktop,.pt)[data-bg] :is(.card__bar .inp,.note .inp,.chart-year__box){background-color:rgba(255,255,255,.07)}
+html:is(.desktop,.pt)[data-bg] :is(.card__bar,.note) .inp:focus{background-color:rgba(255,255,255,.2)}
+html:is(.desktop,.pt)[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}
+html:is(.desktop,.pt)[data-bg] .tab__ic{color:#e2e8f0}
+html:is(.desktop,.pt) select option,html:is(.desktop,.pt) select optgroup{background:var(--surface);color:var(--text)}
 html.desktop .dlg__card{background:var(--surface)}
-html.desktop .card table:not(.ord){background:none}
+html:is(.desktop,.pt) .card table:not(.ord){background:none}
 html.desktop .inp{background:rgba(255,255,255,.62)}
 html.desktop .inp:focus{background:rgba(255,255,255,.85)}
 html.desktop .main details.card[open]>summary.card__head:hover{background:rgba(255,255,255,.14)}
@@ -711,29 +711,37 @@ html.desktop #backupBox{align-self:start}
 html.desktop #backupBox .card__body{padding:4px 16px 16px}
 html.desktop .chart-year__box:hover{background:rgba(255,255,255,.8)}
 html.desktop .chart-year__box{background:rgba(255,255,255,.62);border-color:var(--vien);border-radius:999px}
-html.desktop .bgd{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;border:0;background:none;color:var(--muted);font-size:11px;font-weight:600;line-height:1.1;cursor:pointer}
-html.desktop .bgd::before{content:"";width:38px;height:38px;border-radius:50%;background:var(--dc);box-shadow:inset 1px 1px 1px rgba(255,255,255,.4),inset -1px -2px 4px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.3);transition:transform .15s}
-html.desktop .bgd:hover::before{transform:translateY(-1px)}
-html.desktop .bgd[aria-pressed=true]{color:var(--sel-fg);font-weight:800}
-html.desktop .bgd[aria-pressed=true]::before{box-shadow:0 0 0 2px #1b1840,0 0 0 4px #8b7bff}
-html.desktop .bgd[aria-pressed=true]::after{content:"";position:absolute;top:8px;left:50%;width:7px;height:13px;border:solid var(--sel-fg);border-width:0 3px 3px 0;transform:translateX(-50%) rotate(45deg)}
-html.desktop .bgdots{grid-area:2/1;align-self:end;display:grid;grid-template-columns:repeat(4,1fr);gap:8px 0;padding:0 0 4px}
+html:is(.desktop,.pt) .bgd{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;border:0;background:none;color:var(--muted);font-size:11px;font-weight:600;line-height:1.1;cursor:pointer}
+html:is(.desktop,.pt) .bgd::before{content:"";width:38px;height:38px;border-radius:50%;background:var(--dc);box-shadow:inset 1px 1px 1px rgba(255,255,255,.4),inset -1px -2px 4px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.3);transition:transform .15s}
+html:is(.desktop,.pt) .bgd:hover::before{transform:translateY(-1px)}
+html:is(.desktop,.pt) .bgd[aria-pressed=true]{color:var(--sel-fg);font-weight:800}
+html:is(.desktop,.pt) .bgd[aria-pressed=true]::before{box-shadow:0 0 0 2px #1b1840,0 0 0 4px #8b7bff}
+html:is(.desktop,.pt) .bgd[aria-pressed=true]::after{content:"";position:absolute;top:8px;left:50%;width:7px;height:13px;border:solid var(--sel-fg);border-width:0 3px 3px 0;transform:translateX(-50%) rotate(45deg)}
+html:is(.desktop,.pt) .bgdots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 0;padding:0 0 4px}
+html.desktop .bgdots{grid-area:2/1;align-self:end}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
+/* 2.20.13 điện thoại (html.pt: màn cảm ứng, hoặc ?pt=1; ?pt=0 tắt): CHỈ lớp màu/kính dùng chung token html[data-bg] của desktop; không đổi cỡ/bố cục, không thêm backdrop-filter */
+html.pt[data-bg]{--bg:#1a3356;--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text);--sh:inset 1px 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.2);--k3d:inset 1px 1px 0 rgba(255,255,255,.14),inset 0 -3px 6px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.2)}
+html.pt :is(.tab.is-active,.btn--green,.btn--primary,.btn--dark,.pager__num[aria-current]){color:var(--sel-fg);border-color:var(--sel-bd);background-color:var(--sel-bg);background-image:var(--spec);background-size:100% 55%;background-repeat:no-repeat;box-shadow:var(--k3d)}
+html.pt .note__head{color:var(--muted)}
+html.pt .bgdots{margin-top:14px}
 </style>
 <script>
 (function(){
   try { var q = location.search || '';
     if (/[?&]desktop=0/.test(q)) localStorage.setItem('desktop', '0'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
     var dk = localStorage.getItem('desktop'); /* 2.20.12: PWA Edge trên PC (standalone, >=900px, chuột) tự bật; '0' = đã tắt */
-    if (dk === '1' || (dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900)) document.documentElement.classList.add('desktop'); } catch (e) {}
-  var R = document.documentElement;
-  if (R.classList.contains('desktop')) {
+    if (dk === '1' || (dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900)) document.documentElement.classList.add('desktop');
+    if (!document.documentElement.classList.contains('desktop') && !/[?&]pt=0/.test(q) && (/[?&]pt=1/.test(q) || matchMedia('(pointer:coarse)').matches)) { document.documentElement.classList.add('pt'); var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', '#142844'); } /* 2.20.13: điện thoại dùng chung lớp màu/nền với desktop */
+  } catch (e) {}
+  var R = document.documentElement, D = R.classList.contains('desktop');
+  if (D || R.classList.contains('pt')) {
     /* 2.20.0: khung vẽ 1280x720, phóng đều theo cửa sổ (zoom); 7 nền nhớ bằng localStorage 'desktopBg' */
     var mark = function(){ var g = document.querySelector('.szpick'), pw = innerWidth * (devicePixelRatio || 1); if (g) [].forEach.call(g.children, function(b){ b.setAttribute('aria-pressed', Math.abs(pw - +b.getAttribute('data-w')) <= 6 ? 'true' : 'false'); }); };
     var fit = function(){ var z = Math.min(innerWidth / 1280, innerHeight / 720); window.__dz = z; R.style.setProperty('--z', z); R.style.setProperty('--vw', innerWidth / z + 'px'); R.style.setProperty('--vh', innerHeight / z + 'px'); mark(); };
-    fit(); addEventListener('resize', fit);
+    if (D) { fit(); addEventListener('resize', fit); }
     var BGS = ['navy', 'prism', 'cyan', 'emerald', 'gold', 'rose', 'graphite'], NM = ['Navy', 'Prism', 'Cyan', 'Emerald', 'Amber', 'Rose', 'Graphite'], cur = 'navy';
     try { cur = localStorage.getItem('desktopBg') || 'navy'; } catch (e) {}
     if (BGS.indexOf(cur) < 0) cur = 'navy';
@@ -747,6 +755,7 @@ html.desktop .bgdots{grid-area:2/1;align-self:end;display:grid;grid-template-col
           [].forEach.call(w.children, function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); }); };
         w.appendChild(b);
       });
+      if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
       document.body.appendChild(w);
       var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false; /* 2.20.11 */
       /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */

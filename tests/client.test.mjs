@@ -5881,7 +5881,7 @@ test('2.16.0 PWA: manifest JSON hợp lệ; sw.js không cache, không nhắc /a
   const { MANIFEST, SW_JS, makeIcon } = await import('../pwa.js');
   const m = JSON.parse(MANIFEST);
   assert.equal(m.name, 'Quản Lý Kho'); assert.equal(m.short_name, 'Kho'); assert.equal(m.scope, '/');
-  assert.equal(m.background_color, '#eceef2');
+  assert.equal(m.background_color, '#142844');
   assert.ok(!/\/api|caches\.|respondWith/.test(SW_JS));
   const b = makeIcon(192);
   assert.equal(b.subarray(1, 4).toString(), 'PNG'); assert.equal(b.readUInt32BE(16), 192); assert.equal(b.readUInt32BE(20), 192);
@@ -6184,7 +6184,7 @@ test('2.17.9 ?glass=0 trả nền đục: lớp noglass đặt token đục, JS 
 test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, ≤6 backdrop, bảng/hộp thoại đục; JS nhớ ?desktop=1/0', () => {
   const a = PAGE.indexOf('/* 2.20.8 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){\n*,*::before', a);
   assert.ok(a > 0 && b > a);
-  const block = PAGE.slice(a, b);
+  const block = PAGE.slice(a, b).split('html:is(.desktop,.pt)').join('html.desktop'); // 2.20.13: selector dùng chung desktop + điện thoại
   const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
   assert.ok(rules.length >= 7 && rules.every(l => l.startsWith('html.desktop')), 'mọi quy tắc phải bắt đầu bằng html.desktop');
   assert.ok(Buffer.byteLength(block) <= 20480, 'CSS desktop ≤ 20 KB (2.20.7: thêm nền navy)');
@@ -6276,7 +6276,7 @@ function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh 
 }
 function deskBlock() {
   const a = PAGE.indexOf('/* 2.20.8 chế độ desktop'), b = PAGE.indexOf('@media (prefers-reduced-motion:reduce){', a);
-  return PAGE.slice(a, b);
+  return PAGE.slice(a, b).split('html:is(.desktop,.pt)').join('html.desktop'); // 2.20.13: selector dùng chung desktop + điện thoại
 }
 
 test('2.20.0 khung vẽ 1280x720: CSS cố định (không vw/vh/clamp) + zoom theo --z; JS tính --z = min(w/1280, h/720) và cập nhật khi resize', () => {
@@ -6641,4 +6641,13 @@ test('2.20.12 PWA standalone tự bật desktop; desktop=0 nhớ tắt; HD/FHD c
   assert.ok(PAGE.includes("setItem('desktop', '0')"));
   assert.ok(PAGE.includes("dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900"));
   assert.ok(PAGE.includes('bw.parentNode && window.__TAURI__) bw.parentNode.insertBefore(sz'));
+});
+
+test('2.20.13 điện thoại html.pt: dùng chung token data-bg, chỉ màu/kính (không radius/size/backdrop mới), bộ chọn nền ở tab Sao lưu, manifest navy', () => {
+  const a = PAGE.indexOf('/* 2.20.13 điện thoại'), b = PAGE.indexOf('</style>', a);
+  const ph = PAGE.slice(a, b);
+  assert.ok(a > 0 && ph.includes('html.pt[data-bg]{--bg:#1a3356;--brand-text:var(--text)'));
+  assert.ok(!/backdrop-filter|border-radius|font-size|font-weight|min-height|padding:|width:/.test(ph.replace(/\/\*[\s\S]*?\*\//g, '').replace('padding:0','')), 'lớp điện thoại không đổi hình dạng/kích cỡ');
+  assert.ok(PAGE.includes('html:is(.desktop,.pt)[data-bg]{color-scheme:dark;') && PAGE.includes("classList.add('pt')") && PAGE.includes("document.querySelector('#backupBox .card__body')"));
+  assert.ok(/\[\?&\]pt=0/.test(PAGE) && PAGE.includes('(pointer:coarse)'));
 });
