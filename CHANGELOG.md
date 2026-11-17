@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.10] - 2026-11-17
+
+### Đổi (chỉ html.desktop)
+- Bộ chọn nền còn 7 nền tối có nhãn (Navy mặc định, Prism, Cyan, Emerald, Amber, Rose, Graphite); xóa 8 nền cũ, nền đã lưu không còn thì về Navy.
+
 ## [2.20.9] - 2026-11-17
 
 ### Thêm (chỉ html.desktop)

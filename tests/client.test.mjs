@@ -6190,7 +6190,7 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   assert.ok(Buffer.byteLength(block) <= 20480, 'CSS desktop ≤ 20 KB (2.20.7: thêm nền navy)');
   assert.ok((block.match(/backdrop-filter:/g) || []).length <= 6 && !/feDisplacementMap/.test(PAGE));
   assert.ok(block.includes('html.desktop .dlg__card{background:var(--surface)}') && block.includes('html.desktop .card table:not(.ord){background:none}'), 'hộp thoại đục, bảng cùng độ trong với thẻ');
-  assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg=navy]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.szpick') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.szpick') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
+  assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.szpick') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.szpick') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
   // 2.19.0: màu nhấn xanh lá (phân trang, nút chính, focus) và nút Bán đơn dính đáy khung
   assert.ok(block.includes('--brand:#047857;--brand-text:var(--text)') && block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}') && !block.includes('position:sticky'));
   assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.removeItem\('desktop'\)/.test(PAGE));
@@ -6298,27 +6298,28 @@ test('2.20.0 menu dòng: vị trí chia cho window.__dz (zoom), tự hiệu ch�
   assert.ok(PAGE.includes('var r = btn.getBoundingClientRect(), z = window.__dz || 1;') && PAGE.includes('var left = r.right / z - w;') && PAGE.includes('window.innerHeight / z - 8') && PAGE.includes('list.style.left = (2 * left - q.left / z)'));
 });
 
-test('2.20.1 9 nền (8 nền + navy): GPUI mặc định + 7 màu nhẹ (6 quy tắc data-bg + sương trắng trong suốt); 8 chấm; bấm lưu desktopBg; giá trị lạ về nền GPUI', () => {
+test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/graphite): mỗi nền có --bt + chấm --dc; bấm lưu desktopBg; giá trị lạ (kể cả nền cũ) về navy', () => {
   const block = deskBlock();
-  for (const k of ['hong', 'dao', 'vang', 'la', 'duong', 'tim']) assert.ok(block.includes('html.desktop[data-bg=' + k + '],html.desktop .bgd[data-bg=' + k + ']{--bt:rgba('), k);
+  const ks = ['navy', 'prism', 'cyan', 'emerald', 'gold', 'rose', 'graphite'];
+  for (const k of ks) assert.ok(block.includes('html.desktop[data-bg=' + k + ']{--bt:linear-gradient(160deg,#') && block.includes('html.desktop .bgd[data-bg=' + k + ']{--dc:#'), k);
+  for (const k of ['gpui', 'hong', 'dao', 'vang', 'duong', 'tim']) assert.ok(!block.includes('data-bg=' + k) && !PAGE.includes("'" + k + "'"), 'đã xóa nền cũ ' + k);
   assert.ok(block.includes('--bt:transparent') && block.includes(',var(--bt)}'));
   let r = runHead();
-  assert.equal(r.attrs['data-bg'], 'navy', '2.20.8: nền mặc định navy');
-  assert.ok(block.includes('html.desktop[data-bg=gpui],html.desktop .bgd[data-bg=gpui]{--bt:radial-gradient(') && block.includes('linear-gradient(165deg,#e3cfcb,#dcd7ce 45%,#bfcabb)'));
+  assert.equal(r.attrs['data-bg'], 'navy', 'nền mặc định navy');
   const wrap = r.body.children[0];
-  assert.equal(wrap.children.length, 9);
-  assert.deepEqual(wrap.children.map(c => c['data-bg']), ['gpui', 'suong', 'hong', 'dao', 'vang', 'la', 'duong', 'tim', 'navy']);
-  assert.equal(wrap.children[8]['aria-pressed'], 'true', 'chấm navy (thứ 9) được đánh dấu khi mặc định');
-  wrap.children[6].onclick();
-  assert.equal(r.attrs['data-bg'], 'duong');
-  assert.equal(r.store.desktopBg, 'duong');
-  assert.equal(wrap.children[6]['aria-pressed'], 'true');
-  assert.equal(wrap.children[8]['aria-pressed'], 'false');
-  r = runHead({ ls: { desktopBg: 'tim' } });
-  assert.equal(r.attrs['data-bg'], 'tim');
-  assert.equal(r.body.children[0].children[7]['aria-pressed'], 'true');
+  assert.deepEqual(wrap.children.map(c => c['data-bg']), ks);
+  assert.deepEqual(wrap.children.map(c => c.textContent), ['Navy', 'Prism', 'Cyan', 'Emerald', 'Amber', 'Rose', 'Graphite']);
+  assert.equal(wrap.children[0]['aria-pressed'], 'true', 'chấm navy được đánh dấu khi mặc định');
+  wrap.children[2].onclick();
+  assert.equal(r.attrs['data-bg'], 'cyan');
+  assert.equal(r.store.desktopBg, 'cyan');
+  assert.equal(wrap.children[2]['aria-pressed'], 'true');
+  assert.equal(wrap.children[0]['aria-pressed'], 'false');
+  r = runHead({ ls: { desktopBg: 'rose' } });
+  assert.equal(r.attrs['data-bg'], 'rose');
+  assert.equal(r.body.children[0].children[5]['aria-pressed'], 'true');
   assert.equal(runHead({ ls: { desktopBg: 'xyz' } }).attrs['data-bg'], 'navy');
-  assert.equal(runHead({ ls: { desktopBg: 'gpui' } }).attrs['data-bg'], 'gpui', 'lựa chọn đã lưu được giữ');
+  assert.equal(runHead({ ls: { desktopBg: 'gpui' } }).attrs['data-bg'], 'navy', 'nền đã xóa → navy');
   assert.equal(runHead({ desktop: false }).body.children.length, 0, 'không desktop: không dựng chấm màu');
 });
 
@@ -6389,7 +6390,7 @@ test('2.20.2 kính 3D bám glass.rs: viền chuyển sắc trắng trên-trái/m
   for (const m of block.matchAll(/transition:([^;}]*)/g)) assert.ok(/^(transform|box-shadow|background-color|opacity)( [\d.]+s)?(,(transform|box-shadow|background-color|opacity)( [\d.]+s)?)*$/.test(m[1].trim()), 'transition chỉ transform/box-shadow/background-color: ' + m[1]);
   assert.ok((block.match(/backdrop-filter:/g) || []).length <= 4, 'không thêm backdrop-filter mới (2.20.1: 4 lần ghi = thẻ + tắt ở .top, mỗi lần kèm -webkit-)');
   assert.ok(!/(^|[^-])filter:\s*blur|feGaussian/.test(block));
-  assert.ok(block.includes('html.desktop .bgd:hover{transform:translateY(-1px)}') && block.includes('html.desktop .bgd[aria-pressed=true]{box-shadow:inset 1px 1px 1px'));
+  assert.ok(block.includes('html.desktop .bgd:hover::before{transform:translateY(-1px)}') && block.includes('html.desktop .bgd[aria-pressed=true]::before{box-shadow:0 0 0 2px'));
   assert.ok(block.includes('html.desktop .card:not(.dlg__card){border-radius:16px') && block.includes('border-color:var(--kb);background:linear-gradient(120deg,rgba(255,255,255,.3)'), 'thẻ nội dung nhẹ hơn nút');
 });
 
@@ -6585,9 +6586,9 @@ test('2.20.7 desktop: "+" chung một lớp 28x28 tròn cả 3 tờ ghi; ô gợ
   assert.ok(/var maxW = isDesk\(\) \? 58 : Math\.max\(0, \(host\.offsetWidth \|\| cw\) - QTY_LABEL_W - 6\);/.test(PAGE), 'điện thoại giữ cách tính cũ');
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.8 chế độ desktop')).includes('padding-left:86px'));
   // nền navy: token chữ sáng, kính trắng ~.07-.12, không thêm backdrop-filter, màu mẫu thanh Safari #142844
-  const nv = /html\.desktop\[data-bg=navy\]\{([^}]*)\}/.exec(block);
+  const nv = /html\.desktop\[data-bg]{([^}]*)\}/.exec(block);
   assert.ok(nv && /--text:#f1f5f9/.test(nv[1]) && /--muted:#c3d0e3/.test(nv[1]) && /--glass:rgba\(255,255,255,\.07\)/.test(nv[1]) && nv[1].includes('color-scheme:dark'), 'token sáng');
-  assert.ok(block.includes('html.desktop[data-bg=navy],html.desktop .bgd[data-bg=navy]{--bt:linear-gradient(160deg,#142844,#1a3356)}'));
+  assert.ok(block.includes('html.desktop[data-bg=navy]{--bt:linear-gradient(160deg,#142844,#1a3356)}'));
   assert.ok((block.match(/backdrop-filter:/g) || []).length <= 6 && !/backdrop-filter/.test(nv[1]));
 });
 
@@ -6604,14 +6605,14 @@ test('2.20.8 desktop: mặc định navy; nút không còn xanh lục, mục ch�
   assert.ok(/\)\{color:var\(--sel-fg\);font-weight:800;border-color:var\(--sel-bd\)/.test(block));
   // select: option có nền/chữ theo token (không để popup trắng + chữ sáng); navy color-scheme dark
   assert.ok(block.includes('html.desktop select option,html.desktop select optgroup{background:var(--surface);color:var(--text)}'));
-  assert.ok(/html\.desktop\[data-bg=navy\]\{color-scheme:dark;/.test(block));
+  assert.ok(/html\.desktop\[data-bg]{color-scheme:dark;/.test(block));
 });
 
 test('2.20.8 desktop: số liệu/icon một màu chữ chung (không xanh lục/xanh dương), hộp thoại có lề trong', () => {
   const block = deskBlock();
   // token màu số/icon đi theo màu chữ chính; navy không ghi đè lại thành xanh
   assert.ok(block.includes('--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text)'));
-  const nv = /html\.desktop\[data-bg=navy\]\{([^}]*)\}/.exec(block)[1];
+  const nv = /html\.desktop\[data-bg]{([^}]*)\}/.exec(block)[1];
   assert.ok(!/--brand-text|--green-text|--blue-text/.test(nv), 'navy không đặt lại màu xanh cho số');
   // nút đỏ/số âm giữ nghĩa cảnh báo (--red-text không bị đổi)
   assert.ok(/--red-text:#fca5a5/.test(nv) && !block.includes('--red-text:var(--text)'));
