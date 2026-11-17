@@ -5130,7 +5130,7 @@ function handleAction(btn){
     case 'backup-now': downloadBackup(true); break;
     case 'open-backup-dir': {
       var T = window.__TAURI__;
-      if (T && T.core) T.core.invoke('mo_thu_muc_sao_luu').catch(function(){ toast('Không thấy thư mục Tải xuống'); });
+      if (T && T.core) T.core.invoke('mo_thu_muc_sao_luu').catch(function(){ toast('Không mở được thư mục sao lưu'); });
       break;
     }
     case 'restore-file': {

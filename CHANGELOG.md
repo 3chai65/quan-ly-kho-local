@@ -8,7 +8,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 ## [2.20.11] - 2026-11-17
 
 ### Thêm
-- Tab Sao lưu: nút "Mở thư mục" mở thư mục Tải xuống (nơi lưu file kho-backup-*.json) trong Explorer (chỉ hiện trong app Tauri).
+- Tab Sao lưu: nút "Mở thư mục" mở thư mục datauu-tru trong Explorer; trong app Tauri file kho-backup-*.json tải về được lưu vào đó (không ghi đè, trùng tên thì thêm (2)) (chỉ hiện trong app Tauri).
 
 ## [2.20.10] - 2026-11-17
 
