@@ -6695,7 +6695,7 @@ test('2.22.0 Sao lưu: lỗi tải (401/mạng) chỉ hiện một dòng báo, t
   let t = bakEnv(async () => ({ ok: false, status: 401, json: async () => ({}) }));
   await t.client.loadBakList();
   assert.equal(t.els.get('bakList').children.length, 1);
-  assert.match(t.els.get('bakList').children[0].textContent, /^Thiết bị chưa được duyệt/);
+  assert.match(t.els.get('bakList').children[0].textContent, /^Không xem được danh sách bản sao lưu/);
   assert.equal(t.client.isAuthLost(), true, '401 phải gọi noteAuthLost');
   t = bakEnv(async () => ({ ok: false, status: 500, json: async () => ({}) }));
   await t.client.loadBakList();
@@ -6719,7 +6719,7 @@ test('2.22.3 Sao lưu: nhãn trước ghi đè, ẩn pager 1 trang, role list/li
   assert.equal(rows[1].children[0].children.length, 0, 'tên thường không nhãn');
   assert.equal(els.get('bakPager').children.length, 0, 'một trang: không pager');
   assert.ok(PAGE.includes('id="bakList" role="list">') && !PAGE.includes('id="bakList" role="list" aria-live'), 'aria-live không nằm trên list');
-  assert.ok(PAGE.includes('id="bakStat" role="status" aria-live="polite"'));
+  assert.ok(PAGE.includes('id="bakStat" role="status"></p>') && !PAGE.includes('id="bakStat" role="status" aria-live'));
   assert.ok(PAGE.includes('Chỉ xem. Khôi phục: dừng máy chủ, chép đè data/app.db, xóa app.db-wal và app.db-shm nếu có, rồi khởi động lại (xem README).'));
   assert.equal(rows[0].attrs.role, 'listitem');
 });
@@ -6727,7 +6727,7 @@ test('2.22.3 Sao lưu: nhãn trước ghi đè, ẩn pager 1 trang, role list/li
 test('2.22.4 Sao lưu: dòng trạng thái role=none, bakStat báo số bản, lỗi vào bakStat', async () => {
   let t = bakEnv(bakOk(bakFiles(23)));
   await t.client.loadBakList();
-  assert.equal(t.els.get('bakStat').textContent, 'Đã tải 10/23 bản');
+  assert.equal(t.els.get('bakStat').textContent, 'Trang 1/3 — 10/23 bản');
   t = bakEnv(async () => { throw new Error('x'); });
   await t.client.loadBakList();
   assert.equal(t.els.get('bakStat').textContent, 'Không tải được danh sách');
@@ -6748,6 +6748,17 @@ test('2.22.4 Sao lưu: nút làm mới khóa khi tải, mở lại khi xong; hai
   ctl[0](mk(bakFiles(5))); await p1;
   assert.equal(host.children.length, 2, 'request 1 chậm không đè');
   assert.equal(btn.disabled, false); assert.ok(!cls.has('bak-busy'));
+});
+
+test('2.22.5 Sao lưu: 401 không đặt câu trùng toast vào bakStat; đổi trang cập nhật bakStat', async () => {
+  let t = bakEnv(async () => ({ ok: false, status: 401, json: async () => ({}) }));
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakStat').textContent, '');
+  assert.equal(t.els.get('bakList').children[0].textContent, 'Không xem được danh sách bản sao lưu');
+  assert.ok(PAGE.includes("kind === 'bak') { bakPage = page; renderBakList(); }"), 'đổi trang gọi renderBakList (cập nhật bakStat)');
+  t = bakEnv(bakOk(bakFiles(4)));
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakStat').textContent, 'Đã tải 4/4 bản');
 });
 
 test('2.22.0 Sao lưu: dòng thư mục ẩn mặc định, chỉ hiện trong Tauri; không có nút Chọn thư mục', () => {

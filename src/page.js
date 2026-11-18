@@ -846,7 +846,7 @@ html.pt .bgdots{margin-top:14px}
       <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
     </div>
   </div>
-  <p class="sr" id="brandNote" role="status" aria-live="polite"></p>
+  <p class="sr" id="brandNote" role="status"></p>
 </header>
 
 <main id="main" class="wrap main">
@@ -1250,7 +1250,7 @@ html.pt .bgdots{margin-top:14px}
           <h3 class="bak-sec__t">Bản sao lưu trên máy chủ</h3>
           <button class="btn btn--icon" type="button" id="bakRefresh" data-action="bak-refresh" aria-label="Làm mới danh sách" title="Làm mới"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
         </div>
-        <div id="bakList" role="list"><p class="hint bak-empty" role="none">Đang tải…</p></div><p class="sr" id="bakStat" role="status" aria-live="polite"></p>
+        <div id="bakList" role="list"><p class="hint bak-empty" role="none">Đang tải…</p></div><p class="sr" id="bakStat" role="status"></p>
         <div class="bak-pg" id="bakPager"></div>
         <p class="hint bak-note">Chỉ xem. Khôi phục: dừng máy chủ, chép đè data/app.db, xóa app.db-wal và app.db-shm nếu có, rồi khởi động lại (xem README).</p>
       </section>
@@ -4934,13 +4934,14 @@ function renderBakList(){
   if (bakPage > pages) bakPage = pages;
   if (bakPage < 1) bakPage = 1;
   if (bakErr || !rows.length) {
-    var msg = (bakErr === 'auth' ? 'Thiết bị chưa được duyệt, chưa xem được danh sách.' : bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…'));
+    var msg = (bakErr === 'auth' ? 'Không xem được danh sách bản sao lưu' : bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…'));
     var ep = el('p', 'hint bak-empty', msg); ep.setAttribute('role', 'none'); host.appendChild(ep);
-    if (st) st.textContent = msg;
+    if (st) st.textContent = bakErr === 'auth' ? '' : msg;
     if (pg) pg.textContent = '';
     return;
   }
-  rows.slice((bakPage - 1) * 10, bakPage * 10).forEach(function(b){
+  var shown = rows.slice((bakPage - 1) * 10, bakPage * 10);
+  shown.forEach(function(b){
     var r = el('div', 'bak-row');
     r.setAttribute('role', 'listitem');
     var nm = el('span', 'bak-row__name', b.name);
@@ -4951,7 +4952,7 @@ function renderBakList(){
     host.appendChild(r);
   });
   if (pages > 1) renderPager(pg, bakPage, pages, 'bak', true); else if (pg) pg.textContent = '';
-  if (st) st.textContent = 'Đã tải ' + Math.min(rows.length, 10) + '/' + rows.length + ' bản';
+  if (st) st.textContent = (pages > 1 ? 'Trang ' + bakPage + '/' + pages + ' — ' : 'Đã tải ') + shown.length + '/' + rows.length + ' bản';
 }
 function loadBakList(){
   var seq = ++bakSeq, host = $('#bakList'), btn = $('#bakRefresh');
