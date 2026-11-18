@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.28.0] - 2026-11-18
+- Doi chieu dac ta app Mac (3), chi desktop (html.desktop); dien thoai giu nguyen (do lai 16 phan tu Thuoc chen o 390/800/1300: giong het truoc/sau).
+- Don moi (Thuoc chen): chi mot tac dung, KHONG hoi xac nhan: to ghi moi tinh (bo don dang mo, dong dang ghi, o tim don, so thang/gia ve mac dinh), tro ve "Tim vi thuoc"; khong xoa don da luu.
+- Xoa don luon hien o desktop (Xoa don | Luu don/Sua don | Ban don): don da luu hoi roi xoa; chua luu co dong thi hoi "Xoa don dang ghi (N dong) va ghi lai tu dau?" roi sach to ghi; trong thi khong lam gi. Chan to ghi van mot hang o 1280 (do 43px cao, 3 nut vua).
+- Trang 1: nap don nhieu dong ve trang 1 (da dung, them test don 12 dong); danh sach DON DA LUU ve trang 1 khi vao tab, sau Don moi, sau xoa don.
+- Thanh ben: bam logo hoac chu "Quan Ly Kho" = Tai lai (co hoi khi con don nhap, khong dang xuat), title "Tai lai", con tro tay; bo nut Tai lai va Thoat o chan (chan chi con Nen, dong dong bo, cong tac kinh); bo exitAppClick/exit-app; nut Tai lai tren thanh dau an o desktop. Dien thoai van bam chu "Quan Ly Kho" vao Thiet bi (brandDevicesClick giu cho dien thoai).
+- Tab Sao luu khoi phuc (desktop): vien "Sao luu | Thiet bi" ben phai thanh dau; mac dinh Sao luu moi lan vao tab; Thiet bi: thiet bi chu (fetch /auth/devices 200) thay the "Mo quan ly thiet bi" dan toi /auth/devices; thiet bi khac thay "Chi thiet bi chu moi quan ly duoc thiet bi khac."; dang cho thay "Dang kiem tra...". Chua lam: danh sach thiet bi, Thu hoi, Tao ma moi, Dang xuat thiet bi ngay trong app (dung trang /auth/devices co san).
+- CSS desktop 20375 byte (<= tran 20480). Khong doi du lieu/tien/ton kho, server.js, auth.js.
+
 ## [2.27.0] - 2026-11-18
 - Mot luat tim chung (dong bo 3 app): moi o tim ten (Kho ton, Lich su nhap/ban gom ten vi VA ten don, hang gop khop khi ten don hoac bat ky vi nao trong don khop, goi y vi thuoc, tim don da luu) chi khop TRON mot chu hoac cum chu lien nhau (khong phan biet hoa/thuong, co/khong dau, d = d); chua tron chu thi khong hien; o trong = hien tat ca. Truoc day Kho ton/Lich su khop mot phan (indexOf) - ghi chu "giu luat cu" cua 2.15.9 het hieu luc. Ap dung ca dien thoai (luat du lieu).
 - Thanh ben desktop: "Tai lai" va "Thoat" (chi Tauri) hoi "Con don nhap chua luu. Tai lai/Thoat se mat don nhap chua luu. Van tai lai/thoat?" khi con don nhap (dung chung mot ham kiem); Thoat chi dong cua so, khong dang xuat, khong xoa cookie. Bam "Quan Ly Kho" khi khong phai thiet bi chu: them toast "Chi thiet bi chu quan ly duoc thiet bi." (nut/fetch /auth/devices co tu 2.13.0, trang do co lien ket "Ve kho").

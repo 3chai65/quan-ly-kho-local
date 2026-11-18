@@ -581,7 +581,7 @@ html.desktop.tauri body{padding-top:34px}
 html.desktop body::after{content:"";grid-area:1/1/3/2;border:1px solid rgba(255,255,255,.10);border-radius:24px;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);z-index:-1}
 html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop .top .wrap{padding:0 14px}
-html.desktop .brand{font-size:13px;font-weight:700}
+html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}
 html:is(.desktop,.pt) :is(.brand__yin,.txt-brand,.txt-green){color:var(--text)}
 html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0;padding-top:14px}
 html.desktop .main{display:contents}
@@ -768,8 +768,7 @@ html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:colum
 html.desktop .sbs{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
 html.desktop .sbs[data-st=err]::before{background:#FF5F57}
-html.desktop .sbb{display:flex;gap:8px}
-html.desktop .sbb .btn{min-height:28px;padding:2px 14px;font-size:12px}
+html.desktop .brand__yin{cursor:pointer}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -813,13 +812,23 @@ html.pt .bgdots{margin-top:14px}
       gl.setAttribute('aria-checked', R.classList.contains('glass') ? 'true' : 'false');
       gl.onclick = function(){ var on = !R.classList.contains('glass'); R.classList.toggle('glass', on); gl.setAttribute('aria-checked', on ? 'true' : 'false'); try { localStorage.setItem('kho_glass_v2', on ? '1' : '0'); } catch (e) {} };
       if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w), bb.appendChild(gl); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
-      /* 2.25.0: chân thanh bên = nền, dòng đồng bộ (#syncLine, chữ do renderSyncLine), công tắc kính, Tải lại / Thoát (Thoát chỉ trong Tauri) */
-      var sbf = document.createElement('div'), sy = document.createElement('div'), rw = document.createElement('div'), rl = document.createElement('button'), ex = document.createElement('button');
-      sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…'; rw.className = 'sbb';
-      rl.type = ex.type = 'button'; rl.className = ex.className = 'btn'; rl.textContent = 'Tải lại'; rl.setAttribute('data-action', 'reload-app'); ex.textContent = 'Thoát'; ex.hidden = !window.__TAURI__;
-      ex.setAttribute('data-action', 'exit-app'); /* 2.27.0: xử lý ở exitAppClick (có hỏi nháp) */
-      rw.appendChild(rl); rw.appendChild(ex);
-      [w, sy, gl, rw].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
+      /* 2.25.0: chân thanh bên = nền, dòng đồng bộ (#syncLine, chữ do renderSyncLine), công tắc kính. 2.28.0: bỏ nút Tải lại/Thoát; bấm logo hoặc chữ "Quản Lý Kho" = Tải lại (reloadAppClick, có hỏi nháp). */
+      var sbf = document.createElement('div'), sy = document.createElement('div');
+      sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…';
+      [w, sy, gl].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
+      ['brandBtn', 'brandLogo'].forEach(function(i){ var n = document.getElementById(i); if (n) n.setAttribute('data-action', 'reload-app'), n.title = 'Tải lại'; });
+      /* 2.28.0: tab Sao lưu khôi phục: viên Sao lưu | Thiết bị (bakView) + thẻ Thiết bị (chỉ dẫn tới trang /auth/devices, không viết lại giao diện) */
+      var kb = document.getElementById('backupBox'), kbar = kb && kb.querySelector('.card__bar'), kbody = kb && kb.querySelector('.card__body');
+      if (kbar && kbody) {
+        var sg = document.createElement('div'), ds = document.createElement('section');
+        sg.className = 'pager bakseg'; sg.setAttribute('role', 'group'); sg.setAttribute('aria-label', 'Phần hiển thị');
+        [['bak', 'Sao lưu'], ['dev', 'Thiết bị']].forEach(function(p){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn--sm'; b.textContent = p[1]; b.setAttribute('data-action', 'bak-view'); b.setAttribute('data-view', p[0]); if (p[0] === 'bak') b.setAttribute('aria-current', 'true'); sg.appendChild(b); });
+        var dm = document.createElement('p'), dv = document.createElement('button');
+        dm.className = 'hint'; dm.id = 'devMsg'; dm.setAttribute('role', 'status');
+        dv.type = 'button'; dv.className = 'btn mt-10'; dv.id = 'devOpen'; dv.hidden = true; dv.textContent = 'Mở quản lý thiết bị'; dv.setAttribute('data-action', 'open-devices');
+        ds.className = 'bak-sec'; ds.id = 'devSec'; ds.hidden = true; ds.appendChild(dm); ds.appendChild(dv);
+        kbody.appendChild(ds); kbar.appendChild(sg);
+      }
       var th = document.querySelector('.thk'), ct = document.getElementById('chartTip'); if (th && ct) th.appendChild(ct); /* 2.25.0: dòng tháng + chip Nhập/Bán nằm dưới hàng 4 số */
       var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false; /* 2.20.11; 2.22.0: ngoài Tauri ẩn cả dòng thư mục */
       /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */
@@ -2224,9 +2233,9 @@ function isStandaloneMode(){
 }
 function renderReloadBtn(){
   var b = $('#reloadBtn');
-  if (b) b.hidden = !isStandaloneMode();
+  if (b) b.hidden = isDesk() || !isStandaloneMode(); /* 2.28.0: desktop tải lại bằng logo */
 }
-/* 2.27.0: Tải lại / Thoát dùng chung một phép kiểm nháp (cờ chưa gửi + đơn nháp trong bộ nhớ); không đăng xuất, không xóa cookie. */
+/* 2.27.0: phép kiểm nháp của Tải lại (cờ chưa gửi + đơn nháp trong bộ nhớ); không đăng xuất, không xóa cookie. 2.28.0: Thoát đã bỏ (Tauri đóng bằng nút hệ điều hành). */
 function draftOk(verb){
   var pending = dirty || (retailItems && retailItems.length) || (remedyItems && remedyItems.length) || (nhapList && nhapList.length);
   return !pending || confirm('Còn đơn nháp chưa lưu. ' + verb + ' sẽ mất đơn nháp chưa lưu. Vẫn ' + verb.toLowerCase() + '?');
@@ -2234,11 +2243,6 @@ function draftOk(verb){
 function reloadAppClick(){
   if (!draftOk('Tải lại')) return false;
   location.reload();
-  return true;
-}
-function exitAppClick(){
-  if (!window.__TAURI__ || !draftOk('Thoát')) return false;
-  try { window.__TAURI__.window.getCurrentWindow().close(); } catch (e) {}
   return true;
 }
 function discardUnsynced(){
@@ -2336,15 +2340,36 @@ function denyDevices(){
   if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';
   toast('Chỉ thiết bị chủ quản lý được thiết bị.', 'error'); /* 2.27.0 */
 }
+function devicesOwner(){
+  return Promise.resolve().then(function(){
+    return fetch('/auth/devices', { credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'text/html' } });
+  }).then(function(r){ return !!(r && r.status === 200); }, function(){ return false; });
+}
+/* 2.28.0: desktop không còn dùng brand-devices (bấm logo = Tải lại); chỉ điện thoại còn vào Thiết bị bằng chữ "Quản Lý Kho". */
 function brandDevicesClick(){
   if (brandBusy) return Promise.resolve();
   brandBusy = true;
-  return Promise.resolve().then(function(){
-    return fetch('/auth/devices', { credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'text/html' } });
-  }).then(function(r){
-    if (r && r.status === 200) location.href = '/auth/devices';
+  return devicesOwner().then(function(ok){
+    if (ok) location.href = '/auth/devices';
     else denyDevices();
-  }, denyDevices).then(function(){ brandBusy = false; });
+  }).then(function(){ brandBusy = false; });
+}
+/* 2.28.0 desktop: viên Sao lưu | Thiết bị trong tab Sao lưu khôi phục; Thiết bị: chủ → nút mở /auth/devices; thiết bị khác → lời báo. */
+var devSeq = 0;
+function bakView(v){
+  var bx = $('#backupBox');
+  if (!bx || !$('.bakseg')) return Promise.resolve();
+  var seq = ++devSeq, m = $('#devMsg'), o = $('#devOpen');
+  $$('.bak-sec', bx).forEach(function(s){ s.hidden = (s.id === 'devSec') !== (v === 'dev'); });
+  $$('.bakseg .btn', bx).forEach(function(b){ if (b.getAttribute('data-view') === v) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+  if (v !== 'dev') return Promise.resolve();
+  if (o) o.hidden = true;
+  if (m) m.textContent = 'Đang kiểm tra…';
+  return devicesOwner().then(function(ok){
+    if (seq !== devSeq) return;
+    if (m) m.textContent = ok ? 'Thiết bị này là thiết bị chủ. Danh sách thiết bị, tạo mã mời, thu hồi và đăng xuất thiết bị nằm ở trang quản lý thiết bị (có liên kết "Về kho" để quay lại).' : 'Chỉ thiết bị chủ mới quản lý được thiết bị khác.';
+    if (o) o.hidden = !ok;
+  });
 }
 /* ================= DÒNG ĐƠN HÀNG ================= */
 function renumber(tbody, base){
@@ -2965,17 +2990,12 @@ function closePreset(){
   remedyPresetPick();
   focusNS($('#remedySearch'));
 }
-/* 2.26.1 desktop: nút "Đơn mới": đang mở đơn có sẵn = như ✕ (không hỏi); đang ghi dở thì hỏi rồi xóa dòng, ô tìm, thang/giá về mặc định; luôn trỏ về Tìm vị thuốc. */
+/* 2.28.0 desktop: nút "Đơn mới" chỉ có một tác dụng, KHÔNG hỏi: tờ ghi mới tinh (bỏ đơn đang mở, dòng đang ghi, ô tìm, thang/giá mặc định), trỏ về Tìm vị thuốc; không xóa đơn đã lưu. */
 function hasVal(s){ var e = $(s); return !!(e && e.value); }
 function newRemedy(){
-  var sel = $('#remedyPreset');
-  if (sel && sel.value) { closePreset(); return; }
-  var n = remedyItems.length, th = $('#remedyThang');
-  if (n || $('#remedyBody tr[data-pid]') || hasVal('#remedySearch') || hasVal('#remedyUnitPrice') || (th && th.value && th.value !== '1')) {
-    if (!confirm(n ? 'Bỏ ' + n + ' dòng đang ghi và làm đơn mới?' : 'Bỏ chữ đang gõ và làm đơn mới?')) return;
-    resetRemedy();
-    presetFindClose(true);
-  }
+  presetPage = 1;
+  resetRemedy();
+  presetFindClose(true);
   focusNS($('#remedySearch'));
 }
 /* 2.26.1 desktop: nút "Xóa hết" Bán lẻ/Nhập hàng: có dòng nháp hoặc chữ đang gõ thì hỏi, rồi xóa nháp (giữ ngày đang chọn) và trỏ về ô tìm vị; không có gì thì không làm gì. */
@@ -2999,7 +3019,7 @@ function updatePresetUI(){
     else if (name) lbl.textContent = (target ? 'Tên đã dùng (' : 'Lưu đơn (') + name + ')';
     else lbl.textContent = 'Lưu đơn';
   }
-  if (del) del.hidden = !cur;
+  if (del) del.hidden = !cur && !isDesk(); /* 2.28.0: desktop luôn hiện Xóa đơn */
   var fb = $('#remedyFindBox'), fn = $('#remedyOpenName');
   if (fb && fb.classList) fb.classList.toggle('is-open', !!cur); /* 2.26.0 desktop: đang mở đơn thì ô phải hiện tên đơn + ✕ */
   if (fn) fn.textContent = cur ? cur.name : '';
@@ -3131,8 +3151,13 @@ function savePreset(){
 function delPreset(){
   var sel = $('#remedyPreset');
   var r = sel && sel.value ? findPreset(sel.value) : null;
-  if (!r) return;
+  if (!r) { /* 2.28.0: chưa lưu: có dòng đang ghi thì hỏi rồi làm sạch tờ ghi; không có gì thì không làm gì */
+    var n = remedyItems.length;
+    if (!n || !confirm('Xóa đơn đang ghi (' + n + ' dòng) và ghi lại từ đầu?')) return;
+    resetRemedy(); presetFindClose(true); return;
+  }
   if (!confirm('Xóa đơn "' + r.name + '"? Các giao dịch đã bán vẫn được giữ lại.')) return;
+  presetPage = 1;
   db.prescriptions = db.prescriptions.filter(function(x){ return String(x.id) !== String(r.id); });
   resetRemedy();
   commit('Đã xóa đơn "' + r.name + '"');
@@ -5493,8 +5518,9 @@ function handleAction(btn){
     case 'save-edit': saveEdit(); break;
     case 'sync-discard': discardUnsynced(); break;
     case 'reload-app': reloadAppClick(); break;
-    case 'exit-app': exitAppClick(); break;
     case 'brand-devices': brandDevicesClick(); break;
+    case 'bak-view': bakView(btn.getAttribute('data-view')); break;
+    case 'open-devices': location.href = '/auth/devices'; break;
     case 'close-edit': closeEdit(); break;
     case 'reconcile': openRec(); break;
     case 'close-rec': closeRec(); break;
@@ -5656,7 +5682,9 @@ function bindEvents(){
     if (cb.open) { chartYr = Number(thisYear()); chartSel = -1; chartHover = -1; requestAnimationFrame(renderChart); }
   });
   var bbx = $('#backupBox');
-  if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) loadBakList(); });
+  if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) { loadBakList(); bakView('bak'); } });
+  var rbx = $('#remedyBox');
+  if (rbx) rbx.addEventListener('toggle', function(){ if (rbx.open) { presetPage = 1; renderPresetList(); } }); /* 2.28.0: ĐƠN ĐÃ LƯU mở ở trang 1 khi vào tab */
   initTabs();
   initFootBars();
 

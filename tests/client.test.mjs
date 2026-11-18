@@ -119,7 +119,7 @@ globalThis.__test = {
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
-  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), exitAppClick: (typeof exitAppClick === 'function' ? exitAppClick : null),
+  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
 };
@@ -6291,13 +6291,13 @@ function headScript() {
   const blocks = [...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
   return blocks.find(b => b.includes('__NEED_FETCH__') && b.includes("'desktop'"));
 }
-function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh = 2160, dpr = 1, tauri = true } = {}) {
+function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh = 2160, dpr = 1, tauri = true, els = {} } = {}) {
   const props = {}, attrs = {}, resize = [];
   const cls = new Set(); const R = { classList: { contains: k => (desktop && k === 'desktop') || cls.has(k), add(k) { if (k === 'glass' || k === 'tauri') cls.add(k); }, toggle(k, on) { if (on) cls.add(k); else cls.delete(k); } }, style: { setProperty(k, v) { props[k] = v; } }, setAttribute(k, v) { attrs[k] = v; } };
   const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
   let ready = null;
   const wrapEl = { nextSibling: null, parentNode: null }; const bar = { children: [wrapEl], insertBefore(n, ref) { if (ref) this.children.splice(this.children.indexOf(ref), 0, n); else this.children.push(n); } }; wrapEl.parentNode = bar;
-  const document = { documentElement: R, getElementById: () => null, createElement: mk, body: mk(), querySelector: q => (q === '.top .brand-wrap' ? wrapEl : q === '.szpick' ? bar.children.find(c => c.className === 'szpick') || null : null), addEventListener(e, f) { if (e === 'DOMContentLoaded') ready = f; } };
+  const document = { documentElement: R, getElementById: (i) => els[i] || null, createElement: mk, body: mk(), querySelector: q => (q === '.top .brand-wrap' ? wrapEl : q === '.szpick' ? bar.children.find(c => c.className === 'szpick') || null : null), addEventListener(e, f) { if (e === 'DOMContentLoaded') ready = f; } };
   const store = { ...ls };
   const localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
   const win = tauri ? { __TAURI__: {} } : {};
@@ -7096,16 +7096,19 @@ test('2.25.1 #syncLine: dirty quá hạn không lỗi → Chưa đồng bộ; h�
   assert.equal(L.textContent, 'Đã đồng bộ 09:05'); assert.equal(L.attrs['data-st'], 'ok');
 });
 
-test('2.25.0 thanh bên: nút Tải lại (reload-app) luôn có; Thoát chỉ trong Tauri và gọi close; điện thoại không dựng gì', () => {
-  const out = runHead({ tauri: false }), box = out.body.children[0];
-  const row = box.children.find(x => x.className === 'sbb');
+test('2.28.0 thanh bên: chân chỉ còn Nền + dòng đồng bộ + công tắc kính (không Tải lại/Thoát); logo và chữ Quản Lý Kho = reload-app, title "Tải lại"; điện thoại không dựng gì', () => {
+  const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
+  const els = { brandBtn: mk(), brandLogo: mk() };
+  const out = runHead({ tauri: true, els }), box = out.body.children[0];
+  assert.deepEqual(box.children.map(x => x.className), ['bgdots', 'sbs', 'glsw'], 'chân: Nền, dòng đồng bộ, công tắc kính, theo thứ tự');
   assert.ok(box.children.some(x => x.id === 'syncLine'));
-  assert.equal(row.children[0].textContent, 'Tải lại'); assert.equal(row.children[0]['data-action'], 'reload-app');
-  assert.equal(row.children[1].textContent, 'Thoát'); assert.equal(row.children[1].hidden, true, 'ngoài Tauri ẩn Thoát');
-  const t = runHead({ tauri: true }), ex = t.body.children[0].children.find(x => x.className === 'sbb').children[1];
-  assert.equal(ex.hidden, false);
-  assert.equal(ex['data-action'], 'exit-app', '2.27.0: Thoát đi qua exitAppClick (có hỏi nháp)');
-  assert.equal(runHead({ desktop: false }).body.children.length, 0, 'iPhone/pt: không dựng chân thanh bên');
+  assert.ok(!box.children.some(x => x.className === 'sbb'), 'không còn hàng nút Tải lại/Thoát');
+  for (const k of ['brandBtn', 'brandLogo']) { assert.equal(els[k]['data-action'], 'reload-app', k); assert.equal(els[k].title, 'Tải lại', k); }
+  assert.ok(!PAGE.includes("'exit-app'") && !PAGE.includes('exitAppClick') && !PAGE.includes("textContent = 'Thoát'"), 'không còn Thoát/exit-app');
+  const els2 = { brandBtn: mk(), brandLogo: mk() };
+  assert.equal(runHead({ desktop: false, els: els2 }).body.children.length, 0, 'iPhone/pt: không dựng chân thanh bên');
+  assert.equal(els2.brandBtn['data-action'], undefined, 'điện thoại giữ brand-devices');
+  assert.ok(deskBlock().includes('html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}') && deskBlock().includes('html.desktop .brand__yin{cursor:pointer}'), 'brand cao >= 28, con trỏ tay');
 });
 
 /* ===== 2.26.0 Thuốc chén desktop: ô "Tìm đơn đã lưu", ✕ bỏ đơn, dòng đang gõ trong tờ ghi ===== */
@@ -7115,7 +7118,7 @@ function findKit(presets, extra = {}) {
   Object.defineProperty(list, 'textContent', { get() { return ''; }, set() { list.children.length = 0; } });
   const els = {
     '#remedyFind': attrs(makeEl()), '#remedyFindList': list, '#remedyPreset': makeEl(), '#remedySearch': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(),
-    '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyFindBox': makeEl(), '#remedyOpenName': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+    '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyFindBox': makeEl(), '#remedyOpenName': makeEl(), '#remedyDelPreset': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
   };
   const doc = trackDoc(els);
   doc.documentElement.classList.contains = (k) => k === 'desktop';
@@ -7279,23 +7282,20 @@ test('2.26.1 Đơn mới: đang mở đơn có sẵn thì về tờ ghi trống 
   assert.equal(k.doc.activeElement, k.els['#remedySearch']);
 });
 
-test('2.26.1 Đơn mới: đang ghi dòng chưa lưu thì hỏi "Bỏ N dòng đang ghi và làm đơn mới?"; Hủy giữ nguyên; đồng ý xóa dòng/ô tìm/thang/giá và trỏ về Tìm vị thuốc', () => {
-  const no = confirmSpy(false), yes = confirmSpy(true);
+test('2.28.0 Đơn mới: một tác dụng, KHÔNG hỏi: bỏ dòng đang ghi/ô tìm/ô tìm đơn, thang/giá về mặc định, trang đơn đã lưu về 1, trỏ về Tìm vị thuốc; không xóa đơn đã lưu', () => {
+  const sp = confirmSpy(false);
   const rows = [{ productId: 'p1', grams: 5 }, { productId: 'p1', grams: 7 }];
-  const a = findKit(FIND_RX, { confirm: no.fn });
-  a.c.setRemedyItems(rows.slice());
-  a.c.handleAction(act('new-remedy'));
-  assert.deepEqual(no.log, ['Bỏ 2 dòng đang ghi và làm đơn mới?']);
-  assert.equal(a.c.getRemedyItems().length, 2, 'Hủy: giữ nguyên');
-  const b = findKit(FIND_RX, { confirm: yes.fn });
-  b.c.setRemedyItems(rows.slice());
+  const b = findKit(FIND_RX, { confirm: sp.fn });
+  b.c.setRemedyItems(rows.slice()); b.c.setPresetPage(3);
   b.els['#remedySearch'].value = 'cam'; b.els['#remedyThang'].value = '4'; b.els['#remedyUnitPrice'].value = '90'; b.els['#remedyFind'].value = 'ab';
   b.doc.activeElement = null;
   b.c.handleAction(act('new-remedy'));
-  assert.deepEqual(yes.log, ['Bỏ 2 dòng đang ghi và làm đơn mới?']);
+  assert.deepEqual(sp.log, [], 'không hỏi xác nhận');
   assert.equal(b.c.getRemedyItems().length, 0);
   assert.equal(b.els['#remedySearch'].value, ''); assert.equal(b.els['#remedyThang'].value, '1'); assert.equal(b.els['#remedyUnitPrice'].value, ''); assert.equal(b.els['#remedyFind'].value, '');
+  assert.equal(b.c.getPresetPage(), 1);
   assert.equal(b.doc.activeElement, b.els['#remedySearch']);
+  assert.equal(b.c.getDb().prescriptions.length, 4, 'không xóa đơn đã lưu');
 });
 
 test('2.26.1 Đơn mới: không có gì để bỏ thì không hỏi, chỉ đưa trỏ về Tìm vị thuốc', () => {
@@ -7306,6 +7306,54 @@ test('2.26.1 Đơn mới: không có gì để bỏ thì không hỏi, chỉ đ�
   assert.deepEqual(sp.log, []);
   assert.equal(k.doc.activeElement, k.els['#remedySearch']);
   assert.equal(k.c.getDb().prescriptions.length, 4, 'không đụng đơn đã lưu');
+});
+
+test('2.28.0 Xóa đơn luôn hiện ở desktop (điện thoại chỉ khi mở đơn có sẵn); 3 nhánh: đơn đã lưu hỏi rồi xóa; chưa lưu có dòng hỏi "Xóa đơn đang ghi (N dòng)..." rồi sạch; trống không làm gì', () => {
+  const rows = [{ productId: 'p1', grams: 5 }, { productId: 'p1', grams: 7 }];
+  const d = findKit(FIND_RX); d.c.remedyPresetPick(); assert.equal(d.els['#remedyDelPreset'].hidden, false, 'desktop: hiện dù chưa mở đơn');
+  const ph = findKit(FIND_RX); ph.doc.documentElement.classList.contains = () => false; ph.c.remedyPresetPick(); assert.equal(ph.els['#remedyDelPreset'].hidden, true, 'điện thoại: ẩn khi chưa mở đơn');
+  const sp = confirmSpy(true); const a = findKit(FIND_RX, { confirm: sp.fn });
+  a.c.pickPresetRow('RX2'); a.c.setPresetPage(2);
+  a.c.handleAction(act('del-preset'));
+  assert.deepEqual(sp.log, ['Xóa đơn "Bạn Nga"? Các giao dịch đã bán vẫn được giữ lại.']);
+  assert.deepEqual(a.c.getDb().prescriptions.map(x => x.id), ['RX1', 'RX3', 'RX4']); assert.equal(a.c.getPresetPage(), 1, 'sau xóa về trang 1');
+  const no = confirmSpy(false), yes = confirmSpy(true);
+  const b = findKit(FIND_RX, { confirm: no.fn }); b.c.setRemedyItems(rows.slice()); b.c.handleAction(act('del-preset'));
+  assert.deepEqual(no.log, ['Xóa đơn đang ghi (2 dòng) và ghi lại từ đầu?']); assert.equal(b.c.getRemedyItems().length, 2, 'Hủy giữ nguyên');
+  const c2 = findKit(FIND_RX, { confirm: yes.fn }); c2.c.setRemedyItems(rows.slice()); c2.c.handleAction(act('del-preset'));
+  assert.equal(c2.c.getRemedyItems().length, 0, 'đồng ý: sạch'); assert.equal(c2.c.getDb().prescriptions.length, 4, 'không đụng đơn đã lưu');
+  const e = findKit(FIND_RX, { confirm: yes.fn }); e.c.handleAction(act('del-preset')); assert.equal(yes.log.length, 1, 'không có gì: không hỏi (log cũ vẫn 1 từ ca trên)');
+});
+
+test('2.28.0 nạp đơn 12 dòng về TRANG 1 (2 trang), không nhảy trang cuối; ĐƠN ĐÃ LƯU mở ở trang 1 khi vào tab Thuốc chén', () => {
+  const big = { id: 'RX9', name: 'Đơn Dài', items: Array.from({ length: 12 }, (_, i) => ({ productId: 'p1', grams: 10 + i })), total: 100000, thang: 1 };
+  const k = findKit([big, ...FIND_RX]);
+  k.c.setRemedyNotePage(1e9);
+  k.c.pickPresetRow('RX9');
+  assert.equal(k.c.getRemedyItems().length, 12);
+  assert.equal(k.c.getRemedyNotePage(), 1, 'trang 1 / 2');
+  assert.ok(PAGE.includes("rbx.addEventListener('toggle', function(){ if (rbx.open) { presetPage = 1; renderPresetList(); } })"), 'vào tab: danh sách đơn về trang 1');
+});
+
+test('2.28.0 viên Sao lưu | Thiết bị: chủ (fetch 200) → nút mở /auth/devices; thiết bị khác → lời báo; chờ → "Đang kiểm tra…"; Sao lưu = mặc định; điện thoại (không có viên) không làm gì', async () => {
+  const mkb = (v) => { const b = makeEl(); b.attrs = { 'data-view': v }; b.setAttribute = (k, x) => { b.attrs[k] = String(x); }; b.getAttribute = (k) => (k in b.attrs ? b.attrs[k] : null); b.removeAttribute = (k) => { delete b.attrs[k]; }; return b; };
+  const bb = [mkb('bak'), mkb('dev')], s1 = makeEl(), s2 = makeEl(), sd = makeEl(); sd.id = 'devSec';
+  const bx = makeEl(); bx.querySelectorAll = (q) => (q === '.bakseg .btn' ? bb : [s1, s2, sd]);
+  const msg = makeEl(), open = makeEl(), ids = { '#backupBox': bx, '.bakseg': makeEl(), '#devMsg': msg, '#devOpen': open };
+  const run = (fetch) => loadClient({ document: trackDoc(ids), fetch, setTimeout() { return 0; }, clearTimeout() {} });
+  let c = run(() => Promise.resolve({ status: 200 }));
+  const p = c.bakView('dev');
+  assert.equal(msg.textContent, 'Đang kiểm tra…'); assert.equal(open.hidden, true); assert.equal(sd.hidden, false); assert.equal(s1.hidden, true, 'ẩn phần Sao lưu');
+  assert.equal(bb[1].attrs['aria-current'], 'true'); assert.equal(bb[0].attrs['aria-current'], undefined);
+  await p; assert.equal(open.hidden, false, 'chủ: có nút mở quản lý'); assert.match(msg.textContent, /thiết bị chủ/);
+  c = run(() => Promise.resolve({ status: 403 }));
+  await c.bakView('dev'); assert.equal(msg.textContent, 'Chỉ thiết bị chủ mới quản lý được thiết bị khác.'); assert.equal(open.hidden, true);
+  c = run(() => Promise.reject(new Error('mạng')));
+  await c.bakView('dev'); assert.equal(open.hidden, true, 'lỗi mạng: không phải chủ');
+  await c.bakView('bak'); assert.equal(s1.hidden, false); assert.equal(sd.hidden, true); assert.equal(bb[0].attrs['aria-current'], 'true');
+  const ph = loadClient({ document: trackDoc({ '#backupBox': bx }), fetch: () => { throw new Error('không gọi'); } });
+  await ph.bakView('dev');
+  assert.ok(PAGE.includes("case 'open-devices': location.href = '/auth/devices'") && PAGE.includes("if (bbx.open) { loadBakList(); bakView('bak'); }"), 'nút mở trang thiết bị; mỗi lần vào tab = Sao lưu');
 });
 
 test('2.26.1 dòng đang gõ trống ở desktop có đủ 4 ô: "+", chữ mờ, ô Gram và nút + (vô hiệu); điện thoại vẫn một ô gộp', () => {
@@ -7422,20 +7470,14 @@ test('2.27.0 ô tìm vị thuốc cùng bộ ví dụ', () => {
   c.setDb(lawDb());
   for (const [q, want] of LAW_CASES) assert.deepEqual(c.matchProducts(q).map(p => p.name).sort(), want, 'matchProducts "' + q + '"');
 });
-test('2.27.0 Tải lại/Thoát: hỏi đúng chữ khi có nháp, không hỏi khi sạch; Thoát chỉ trong Tauri, chỉ đóng cửa sổ', () => {
-  const msgs = []; let closes = 0, reloads = 0, ans = false;
-  const tauri = { window: { getCurrentWindow: () => ({ close() { closes++; } }) } };
-  const mk = (T) => loadClient({ confirm(m) { msgs.push(m); return ans; }, location: { href: 'x', reload() { reloads++; } }, ...(T ? { __TAURI__: T } : {}) });
-  let c = mk(tauri);
+test('2.28.0 Tải lại: hỏi đúng chữ khi có nháp, không hỏi khi sạch; đồng ý thì tải lại (không đăng xuất)', () => {
+  const msgs = []; let reloads = 0, ans = false;
+  const c = loadClient({ confirm(m) { msgs.push(m); return ans; }, location: { href: 'x', reload() { reloads++; } } });
   c.setDirty(false); c.setRetailItems([]); c.setRemedyItems([]); c.setNhapList([]);
-  c.exitAppClick(); assert.equal(closes, 1); assert.equal(msgs.length, 0, 'sạch: không hỏi');
-  c.reloadAppClick(); assert.equal(reloads, 1); assert.equal(msgs.length, 0);
+  c.reloadAppClick(); assert.equal(reloads, 1); assert.equal(msgs.length, 0, 'sạch: không hỏi');
   c.setRemedyItems([{ id: 1 }]);
   c.reloadAppClick(); assert.equal(msgs.pop(), 'Còn đơn nháp chưa lưu. Tải lại sẽ mất đơn nháp chưa lưu. Vẫn tải lại?'); assert.equal(reloads, 1, 'từ chối: không tải lại');
-  c.exitAppClick(); assert.equal(msgs.pop(), 'Còn đơn nháp chưa lưu. Thoát sẽ mất đơn nháp chưa lưu. Vẫn thoát?'); assert.equal(closes, 1, 'từ chối: không đóng');
-  ans = true; c.exitAppClick(); assert.equal(closes, 2, 'đồng ý: đóng');
-  c = mk(null); c.setRetailItems([{ id: 1 }]); msgs.length = 0;
-  assert.equal(c.exitAppClick(), false); assert.equal(msgs.length, 0, 'ngoài Tauri: Thoát không làm gì, không hỏi');
+  ans = true; c.reloadAppClick(); assert.equal(reloads, 2, 'đồng ý: tải lại');
   const sb0 = PAGE.indexOf('var sbf = document.createElement'); assert.ok(sb0 > 0);
   assert.doesNotMatch(PAGE.slice(sb0, sb0 + 1200), /logout|đăng xuất|cookie/i, 'thanh bên không có đường đăng xuất/xóa cookie');
 });
