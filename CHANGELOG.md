@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.20.14] - 2026-11-18
+
+### Sửa
+- Nền tối (data-bg): `--red-text` #fca5a5 → #fecaca, tương phản số âm/chữ đỏ trên điểm sáng nhất gradient + 14% trắng từ 3,90–4,79 (Cyan 3,99, Emerald 4,19) lên ≥ 5,12.
+
 ## [2.20.13] - 2026-11-17
 
 ### Thêm

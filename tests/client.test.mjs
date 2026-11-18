@@ -6616,7 +6616,7 @@ test('2.20.8 desktop: số liệu/icon một màu chữ chung (không xanh lục
   const nv = /html\.desktop\[data-bg]{([^}]*)\}/.exec(block)[1];
   assert.ok(!/--brand-text|--green-text|--blue-text/.test(nv), 'navy không đặt lại màu xanh cho số');
   // nút đỏ/số âm giữ nghĩa cảnh báo (--red-text không bị đổi)
-  assert.ok(/--red-text:#fca5a5/.test(nv) && !block.includes('--red-text:var(--text)'));
+  assert.ok(/--red-text:#fecaca/.test(nv) && !block.includes('--red-text:var(--text)'));
   // hộp thoại: thân có lề 16px, tờ ghi trong hộp thoại không thụt thêm → dòng phụ, tờ ghi, tham số cùng lề
   assert.ok(block.includes('html.desktop .dlg__card .card__body{padding:0 16px 16px}') && block.includes('html.desktop .dlg__card .note{margin-left:0;margin-right:0}'));
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.20.8 chế độ desktop')).includes('padding:0 16px 16px'));
@@ -6650,4 +6650,13 @@ test('2.20.13 điện thoại html.pt: dùng chung token data-bg, chỉ màu/kí
   assert.ok(!/backdrop-filter|border-radius|font-size|font-weight|min-height|padding:|width:/.test(ph.replace(/\/\*[\s\S]*?\*\//g, '').replace('padding:0','')), 'lớp điện thoại không đổi hình dạng/kích cỡ');
   assert.ok(PAGE.includes('html:is(.desktop,.pt)[data-bg]{color-scheme:dark;') && PAGE.includes("classList.add('pt')") && PAGE.includes("document.querySelector('#backupBox .card__body')"));
   assert.ok(/\[\?&\]pt=0/.test(PAGE) && PAGE.includes('(pointer:coarse)'));
+});
+
+test('2.20.14 nền tối: --red-text đạt tương phản >= 4,5 trên điểm sáng nhất của mọi gradient nền + 14% trắng', () => {
+  const L = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const mix = h => '#' + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * .86 + 255 * .14).toString(16).padStart(2, '0')).join('');
+  const red = /html:is\(\.desktop,\.pt\)\[data-bg\]\{[^}]*--red-text:(#[0-9a-f]{6})/.exec(PAGE)[1];
+  const tops = [...PAGE.matchAll(/\[data-bg=\w+\]\{--bt:linear-gradient\(160deg,#[0-9a-f]{6},(#[0-9a-f]{6})\)/g)].map(m => m[1]);
+  assert.ok(tops.length >= 7);
+  for (const bg of tops) { const x = L(red), y = L(mix(bg)); assert.ok((Math.max(x, y) + .05) / (Math.min(x, y) + .05) >= 4.5, bg); }
 });
