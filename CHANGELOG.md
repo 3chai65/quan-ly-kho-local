@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.22.3] - 2026-11-18
+- Danh sách bản .db: 401 báo "Thiết bị chưa được duyệt" (gọi noteAuthLost), nhãn "trước ghi đè", ẩn phân trang khi 1 trang, nút làm mới khóa + danh sách mờ khi tải, role list/listitem + aria-live, ghi chú "Chỉ xem".
+
 ## [2.22.2] - 2026-11-18
 - Độ sáng kính đồng nhất theo token `--pnl` (thẻ, 4 ô số, tab, khung Sao lưu = độ sáng tờ ghi trên nền tối) và `font-family:inherit` cho button/input/select/textarea (nút chọn nền hết rơi về Arial).
 

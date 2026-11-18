@@ -570,9 +570,12 @@ html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 .bak-dir[hidden]{display:none}
 .bak-dir__p{flex:1;min-width:0;word-break:break-all}
 .bak-restore{color:var(--red-text)}
-.bak-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.3}
+.bak-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;align-items:center;padding:2px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.3}
 .bak-row__name{font-weight:700;word-break:break-all}
 .bak-row__size,.bak-row__time{text-align:right;color:var(--muted);white-space:nowrap}
+.bak-busy{opacity:.5}
+.bak-row__tag{margin-left:6px;padding:0 6px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.bak-note{margin:6px 0 0}
 .bak-pg{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
 @media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
 /* 2.20.8 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
@@ -1244,10 +1247,11 @@ html.pt .bgdots{margin-top:14px}
       <section class="bak-sec">
         <div class="bak-sec__bar">
           <h3 class="bak-sec__t">Bản sao lưu trên máy chủ</h3>
-          <button class="btn btn--icon" type="button" data-action="bak-refresh" aria-label="Làm mới danh sách" title="Làm mới"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+          <button class="btn btn--icon" type="button" id="bakRefresh" data-action="bak-refresh" aria-label="Làm mới danh sách" title="Làm mới"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
         </div>
-        <div id="bakList"><p class="hint bak-empty">Đang tải…</p></div>
+        <div id="bakList" role="list" aria-live="polite"><p class="hint bak-empty">Đang tải…</p></div>
         <div class="bak-pg" id="bakPager"></div>
+        <p class="hint bak-note">Chỉ xem. Khôi phục bản .db: chép vào data/app.db rồi khởi động lại (xem README).</p>
       </section>
     </div>
   </details>
@@ -4929,28 +4933,39 @@ function renderBakList(){
   if (bakPage > pages) bakPage = pages;
   if (bakPage < 1) bakPage = 1;
   if (bakErr || !rows.length) {
-    host.appendChild(el('p', 'hint bak-empty', bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…')));
+    host.appendChild(el('p', 'hint bak-empty', bakErr === 'auth' ? 'Thiết bị chưa được duyệt, chưa xem được danh sách.' : bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…')));
     if (pg) pg.textContent = '';
     return;
   }
   rows.slice((bakPage - 1) * 10, bakPage * 10).forEach(function(b){
     var r = el('div', 'bak-row');
-    r.appendChild(el('span', 'bak-row__name', b.name));
+    r.setAttribute('role', 'listitem');
+    var nm = el('span', 'bak-row__name', b.name);
+    if (String(b.name).indexOf('-truoc-ghi-de-') >= 0) nm.appendChild(el('span', 'bak-row__tag', 'trước ghi đè'));
+    r.appendChild(nm);
     r.appendChild(el('span', 'bak-row__size', bakSizeText(b.size)));
     r.appendChild(el('span', 'bak-row__time', bakTimeText(b.modified)));
     host.appendChild(r);
   });
-  renderPager(pg, bakPage, pages, 'bak', true);
+  if (pages > 1) renderPager(pg, bakPage, pages, 'bak', true); else if (pg) pg.textContent = '';
 }
 function loadBakList(){
-  var seq = ++bakSeq;
-  var done = function(list){
+  var seq = ++bakSeq, host = $('#bakList'), btn = $('#bakRefresh');
+  if (host) host.classList.add('bak-busy');
+  if (btn) btn.disabled = true;
+  var done = function(list, auth){
     if (seq !== bakSeq) return;
-    bakErr = !list;
+    if (host) host.classList.remove('bak-busy');
+    if (btn) btn.disabled = false;
+    bakErr = list ? false : auth ? 'auth' : true;
     if (list) bakList = list;
     renderBakList();
   };
-  return apiFetch('/api/backups').then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+  return apiFetch('/api/backups').then(function(r){
+    if (r && r.status === 401) { noteAuthLost(); return 'auth'; }
+    return r.ok ? r.json() : null;
+  }).then(function(j){
+    if (j === 'auth') return done(null, true);
     done(j && j.success && Array.isArray(j.backups) ? j.backups : null);
   }, function(){ done(null); });
 }

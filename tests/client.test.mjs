@@ -6695,13 +6695,31 @@ test('2.22.0 Sao lưu: lỗi tải (401/mạng) chỉ hiện một dòng báo, t
   let t = bakEnv(async () => ({ ok: false, status: 401, json: async () => ({}) }));
   await t.client.loadBakList();
   assert.equal(t.els.get('bakList').children.length, 1);
+  assert.match(t.els.get('bakList').children[0].textContent, /^Thiết bị chưa được duyệt/);
+  assert.equal(t.client.isAuthLost(), true, '401 phải gọi noteAuthLost');
+  t = bakEnv(async () => ({ ok: false, status: 500, json: async () => ({}) }));
+  await t.client.loadBakList();
   assert.equal(t.els.get('bakList').children[0].textContent, 'Không tải được danh sách');
+  assert.equal(t.client.isAuthLost(), false, '5xx không phải mất duyệt');
   t = bakEnv(async () => { throw new Error('mạng'); });
   await t.client.loadBakList();
   assert.equal(t.els.get('bakList').children[0].textContent, 'Không tải được danh sách');
   t = bakEnv(bakOk([]));
   await t.client.loadBakList();
   assert.equal(t.els.get('bakList').children[0].textContent, 'Chưa có bản sao lưu trên máy chủ.');
+});
+
+test('2.22.3 Sao lưu: nhãn trước ghi đè, ẩn pager 1 trang, role list/listitem, ghi chú chỉ xem', async () => {
+  const list = [{ name: 'app-truoc-ghi-de-20261117.db', size: 2048, modified: '2026-11-17T12:30:00.000Z' }, { name: 'backup-2026-11-17.db', size: 2048, modified: '2026-11-17T12:30:00.000Z' }];
+  const { els, client } = bakEnv(bakOk(list));
+  await client.loadBakList();
+  const rows = els.get('bakList').children;
+  assert.equal(rows[0].children[0].children.length, 1, 'có nhãn');
+  assert.equal(rows[0].children[0].children[0].className, 'bak-row__tag');
+  assert.equal(rows[1].children[0].children.length, 0, 'tên thường không nhãn');
+  assert.equal(els.get('bakPager').children.length, 0, 'một trang: không pager');
+  assert.ok(PAGE.includes('id="bakList" role="list" aria-live="polite"') && PAGE.includes("setAttribute('role', 'listitem')"));
+  assert.ok(PAGE.includes('Chỉ xem. Khôi phục bản .db: chép vào data/app.db rồi khởi động lại (xem README).'));
 });
 
 test('2.22.0 Sao lưu: dòng thư mục ẩn mặc định, chỉ hiện trong Tauri; không có nút Chọn thư mục', () => {
