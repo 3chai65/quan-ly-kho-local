@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.23.0] - 2026-11-18
+- Giao diện "phẳng mờ, KHÔNG kính" của app Mac native cho `html.desktop` (Tauri + PWA desktop) và `html.pt` (iPhone, giữ bố cục): nền gradient 135 độ theo 7 theme (Navy mặc định, Prism, Cyan, Emerald, Amber khóa `gold`, Rose, Graphite); thẻ trắng .07 viền .10 bo 20 (thanh bên 24, tờ ghi/thẻ Sao lưu 18); thanh bên 230 rộng; 4 ô số bằng cao (26/600, nhãn 10); nút danh sách 34px hover sáng lên 120ms; ô nhập viên 32px focus viền .35; nút chính xanh .50/.60; cột tờ ghi 38/tên/120/110/34; 7 chấm nền một hàng 22px; toast, hộp gợi ý, hộp thoại nền đặc; biểu đồ Nhập cyan, Bán cam.
+- Kính MẶC ĐỊNH TẮT toàn app: `--blur:none` ở :root, chỉ `html.glass` bật lại; công tắc "Hiệu ứng kính" ở thanh bên (tab Sao lưu trên điện thoại), khóa mới `kho_glass_v2` ('1' = bật; giá trị cũ không bật); `?glass=1`/`?glass=0` đặt khóa. Bỏ `html.noglass` và `?glass=0` cũ (thành mặc định).
+- Chữ phụ và chữ đỏ có độ đậm riêng theo theme để giữ tương phản >= 4,5 (bảng nền tối thuần .58 trắng và #FF7373 của đặc tả không đạt trên Prism/Cyan/Emerald/Amber/Rose; Navy dùng #FF7676).
+- Không đổi luật nghiệp vụ, server.js, auth.js, API; mọi id/data-action giữ nguyên.
+- Chưa làm (đợt sau): thẻ quản lý thiết bị, dòng trạng thái đồng bộ ở thanh bên, nút "Chọn thư mục…", banner chỉ đọc; nút "Tải lại"/"Thoát" cạnh công tắc kính; dòng phụ ô số tự thu nhỏ; bộ chọn năm ‹ › ở Thống kê.
+
 ## [2.22.5] - 2026-11-18
 - Danh sách bản .db: 401 không đặt thêm câu trùng toast (`#bakStat` rỗng, danh sách ghi "Không xem được danh sách bản sao lưu"), `#bakStat` bỏ `aria-live` thừa (giữ `role="status"`), nhiều trang ghi "Trang p/n — a/b bản".
 
