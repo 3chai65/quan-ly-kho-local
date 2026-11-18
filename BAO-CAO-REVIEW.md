@@ -1,3 +1,5 @@
+Mốc kiểm: 14/11/2026 (2.17.6); các thay đổi từ 2.17.7 đến 2.23.x chưa được rà lại trong báo cáo này — xem CHANGELOG.md
+
 # Lỗi do reviewer báo: bằng chứng, đã xử lý, không xử lý, lý do
 
 Mốc: 14/11/2026, HEAD `a67605c` (phiên bản 2.17.6; các commit sau 46ddde5 chưa triển khai). Số dòng `file:dòng` lấy ở mốc `46ddde5` trừ khi ghi khác, có thể lệch về sau.

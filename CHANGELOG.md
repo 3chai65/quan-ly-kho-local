@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.23.2] - 2026-11-18
+
+### Sửa
+- Máy chủ: PUT /api/state với X-Force mà không chụp được bản trước-ghi-đè thì trả 500 và KHÔNG ghi (trước đây vẫn ghi đè); sao lưu hằng ngày vẫn fail-open. Thêm test.
+- Tài liệu: khung cảnh báo hub Mac ở README.md/README-LOCAL.md, mốc kiểm BAO-CAO-REVIEW.md, ghi chú bản Docker cũ trong CLAUDE.md.
+- CI: thêm bước `npm run lint:client` (continue-on-error, chỉ cảnh báo) sau `npm run lint`.
+
 ## [2.23.1] - 2026-11-18
 
 ### Sửa

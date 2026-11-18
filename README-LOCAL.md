@@ -1,3 +1,5 @@
+> **CẢNH BÁO (cập nhật 16/11/2026):** hub thật chạy trên **Mac mini 192.168.2.46** (Node 22 + Caddy native, KHÔNG Docker; dữ liệu `~/kho/data`; sao lưu 19:00 sang Drive). Các mục Docker/Windows bên dưới là **bản lùi đóng băng**, đừng làm theo để triển khai. Quy trình hiện hành: `D:\Soft\quy-trinh-chuyen-hub-sang-mac.md` (ngoài repo) và `CLAUDE.md`.
+
 # Quản Lý Kho — bản chạy local (Docker + SQLite)
 
 Bản đang dùng: server Node trong Docker, dữ liệu là **file SQLite trên ổ cứng**.

@@ -464,11 +464,17 @@ function snapshotBeforeForce() {
       db.prepare('VACUUM INTO ?').run(file);
       console.log('[backup] Đã chụp bản trước khi ghi đè: ' + file);
     }
+  } catch (err) {
+    console.error('[backup] Lỗi chụp bản trước khi ghi đè:', err && err.message ? err.message : err);
+    return false;
+  }
+  try { // dọn bản cũ lỗi KHÔNG tính là thất bại (bản chụp đã xong)
     const olds = fs.readdirSync(BACKUP_DIR).filter(n => FORCE_BACKUP_RE.test(n)).sort();
     while (olds.length > FORCE_BACKUP_KEEP) fs.unlinkSync(path.join(BACKUP_DIR, olds.shift()));
   } catch (err) {
-    console.error('[backup] Lỗi chụp bản trước khi ghi đè:', err && err.message ? err.message : err);
+    console.error('[backup] Lỗi dọn bản trước-ghi-đè cũ:', err && err.message ? err.message : err);
   }
+  return true;
 }
 
 function pruneBackups() {
@@ -583,8 +589,11 @@ app.put('/api/state', (req, res) => {
       }
     }
     // Chụp TRƯỚC khi ghi: bản của ngày = trạng thái trước lần ghi đầu tiên trong ngày.
-    runDailyBackup();
-    if (force) snapshotBeforeForce();
+    runDailyBackup(); // fail-open có chủ ý: chặn ghi vì backup hằng ngày lỗi = ngừng app
+    if (force && !snapshotBeforeForce()) {
+      console.warn(new Date().toISOString() + ' PUT /api/state X-Force bị chặn: không chụp được bản trước ghi đè');
+      return res.status(500).json({ success: false, error: 'Không chụp được bản sao lưu trước khi ghi đè; chưa ghi gì' });
+    }
     const updatedAt = writeState(checked.state, opId);
     const reply = { success: true, updatedAt };
     if (checked.warnings.length) reply.warnings = checked.warnings;

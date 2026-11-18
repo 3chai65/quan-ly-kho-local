@@ -498,6 +498,29 @@ test('server.js: ghi đè chủ động (X-Force) chụp bản trước-ghi-đè
   assert.ok(list.backups.some(b => /truoc-ghi-de/.test(b.name)), '/api/backups phải liệt kê cả bản trước-ghi-đè');
 });
 
+test('server.js: X-Force mà không chụp được bản trước-ghi-đè → 500, không ghi gì', async () => {
+  await put(emptyState({ products: [{ id: 'NOSNAP0', name: 'GiuNguyen', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  const before = (await getState()).updatedAt;
+  const bd = path.join(dataDir, 'backups');
+  const aside = bd + '-aside';
+  fs.renameSync(bd, aside);
+  fs.writeFileSync(bd, 'x'); // một FILE chắn đúng chỗ thư mục backup → mkdir/VACUUM lỗi
+  try {
+    const r = await put(emptyState({ products: [{ id: 'NOSNAP1', name: 'KhongDuocGhi', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+    assert.equal(r.status, 500);
+    assert.equal(r.body.success, false);
+    const after = await getState();
+    assert.equal(after.updatedAt, before, 'updatedAt giữ nguyên');
+    assert.ok(after.products.some(p => p.id === 'NOSNAP0') && !after.products.some(p => p.id === 'NOSNAP1'));
+  } finally {
+    fs.rmSync(bd, { force: true });
+    fs.renameSync(aside, bd);
+  }
+  const ok = await put(emptyState({ products: [{ id: 'NOSNAP2', name: 'GhiDuoc', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
+  assert.equal(ok.status, 200);
+  assert.ok(fs.readdirSync(bd).some(n => /-truoc-ghi-de-\d{9}\.db$/.test(n)), 'ca bình thường vẫn có file truoc-ghi-de');
+});
+
 test('server.js: bản backup ngày chụp trạng thái TRƯỚC lần ghi đầu tiên trong ngày', async () => {
   await put(emptyState({ products: [{ id: 'DAYOLD', name: 'CuTrongNgay', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
   const backupDir = path.join(dataDir, 'backups');

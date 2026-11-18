@@ -25,7 +25,7 @@ Kính: người dùng chốt 16/11/2026 giữ 4 phần tử `backdrop-filter` (h
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
 - `pwa.js` — manifest, icon PNG sinh bằng mã, sw.js passthrough (không cache); các đường này công khai GET/HEAD trong PUBLIC của `auth.js`; CSP của "/" có manifest-src/worker-src 'self'.
-- Phiên bản hiện tại: 2.23.1.
+- Phiên bản hiện tại: 2.23.2.
 - `BAO-CAO-REVIEW.md` — tổng hợp lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI ở `G:\quan-ly-kho-gpui` dùng chung schema SQLite, hiện chỉ-đọc trên `data\app.db` (ghi thử trên bản chép); không đụng `data/` từ app đó khi chưa có duyệt.
 
@@ -35,6 +35,7 @@ Sửa xong phải chạy test: logic tiền, tồn kho, đồng bộ
 Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được lỗi.
 
 ## Triển khai
+(bản Docker cũ, đóng băng; xem Vị trí chạy)
 - Build một lần với `--label org.opencontainers.image.revision=<commit>` (hash commit).
 - Thẻ `pre-X.Y.Z` = image đang chạy trước khi bật bản mới.
 - Hệ thống chặn Claude chạy `docker tag … :latest` và `docker compose up`, nên NGƯỜI DÙNG tự chạy:
@@ -45,6 +46,7 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - Cấm `docker compose down -v` (mất chứng chỉ Caddy `caddy_data`).
 
 ## Dữ liệu
+(bản Docker cũ, đóng băng; xem Vị trí chạy)
 - Không bao giờ đụng `data/`.
 - Sao lưu bằng `robocopy` (không `/MIR`) sang `E:\sao-luu-kho`, do Task Scheduler "SaoLuuKho" thực hiện.
 - Đã diễn tập khôi phục 12/11/2026 (chép backup thành app.db trong thư mục thử, chạy image, healthz 200, integrity_check ok): hướng dẫn ở `README-LOCAL.md` mục "Khôi phục từ bản sao lưu". Phát hiện: `E:` (đĩa WD) và `G:` (NVMe) khác đĩa nhưng cùng máy; `auth.db` KHÔNG được sao lưu (mất thì thiết lập lại thiết bị, dữ liệu kho không mất). ĐÃ XỬ LÝ 12/11/2026 (người dùng tự cấu hình, giám sát kiểm 6/6 đạt): SaoLuuKho chạy HẰNG NGÀY 19:00 (đổi từ 21:00 ngày 12/11/2026, giám sát/đọc lại lịch đã khớp), LogonType Interactive; `E:\sao-luu-kho\sao-luu.cmd` có 4 lệnh robocopy (2 từ `G:\...\data\backups`, `\luu-tru` sang `E:`, 2 từ `E:` sang Google Drive `J:\My Drive\Kho-sao-luu\backups` và `\luu-tru`, đường dẫn có ngoặc kép, không `/MIR`); sang Drive 17 + 13 file, 0 lỗi. Cần Google Drive cho máy tính đang chạy và ổ `J:` có mặt. Đã diễn tập khôi phục từ bản trên Drive (`J:`) 12/11/2026: SHA256 khớp `E:`, image 2.15.19 lên được, healthz 200, integrity_check ok, money_unit dong (163 sản phẩm, 660 giao dịch, 14 đơn thuốc, 322 vị); lưu ý file lấy từ ổ `J:` cục bộ của Drive (0,01 giây), chưa chứng minh bản trên đám mây tải về được từ máy khác. Đã kiểm trên web drive.google.com (12/11/2026): thư mục `Kho-sao-luu/backups` có đủ file. Tài khoản Google Drive này DÀNH RIÊNG cho sao lưu kho (người dùng xác nhận 12/11/2026, 15 GB; ~1 MB/ngày, không dọn tự động; các file có sẵn trong `My Drive` như FBReader/Google AI Studio/violentmonkey không phải của sao lưu, không đụng): không đề nghị thêm thứ khác vào tài khoản này; rà dung lượng khi `Kho-sao-luu` vượt ~1 GB (khi đó thêm quy tắc giữ N ngày). Tác vụ tự chạy bù khi lỡ giờ (StartWhenAvailable bật), Google Drive tự mở cùng Windows (HKCU Run), nếu Drive chưa sẵn thì bước sang Drive lỗi nhưng `E:` đã xong, lần sau chép bù (`/XO`). Không có thông báo khi sao lưu hỏng (có thể thêm file `trang-thai.txt` ghi OK/LỖI vào `sao-luu.cmd` nếu cần). Người dùng tự giữ: xác thực hai bước, mật khẩu riêng, không chia sẻ thư mục, không đăng nhập máy lạ.
