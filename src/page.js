@@ -667,7 +667,7 @@ html.desktop input.inp.inp--num::placeholder{font-weight:400}
 html.desktop td.c-money .inp--num{margin-left:auto}
 html.desktop .chart-year__in{width:64px;font-size:15px}
 html.desktop .note .inp{height:28px;min-height:28px;padding-top:2px;padding-bottom:2px;font-size:13px}
-html.desktop .note td .btn--icon{min-height:22px;height:22px;width:32px}
+html.desktop .note td .btn--icon{min-height:22px;height:22px;width:22px;min-width:22px}
 html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__foot{display:flex;align-items:center;gap:10px;padding:4px 12px;background:none;border-top:1px solid var(--border)}
 html.desktop .note__foot>.btn{margin-left:auto;height:30px}
@@ -677,7 +677,7 @@ html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:120px;mi
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-money{width:110px}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-act{width:34px}
 html.desktop .note :is(td,th):is(.c-num,.c-qty,.c-money,.c-act,.c-del){width:auto}
-html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left}
+html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left;padding:1px 10px 1px 2px}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__pending :is(.btn--icon,.nhap-add){display:inline-flex;width:28px;min-width:28px;height:28px;min-height:28px;padding:0;margin-left:0}
 html.desktop td .qty-hint.qty-hint--label{left:auto;right:96px;top:50%;transform:translateY(-50%);width:max-content;max-width:72px;box-sizing:border-box;padding:1px 5px;border:1px solid var(--kb);border-radius:999px;background:rgba(255,255,255,.10);color:var(--muted);font-size:11px;line-height:16px;text-align:center}
 html.desktop .note__row{flex-wrap:nowrap;justify-content:flex-start}
@@ -727,14 +727,14 @@ html.desktop #remedyFindList{top:38px;max-height:182px}
 html.desktop #remedyFindList .sug__item{height:36px}
 html.desktop #remedyList{top:30px;right:auto;width:380px}
 html.desktop #remedyBody .empty-cell{text-align:left}
-html.desktop #remedyBody .empty-cell::before{content:"+";display:inline-block;width:38px}
 html.desktop #remedyBody .empty-cell::after{content:"Tên vị thuốc"}
 html.desktop #remedyBody .c-num{font-size:0}
 html.desktop #remedyBody .c-num::before{content:"+";font-size:13px}
-html.desktop #remedyBody input.inp.inp--num{width:52px;height:22px;min-height:22px;margin-left:auto}
+html.desktop #remedyBody input.inp.inp--num{width:52px;height:22px;min-height:22px;padding:2px 5px;margin-left:auto}
 html.desktop #remedyBody .qty-hint--label{right:64px;padding:0;border:0;background:none}
+html.desktop .bx{height:32px;white-space:nowrap}
 html.desktop #remedyNoteFoot td{height:38px;background:#ffffff0f}
-html.desktop #remedyBody button{width:22px;min-width:22px;height:22px;min-height:22px;padding:0}
+html.desktop #remedyBody button{padding:0}
 html.desktop #remedyNote{margin-right:6px}
 html.desktop #remedyPresetBox{display:flex;flex-direction:column;min-height:0;margin-left:6px;overflow:clip}
 html.desktop #remedyPresetBox .rp-rows{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -835,11 +835,16 @@ html.pt .bgdots{margin-top:14px}
       });
       if (bw && bw.parentNode && window.__TAURI__) bw.parentNode.insertBefore(sz, bw.nextSibling); /* 2.20.12: ngoài Tauri không chèn (không để lại khoảng trống) */
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
+      /* 2.26.1: nút viên ở thanh đầu (chỉ desktop, tạo bằng JS nên điện thoại không có): Đơn mới (Thuốc chén), Xóa hết (Bán lẻ trái nút ngày, Nhập hàng cuối hàng) */
+      var bx = function(act, ico, txt){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn bx'; b.setAttribute('data-action', act); b.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + ico + '"/></svg>' + txt; return b; };
+      var rbar = document.querySelector('#retailBox .card__bar'), nbar = document.querySelector('#nhapBox .card__bar');
+      if (rbar) rbar.insertBefore(bx('clear-retail', 'trash', 'Xóa hết'), rbar.querySelector('.card__bar-date'));
+      if (nbar) nbar.appendChild(bx('clear-nhap', 'trash', 'Xóa hết'));
       var rs = document.getElementById('remedySearch'), rb = document.querySelector('#remedyBox .card__bar'), rp = document.getElementById('remedyPreset'); /* 2.20.6: ô nhập tên Thuốc chén lên thanh đầu như Bán lẻ/Nhập hàng (chỉ dời nút, giữ id) */
       if (rs && rb && rp) { /* 2.26.0: nửa trái = tiêu đề + Tìm vị thuốc; nửa phải = Tìm đơn đã lưu + ngày; dòng đang gõ và dòng trống nằm cùng bảng tờ ghi (thứ tự: dòng ghi, dòng gõ, dòng trống) */
         var bl = document.createElement('div'), br = document.createElement('div'), nb = document.getElementById('remedyNoteBody'), pb = document.getElementById('remedyBody'), fl = document.createElement('tbody');
         rs.placeholder = 'Tìm vị thuốc'; rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'; br.className = 'rbr';
-        bl.appendChild(rb.querySelector('.card__bar-title')); bl.appendChild(rs); br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(rb.querySelector('.card__bar-date')); rb.insertBefore(bl, rp); rb.appendChild(br);
+        bl.appendChild(rb.querySelector('.card__bar-title')); bl.appendChild(rs); br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(bx('new-remedy', 'plus', 'Đơn mới')); br.appendChild(rb.querySelector('.card__bar-date')); rb.insertBefore(bl, rp); rb.appendChild(br);
         if (nb && pb) { fl.id = 'remedyFill'; nb.parentNode.insertBefore(pb, nb.nextSibling); nb.parentNode.insertBefore(fl, pb.nextSibling); }
       }
       mark();
@@ -2358,6 +2363,15 @@ function orderEmpty(tb, cols, text){
   tr.setAttribute('data-empty', '1');
   tr.className = 'is-empty';
   var td = el('td', 'empty-cell muted small', text);
+  if (tb.id === 'remedyBody' && isDesk()) { /* 2.26.1 desktop: dòng đang gõ trống vẫn đủ 4 ô: "+", chữ mờ, ô Gram và nút + vô hiệu (chỉ để thấy chỗ) */
+    var qd = el('input', 'inp inp--sm inp--num'), bd = el('button', 'btn btn--icon btn--primary');
+    qd.disabled = bd.disabled = true; qd.placeholder = 'Gram'; qd.setAttribute('aria-label', 'Số lượng (gram)'); bd.setAttribute('aria-label', 'Thêm vào tờ ghi'); bd.appendChild(svg('plus'));
+    tr.appendChild(el('td', 'c-num muted')); tr.appendChild(td);
+    var tq = el('td', 'c-qty'), tdl = el('td', 'c-del');
+    tq.appendChild(qd); tdl.appendChild(bd); tr.appendChild(tq); tr.appendChild(tdl);
+    tb.appendChild(tr);
+    return;
+  }
   td.colSpan = cols;
   tr.appendChild(td);
   tb.appendChild(tr);
@@ -2940,6 +2954,27 @@ function closePreset(){
   if (sel) sel.value = '';
   remedyPresetPick();
   focusNS($('#remedySearch'));
+}
+/* 2.26.1 desktop: nút "Đơn mới": đang mở đơn có sẵn = như ✕ (không hỏi); đang ghi dở thì hỏi rồi xóa dòng, ô tìm, thang/giá về mặc định; luôn trỏ về Tìm vị thuốc. */
+function hasVal(s){ var e = $(s); return !!(e && e.value); }
+function newRemedy(){
+  var sel = $('#remedyPreset');
+  if (sel && sel.value) { closePreset(); return; }
+  var n = remedyItems.length, th = $('#remedyThang');
+  if (n || $('#remedyBody tr[data-pid]') || hasVal('#remedySearch') || hasVal('#remedyUnitPrice') || (th && th.value && th.value !== '1')) {
+    if (!confirm(n ? 'Bỏ ' + n + ' dòng đang ghi và làm đơn mới?' : 'Bỏ chữ đang gõ và làm đơn mới?')) return;
+    resetRemedy();
+    presetFindClose(true);
+  }
+  focusNS($('#remedySearch'));
+}
+/* 2.26.1 desktop: nút "Xóa hết" Bán lẻ/Nhập hàng: có dòng nháp hoặc chữ đang gõ thì hỏi, rồi xóa nháp (giữ ngày đang chọn) và trỏ về ô tìm vị; không có gì thì không làm gì. */
+function clearDraft(kind){
+  var r = kind === 'retail', n = r ? retailItems.length : nhapList.length;
+  if (!n && !(r ? $('#retailBody tr[data-pid]') || hasVal('#retailSearch') : hasVal('#nhapSearch') || hasVal('#nhapQty') || hasVal('#nhapPrice'))) return;
+  if (!confirm(n ? 'Xóa hết ' + n + ' dòng đang ghi và làm lại từ đầu?' : 'Xóa chữ đang gõ và làm lại từ đầu?')) return;
+  if (r) resetRetail(); else { nhapList = []; nhapNotePage = 1; renderNhapList(); resetNhapInputs(); }
+  focusNS($(r ? '#retailSearch' : '#nhapSearch'));
 }
 function updatePresetUI(){
   var sel = $('#remedyPreset');
@@ -5398,6 +5433,9 @@ function handleAction(btn){
     case 'del-preset': delPreset(); break;
     case 'pick-preset': pickPresetRow(id); break;
     case 'close-preset': closePreset(); break;
+    case 'new-remedy': newRemedy(); break;
+    case 'clear-retail': clearDraft('retail'); break;
+    case 'clear-nhap': clearDraft('nhap'); break;
     case 'edit-prod': openEdit(id); break;
     case 'del-prod': delProduct(id); break;
     case 'del-nhap-item': {

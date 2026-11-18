@@ -6567,7 +6567,7 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   // (5) cột: STT 40, tên 290, SL 110, giá 100, cột thao tác auto (hấp thụ phần còn lại, nút sát trái)
   assert.equal(px(/col\.cg-num\{width:(\d+)px/), 38); assert.ok(block.includes('col.cg-name{width:auto}'));
   assert.equal(px(/col\.cg-qty\{width:(\d+)px;min-width:120px/), 120); assert.equal(px(/col\.cg-money\{width:(\d+)px/), 110);
-  assert.ok(block.includes('col.cg-act{width:34px}') && block.includes('.c-act,.c-del){text-align:left}'));
+  assert.ok(block.includes('col.cg-act{width:34px}') && block.includes('.c-act,.c-del){text-align:left;padding:1px 10px 1px 2px}'));
   // (2) đường kẻ: mọi đường ngang 1px solid var(--border); không còn 2px/dashed trong khối desktop
   assert.ok(!/border-(top|bottom):(?:[2-9]px|1px dashed)/.test(block));
   assert.ok(block.includes('html.desktop .note tfoot td{border-top:1px solid var(--border);border-bottom:0}') && block.includes('html.desktop .note__pending tfoot td{border-top:0}'));
@@ -7110,7 +7110,7 @@ test('2.25.0 thanh bên: nút Tải lại (reload-app) luôn có; Thoát chỉ t
 });
 
 /* ===== 2.26.0 Thuốc chén desktop: ô "Tìm đơn đã lưu", ✕ bỏ đơn, dòng đang gõ trong tờ ghi ===== */
-function findKit(presets) {
+function findKit(presets, extra = {}) {
   const attrs = (e) => { e.attrs = {}; e.setAttribute = (k, v) => { e.attrs[k] = String(v); }; e.getAttribute = (k) => (k in e.attrs ? e.attrs[k] : null); return e; };
   const list = attrs(makeEl()); list.querySelectorAll = () => list.children; list.hidden = true;
   Object.defineProperty(list, 'textContent', { get() { return ''; }, set() { list.children.length = 0; } });
@@ -7121,7 +7121,7 @@ function findKit(presets) {
   const doc = trackDoc(els);
   doc.documentElement.classList.contains = (k) => k === 'desktop';
   doc.createElement = () => attrs(makeEl());
-  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, ...extra });
   c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: presets, updatedAt: 1, moneyUnit: 'dong' });
   c.setBase(1);
   const names = () => list.children.map(x => x.children[0].textContent);
@@ -7261,4 +7261,117 @@ test('2.26.0 cấu trúc: hàng A chỉ 2 ô + ngày ở desktop, #remedyPreset 
   assert.match(PAGE, /html:not\(\.desktop\) #remedyNote>\.note__list>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/, 'luật ẩn thead khi rỗng chỉ cho điện thoại');
   assert.ok(PAGE.includes("rs.placeholder = 'Tìm vị thuốc'") && PAGE.includes('placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén"'), 'đổi chữ gợi ý chỉ ở desktop');
   assert.ok(PAGE.includes("window.prompt(isDesk() ? 'Tên đơn mới' : 'Tên đơn', '')") && PAGE.includes('if (isDesk() || (window.matchMedia'), 'Lưu đơn chưa có tên: desktop hỏi bằng hộp thoại, không mở ô tên');
+});
+
+/* ===== 2.26.1 Thuốc chén desktop: nút "Đơn mới", dòng đang gõ đủ ô, ⋯ trong thẻ; Bán lẻ/Nhập hàng: nút "Xóa hết" ===== */
+const act = (name) => ({ getAttribute: (k) => (k === 'data-action' ? name : null) });
+function confirmSpy(ans) { const log = []; return { log, fn: (m) => { log.push(m); return ans; } }; }
+
+test('2.26.1 Đơn mới: đang mở đơn có sẵn thì về tờ ghi trống ngay, không hỏi', () => {
+  const sp = confirmSpy(false);
+  const k = findKit(FIND_RX, { confirm: sp.fn });
+  k.c.pickPresetRow('RX1');
+  assert.equal(k.c.getRemedyItems().length, 1);
+  k.doc.activeElement = null;
+  k.c.handleAction(act('new-remedy'));
+  assert.deepEqual(sp.log, [], 'không hỏi');
+  assert.equal(k.els['#remedyPreset'].value, '');
+  assert.equal(k.c.getRemedyItems().length, 0);
+  assert.equal(k.doc.activeElement, k.els['#remedySearch']);
+});
+
+test('2.26.1 Đơn mới: đang ghi dòng chưa lưu thì hỏi "Bỏ N dòng đang ghi và làm đơn mới?"; Hủy giữ nguyên; đồng ý xóa dòng/ô tìm/thang/giá và trỏ về Tìm vị thuốc', () => {
+  const no = confirmSpy(false), yes = confirmSpy(true);
+  const rows = [{ productId: 'p1', grams: 5 }, { productId: 'p1', grams: 7 }];
+  const a = findKit(FIND_RX, { confirm: no.fn });
+  a.c.setRemedyItems(rows.slice());
+  a.c.handleAction(act('new-remedy'));
+  assert.deepEqual(no.log, ['Bỏ 2 dòng đang ghi và làm đơn mới?']);
+  assert.equal(a.c.getRemedyItems().length, 2, 'Hủy: giữ nguyên');
+  const b = findKit(FIND_RX, { confirm: yes.fn });
+  b.c.setRemedyItems(rows.slice());
+  b.els['#remedySearch'].value = 'cam'; b.els['#remedyThang'].value = '4'; b.els['#remedyUnitPrice'].value = '90'; b.els['#remedyFind'].value = 'ab';
+  b.doc.activeElement = null;
+  b.c.handleAction(act('new-remedy'));
+  assert.deepEqual(yes.log, ['Bỏ 2 dòng đang ghi và làm đơn mới?']);
+  assert.equal(b.c.getRemedyItems().length, 0);
+  assert.equal(b.els['#remedySearch'].value, ''); assert.equal(b.els['#remedyThang'].value, '1'); assert.equal(b.els['#remedyUnitPrice'].value, ''); assert.equal(b.els['#remedyFind'].value, '');
+  assert.equal(b.doc.activeElement, b.els['#remedySearch']);
+});
+
+test('2.26.1 Đơn mới: không có gì để bỏ thì không hỏi, chỉ đưa trỏ về Tìm vị thuốc', () => {
+  const sp = confirmSpy(true);
+  const k = findKit(FIND_RX, { confirm: sp.fn });
+  k.els['#remedyThang'].value = '1';
+  k.c.handleAction(act('new-remedy'));
+  assert.deepEqual(sp.log, []);
+  assert.equal(k.doc.activeElement, k.els['#remedySearch']);
+  assert.equal(k.c.getDb().prescriptions.length, 4, 'không đụng đơn đã lưu');
+});
+
+test('2.26.1 dòng đang gõ trống ở desktop có đủ 4 ô: "+", chữ mờ, ô Gram và nút + (vô hiệu); điện thoại vẫn một ô gộp', () => {
+  const mk = (desk) => { const k = findKit(FIND_RX); k.doc.documentElement.classList.contains = (c) => desk && c === 'desktop'; k.els['#remedyBody'].id = 'remedyBody'; k.c.resetDrafts(); return k.els['#remedyBody'].children[0]; };
+  const d = mk(true);
+  assert.equal(d.children.length, 4);
+  const inp = d.children[2].children[0], btn = d.children[3].children[0];
+  assert.equal(inp.disabled, true); assert.equal(inp.placeholder, 'Gram');
+  assert.equal(btn.disabled, true); assert.equal(btn.attrs['data-action'], undefined, 'nút vô hiệu không có data-action');
+  const m = mk(false);
+  assert.equal(m.children.length, 1); assert.equal(m.children[0].colSpan, 4);
+});
+
+function drKit(extra) {
+  const attrs = (e) => { e.attrs = {}; e.setAttribute = (k, v) => { e.attrs[k] = String(v); }; e.getAttribute = (k) => (k in e.attrs ? e.attrs[k] : null); return e; };
+  const els = { '#retailSearch': makeEl(), '#retailDate': makeEl(), '#retailBody': makeEl(), '#nhapSearch': makeEl(), '#nhapQty': makeEl(), '#nhapPrice': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl() };
+  const doc = trackDoc(els); doc.createElement = () => attrs(makeEl());
+  els['#retailDate'].value = '05/11/2026';
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, ...extra });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  return { els, doc, c };
+}
+
+test('2.26.1 Xóa hết (Bán lẻ): có dòng nháp thì hỏi "Xóa hết N dòng đang ghi và làm lại từ đầu?"; Hủy giữ nguyên; đồng ý xóa nháp, GIỮ ngày, trỏ về ô tìm vị', () => {
+  const no = confirmSpy(false), yes = confirmSpy(true);
+  const rows = [{ productId: 'p1', qty: 1, money: 2 }, { productId: 'p1', qty: 2, money: 3 }, { productId: 'p1', qty: 3, money: 4 }];
+  const a = drKit({ confirm: no.fn });
+  a.c.setRetailItems(rows.slice());
+  a.c.handleAction(act('clear-retail'));
+  assert.deepEqual(no.log, ['Xóa hết 3 dòng đang ghi và làm lại từ đầu?']);
+  assert.equal(a.c.getRetailItems().length, 3);
+  const b = drKit({ confirm: yes.fn });
+  b.c.setRetailItems(rows.slice()); b.els['#retailSearch'].value = 'ca';
+  b.c.handleAction(act('clear-retail'));
+  assert.equal(b.c.getRetailItems().length, 0);
+  assert.equal(b.els['#retailSearch'].value, '');
+  assert.equal(b.els['#retailDate'].value, '05/11/2026', 'giữ ngày đang chọn');
+  assert.equal(b.doc.activeElement, b.els['#retailSearch']);
+});
+
+test('2.26.1 Xóa hết: không có gì thì không hỏi, không làm gì; chỉ có chữ đang gõ (0 dòng) thì hỏi bản không đếm dòng; Nhập hàng cùng cách', () => {
+  const sp = confirmSpy(true);
+  const k = drKit({ confirm: sp.fn });
+  k.c.handleAction(act('clear-retail')); k.c.handleAction(act('clear-nhap'));
+  assert.deepEqual(sp.log, []); assert.equal(k.doc.activeElement, null, 'không làm gì cả, kể cả con trỏ');
+  k.els['#retailSearch'].value = 'cam';
+  k.c.handleAction(act('clear-retail'));
+  assert.deepEqual(sp.log, ['Xóa chữ đang gõ và làm lại từ đầu?']);
+  assert.equal(k.els['#retailSearch'].value, '');
+  k.els['#nhapQty'].value = '5';
+  k.c.setNhapList([{ name: 'A', qty: 1, price: 1 }, { name: 'B', qty: 2, price: 1 }]);
+  k.c.handleAction(act('clear-nhap'));
+  assert.equal(sp.log[1], 'Xóa hết 2 dòng đang ghi và làm lại từ đầu?');
+  assert.equal(k.c.getNhapList().length, 0); assert.equal(k.els['#nhapQty'].value, '');
+  assert.equal(k.doc.activeElement, k.els['#nhapSearch']);
+});
+
+test('2.26.1 cấu trúc: nút Đơn mới/Xóa hết chỉ do JS desktop tạo (điện thoại không có trong DOM/CSS); ⋯ và + nằm trong thẻ (cột thao tác 34, đệm phải 10); ô Gram không bị cắt chữ', () => {
+  assert.ok(PAGE.includes("bx('new-remedy', 'plus', 'Đơn mới')") && PAGE.includes("bx('clear-retail', 'trash', 'Xóa hết')") && PAGE.includes("bx('clear-nhap', 'trash', 'Xóa hết')"));
+  assert.ok(!PAGE.includes('data-action="new-remedy"') && !PAGE.includes('data-action="clear-retail"') && !PAGE.includes('data-action="clear-nhap"'), 'không có nút trong HTML tĩnh');
+  assert.equal(PAGE.split('.bx{').length - 1, 1, 'CSS .bx chỉ một chỗ');
+  const block = deskBlock();
+  assert.ok(block.includes('html.desktop .bx{height:32px;white-space:nowrap}'), 'nút viên cao 32');
+  assert.ok(block.includes('html.desktop .note td .btn--icon{min-height:22px;height:22px;width:22px;min-width:22px}'), '⋯ 22 tròn, không còn 32 tràn mép');
+  assert.ok(2 + 22 + 10 <= 34 && 10 >= 8, 'cột 34 = đệm trái 2 + nút 22 + đệm phải 10: nút cách mép thẻ >= 8');
+  assert.ok(block.includes('input.inp.inp--num{width:52px;height:22px;min-height:22px;padding:2px 5px;margin-left:auto}'), 'Gram rộng 52, đệm 5 để chữ Gram không cụt');
+  assert.ok(!block.includes('#remedyBody .empty-cell::before'), 'dấu + dòng trống do ô STT, không đặt hai lần');
 });

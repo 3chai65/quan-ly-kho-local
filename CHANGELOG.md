@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.26.1] - 2026-11-18
+- Thuoc chen desktop: nut vien "+ Don moi" (cao 32, luon hien, giua o Tim don va nut ngay): dang mo don co san = ve to ghi trong ngay (nhu X); dang ghi do thi hoi "Bo N dong dang ghi va lam don moi?" (confirm cua trinh duyet: OK/Huy), dong y thi xoa dong, o tim, thang/gia ve mac dinh; luon tro ve o "Tim vi thuoc".
+- Ban le va Nhap hang desktop: nut vien "Xoa het" (Ban le ben trai nut ngay, Nhap hang cuoi hang): co dong nhap hoac chu dang go thi hoi "Xoa het N dong dang ghi va lam lai tu dau?", dong y thi xoa nhap (GIU ngay dang chon) va tro ve o tim vi; khong co gi thi khong lam gi. Nut tao bang JS desktop nen dien thoai khong co.
+- Sua loi hien thi: nut ... cua dong du lieu to ghi bi cat o mep phai (nay 22x22, cach mep the 11); dong dang go cua Thuoc chen luon co o Gram va nut + (mo, vo hieu khi chua chon vi); chu "Gram" khong con bi cut.
+- Khong doi du lieu/tien/ton kho/luat luu-ban. Hop "Ten don moi" van la window.prompt (hop tu ve can them khoi HTML/JS > 30 dong).
+
 ## [2.26.0] - 2026-11-18
 - Thuoc chen (chi html.desktop; iPhone/PWA hep giu nguyen): hang A chia doi 50/50 cao 32: trai = Thuoc chen + o "Tim vi thuoc", phai = o "Tim don da luu" + nut ngay; an select #remedyPreset (con trong DOM cho dien thoai), khong con "Don moi".
 - O "Tim don da luu": khop tron tu/cum tu (wholeWordMatch), tha xuong toi da 5 dong x 36, ↑/↓ xoay vong, Enter chon dong sang (chua sang = dong dau), Esc xoa o; chon xong nap don, xoa o tim, tro ve "Tim vi thuoc". Dang mo don: o phai hien ten don + nut ✕ (bo don, to ghi ve trong).
