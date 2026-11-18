@@ -516,11 +516,11 @@ test('server.js: X-Force mà không chụp được bản trước-ghi-đè → 
     fs.rmSync(bd, { force: true });
     fs.renameSync(aside, bd);
   }
-  const countSnap = () => fs.readdirSync(bd).filter(n => /-truoc-ghi-de-\d{9}\.db$/.test(n)).length;
-  const snapBefore = countSnap();
+  const snapNames = () => new Set(fs.readdirSync(bd).filter(n => /-truoc-ghi-de-\d{9}\.db$/.test(n)));
+  const snapBefore = snapNames();
   const ok = await put(emptyState({ products: [{ id: 'NOSNAP2', name: 'GhiDuoc', stock: 1, costPrice: 1 }] }), { 'X-Force': '1' });
   assert.equal(ok.status, 200);
-  assert.equal(countSnap(), snapBefore + 1, 'PUT X-Force thành công thêm đúng 1 file truoc-ghi-de');
+  assert.ok([...snapNames()].some(n => !snapBefore.has(n)), 'PUT X-Force thành công chụp một file truoc-ghi-de mới (server giữ tối đa 10)');
 });
 
 test('server.js: bản backup ngày chụp trạng thái TRƯỚC lần ghi đầu tiên trong ngày', async () => {
