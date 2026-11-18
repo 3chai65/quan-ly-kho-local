@@ -90,7 +90,7 @@ globalThis.__test = {
   setSyncDetail: function(v){ syncDetail = String(v || ''); },
   setDirtySince: function(v){ dirtySince = num(v); },
   isAuthLost: function(){ return authLost; },
-  setAuthLost: function(v){ authLost = !!v; },
+  setAuthLost: function(v){ authLost = !!v; }, setRefreshing: function(v){ refreshing = !!v; },
   renderSyncBadge: (typeof renderSyncBadge === 'function' ? renderSyncBadge : null),
   discardUnsynced: (typeof discardUnsynced === 'function' ? discardUnsynced : null), restoreFromFile: (typeof restoreFromFile === 'function' ? restoreFromFile : null),
   readLocal: (typeof readLocal === 'function' ? readLocal : null),
@@ -2706,7 +2706,8 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 166); // 2.21.0 thêm symbol i-inbox, i-outbox, i-drive: 163 -> 166; 2.20.9 thêm remedyPresetBox, remedyPresetRows, remedyPresetPager: 160 -> 163;  2.20.0 thêm nhapListPager: 159 -> 160; 2.17.6 bỏ remedyQty: 160 -> 159; 2.17.3 thêm retailNoteFoot, nhapListFoot: 158 -> 160; 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  const ids = [...PAGE.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(new Set(ids).size, ids.length, 'id trùng nhau: ' + ids.filter((x, k) => ids.indexOf(x) !== k));
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -6789,4 +6790,45 @@ test('2.21.1 P2.3 openTxEdit dòng thuốc chén cũ thiếu g: hiện gram quy 
   assert.equal(els['#txEditQty'].value, '10');
   c.openTxEdit('new');
   assert.equal(els['#txEditQty'].value, '10');
+});
+
+test('2.21.5 restoreFromFile: authLost hoặc đang refreshing thì chặn, không confirm, không tải, không đổi dữ liệu', () => {
+  const raw = JSON.stringify({ app: 'quan-ly-kho', data: { products: [{ id: 'p1', name: 'Mới', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] } });
+  const keep = { products: [{ id: 'keep', name: 'Giữ', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' };
+  for (const set of ['setAuthLost', 'setRefreshing']) {
+    const downloads = [], msgEl = makeEl(); let asked = 0;
+    const doc = bakDoc({}, downloads);
+    doc.querySelector = (q) => q === '#toast' ? makeEl() : q === '#toastMsg' ? msgEl : null;
+    const c = loadClient({ document: doc, Blob: class {}, FileReader: readerOf(raw), confirm: () => { asked++; return true; },
+      fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 2 }) }) });
+    c.setDb(structuredClone(keep));
+    c[set](true);
+    c.restoreFromFile({ size: raw.length });
+    assert.equal(asked, 0, set);
+    assert.equal(downloads.length, 0, set);
+    assert.equal(c.getDb().products[0].name, 'Giữ', set);
+    assert.ok(msgEl.textContent, set + ' phải có toast lý do');
+  }
+});
+
+test('2.21.5 firstUse: cử chỉ đầu là nút khôi phục thì KHÔNG tự sao lưu và giữ listener; cử chỉ khác thì có', () => {
+  const handlers = {}, downloads = [];
+  const doc = bakDoc(handlers, downloads);
+  doc.readyState = 'complete';
+  const store = new Map();
+  const localStorage = { getItem: (k) => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem() {} };
+  const c = loadClient({ document: doc, Blob: class {}, localStorage, setTimeout: () => 0, setInterval() { return 0; }, clearInterval() {}, fetch: async () => { throw new Error('offline'); } });
+  c.getDb().products.push({ id: 'p1', name: 'A', stock: 1, costPrice: 1 });
+  const fire = (target) => handlers.click[handlers.click.length - 1]({ target });
+  fire({ closest: (q) => q === '[data-action=restore-file]' ? {} : null });
+  assert.equal(downloads.length, 0, 'bấm nút khôi phục không được tự tải');
+  assert.ok(handlers.click.length, 'listener còn');
+  fire({ closest: () => null });
+  assert.equal(downloads.length, 1);
+});
+
+test('2.21.5 tài liệu *.md không chứa ký tự điều khiển (vd \b, \a do gõ \ trong đường dẫn)', () => {
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  const files = fs.readdirSync(root).filter(f => f.endsWith('.md'));
+  for (const f of files) assert.doesNotMatch(fs.readFileSync(root + f, 'utf8'), /[ --]/, f);
 });

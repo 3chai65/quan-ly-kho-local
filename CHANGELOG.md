@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.21.5] - 2026-11-18
+
+- Sao lưu/khôi phục: chữ bớt khẳng định ("Đã gửi lệnh tải hôm nay"); nút khôi phục không kích hoạt tự sao lưu; chặn khôi phục khi mất xác thực/đang đồng bộ; sửa ký tự điều khiển trong tài liệu (+ test quét *.md); README-LOCAL "giữ N bản".
+
 ## [2.21.4] - 2026-11-18
 - Xóa route /favicon.ico 204 đã chết trong server.js; thêm test HTTP icon PWA công khai (GET/HEAD 200, Content-Type) và /api/state vẫn 401.
 

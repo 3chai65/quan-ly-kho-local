@@ -34,7 +34,7 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 - Server tự tạo **1 bản backup/ngày** vào `G:\quan-ly-kho-local\data\backups\`,
   tên `backup-YYYY-MM-DD.db`, giữ **30 bản** gần nhất (bản cũ tự xóa, chụp trước lần ghi đầu tiên trong ngày);
   đồng thời tự chụp thêm bản `backup-YYYY-MM-DD-truoc-ghi-de-HHmmssSSS.db` (giữ **10 bản**) trước mỗi lần ghi đè chủ động (`X-Force`).
-- Xem danh sách backup: app CHƯA có giao diện cho việc này (mục "Sao lưu & khôi phục" trong app chỉ tải/nạp file JSON). Xem thư mục `dataackups\` hoặc gọi `GET /api/backups` (số bản giữ tính theo SỐ FILE, không phải số ngày). Các đường `/api/*` cần cookie của thiết bị đã duyệt; mở thẳng `http://localhost:8787/api/backups` từ trình duyệt chưa duyệt sẽ bị 401.
+- Xem danh sách backup: app CHƯA có giao diện cho việc này (mục "Sao lưu & khôi phục" trong app chỉ tải/nạp file JSON). Xem thư mục `data\backups\` hoặc gọi `GET /api/backups` (số bản giữ tính theo SỐ FILE, không phải số ngày). Các đường `/api/*` cần cookie của thiết bị đã duyệt; mở thẳng `http://localhost:8787/api/backups` từ trình duyệt chưa duyệt sẽ bị 401.
 - **Khôi phục nhanh:** dừng container, copy file backup đè lên `app.db`, khởi động lại:
   ```powershell
   cd "G:\quan-ly-kho-local"
@@ -51,7 +51,7 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 Đã diễn tập thật 12/11/2026: chép một backup thành `app.db` trong thư mục thử, chạy image 2.15.19 → `/healthz` 200, `integrity_check` ok, `money_unit` là `dong`.
 
 ### Các lớp sao lưu hiện có
-1. **Server tự tạo** `data\backups\backup-<ngày>.db` (`VACUUM INTO`, chụp trước lần ghi đầu tiên trong ngày) và `backup-<ngày>-truoc-ghi-de-<giờ>.db` (trước mỗi lần ghi đè chủ động); giữ 30 ngày/bản như mục trên.
+1. **Server tự tạo** `data\backups\backup-<ngày>.db` (`VACUUM INTO`, chụp trước lần ghi đầu tiên trong ngày) và `backup-<ngày>-truoc-ghi-de-<giờ>.db` (trước mỗi lần ghi đè chủ động); giữ N bản như mục trên (tính theo số file).
 2. **Task Scheduler "SaoLuuKho"** chạy `E:\sao-luu-kho\sao-luu.cmd`: `robocopy` `data\backups` và `data\luu-tru` sang `E:\sao-luu-kho` với cờ `/E /XO /R:2 /W:5`, KHÔNG dùng `/MIR`. Chạy hằng ngày lúc 19:00 (từ 12/11/2026), chỉ khi đã đăng nhập Windows (LogonType Interactive).
 3. `E:` là đĩa khác `G:` nhưng cùng máy: mất máy là mất cả hai. Vì vậy cũng trong `sao-luu.cmd`, hai lệnh `robocopy` cuối chép `E:\sao-luu-kho\backups` và `luu-tru` sang Google Drive tại `J:\My Drive\Kho-sao-luu\` (dùng `/E /XO`, không `/MIR`, đường dẫn có ngoặc kép vì có khoảng trắng). Cần Google Drive cho máy tính đang chạy và ổ `J:` có mặt; nếu `J:` vắng thì bước Drive lỗi nhưng bản ở `E:` đã xong. Đã kiểm 12/11/2026: 17 file backup và 13 file lưu trữ sang Drive, 0 lỗi, khớp với `E:`.
 4. `E:` KHÔNG chứa `app.db`/`auth.db` đang chạy; chỉ có các file backup.

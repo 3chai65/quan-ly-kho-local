@@ -4873,7 +4873,7 @@ function renderBackupInfo(){
   var h = $('#backupHint');
   if (h) h.textContent = !last
     ? 'Chưa sao lưu'
-    : (last === todayISO() ? 'Đã sao lưu hôm nay' : 'Sao lưu ' + bakDateText(last));
+    : (last === todayISO() ? 'Đã gửi lệnh tải hôm nay' : 'Sao lưu ' + bakDateText(last));
 }
 function downloadBackup(manual, filename, skipStamp){
   var url = null;
@@ -5019,6 +5019,7 @@ function parseBackup(text){
 }
 function restoreFromFile(file){
   if (!file) return;
+  if (authLost || refreshing) { toast(authLost ? 'Thiết bị chưa được duyệt: chưa thể khôi phục' : 'Đang đồng bộ, thử lại sau giây lát', 'error'); return; }
   if (file.size > 12 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
   var fr = new FileReader();
   fr.onload = function(){
@@ -5052,7 +5053,7 @@ function restoreFromFile(file){
     db = bak;
     resetDrafts();
     /* Restore là ghi đè chủ động: bỏ qua kiểm tra conflict và ép ghi lên máy chủ. */
-    commit('Đã khôi phục từ file sao lưu (đã lưu bản trước đó)', true);
+    commit('Đã khôi phục từ file sao lưu', true);
   };
   fr.onerror = function(){ toast('Không đọc được file', 'error'); };
   fr.readAsText(file);
@@ -5723,7 +5724,8 @@ function init(){
   }
   startAutoRefresh();
 
-  var firstUse = function(){
+  var firstUse = function(e){
+    if (e && e.target && e.target.closest && e.target.closest('[data-action=restore-file]')) return; /* cử chỉ đầu là nút khôi phục: không tự tải, giữ listener */
     doc.removeEventListener('click', firstUse);
     doc.removeEventListener('keydown', firstUse);
     maybeAutoBackup(); /* chạy ngay trong cử chỉ người dùng: tải qua setTimeout dễ bị trình duyệt chặn */
