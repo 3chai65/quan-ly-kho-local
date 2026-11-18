@@ -817,7 +817,7 @@ html.pt .bgdots{margin-top:14px}
       var sbf = document.createElement('div'), sy = document.createElement('div'), rw = document.createElement('div'), rl = document.createElement('button'), ex = document.createElement('button');
       sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…'; rw.className = 'sbb';
       rl.type = ex.type = 'button'; rl.className = ex.className = 'btn'; rl.textContent = 'Tải lại'; rl.setAttribute('data-action', 'reload-app'); ex.textContent = 'Thoát'; ex.hidden = !window.__TAURI__;
-      ex.onclick = function(){ try { window.__TAURI__.window.getCurrentWindow().close(); } catch (e) {} };
+      ex.setAttribute('data-action', 'exit-app'); /* 2.27.0: xử lý ở exitAppClick (có hỏi nháp) */
       rw.appendChild(rl); rw.appendChild(ex);
       [w, sy, gl, rw].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
       var th = document.querySelector('.thk'), ct = document.getElementById('chartTip'); if (th && ct) th.appendChild(ct); /* 2.25.0: dòng tháng + chip Nhập/Bán nằm dưới hàng 4 số */
@@ -2226,10 +2226,19 @@ function renderReloadBtn(){
   var b = $('#reloadBtn');
   if (b) b.hidden = !isStandaloneMode();
 }
-function reloadAppClick(){
+/* 2.27.0: Tải lại / Thoát dùng chung một phép kiểm nháp (cờ chưa gửi + đơn nháp trong bộ nhớ); không đăng xuất, không xóa cookie. */
+function draftOk(verb){
   var pending = dirty || (retailItems && retailItems.length) || (remedyItems && remedyItems.length) || (nhapList && nhapList.length);
-  if (pending && !confirm('Còn thay đổi hoặc đơn nháp chưa lưu. Tải lại sẽ mất đơn nháp chưa lưu.\n\nVẫn tải lại?')) return false;
+  return !pending || confirm('Còn đơn nháp chưa lưu. ' + verb + ' sẽ mất đơn nháp chưa lưu. Vẫn ' + verb.toLowerCase() + '?');
+}
+function reloadAppClick(){
+  if (!draftOk('Tải lại')) return false;
   location.reload();
+  return true;
+}
+function exitAppClick(){
+  if (!window.__TAURI__ || !draftOk('Thoát')) return false;
+  try { window.__TAURI__.window.getCurrentWindow().close(); } catch (e) {}
   return true;
 }
 function discardUnsynced(){
@@ -2325,6 +2334,7 @@ function denyDevices(){
   if (yin) { yin.classList.remove('is-shake'); void yin.offsetWidth; yin.classList.add('is-shake'); }
   var note = $('#brandNote');
   if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';
+  toast('Chỉ thiết bị chủ quản lý được thiết bị.', 'error'); /* 2.27.0 */
 }
 function brandDevicesClick(){
   if (brandBusy) return Promise.resolve();
@@ -3430,7 +3440,7 @@ function renderInventory(){
   if (!tbody) return;
   tbody.textContent = '';
   var kw = normSearch(($('#invSearch') || {}).value || '');
-  var list = db.products.filter(function(p){ return !kw || normSearch(p.name).indexOf(kw) >= 0; });
+  var list = db.products.filter(function(p){ return !kw || wholeWordMatch(p.name, kw); }); /* 2.27.0: một luật tìm chung (trọn chữ) */
 
   // Tổng kg đã bán theo từng vị (BAN: bán lẻ + đơn chén, đều lưu qty_kg)
   var sales = {};
@@ -3731,10 +3741,10 @@ function historyData(kind, month, q){
   if (nq) {
     rows = rows.filter(function(r){
       if (r.group) {
-        if (normSearch(r.name || '').indexOf(nq) >= 0) return true;
-        return r.items.some(function(t){ var nm = txName(t); return nm && normSearch(nm).indexOf(nq) >= 0; });
+        if (wholeWordMatch(r.name || '', nq)) return true;
+        return r.items.some(function(t){ var nm = txName(t); return nm && wholeWordMatch(nm, nq); });
       }
-      return r.name && normSearch(r.name).indexOf(nq) >= 0;
+      return r.name && wholeWordMatch(r.name, nq);
     });
   }
 
@@ -4134,7 +4144,7 @@ function wholeWordMatch(name, query){
   }
   return false;
 }
-/* Luật whole-word cho hộp gợi ý tên Bán lẻ/Thuốc chén/Nhập hàng, MỌI thiết bị. Ô lọc Kho tồn/Lịch sử (inv, imph) giữ luật chứa chuỗi. */
+/* 2.27.0: mọi ô tìm tên dùng wholeWordMatch; sugWhole chỉ còn quyết định bố cục khung gợi ý (3 hàng) của Bán lẻ/Thuốc chén/Nhập hàng. */
 function sugWhole(key){ return key === 'retail' || key === 'remedy' || key === 'nhap'; }
 /* 2.15.9: khung gợi ý cao đúng n mục (đo mục thật) + đệm/viền của khung; <= n mục thì 0 (không giới hạn). Hàm thuần. */
 var SUG_ROWS = 3;
@@ -4153,9 +4163,9 @@ function sugReveal(list, item){
   if (t < list.scrollTop) list.scrollTop = t;
   else if (b > list.scrollTop + list.clientHeight) list.scrollTop = b - list.clientHeight;
 }
-function matchProducts(q, whole){
+function matchProducts(q){
   var nq = normSearch(q);
-  var arr = db.products.filter(function(p){ return !nq || (whole ? wholeWordMatch(p.name, q) : normSearch(p.name).indexOf(nq) >= 0); });
+  var arr = db.products.filter(function(p){ return !nq || wholeWordMatch(p.name, q); });
   arr.sort(function(a, b){
     var sa = nq && normSearch(a.name).indexOf(nq) === 0 ? 0 : 1;
     var sb = nq && normSearch(b.name).indexOf(nq) === 0 ? 0 : 1;
@@ -4176,7 +4186,7 @@ function openSuggest(key){
   if (!cfg) return;
   var inp = $('#' + cfg.input), list = $('#' + cfg.list);
   if (!inp || !list) return;
-  var items = matchProducts(inp.value, sugWhole(key));
+  var items = matchProducts(inp.value);
   var raw = String(inp.value || '').trim();
   var exact = false;
   list.textContent = '';
@@ -4321,7 +4331,7 @@ function onSuggestKey(e, key){
     if (!pick) {
       var inp = $('#' + cfg.input);
       var raw = String(inp && inp.value || '').trim();
-      var prods = raw ? matchProducts(raw, sugWhole(key)) : [];
+      var prods = raw ? matchProducts(raw) : [];
       var wantId = null;
       for (var pi = 0; pi < prods.length; pi++) {
         if (normSearch(prods[pi].name) === normSearch(raw)) { wantId = String(prods[pi].id); break; }
@@ -5483,6 +5493,7 @@ function handleAction(btn){
     case 'save-edit': saveEdit(); break;
     case 'sync-discard': discardUnsynced(); break;
     case 'reload-app': reloadAppClick(); break;
+    case 'exit-app': exitAppClick(); break;
     case 'brand-devices': brandDevicesClick(); break;
     case 'close-edit': closeEdit(); break;
     case 'reconcile': openRec(); break;

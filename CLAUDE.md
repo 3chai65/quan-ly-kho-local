@@ -25,7 +25,7 @@ Kính: người dùng chốt 16/11/2026 giữ 4 phần tử `backdrop-filter` (h
 - `tests/auth*.test.mjs` — test xác thực, chạy trong Docker.
 - `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `scripts/auth-reset.mjs`.
 - `pwa.js` — manifest, icon PNG sinh bằng mã, sw.js passthrough (không cache); các đường này công khai GET/HEAD trong PUBLIC của `auth.js`; CSP của "/" có manifest-src/worker-src 'self'.
-- Phiên bản hiện tại: 2.26.1.
+- Phiên bản hiện tại: 2.27.0.
 - `BAO-CAO-REVIEW.md` — tổng hợp lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI ở `G:\quan-ly-kho-gpui` dùng chung schema SQLite, hiện chỉ-đọc trên `data\app.db` (ghi thử trên bản chép); không đụng `data/` từ app đó khi chưa có duyệt.
 
@@ -97,7 +97,7 @@ Sau khi sửa, phải có phá thử (mutation) chứng minh test bắt được
 - 2.15.12 (dọn code chết CSS) + 2.15.13 (icon tab PC cùng một màu xanh lá `--tab-ico`, tab chọn có chip nền `--brand-soft`) triển khai chung; chưa xem trên màn hình thật, nếu tab chọn ở giao diện sáng chưa đủ nổi (tương phản 4,61) thì đậm hơn.
 - Trước nữa: `quan-ly-kho:pre-2.15.13` = 2.15.11 (id 985a8974…, commit 441b992); trước nữa `pre-2.15.11` = 2.15.10 (id 67037c9e…, commit ab59982); `pre-2.15.10` = 2.15.9 (id 43ec6f62…).
 - 2.15.11: khi khóa trang, `.top` bị ẩn (visibility); chạm sang ô khác trong thẻ khóa dùng `touchstart` preventDefault + focus preventScroll (người dùng luôn chạm thẳng vào ô, không dùng mũi tên Prev/Next). ĐÃ XÁC NHẬN trên iPhone 14 Pro (12/11/2026): bàn phím vẫn bật, vvTop giữ 0→0 ở mọi sự kiện, khung đứng yên khi nhập tên/SL/thành tiền, thanh thẻ không bị che. Nếu sau này iOS không bật bàn phím từ touchstart thì đổi sang touchend.
-- Gợi ý tên (2.15.9): chỉ hiện khi gõ trọn một từ của tên (không phân biệt hoa/dấu/đ), mọi thiết bị, khung tối đa 3 mục cuộn trong; ô lọc Kho tồn/Lịch sử giữ luật cũ. Focus lập trình dùng preventScroll.
+- Gợi ý tên (2.15.9): chỉ hiện khi gõ trọn một từ của tên (không phân biệt hoa/dấu/đ), mọi thiết bị, khung tối đa 3 mục cuộn trong; ô lọc Kho tồn/Lịch sử cũng dùng luật này từ 2.27.0 (đồng bộ 3 app, theo yêu cầu người dùng; trước đó giữ luật chứa chuỗi). Focus lập trình dùng preventScroll.
 - Giao diện điện thoại (2.15.3–2.15.10): chân tờ ghi là thanh `fixed` ở đáy, ẩn khi gõ; khi nhập, trang bị KHÓA (body fixed, đỉnh thẻ cách mép trên 8px; chỉ `kbUnlock` gọi `window.scrollTo`); tờ ghi gọn 2 vị mới nhất (cuộn mượt kiểu guồng), tự co theo `visualViewport.height`. Số đo thật iPhone 14 Pro: khi bàn phím hiện vvH ≈ 357 (innerHeight 695), thanh phụ Prev/Next và viên địa chỉ Safari nằm DƯỚI đáy vv. Mở với `?kbdebug=1` có dòng chữ gỡ lỗi (vvH, vvTop, savedY, lock, lý do). Bàn phím iOS không mô phỏng được, chỉ thử trên iPhone thật; chưa xác nhận 2.15.10 trên máy thật.
 - Tab PC có icon cùng màu icon thẻ (2.15.8, 2.15.10). Đã dọn code chết (2.15.7); lặp lại sau mỗi đợt chỉnh giao diện lớn.
 - 2.15.x chưa thử trên iPhone thật: sticky chân tờ ghi + bàn phím, vùng an toàn, nút "Tải lại" (chỉ hiện khi chạy từ màn hình chính), bo góc đáy tờ ghi, gợi ý có đè chân không. Đã bỏ chức năng "Gộp đơn thuốc lẻ cũ".

@@ -119,7 +119,7 @@ globalThis.__test = {
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
-  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null),
+  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), exitAppClick: (typeof exitAppClick === 'function' ? exitAppClick : null),
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
 };
@@ -5572,7 +5572,7 @@ test('2.15.9 wholeWordMatch: dấu/đ/hoa-thường, nhiều từ liên tiếp, 
   assert.equal(w('Cam', 'cam thao'), false, 'chữ gõ dài hơn tên');
   assert.equal(w('Cam  Thảo', 'cam'), true, 'nhiều khoảng trắng');
 });
-test('2.15.9 hộp gợi ý Bán lẻ/Thuốc chén/Nhập hàng dùng luật trọn từ ở MỌI cỡ màn hình; ô lọc Kho tồn/Lịch sử giữ luật cũ', () => {
+test('2.15.9 hộp gợi ý Bán lẻ/Thuốc chén/Nhập hàng dùng luật trọn từ ở MỌI cỡ màn hình; ô lọc Kho tồn/Lịch sử đổi sang cùng luật từ 2.27.0', () => {
   for (const mobile of [true, false]) {
     const c = loadClient({ matchMedia: () => ({ matches: mobile }) });
     c.setDb({ products: [{ id: '1', name: 'Cam Thảo' }, { id: '2', name: 'Đỗ Trọng' }, { id: '3', name: 'Ích Trí Nhân' }, { id: '4', name: 'Kê Huyết Đằng' }, { id: '5', name: 'Camphor' }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
@@ -5587,8 +5587,8 @@ test('2.15.9 hộp gợi ý Bán lẻ/Thuốc chén/Nhập hàng dùng luật tr
       assert.equal(ids('').length, 5, 'rỗng: như cũ');
     }
     for (const key of ['inv', 'imph']) {
-      assert.equal(c.sugWhole(key), false);
-      assert.deepEqual(c.matchProducts('ca', c.sugWhole(key)).map(p => p.id).sort(), ['1', '5'], 'luật chứa chuỗi giữ nguyên');
+      assert.equal(c.sugWhole(key), false, 'sugWhole chỉ còn quyết định bố cục (2.27.0)');
+      assert.deepEqual(c.matchProducts('ca', c.sugWhole(key)).map(p => p.id), [], '2.27.0: gợi ý Kho tồn/Lịch sử cũng trọn chữ');
     }
   }
   assert.ok(!/function sugWhole\(key\)\{[^}]*kbMobile/.test(PAGE), 'sugWhole không phụ thuộc cỡ màn hình');
@@ -7104,8 +7104,7 @@ test('2.25.0 thanh bên: nút Tải lại (reload-app) luôn có; Thoát chỉ t
   assert.equal(row.children[1].textContent, 'Thoát'); assert.equal(row.children[1].hidden, true, 'ngoài Tauri ẩn Thoát');
   const t = runHead({ tauri: true }), ex = t.body.children[0].children.find(x => x.className === 'sbb').children[1];
   assert.equal(ex.hidden, false);
-  let n = 0; t.win.__TAURI__.window = { getCurrentWindow: () => ({ close() { n++; } }) };
-  ex.onclick(); assert.equal(n, 1);
+  assert.equal(ex['data-action'], 'exit-app', '2.27.0: Thoát đi qua exitAppClick (có hỏi nháp)');
   assert.equal(runHead({ desktop: false }).body.children.length, 0, 'iPhone/pt: không dựng chân thanh bên');
 });
 
@@ -7374,4 +7373,76 @@ test('2.26.1 cấu trúc: nút Đơn mới/Xóa hết chỉ do JS desktop tạo 
   assert.ok(2 + 22 + 10 <= 34 && 10 >= 8, 'cột 34 = đệm trái 2 + nút 22 + đệm phải 10: nút cách mép thẻ >= 8');
   assert.ok(block.includes('input.inp.inp--num{width:52px;height:22px;min-height:22px;padding:2px 5px;margin-left:auto}'), 'Gram rộng 52, đệm 5 để chữ Gram không cụt');
   assert.ok(!block.includes('#remedyBody .empty-cell::before'), 'dấu + dòng trống do ô STT, không đặt hai lần');
+});
+
+/* ===== 2.27.0 một luật tìm chung (trọn chữ) + Tải lại/Thoát hỏi nháp ===== */
+const LAW_NAMES = ['Cam Thảo', 'Hoàng Cầm', 'Cam Thảo Chích', 'Kỳ chế', 'Hoàng Kỳ', 'Kỷ Tử', 'Đảng Sâm'];
+const LAW_CASES = [['cam', ['Cam Thảo', 'Cam Thảo Chích', 'Hoàng Cầm']], ['ky', ['Hoàng Kỳ', 'Kỳ chế', 'Kỷ Tử']], ['ca', []], ['dang', ['Đảng Sâm']], ['', LAW_NAMES.slice().sort()], ['  CAM thao ', ['Cam Thảo', 'Cam Thảo Chích']]];
+const lawDb = () => ({
+  products: LAW_NAMES.map((name, i) => ({ id: 'p' + i, name, stock: 10, costPrice: 1000 })),
+  transactions: [
+    { id: 'b1', date: '2026-11-08', type: 'BAN', productId: 'p3', qty: 1, price: 2000, total: 2000, ts: 3000 },
+    { id: 'g1', date: '2026-11-05', type: 'BAN', productId: 'p0', qty: 1, price: 2000, total: 2000, ts: 500, oid: 'O1', oname: 'Đơn Ông Phi' },
+    { id: 'g2', date: '2026-11-05', type: 'BAN', productId: 'p6', qty: 1, price: 2000, total: 2000, ts: 501, oid: 'O1', oname: 'Đơn Ông Phi' },
+    { id: 'n1', date: '2026-11-08', type: 'NHAP', productId: 'p4', qty: 1, price: 1000, total: 1000, ts: 3000 },
+    { id: 'n2', date: '2026-11-05', type: 'NHAP', productId: 'p0', qty: 1, price: 1000, total: 1000, ts: 500, oid: 'IM1' },
+    { id: 'n3', date: '2026-11-05', type: 'NHAP', productId: 'p5', qty: 1, price: 1000, total: 1000, ts: 501, oid: 'IM1' }
+  ], prescriptions: [], updatedAt: 1, moneyUnit: 'dong'
+});
+test('2.27.0 Kho tồn: ô lọc #invSearch trọn chữ (cam/ky/ca/dang)', () => {
+  const inv = makeEl(), cnt = makeEl(), body = makeEl();
+  const doc = trackDoc({ '#invSearch': inv, '#invCount': cnt, '#invBody': body });
+  doc.createTextNode = () => makeEl();
+  const c = loadClient({ document: doc });
+  c.setDb(lawDb());
+  for (const [q, want] of LAW_CASES) {
+    inv.value = q; c.renderInventory();
+    assert.equal(cnt.textContent, want.length + ' vị thuốc', 'invSearch "' + q + '"');
+  }
+});
+test('2.27.0 Lịch sử nhập/bán: trọn chữ theo tên vị VÀ tên đơn; hàng gộp khớp qua vị trong đơn', () => {
+  const c = loadClient();
+  c.setDb(lawDb());
+  const n = (kind, q) => c.historyData(kind, null, q).rows.length;
+  assert.equal(n('imp', 'cam'), 1, 'nhập: cam -> chỉ hàng gộp IM1 (có Cam Thảo)');
+  assert.equal(n('imp', 'ca'), 0, 'nhập: ca không ra');
+  assert.equal(n('imp', 'ky'), 2, 'nhập: ky -> Hoàng Kỳ + gộp (Kỷ Tử)');
+  assert.equal(n('imp', ''), 2);
+  assert.equal(n('exp', 'cam'), 1, 'bán: cam -> đơn gộp qua vị Cam Thảo');
+  assert.equal(n('exp', 'ca'), 0, 'bán: ca không ra');
+  assert.equal(n('exp', 'dang'), 1, 'bán: dang -> đơn gộp qua vị Đảng Sâm');
+  assert.equal(n('exp', 'ky'), 1, 'bán: ky -> Kỳ chế lẻ');
+  assert.equal(n('exp', 'ong phi'), 1, 'bán: tên đơn "Đơn Ông Phi" cụm từ');
+  assert.equal(n('exp', 'ch'), 0, 'bán lẻ: "ch" chưa trọn chữ của Kỳ chế');
+  assert.equal(n('imp', 'oa'), 0, 'nhập lẻ: "oa" chưa trọn chữ của Hoàng Kỳ');
+  assert.equal(n('exp', 'on'), 0, 'bán: "on" chưa trọn chữ');
+});
+test('2.27.0 ô tìm vị thuốc cùng bộ ví dụ', () => {
+  const c = loadClient();
+  c.setDb(lawDb());
+  for (const [q, want] of LAW_CASES) assert.deepEqual(c.matchProducts(q).map(p => p.name).sort(), want, 'matchProducts "' + q + '"');
+});
+test('2.27.0 Tải lại/Thoát: hỏi đúng chữ khi có nháp, không hỏi khi sạch; Thoát chỉ trong Tauri, chỉ đóng cửa sổ', () => {
+  const msgs = []; let closes = 0, reloads = 0, ans = false;
+  const tauri = { window: { getCurrentWindow: () => ({ close() { closes++; } }) } };
+  const mk = (T) => loadClient({ confirm(m) { msgs.push(m); return ans; }, location: { href: 'x', reload() { reloads++; } }, ...(T ? { __TAURI__: T } : {}) });
+  let c = mk(tauri);
+  c.setDirty(false); c.setRetailItems([]); c.setRemedyItems([]); c.setNhapList([]);
+  c.exitAppClick(); assert.equal(closes, 1); assert.equal(msgs.length, 0, 'sạch: không hỏi');
+  c.reloadAppClick(); assert.equal(reloads, 1); assert.equal(msgs.length, 0);
+  c.setRemedyItems([{ id: 1 }]);
+  c.reloadAppClick(); assert.equal(msgs.pop(), 'Còn đơn nháp chưa lưu. Tải lại sẽ mất đơn nháp chưa lưu. Vẫn tải lại?'); assert.equal(reloads, 1, 'từ chối: không tải lại');
+  c.exitAppClick(); assert.equal(msgs.pop(), 'Còn đơn nháp chưa lưu. Thoát sẽ mất đơn nháp chưa lưu. Vẫn thoát?'); assert.equal(closes, 1, 'từ chối: không đóng');
+  ans = true; c.exitAppClick(); assert.equal(closes, 2, 'đồng ý: đóng');
+  c = mk(null); c.setRetailItems([{ id: 1 }]); msgs.length = 0;
+  assert.equal(c.exitAppClick(), false); assert.equal(msgs.length, 0, 'ngoài Tauri: Thoát không làm gì, không hỏi');
+  const sb0 = PAGE.indexOf('var sbf = document.createElement'); assert.ok(sb0 > 0);
+  assert.doesNotMatch(PAGE.slice(sb0, sb0 + 1200), /logout|đăng xuất|cookie/i, 'thanh bên không có đường đăng xuất/xóa cookie');
+});
+test('2.27.0 brand: không phải chủ thì toast "Chỉ thiết bị chủ quản lý được thiết bị."', async () => {
+  const msg = makeEl();
+  const doc = trackDoc({ '#toast': makeEl(), '#toastMsg': msg });
+  const c = loadClient({ document: doc, fetch: () => Promise.resolve({ status: 403 }), setTimeout() { return 0; }, clearTimeout() {} });
+  await c.brandDevicesClick();
+  assert.equal(msg.textContent, 'Chỉ thiết bị chủ quản lý được thiết bị.');
 });

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.27.0] - 2026-11-18
+- Mot luat tim chung (dong bo 3 app): moi o tim ten (Kho ton, Lich su nhap/ban gom ten vi VA ten don, hang gop khop khi ten don hoac bat ky vi nao trong don khop, goi y vi thuoc, tim don da luu) chi khop TRON mot chu hoac cum chu lien nhau (khong phan biet hoa/thuong, co/khong dau, d = d); chua tron chu thi khong hien; o trong = hien tat ca. Truoc day Kho ton/Lich su khop mot phan (indexOf) - ghi chu "giu luat cu" cua 2.15.9 het hieu luc. Ap dung ca dien thoai (luat du lieu).
+- Thanh ben desktop: "Tai lai" va "Thoat" (chi Tauri) hoi "Con don nhap chua luu. Tai lai/Thoat se mat don nhap chua luu. Van tai lai/thoat?" khi con don nhap (dung chung mot ham kiem); Thoat chi dong cua so, khong dang xuat, khong xoa cookie. Bam "Quan Ly Kho" khi khong phai thiet bi chu: them toast "Chi thiet bi chu quan ly duoc thiet bi." (nut/fetch /auth/devices co tu 2.13.0, trang do co lien ket "Ve kho").
+- Khong doi du lieu/tien/ton kho, server.js, auth.js.
+
 ## [2.26.1] - 2026-11-18
 - Thuoc chen desktop: nut vien "+ Don moi" (cao 32, luon hien, giua o Tim don va nut ngay): dang mo don co san = ve to ghi trong ngay (nhu X); dang ghi do thi hoi "Bo N dong dang ghi va lam don moi?" (confirm cua trinh duyet: OK/Huy), dong y thi xoa dong, o tim, thang/gia ve mac dinh; luon tro ve o "Tim vi thuoc".
 - Ban le va Nhap hang desktop: nut vien "Xoa het" (Ban le ben trai nut ngay, Nhap hang cuoi hang): co dong nhap hoac chu dang go thi hoi "Xoa het N dong dang ghi va lam lai tu dau?", dong y thi xoa nhap (GIU ngay dang chon) va tro ve o tim vi; khong co gi thi khong lam gi. Nut tao bang JS desktop nen dien thoai khong co.
