@@ -34,7 +34,7 @@ Mở trên điện thoại/Mac: **https://<IP-máy-tính>**
 - Server tự tạo **1 bản backup/ngày** vào `G:\quan-ly-kho-local\data\backups\`,
   tên `backup-YYYY-MM-DD.db`, giữ **30 bản** gần nhất (bản cũ tự xóa, chụp trước lần ghi đầu tiên trong ngày);
   đồng thời tự chụp thêm bản `backup-YYYY-MM-DD-truoc-ghi-de-HHmmssSSS.db` (giữ **10 bản**) trước mỗi lần ghi đè chủ động (`X-Force`).
-- Xem danh sách backup: trong app, mục "Sao lưu & khôi phục". Các đường `/api/*` cần cookie của thiết bị đã duyệt; mở thẳng `http://localhost:8787/api/backups` từ trình duyệt chưa duyệt sẽ bị 401.
+- Xem danh sách backup: app CHƯA có giao diện cho việc này (mục "Sao lưu & khôi phục" trong app chỉ tải/nạp file JSON). Xem thư mục `dataackups\` hoặc gọi `GET /api/backups` (số bản giữ tính theo SỐ FILE, không phải số ngày). Các đường `/api/*` cần cookie của thiết bị đã duyệt; mở thẳng `http://localhost:8787/api/backups` từ trình duyệt chưa duyệt sẽ bị 401.
 - **Khôi phục nhanh:** dừng container, copy file backup đè lên `app.db`, khởi động lại:
   ```powershell
   cd "G:\quan-ly-kho-local"

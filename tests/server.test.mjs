@@ -845,3 +845,12 @@ test('2.17.5 thang của giao dịch và đơn thuốc dùng cùng luật số: 
     assert.equal(r2.status, 200, 'rx.thang hợp lệ=' + JSON.stringify(v));
   }
 });
+
+test('2.21.1 đường không có thật: 404 JSON kèm header bảo mật (không HTML mặc định Express)', async () => {
+  const r = await fetch(`${BASE}/khong-co-duong-nay`, { headers: { Cookie: deviceCookie } });
+  assert.equal(r.status, 404);
+  assert.match(r.headers.get('content-type') || '', /application\/json/);
+  assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+  assert.match(r.headers.get('content-security-policy') || '', /default-src 'none'/);
+  assert.equal((await r.json()).success, false);
+});

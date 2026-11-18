@@ -10,7 +10,7 @@ export const PAGE = String.raw`<!doctype html>
 <title>Quản Lý Kho — Sổ kho, đơn bán và doanh thu</title>
 <meta name="description" content="Quản lý kho dược liệu: đơn bán lẻ, đơn thuốc chén, nhập hàng, tồn kho, lịch sử giao dịch và thống kê doanh thu 12 tháng. Đồng bộ mạng nội bộ (LAN).">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#e3dad5">
+<meta name="theme-color" content="#142844">
 <meta name="robots" content="noindex, nofollow">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -3188,7 +3188,7 @@ function rowMenu(items, label){
     if (it.idx != null) ib.setAttribute('data-idx', String(it.idx));
     ib.appendChild(svg(it.icon));
     ib.appendChild(doc.createTextNode(it.label));
-    ib.addEventListener('click', closeRowMenu);
+    ib.addEventListener('click', function(){ closeRowMenu(); });
     list.appendChild(ib);
   });
   b.addEventListener('click', function(e){ e.stopPropagation(); toggleRowMenu(b, list); });
@@ -3203,8 +3203,8 @@ doc.addEventListener('click', function(e){
   closeRowMenu();
 }, true);
 doc.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeRowMenu(true); });
-doc.addEventListener('scroll', closeRowMenu, true);
-window.addEventListener('resize', closeRowMenu);
+doc.addEventListener('scroll', function(){ closeRowMenu(); }, true);
+window.addEventListener('resize', function(){ closeRowMenu(); });
 function emptyRow(tbody, cols, text){
   var tr = el('tr');
   tr.className = 'is-empty';
@@ -4431,7 +4431,7 @@ function delTx(id){
   db.transactions = db.transactions.filter(function(x){ return x.id !== id; });
   if (mates.length && !applyRemedyBalance(mates, grand)) {
     db.transactions.splice(pos, 0, t);
-    if (p) p.stock = dec(num(p.stock) - num(t.qty));
+    if (p) p.stock = dec(num(p.stock) + (t.type === 'NHAP' ? num(t.qty) : -num(t.qty)));
     toast('Giá bán thấp hơn vốn của đơn', 'error');
     return;
   }
@@ -4504,7 +4504,7 @@ function openTxEdit(id){
   if (lbl) lbl.textContent = isRx ? 'Số gram (mỗi thang)' : 'Số lượng (kg)';
   var priceField = $('#txEditPriceField');
   if (priceField) priceField.hidden = isRx;
-  $('#txEditQty').value = String(isRx ? num(t.g) : dec(t.qty));
+  $('#txEditQty').value = String(isRx ? (num(t.g) > 0 ? num(t.g) : dec(num(t.qty) * 1000 / (num(t.thang) > 0 ? num(t.thang) : 1))) : dec(t.qty));
   if ($('#txEditQty').qtyHintRefresh) $('#txEditQty').qtyHintRefresh();
   $('#txEditPrice').value = kInput(t.price);
   var meta = $('#txEditMeta');
@@ -4909,15 +4909,15 @@ function backupStamp(){
 }
 /* Tải snapshot hiện tại trước khi restore. Trả false nếu trình duyệt chặn,
    để restoreFromFile dừng lại thay vì ghi đè mù. */
-function backupBeforeRestore(){
-  return downloadBackup(false, 'kho-backup-truoc-restore-' + backupStamp() + '.json', true);
+function backupBeforeRestore(name){
+  return downloadBackup(false, name || ('kho-backup-truoc-restore-' + backupStamp() + '.json'), true);
 }
 function maybeAutoBackup(){
   if (!backupAutoOn()) return false;
   if (backupLastDate() === todayISO()) return false;
   if (!db.products.length && !db.transactions.length && !db.prescriptions.length) return false;
   if (!downloadBackup(false)) return false;
-  toast('Đã tự sao lưu dữ liệu hôm nay');
+  toast('Đã gửi lệnh tải bản sao lưu hôm nay, hãy kiểm tra thư mục Tải xuống');
   return true;
 }
 function moneyRestoreNote(scale, sample, afterCost){
@@ -5042,11 +5042,13 @@ function restoreFromFile(file){
       if (drops.length > 8) msg += '\n…';
     }
     if (!confirm(msg)) return;
-    /* Luôn lưu snapshot hiện tại trước khi ghi đè; nếu không tải được thì hủy. */
-    if (!backupBeforeRestore()) {
+    /* Trình duyệt chặn tải im lặng thì mã không biết được: tải bản hiện tại rồi bắt người dùng xác nhận đã thấy file mới ghi đè. */
+    var bakName = 'kho-backup-truoc-restore-' + backupStamp() + '.json';
+    if (!backupBeforeRestore(bakName)) {
       toast('Không tạo được bản sao lưu trước khi khôi phục — đã hủy thao tác', 'error');
       return;
     }
+    if (!confirm('Vừa tải về bản sao lưu dữ liệu hiện tại: "' + bakName + '".\nHãy kiểm tra file đã có trong thư mục Tải xuống rồi mới bấm OK.\nChưa thấy file thì bấm Hủy: dữ liệu chưa bị thay đổi.')) return;
     db = bak;
     resetDrafts();
     /* Restore là ghi đè chủ động: bỏ qua kiểm tra conflict và ép ghi lên máy chủ. */
@@ -5722,11 +5724,11 @@ function init(){
   startAutoRefresh();
 
   var firstUse = function(){
-    doc.removeEventListener('pointerdown', firstUse);
+    doc.removeEventListener('click', firstUse);
     doc.removeEventListener('keydown', firstUse);
-    setTimeout(maybeAutoBackup, 400);
+    maybeAutoBackup(); /* chạy ngay trong cử chỉ người dùng: tải qua setTimeout dễ bị trình duyệt chặn */
   };
-  doc.addEventListener('pointerdown', firstUse);
+  doc.addEventListener('click', firstUse);
   doc.addEventListener('keydown', firstUse);
 }
 

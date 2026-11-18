@@ -644,6 +644,12 @@ app.get('/api/backups', (req, res) => {
   }
 });
 
+// Đường không có thật: 404 JSON kèm header bảo mật (thay HTML mặc định của Express).
+app.use((req, res) => {
+  res.set({ 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'" });
+  res.status(404).json({ success: false, error: 'Not found' });
+});
+
 // Middleware xử lý lỗi tập trung: trả JSON thay vì HTML lỗi mặc định của Express.
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large' || err.status === 413) {
@@ -724,7 +730,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('  PC    : https://localhost (dự phòng http://localhost:' + PORT + ')');
   console.log('  Khác  : https://<IP-máy-tính> (ứng dụng nghe 0.0.0.0 trong container; docker-compose chỉ mở cổng ' + PORT + ' ở 127.0.0.1)');
   console.log('  DB    : ' + DB_FILE);
-  console.log('  Backup: ' + BACKUP_DIR + ' (giữ ' + BACKUP_KEEP_DAYS + ' ngày)');
+  console.log('  Backup: ' + BACKUP_DIR + ' (giữ ' + BACKUP_KEEP_DAYS + ' bản)');
   auth.announce(PORT);
 
   // Sao lưu ngay khi khởi động (nếu hôm nay chưa có), rồi kiểm tra mỗi giờ

@@ -96,6 +96,7 @@ globalThis.__test = {
   readLocal: (typeof readLocal === 'function' ? readLocal : null),
   saveNhap: (typeof saveNhap === 'function' ? saveNhap : null), saveRetail: (typeof saveRetail === 'function' ? saveRetail : null), saveRemedy: (typeof saveRemedy === 'function' ? saveRemedy : null),
   openTxEdit: (typeof openTxEdit === 'function' ? openTxEdit : null), saveTxEdit: (typeof saveTxEdit === 'function' ? saveTxEdit : null), delTx: (typeof delTx === 'function' ? delTx : null),
+  rowMenu: (typeof rowMenu === 'function' ? rowMenu : null), closeRowMenu: (typeof closeRowMenu === 'function' ? closeRowMenu : null),
   getStockWarnText: function(){ return stockWarnText; },
   todayISO: (typeof todayISO === 'function' ? todayISO : null), thisYear: (typeof thisYear === 'function' ? thisYear : null),
   getDateInput: (typeof getDateInput === 'function' ? getDateInput : null), setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
@@ -6669,4 +6670,98 @@ test('2.21.0 font: SF trước, Inter dự phòng nhúng woff2 nhỏ cùng ngu�
   assert.ok(f.length < 60000, 'font nhỏ hơn 60KB: ' + f.length);
   assert.match(PAGE, /\.ico\{[^}]*stroke-width:1\.75/);
   for (const id of ['i-inbox', 'i-outbox', 'i-drive']) assert.ok(PAGE.includes('<symbol id="' + id + '"'), id);
+});
+
+/* ===== 2.21.1: soi ngoài 18/11 ===== */
+function bakDoc(handlers, downloads) {
+  const d = limitDoc({});
+  d.addEventListener = (t, f) => { (handlers[t] = handlers[t] || []).push(f); };
+  d.removeEventListener = (t, f) => { handlers[t] = (handlers[t] || []).filter(x => x !== f); };
+  d.createElement = () => { const e = makeEl(); e.click = function () { if (this.download) downloads.push(this.download); }; return e; };
+  d.createTextNode = (t) => ({ textContent: t });
+  return d;
+}
+
+test('2.21.1 P1.1 restore: tải bản hiện tại, hỏi lại có thấy file; Hủy ở hỏi lần hai thì không ghi đè', () => {
+  const raw = JSON.stringify({ app: 'quan-ly-kho', data: { products: [{ id: 'p1', name: 'Mới', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] } });
+  const keep = { products: [{ id: 'keep', name: 'Giữ', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' };
+  const run = (answers) => {
+    const downloads = [], msgs = [];
+    const c = loadClient({ document: bakDoc({}, downloads), Blob: class {}, FileReader: readerOf(raw), confirm: (m) => { msgs.push(m); return answers.shift(); },
+      fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 2 }) }) });
+    c.setDb(structuredClone(keep));
+    c.restoreFromFile({ size: raw.length });
+    return { c, downloads, msgs };
+  };
+  const no = run([true, false]);
+  assert.equal(no.downloads.length, 1);
+  assert.match(no.downloads[0], /^kho-backup-truoc-restore-/);
+  assert.equal(no.msgs.length, 2);
+  assert.ok(no.msgs[1].includes(no.downloads[0]), 'hỏi lần hai phải nêu đúng tên file vừa tải');
+  assert.equal(no.c.getDb().products[0].name, 'Giữ');
+  const yes = run([true, true]);
+  assert.equal(yes.c.getDb().products[0].name, 'Mới');
+});
+
+test('2.21.1 P1.1 tự sao lưu ngày: chạy ngay trong cú bấm (không setTimeout), lời báo là "đã gửi lệnh tải"', () => {
+  const handlers = {}, downloads = [], timers = [];
+  const toastEl = makeEl(), msgEl = makeEl();
+  const doc = bakDoc(handlers, downloads);
+  doc.readyState = 'complete';
+  doc.querySelector = (s) => s === '#toast' ? toastEl : s === '#toastMsg' ? msgEl : null;
+  const store = new Map();
+  const localStorage = { getItem: (k) => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem() {} };
+  const c = loadClient({ document: doc, Blob: class {}, localStorage, setTimeout: (f) => { timers.push(f); return 0; }, setInterval() { return 0; }, clearInterval() {},
+    fetch: async () => { throw new Error('offline'); } });
+  c.getDb().products.push({ id: 'p1', name: 'A', stock: 1, costPrice: 1 });
+  assert.equal(downloads.length, 0);
+  assert.ok(handlers.click && handlers.click.length, 'firstUse nghe click (cử chỉ kích hoạt tải)');
+  handlers.click[handlers.click.length - 1]({});
+  assert.equal(downloads.length, 1, 'tải ngay trong cú bấm');
+  assert.match(msgEl.textContent, /gửi lệnh tải/);
+});
+
+test('2.21.1 P2.2 delTx hoàn tác dòng NHAP (đơn có mates không cân được): tồn cộng lại đúng, không trừ hai lần', () => {
+  const els = { '#toast': makeEl(), '#toastMsg': makeEl() };
+  const c = loadClient({ document: limitDoc(els), confirm: () => true });
+  const line = (id, type) => ({ id, date: '2026-11-08', type, productId: 'p1', qty: 1, price: 10, total: 10, cost: 100, oid: 'R1', oname: 'Đơn', rx: true, ts: 1 });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 10, costPrice: 1 }], transactions: [line('n1', 'NHAP'), line('b1', 'BAN'), line('b2', 'BAN')], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.delTx('n1');
+  assert.equal(c.getDb().products[0].stock, 10);
+  assert.deepEqual(c.getDb().transactions.map(t => t.id), ['n1', 'b1', 'b2']);
+});
+
+test('2.21.1 P2.1 menu dòng: scroll/resize (nhận Event) không refocus nút; Esc thì có', () => {
+  const handlers = {}, winH = {}, els = [];
+  const doc = bakDoc(handlers, []);
+  doc.createElement = () => {
+    const e = makeEl(); e.focused = 0; e.on = {};
+    e.focus = () => { e.focused++; };
+    e.addEventListener = (t, f) => { e.on[t] = f; };
+    els.push(e); return e;
+  };
+  const c = loadClient({ document: doc, addEventListener: (t, f) => { winH[t] = f; }, innerWidth: 1000, innerHeight: 800 });
+  const wrap = c.rowMenu([{ action: 'del-tx', id: 'x', icon: 'x', label: 'Xóa' }]);
+  const b = wrap.children[0];
+  b.on.click({ stopPropagation() {} });
+  handlers.scroll[0]({ type: 'scroll' });
+  assert.equal(b.focused, 0, 'scroll không được refocus');
+  b.on.click({ stopPropagation() {} });
+  winH.resize({ type: 'resize' });
+  assert.equal(b.focused, 0, 'resize không được refocus');
+  b.on.click({ stopPropagation() {} });
+  handlers.keydown[0]({ key: 'Escape' });
+  assert.equal(b.focused, 1, 'Esc trả focus về nút');
+});
+
+test('2.21.1 P2.3 openTxEdit dòng thuốc chén cũ thiếu g: hiện gram quy đổi qty*1000/thang, không phải 0', () => {
+  const els = { '#txEditName': makeEl(), '#txEditQty': makeEl(), '#txEditPrice': makeEl(), '#txEditQtyLbl': makeEl(), '#txEditPriceField': makeEl(), '#txEditMeta': makeEl(), '#txEditTotal': makeEl(), '#txDlg': makeEl() };
+  const c = loadClient({ document: limitDoc(els) });
+  const base = { date: '2026-11-08', type: 'BAN', productId: 'p1', price: 10, total: 10, oid: 'R1', oname: 'Đơn', rx: true, ts: 1 };
+  c.setDb({ products: [{ id: 'p1', name: 'Cam', stock: 10, costPrice: 1 }], prescriptions: [], updatedAt: 0, moneyUnit: 'dong',
+    transactions: [{ ...base, id: 'old', qty: 0.03, thang: 3 }, { ...base, id: 'new', qty: 0.03, thang: 3, g: 10 }] });
+  c.openTxEdit('old');
+  assert.equal(els['#txEditQty'].value, '10');
+  c.openTxEdit('new');
+  assert.equal(els['#txEditQty'].value, '10');
 });

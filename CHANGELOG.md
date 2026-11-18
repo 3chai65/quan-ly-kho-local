@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.21.1] - 2026-11-18
+
+- Sao lưu/khôi phục: khôi phục tải bản hiện tại rồi hỏi lại "đã thấy file chưa" trước khi ghi đè (trình duyệt chặn tải thì mã không biết được); tự sao lưu ngày chạy ngay trong cú bấm (bỏ `setTimeout`), lời báo "đã gửi lệnh tải". Hoàn tác `delTx` đơn NHAP cộng tồn lại đúng; menu dòng không còn giật focus khi cuộn; sửa dòng thuốc chén cũ thiếu `g` hiện gram quy đổi; máy chủ trả 404 JSON kèm header bảo mật; log/README ghi "bản" thay "ngày"; `theme-color` navy; xóa file rác `120`, `36`.
+
 ## [2.21.0] - 2026-11-18
 
 - Font: ưu tiên SF Pro của hệ điều hành, dự phòng Inter (OFL, subset Latin/Việt, 44 KB, phục vụ `/inter.woff2` sau cổng xác thực); icon: bộ Lucide (ISC) thay sprite cũ, thêm `i-inbox`/`i-outbox`/`i-drive` cho Lịch sử nhập/bán và Sao lưu; không đổi bố cục.
