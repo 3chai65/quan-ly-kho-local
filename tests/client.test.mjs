@@ -113,7 +113,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -6343,7 +6343,7 @@ test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/g
   assert.ok(block.includes('background:var(--bt)}'));
   let r = runHead();
   assert.equal(r.attrs['data-bg'], 'navy', 'nền mặc định navy');
-  const wrap = r.body.children[0];
+  const wrap = r.body.children[0].children[0]; /* 2.25.0: chân thanh bên .sbf chứa chấm nền */
   assert.deepEqual(wrap.children.map(c => c['data-bg']), ks);
   assert.deepEqual(wrap.children.map(c => c.textContent), ['Navy', 'Prism', 'Cyan', 'Emerald', 'Amber', 'Rose', 'Graphite']);
   assert.equal(wrap.children[0]['aria-pressed'], 'true', 'chấm navy được đánh dấu khi mặc định');
@@ -6354,7 +6354,7 @@ test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/g
   assert.equal(wrap.children[0]['aria-pressed'], 'false');
   r = runHead({ ls: { desktopBg: 'rose' } });
   assert.equal(r.attrs['data-bg'], 'rose');
-  assert.equal(r.body.children[0].children[5]['aria-pressed'], 'true');
+  assert.equal(r.body.children[0].children[0].children[5]['aria-pressed'], 'true');
   assert.equal(runHead({ ls: { desktopBg: 'xyz' } }).attrs['data-bg'], 'navy');
   assert.equal(runHead({ ls: { desktopBg: 'gpui' } }).attrs['data-bg'], 'navy', 'nền đã xóa → navy');
   assert.equal(runHead({ desktop: false }).body.children.length, 0, 'không desktop: không dựng chấm màu');
@@ -6953,7 +6953,7 @@ test('2.22.2 kính một token --pnl: thẻ/4 ô/tab/Sao lưu cùng độ sáng 
 test('2.23.0 công tắc Hiệu ứng kính: mặc định TẮT, khóa kho_glass_v2 (khóa/giá trị cũ không bật), bấm bật/tắt lưu lại', () => {
   let r = runHead();
   assert.ok(!r.cls.has('glass') && !('kho_glass_v2' in r.store), 'mặc định tắt, chưa ghi khóa');
-  const sw = r.body.children.find(c => c.className === 'glsw');
+  const sw = r.body.children[0].children.find(c => c.className === 'glsw');
   assert.ok(sw && sw.role === 'switch' && sw['aria-checked'] === 'false' && sw.textContent === 'Hiệu ứng kính');
   sw.onclick();
   assert.ok(r.cls.has('glass') && r.store.kho_glass_v2 === '1' && sw['aria-checked'] === 'true');
@@ -6963,16 +6963,6 @@ test('2.23.0 công tắc Hiệu ứng kính: mặc định TẮT, khóa kho_glas
   for (const old of [{ glass: '1' }, { kho_glass: '1' }, { kho_glass_v2: '0' }, { kho_glass_v2: 'true' }]) assert.ok(!runHead({ ls: old }).cls.has('glass'), JSON.stringify(old));
   const head = PAGE.slice(0, PAGE.indexOf('</style>'));
   assert.ok(head.includes(':root{') && /--blur:none;--blurb:none;/.test(head));
-});
-
-test('2.24.0 chartMonths: 12 tháng gần nhất kết thúc ở tháng hiện tại, qua ranh năm', () => {
-  const c = loadClient();
-  const m1 = c.chartMonths('2026-11-18');
-  assert.equal(m1.length, 12);
-  assert.equal(m1[0], '2025-12'); assert.equal(m1[11], '2026-11');
-  const m2 = c.chartMonths('2026-01-05');
-  assert.equal(m2[0], '2025-02'); assert.equal(m2[11], '2026-01');
-  assert.equal(c.chartMonths('2026-12-31')[0], '2026-01');
 });
 
 test('2.24.0 chartTicks: vạch đẹp 4-5 vạch, số nguyên, đỉnh >= giá trị lớn nhất', () => {
@@ -6993,7 +6983,7 @@ function deskChart(today, txs, hoverX) {
   const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : (...a) => { calls.push([k, a, t.fillStyle]); return { width: 0 }; }), set: (t, k, v) => { t[k] = v; return true; } });
   const mk = () => ({ value: '', textContent: '', style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; } }, focus() {}, select() {} });
   const cv = { offsetParent: {}, offsetLeft: 0, offsetTop: 0, clientWidth: 970, clientHeight: 400, parentNode: { clientWidth: 970 }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: 970, height: 400 }) };
-  const els = { '#statsChart': cv, '#chartYear': mk(), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartTipSr': mk(), '#chartTip': mk(), '#chartYrL': mk(), '#chartPrev': mk(), '#chartNext': mk() };
+  const els = { '#syncLine': mk(), '#statsChart': cv, '#chartYear': mk(), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartTipSr': mk(), '#chartTip': mk(), '#chartYrL': mk(), '#chartPrev': mk(), '#chartNext': mk() };
   const FakeDate = fakeClock(...today);
   const R = makeEl(); R.classList = { contains: k => k === 'desktop', add() {}, remove() {}, toggle() {} };
   const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: R, body: makeEl(), querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
@@ -7011,70 +7001,96 @@ const DESK_TX = [
   { id: 'e', date: '2026-12-01', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 7000000, cost: 1 }
 ];
 
-test('2.24.0 desktop: 12 nhóm yy-MM, trục Y bên phải số đầy đủ, màu cột đúng, giao dịch ngoài cửa sổ không lẫn, NHAP không vào lợi nhuận', () => {
-  const { c, calls } = deskChart([2026, 10, 18, 12], DESK_TX);
-  const d = c.chartData();
-  assert.equal(d.yms[0], '2025-12'); assert.equal(d.yms[11], '2026-11');
-  assert.equal(d.impK[0], 4000000); assert.equal(d.expK[0], 1500000);
-  assert.equal(d.expK[11], 2300000);
-  assert.equal(d.impK.reduce((a, b) => a + b, 0), 4000000, 'NHAP 2025-11 (ngoài cửa sổ) không lẫn');
-  assert.equal(d.expK.reduce((a, b) => a + b, 0), 3800000, 'BAN 2026-12 (ngoài cửa sổ) không lẫn');
-  const texts = calls.filter(x => x[0] === 'fillText').map(x => x[1][0]);
-  for (const l of ['25-12', '26-01', '26-11']) assert.ok(texts.includes(l), 'nhãn ' + l);
-  assert.equal(texts.filter(t => /^\d\d-\d\d$/.test(t)).length, 12);
-  assert.deepEqual(Array.from(texts.filter(t => /^[\d.]+$/.test(t))), ['0', '1.000', '2.000', '3.000', '4.000']);
-  assert.ok(!texts.some(t => /tỷ|triệu/.test(t)), 'không viết tắt');
-  assert.ok(texts.includes('Nhập') && texts.includes('Bán'));
-  const barFills = new Set(calls.filter(x => x[0] === 'fill').map(x => x[2]));
-  assert.ok(barFills.has('#44DAFE') && barFills.has('#FFA33D'));
-  assert.equal(calls.filter(x => x[0] === 'quadraticCurveTo').length, 6, 'chỉ 3 cột có dữ liệu (tháng trống không vẽ cột), mỗi cột 2 góc trên');
+test('2.25.0 chartMonths(Y) = Y-01..Y-12; chartYearStep kẹp 2000..2100', () => {
+  const c = loadClient(), m = c.chartMonths(2025);
+  assert.equal(m.length, 12); assert.equal(m[0], '2025-01'); assert.equal(m[11], '2025-12');
+  const st = c.chartYearStep;
+  assert.equal(st(2026, -1), 2025); assert.equal(st(2026, 1), 2027);
+  assert.equal(st(2000, -1), 2000, 'chặn ở 2000'); assert.equal(st(2100, 1), 2100, 'chặn ở 2100');
 });
 
-test('2.24.0 desktop hover: vạch dọc trắng .25 + tooltip yy-MM, Nhập x, Bán y; rời chuột thì mất', () => {
-  const { c, calls, els } = deskChart([2026, 10, 18, 12], DESK_TX, 5);
-  assert.equal(els['#chartMonth'].textContent, '25-12');
-  assert.equal(els['#chartImpVal'].textContent, c.fmtMoneyInt(4000000));
-  assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(1500000));
-  assert.equal(els['#chartTip'].style.display, 'flex');
+test('2.25.0 desktop: mặc định = năm hiện tại, 12 nhóm 01..12, trục Y phải số đầy đủ, màu cột, không chú giải đáy, giao dịch năm khác không lẫn', () => {
+  const { c, calls, els } = deskChart([2026, 10, 18, 12], DESK_TX);
+  assert.equal(c.getChartYr(), 2026); assert.equal(typeof c.getChartYr(), 'number');
+  const d = c.chartData();
+  assert.equal(d.yms[0], '2026-01'); assert.equal(d.yms[11], '2026-12');
+  assert.equal(d.expK[10], 2300000); assert.equal(d.expK[11], 7000000);
+  assert.equal(d.impK.reduce((x, y) => x + y, 0), 0, 'NHAP 2025 không lẫn vào 2026');
+  assert.equal(d.expK.reduce((x, y) => x + y, 0), 9300000, 'BAN 2025 không lẫn');
+  const texts = calls.filter(x => x[0] === 'fillText').map(x => x[1][0]);
+  assert.deepEqual(Array.from(texts.filter(t => /^\d\d$/.test(t))), ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']);
+  assert.ok(!texts.some(t => /^\d\d-\d\d$/.test(t)), 'không còn nhãn yy-MM');
+  assert.deepEqual(Array.from(texts.filter(t => t === '0' || /^\d\.\d{3}$/.test(t))), ['0', '2.000', '4.000', '6.000', '8.000']);
+  assert.ok(!texts.some(t => /tỷ|triệu|Nhập|Bán/.test(t)), 'không viết tắt, không chú giải ở đáy biểu đồ');
+  assert.equal(calls.filter(x => x[0] === 'quadraticCurveTo').length, 4, 'chỉ 2 cột có dữ liệu, mỗi cột 2 góc trên');
+  assert.equal(els['#chartYrL'].textContent, 2026);
+  c.setChartYr(2025); c.renderChart();
+  const barFills = new Set(calls.filter(x => x[0] === 'fill').map(x => x[2]));
+  assert.ok(barFills.has('#44DAFE') && barFills.has('#FFA33D'), 'Nhập cyan, Bán cam');
+});
+
+test('2.25.0 chip dưới hàng 4 số: chưa trỏ = --/---- và —; trỏ tháng = MM/yyyy + số; rời chuột về trống; có vạch dọc .25; bấm = ghim', () => {
+  const r0 = deskChart([2026, 10, 18, 12], DESK_TX);
+  assert.equal(r0.els['#chartMonth'].textContent, '--/----'); assert.equal(r0.els['#chartImpVal'].textContent, '—'); assert.equal(r0.els['#chartExpVal'].textContent, '—');
+  assert.ok(!r0.calls.some(x => x[0] === 'fillRect' && x[2] === 'rgba(255,255,255,.25)'), 'chưa trỏ: không vạch');
+  const { c, calls, els } = deskChart([2026, 10, 18, 12], DESK_TX, 830);
+  assert.equal(els['#chartMonth'].textContent, '11/2026');
+  assert.equal(els['#chartImpVal'].textContent, c.fmtMoneyInt(0)); assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(2300000));
   assert.ok(calls.some(x => x[0] === 'fillRect' && x[2] === 'rgba(255,255,255,.25)'), 'có vạch dọc');
   c.onChartMove({ type: 'mouseleave' });
-  assert.equal(els['#chartTip'].style.display, '');
+  assert.equal(els['#chartMonth'].textContent, '--/----'); assert.equal(els['#chartImpVal'].textContent, '—'); assert.equal(els['#chartExpVal'].textContent, '—');
+  c.setChartYr(2025); c.onChartMove({ type: 'mousemove', clientX: 910, clientY: 100 });
+  assert.equal(els['#chartMonth'].textContent, '12/2025');
+  assert.equal(els['#chartImpVal'].textContent, c.fmtMoneyInt(4000000)); assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(1500000));
+  c.onChartClick({ clientX: 910, clientY: 100 });
+  c.onChartMove({ type: 'mouseleave' });
+  assert.equal(els['#chartMonth'].textContent, '12/2025', 'đã ghim thì rời chuột vẫn giữ');
+  c.onChartClick({ clientX: 910, clientY: 100 });
+  assert.equal(els['#chartMonth'].textContent, '--/----', 'bấm lần nữa bỏ ghim');
 });
 
-test('2.24.1 chartYearStep: null -> năm hiện tại -> Y-1; › từ năm hiện tại về null; vô hiệu ở 2000 và khi null', () => {
-  const c = loadClient(), st = c.chartYearStep;
-  assert.equal(st(null, -1, 2026), 2026); assert.equal(st(2026, -1, 2026), 2025); assert.equal(st(2001, -1, 2026), 2000);
-  assert.equal(st(2000, -1, 2026), 2000, 'chặn ở 2000');
-  assert.equal(st(2025, 1, 2026), 2026); assert.equal(st(2026, 1, 2026), null, '› từ năm hiện tại về null');
-  assert.equal(st(null, 1, 2026), null, '› khi null vô hiệu');
-});
-
-test('2.24.1 chartMonths theo năm: Y-01..Y-12; mặc định (null) giữ 12 tháng gần nhất', () => {
-  const c = loadClient(), m = c.chartMonths('2026-11-18', 2025);
-  assert.equal(m.length, 12); assert.equal(m[0], '2025-01'); assert.equal(m[11], '2025-12');
-  assert.equal(c.chartMonths('2026-11-18', null)[0], '2025-12');
-});
-
-test('2.24.1 desktop bộ chọn năm: nhãn, nút vô hiệu, giao dịch năm khác không lẫn, năm trống vẫn vẽ 12 nhóm, mở lại tab về null', () => {
-  const { c, calls, els } = deskChart([2026, 10, 18, 12], DESK_TX);
-  assert.equal(els['#chartYrL'].textContent, '12 tháng gần nhất'); assert.equal(els['#chartNext'].disabled, true); assert.equal(els['#chartPrev'].disabled, false);
+test('2.25.0 bộ chọn năm: nhãn là số, ‹ vô hiệu ở 2000, › vô hiệu ở 2100, đổi năm đổi dữ liệu; mở lại tab về năm hiện tại', () => {
+  const { c, els } = deskChart([2026, 10, 18, 12], DESK_TX);
+  assert.equal(els['#chartPrev'].disabled, false); assert.equal(els['#chartNext'].disabled, false);
   c.chartYearGo(-1);
-  assert.equal(c.getChartYr(), 2026); assert.equal(els['#chartYrL'].textContent, 'Năm 2026'); assert.equal(els['#chartNext'].disabled, false);
-  let d = c.chartData();
-  assert.equal(d.yms[0], '2026-01'); assert.equal(d.yms[11], '2026-12');
-  assert.equal(d.expK[11], 7000000, 'BAN 2026-12'); assert.equal(d.expK[10], 2300000);
-  assert.equal(d.impK.reduce((a, b) => a + b, 0), 0, 'NHAP 2025 không lẫn vào 2026');
-  c.chartYearGo(-1);
-  d = c.chartData(); assert.equal(d.yms[0], '2025-01'); assert.equal(d.impK[10], 9000000); assert.equal(d.impK[11], 4000000); assert.equal(d.expK[11], 1500000);
-  c.setChartYr(2000); c.chartYearGo(-1);
-  assert.equal(c.getChartYr(), 2000); assert.equal(els['#chartPrev'].disabled, true, 'vô hiệu ở 2000');
-  c.setChartYr(1999 + 27); c.chartYearGo(1);
-  assert.equal(c.getChartYr(), null); assert.equal(els['#chartYrL'].textContent, '12 tháng gần nhất');
-  c.setChartYr(2010); c.chartYearGo(-1); c.chartYearGo(-1);
-  assert.equal(c.chartData().yms[0], '2008-01');
-  const empty = c.chartData(); assert.equal(empty.impK.concat(empty.expK).reduce((a, b) => a + b, 0), 0);
-  c.renderChart(); assert.equal(calls.length > 0, true);
-  assert.ok(/if \(cb\.open\) \{ chartYr = null;/.test(PAGE), 'mở tab Thống kê về null');
+  assert.equal(c.getChartYr(), 2025); assert.equal(els['#chartYrL'].textContent, 2025);
+  const d = c.chartData(); assert.equal(d.impK[11], 4000000); assert.equal(d.impK[10], 9000000); assert.equal(d.expK[11], 1500000);
+  c.setChartYr(2001); c.chartYearGo(-1); assert.equal(els['#chartPrev'].disabled, true, 'vô hiệu ở 2000');
+  c.chartYearGo(-1); assert.equal(c.getChartYr(), 2000);
+  c.setChartYr(2099); c.chartYearGo(1); assert.equal(els['#chartNext'].disabled, true, 'vô hiệu ở 2100');
+  c.chartYearGo(1); assert.equal(c.getChartYr(), 2100);
+  const empty = c.chartData(); assert.equal(empty.impK.concat(empty.expK).reduce((x, y) => x + y, 0), 0, 'năm trống vẫn 12 nhóm');
+  assert.ok(/if \(cb\.open\) \{ chartYr = Number\(thisYear\(\)\);/.test(PAGE), 'mở tab Thống kê về năm hiện tại');
   assert.ok(/id="chartPrev" aria-label="Năm trước"/.test(PAGE) && /id="chartNext" aria-label="Năm sau"/.test(PAGE));
+  assert.ok(!PAGE.includes('12 tháng gần nhất') && !/chartYr = null/.test(PAGE), 'đã bỏ chế độ 12 tháng gần nhất');
 });
 
+test('2.25.0 dòng đồng bộ thanh bên (#syncLine): ổn có giờ, mất mạng, bị từ chối; chấm đỏ khi lỗi, xanh khi ổn', () => {
+  const { c, els } = deskChart([2026, 10, 18, 12], []);
+  const L = els['#syncLine'];
+  c.renderSyncLine(); assert.equal(L.textContent, 'Đang kết nối…'); assert.equal(L.attrs['data-st'], 'ok');
+  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.renderSyncLine();
+  assert.equal(L.textContent, 'Đã đồng bộ 09:05'); assert.equal(L.attrs['data-st'], 'ok');
+  c.noteSyncFailure('x', true, true);
+  assert.equal(L.textContent, 'Mất kết nối — đang thử lại…'); assert.equal(L.attrs['data-st'], 'err');
+  c.noteSyncFailure('x', false);
+  assert.equal(L.textContent, 'Chưa lưu được'); assert.equal(L.attrs['data-st'], 'err');
+  c.noteSyncFailure('x', true);
+  assert.equal(L.textContent, 'Chưa lưu được', '5xx không phải mất mạng');
+  c.setSyncErrorShown(false); c.renderSyncLine();
+  assert.equal(L.textContent, 'Đã đồng bộ 09:05'); assert.equal(L.attrs['data-st'], 'ok');
+  assert.ok(/\.sbs\[data-st=err\]::before\{[^}]*background:#FF5F57\}/.test(PAGE) && /\.sbs::before\{[^}]*width:7px;height:7px/.test(PAGE));
+});
+
+test('2.25.0 thanh bên: nút Tải lại (reload-app) luôn có; Thoát chỉ trong Tauri và gọi close; điện thoại không dựng gì', () => {
+  const out = runHead({ tauri: false }), box = out.body.children[0];
+  const row = box.children.find(x => x.className === 'sbb');
+  assert.ok(box.children.some(x => x.id === 'syncLine'));
+  assert.equal(row.children[0].textContent, 'Tải lại'); assert.equal(row.children[0]['data-action'], 'reload-app');
+  assert.equal(row.children[1].textContent, 'Thoát'); assert.equal(row.children[1].hidden, true, 'ngoài Tauri ẩn Thoát');
+  const t = runHead({ tauri: true }), ex = t.body.children[0].children.find(x => x.className === 'sbb').children[1];
+  assert.equal(ex.hidden, false);
+  let n = 0; t.win.__TAURI__.window = { getCurrentWindow: () => ({ close() { n++; } }) };
+  ex.onclick(); assert.equal(n, 1);
+  assert.equal(runHead({ desktop: false }).body.children.length, 0, 'iPhone/pt: không dựng chân thanh bên');
+});

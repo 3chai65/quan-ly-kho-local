@@ -689,16 +689,21 @@ html.desktop .sug__list::-webkit-scrollbar{display:none}
 html.desktop #chartBox>summary{display:none}
 html.desktop #chartBox .card__body{position:relative;padding:16px}
 html.desktop .thk{display:block}
-html.desktop .thk__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+html.desktop .thk__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 html.desktop .thk__y{display:flex;align-items:center;gap:8px}
-html.desktop .thk__y .btn{width:30px;min-width:30px;height:30px;min-height:30px;padding:0;font-size:18px;line-height:1}
-html.desktop .thk__y span{width:120px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums}
+html.desktop .thk__y .btn{width:44px;min-width:44px;height:30px;min-height:30px;padding:0;font-size:18px;line-height:1}
+html.desktop .thk__y span{font-size:13px;color:var(--muted)}
+html.desktop .thk__y b{width:44px;text-align:center;font-size:15px;font-variant-numeric:tabular-nums}
 html.desktop .thk__t{margin:0;font-size:15px;line-height:1.2;font-weight:700}
-html.desktop .thk__n{display:flex;gap:24px;margin-bottom:6px}
+html.desktop .thk__n{display:flex;gap:24px;margin-bottom:12px}
 html.desktop .thk__n span{display:flex;flex-direction:column}
 html.desktop .thk__n i{font-style:normal;font-size:10px;line-height:1.5;color:var(--muted)}
 html.desktop .thk__n b{font-size:15px;line-height:1.2;font-weight:600;font-variant-numeric:tabular-nums}
-html.desktop #chartTip{display:none;position:absolute;z-index:2;margin:0;min-height:0;padding:6px 10px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#141c3c;pointer-events:none;white-space:nowrap}
+html.desktop #chartTip{align-items:center;gap:12px;height:24px;min-height:0;margin:0 0 12px;font-size:12px;white-space:nowrap}
+html.desktop #chartTip .chart-tip__m{min-width:56px}
+html.desktop #chartTip .chart-chip{gap:6px;padding:3px 10px;line-height:18px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
+html.desktop #chartTip .chart-chip__sw{width:9px;height:9px;flex-basis:9px;border-radius:50%}
+html.desktop #chartTip .chart-chip__k{min-width:0;font-weight:400;color:var(--muted)}
 html.desktop .chart{flex:1;min-height:0;height:auto}
 html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]{display:flex;flex-direction:column}
 html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
@@ -739,8 +744,12 @@ html:is(.desktop,.pt) .bgdots::before{content:"Nền";flex:0 0 100%;margin-botto
 html:is(.desktop,.pt) .glsw{display:flex;align-items:center;gap:8px;padding:0;border:0;background:none;color:var(--text);font:inherit;font-size:11px;cursor:pointer}
 html:is(.desktop,.pt) .glsw::after{content:"";width:34px;height:18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:radial-gradient(circle at 9px 50%,rgba(255,255,255,.95) 6px,transparent 7px) no-repeat,rgba(255,255,255,.10)}
 html:is(.desktop,.pt) .glsw[aria-checked=true]::after{background:radial-gradient(circle at 25px 50%,rgba(255,255,255,.95) 6px,transparent 7px) no-repeat,rgba(64,128,242,.5)}
-html.desktop .bgdots{grid-area:2/1;align-self:end;margin:0 14px 46px}
-html.desktop .glsw{grid-area:2/1;align-self:end;margin:0 14px 16px}
+html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:column;gap:8px;margin:0 14px 16px}
+html.desktop .sbs{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
+html.desktop .sbs[data-st=err]::before{background:#FF5F57}
+html.desktop .sbb{display:flex;gap:8px}
+html.desktop .sbb .btn{min-height:28px;padding:2px 14px;font-size:12px}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
@@ -784,7 +793,14 @@ html.pt .bgdots{margin-top:14px}
       gl.setAttribute('aria-checked', R.classList.contains('glass') ? 'true' : 'false');
       gl.onclick = function(){ var on = !R.classList.contains('glass'); R.classList.toggle('glass', on); gl.setAttribute('aria-checked', on ? 'true' : 'false'); try { localStorage.setItem('kho_glass_v2', on ? '1' : '0'); } catch (e) {} };
       if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w), bb.appendChild(gl); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
-      document.body.appendChild(w); document.body.appendChild(gl);
+      /* 2.25.0: chân thanh bên = nền, dòng đồng bộ (#syncLine, chữ do renderSyncLine), công tắc kính, Tải lại / Thoát (Thoát chỉ trong Tauri) */
+      var sbf = document.createElement('div'), sy = document.createElement('div'), rw = document.createElement('div'), rl = document.createElement('button'), ex = document.createElement('button');
+      sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…'; rw.className = 'sbb';
+      rl.type = ex.type = 'button'; rl.className = ex.className = 'btn'; rl.textContent = 'Tải lại'; rl.setAttribute('data-action', 'reload-app'); ex.textContent = 'Thoát'; ex.hidden = !window.__TAURI__;
+      ex.onclick = function(){ try { window.__TAURI__.window.getCurrentWindow().close(); } catch (e) {} };
+      rw.appendChild(rl); rw.appendChild(ex);
+      [w, sy, gl, rw].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
+      var th = document.querySelector('.thk'), ct = document.getElementById('chartTip'); if (th && ct) th.appendChild(ct); /* 2.25.0: dòng tháng + chip Nhập/Bán nằm dưới hàng 4 số */
       var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false; /* 2.20.11; 2.22.0: ngoài Tauri ẩn cả dòng thư mục */
       /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */
       var bw = document.querySelector('.top .brand-wrap'), sz = document.createElement('div');
@@ -1104,7 +1120,7 @@ html.pt .bgdots{margin-top:14px}
         </span>
       </summary>
       <div class="card__body">
-        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span id="chartYrL" aria-live="polite">12 tháng gần nhất</span><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div></div>
+        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span>Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div></div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
@@ -1889,6 +1905,7 @@ var cloudBase = 0;
 var dirty = false;
 var syncErrorShown = false;
 var syncDetail = '';
+var lastSyncOk = 0, syncNet = false; /* 2.25.0: mốc đồng bộ thành công gần nhất; lỗi hiện tại là mất mạng */
 var quotaNote = '';
 var quotaWarned = false;
 var conflictOpen = false;
@@ -2119,6 +2136,16 @@ function renderSyncBadge(){
     }
   }
   if (drop) drop.hidden = !syncRejected || authLost;
+  renderSyncLine();
+}
+/* 2.25.0: dòng trạng thái ở thanh bên desktop (#syncLine): chấm xanh khi ổn, đỏ khi lỗi. Chỉ đọc cờ có sẵn. */
+function renderSyncLine(){
+  var el = $('#syncLine');
+  if (!el) return;
+  var bad = authLost || syncErrorShown, d = new Date(lastSyncOk);
+  el.setAttribute('data-st', bad ? 'err' : 'ok');
+  el.textContent = authLost ? 'Chưa lưu được' : syncErrorShown ? (syncNet ? 'Mất kết nối — đang thử lại…' : 'Chưa lưu được') :
+    lastSyncOk ? 'Đã đồng bộ ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : 'Đang kết nối…';
 }
 function scheduleSyncRetry(){
   if (syncRetryTimer || conflictOpen || syncRejected) return;
@@ -2140,8 +2167,9 @@ function noteAuthLost(){
   if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
   renderSyncBadge();
 }
-function noteSyncFailure(detail, retry){
+function noteSyncFailure(detail, retry, net){
   syncErrorShown = true;
+  syncNet = !!net;
   syncDetail = detail || 'Dữ liệu trên máy này chưa lên máy chủ.';
   syncRejected = !retry;
   renderSyncBadge();
@@ -3744,22 +3772,11 @@ function recFixAll(){
 }
 /* ================= BIỂU ĐỒ ================= */
 var chartSel = -1, chartHover = -1, chartGeo = null;
-/* 2.24.1: chartYr null = 12 tháng gần nhất; số Y = tháng 01..12 của năm Y. Bước năm (dir -1/+1) khi null/biên; hàm thuần, vô hiệu thì trả lại cur. */
-var chartYr = null;
-function chartYearStep(cur, dir, nowY){
-  if (dir < 0) return cur == null ? nowY : cur <= 2000 ? cur : cur - 1;
-  return cur == null ? null : cur + 1 <= nowY ? cur + 1 : null;
-}
-function chartYearGo(dir){
-  chartYr = chartYearStep(chartYr, dir, Number(thisYear())); chartSel = -1; chartHover = -1; renderChart();
-}
-/* 2.24.0 desktop: 12 tháng gần nhất kết thúc ở tháng của ngày hôm nay (YYYY-MM-DD), qua ranh năm. Hàm thuần. */
-function chartMonths(today, yr){
-  if (yr) { var o = []; for (var k = 1; k <= 12; k++) o.push(yr + '-' + pad2(k)); return o; }
-  var y = parseInt(String(today).slice(0, 4), 10), m = parseInt(String(today).slice(5, 7), 10), out = [];
-  for (var i = 11; i >= 0; i--) { var t = y * 12 + m - 1 - i; out.push(Math.floor(t / 12) + '-' + pad2(t % 12 + 1)); }
-  return out;
-}
+/* 2.25.0: desktop luôn là một năm (số), 12 nhóm Y-01..Y-12; mặc định và mỗi lần mở tab = năm hiện tại. Bước năm kẹp 2000..2100; hàm thuần. */
+var chartYr = Number(thisYear());
+function chartYearStep(cur, dir){ return Math.min(2100, Math.max(2000, cur + dir)); }
+function chartYearGo(dir){ chartYr = chartYearStep(chartYr, dir); chartSel = -1; chartHover = -1; renderChart(); }
+function chartMonths(yr){ var o = []; for (var k = 1; k <= 12; k++) o.push(yr + '-' + pad2(k)); return o; }
 /* 2.24.0: vạch trục Y đẹp (nghìn đồng, số nguyên): bước 1/2/2,5/5 x 10^k, 4-5 vạch tính cả 0. Hàm thuần. */
 function chartTicks(maxK){
   var raw = Math.max(1, maxK / 4), e = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / e;
@@ -3770,7 +3787,7 @@ function chartTicks(maxK){
 }
 function chartData(){
   var year = ($('#chartYear') || {}).value || thisYear();
-  var yms = isDesk() ? chartMonths(todayISO(), chartYr) : null;
+  var yms = isDesk() ? chartMonths(chartYr) : null;
   var imp = [], exp = [], impK = [], expK = [];
   for (var m = 1; m <= 12; m++) {
     var ym = yms ? yms[m - 1] : year + '-' + pad2(m);
@@ -3889,7 +3906,7 @@ function renderChart(){
   setChartTip(pad2(shown + 1) + '/' + data.year, data.impK[shown], data.expK[shown]);
 }
 function setChartTip(mmStr, impV, expV){
-  var impTxt = fmtMoneyInt(impV), expTxt = fmtMoneyInt(expV);
+  var impTxt = impV == null ? '—' : fmtMoneyInt(impV), expTxt = expV == null ? '—' : fmtMoneyInt(expV); /* null = chưa trỏ tháng nào (desktop) */
   var mEl = $('#chartMonth'), sEl = $('#chartTipSr');
   if (mEl) mEl.textContent = mmStr;
   /* 2.15.0: chú giải "[ô màu] Nhập số tiền"; số tiền nằm trong phần tử con (chip còn nhãn + ô màu). */
@@ -3898,14 +3915,14 @@ function setChartTip(mmStr, impV, expV){
   if (eV) eV.textContent = expTxt;
   if (sEl) sEl.textContent = 'Tháng ' + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
 }
-/* 2.24.0 desktop: biểu đồ 12 tháng gần nhất, trục Y bên phải (nghìn đồng, số đầy đủ), cột đôi Nhập/Bán, chú giải dưới trục X; hover/bấm → vạch dọc + tooltip (#chartTip). */
+/* 2.25.0 desktop: biểu đồ 12 tháng của năm chartYr, trục Y bên phải (nghìn đồng, số đầy đủ), cột đôi Nhập/Bán, trục X 01..12; hover/bấm → vạch dọc + dòng tháng/chip (#chartTip, nằm dưới hàng 4 số). */
 function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
-  var padT = 10, padB = 36;
+  var padT = 10, padB = 24;
   var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
   var vmax = 0, i, yl = $('#chartYrL'), yp = $('#chartPrev'), yn = $('#chartNext');
-  if (yl) yl.textContent = chartYr ? 'Năm ' + chartYr : '12 tháng gần nhất';
-  if (yp) yp.disabled = chartYr != null && chartYr <= 2000;
-  if (yn) yn.disabled = chartYr == null;
+  if (yl) yl.textContent = chartYr;
+  if (yp) yp.disabled = chartYr <= 2000;
+  if (yn) yn.disabled = chartYr >= 2100;
   for (i = 0; i < 12; i++) vmax = Math.max(vmax, data.impK[i], data.expK[i]);
   var ticks = chartTicks(vmax / 1000), top = ticks[ticks.length - 1] * 1000;
   var hi = chartHover >= 0 ? chartHover : chartSel;
@@ -3928,22 +3945,11 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
     ctx.fillStyle = impC; bar(ctx, cx - gap / 2 - bw, y0 - H * data.impK[i] / top, bw, H * data.impK[i] / top, 3);
     ctx.fillStyle = expC; bar(ctx, cx + gap / 2, y0 - H * data.expK[i] / top, bw, H * data.expK[i] / top, 3);
     ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'center';
-    ctx.fillText(data.yms[i].slice(2), cx, y0 + 12);
+    ctx.fillText(data.yms[i].slice(5), cx, y0 + 12);
   }
-  [[impC, 'Nhập', 4], [expC, 'Bán', 53]].forEach(function(l){
-    ctx.fillStyle = l[0]; ctx.beginPath(); ctx.arc(l[2], y0 + 29, 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'left'; ctx.fillText(l[1], l[2] + 10, y0 + 29);
-  });
   chartGeo = { padL: 0, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
-  var tip = $('#chartTip');
-  if (hi < 0) { if (tip) tip.style.display = ''; return; }
-  setChartTip(data.yms[hi].slice(2), data.impK[hi], data.expK[hi]);
-  if (!tip) return;
-  tip.style.display = 'flex';
-  var tw = tip.offsetWidth || 150, lx = groupW * hi + groupW + 4;
-  if (lx + tw > cssW) lx = groupW * hi - 4 - tw;
-  tip.style.left = ((cv.offsetLeft || 0) + lx) + 'px';
-  tip.style.top = ((cv.offsetTop || 0) + padT + 8) + 'px';
+  if (hi < 0) setChartTip('--/----', null, null);
+  else setChartTip(pad2(hi + 1) + '/' + chartYr, data.impK[hi], data.expK[hi]);
 }
 /* Chỉ số nhóm tháng (0..11) dưới con trỏ, -1 nếu ngoài vùng vẽ. */
 function chartIdxAt(e){
@@ -4875,6 +4881,7 @@ function pushState(manual, force){
       syncRejected = false;
       syncRetryDelay = DIRTY_BADGE_MS;
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+      lastSyncOk = Date.now();
       saveLocal();
       renderSyncBadge();
       noteStockWarnings(d && d.stockDrift);
@@ -4894,7 +4901,7 @@ function pushState(manual, force){
     }
     return ok;
   }).catch(function(e){
-    noteSyncFailure(e && e.name === 'AbortError' ? 'Máy chủ không phản hồi sau 15 giây — dữ liệu vẫn giữ trên máy này.' : 'Mất kết nối — dữ liệu vẫn giữ trên máy này.', true);
+    noteSyncFailure(e && e.name === 'AbortError' ? 'Máy chủ không phản hồi sau 15 giây — dữ liệu vẫn giữ trên máy này.' : 'Mất kết nối — dữ liệu vẫn giữ trên máy này.', true, true);
     return false;
   }).then(function(ok){
     pushing = false;
@@ -4914,6 +4921,8 @@ function pullState(manual, forceLatest){
         return false;
       }
       authLost = false;
+      lastSyncOk = Date.now();
+      renderSyncLine();
       cloudBase = num(server.updatedAt);
       /* Chỉ ưu tiên server khi máy này không có thay đổi chưa gửi.
          Nếu đang dirty, đẩy bản local lên trước; server sẽ trả 409 nếu
@@ -4962,6 +4971,8 @@ function autoRefresh(){
       if (dirty || conflictOpen || busyEditing()) return false;
       var server = d && d.success ? sanitize(d.data) : null;
       if (!server) return false;
+      lastSyncOk = Date.now();
+      renderSyncLine();
       if (num(server.updatedAt) > num(cloudBase)) {
         cloudBase = num(server.updatedAt);
         db = server;
@@ -5486,7 +5497,7 @@ function bindEvents(){
   var cb = $('#chartBox');
   [['#chartPrev', -1], ['#chartNext', 1]].forEach(function(b){ var e = $(b[0]); if (e) e.addEventListener('click', function(){ chartYearGo(b[1]); }); });
   if (cb) cb.addEventListener('toggle', function(){
-    if (cb.open) { chartYr = null; requestAnimationFrame(renderChart); }
+    if (cb.open) { chartYr = Number(thisYear()); chartSel = -1; chartHover = -1; requestAnimationFrame(renderChart); }
   });
   var bbx = $('#backupBox');
   if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) loadBakList(); });
@@ -5884,6 +5895,7 @@ function init(){
     db = remote;
     cloudBase = num(remote.updatedAt) || savedBase;
     dirty = false;
+    lastSyncOk = Date.now();
     saveLocal();
   } else if (local) {
     db = local;

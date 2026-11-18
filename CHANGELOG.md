@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.25.0] - 2026-11-18
+
+### Thay đổi
+- Thống kê (desktop) giống app Mac mới nhất: mặc định và mỗi lần mở tab = năm hiện tại, 12 nhóm tháng; bỏ chế độ "12 tháng gần nhất"; bộ chọn ‹ Năm 2026 › kẹp 2000..2100; nhãn trục X 01..12; bỏ tooltip nổi và chú giải đáy, thay bằng dòng dưới hàng 4 số (--/----, chip Nhập/Bán —; rê/bấm tháng hiện MM/yyyy + số, kèm vạch dọc).
+- Thanh bên desktop: dòng trạng thái đồng bộ (đọc cờ có sẵn: Đã đồng bộ HH:MM / Mất kết nối / Chưa lưu được), nút Tải lại và Thoát (Thoát chỉ trong app Tauri). iPhone không đổi.
+
 ## [2.24.1] - 2026-11-18
 
 ### Thêm
