@@ -119,6 +119,7 @@ globalThis.__test = {
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null),
+  loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
 };
 })();`;
@@ -4365,7 +4366,7 @@ const NEW_213 = ['nhap-add', 'brand-devices'];
 /* 2.14.0 thêm preset-newname; 2.15.5 bỏ lại. */
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
-const NEW_215 = ['reload-app', 'open-backup-dir'];
+const NEW_215 = ['reload-app', 'open-backup-dir', 'bak-refresh'];
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -6662,6 +6663,52 @@ test('2.20.11 nút Mở thư mục sao lưu: ẩn mặc định, chỉ hiện kh
   assert.match(PAGE, /data-action="open-backup-dir" hidden/);
   assert.ok(PAGE.includes("case 'open-backup-dir'") && PAGE.includes("invoke('mo_thu_muc_sao_luu')"));
   assert.ok(PAGE.includes("[data-action=\"open-backup-dir\"]'); if (obd && window.__TAURI__) obd.hidden = false"));
+});
+
+function bakEnv(fetchImpl) {
+  const els = new Map();
+  for (const id of ['bakList', 'bakPager']) { const e = makeEl(); e.appendChild = function(c){ e.children.push(c); return c; }; els.set(id, e); }
+  const doc = {
+    readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(sel) { const m = /^#([\w-]+)$/.exec(String(sel)); return m && els.has(m[1]) ? els.get(m[1]) : null; },
+    querySelectorAll() { return []; },
+    createElement(tag) { const e = makeEl(); e.tagName = String(tag || '').toUpperCase(); e.appendChild = function(c){ e.children.push(c); return c; }; return e; },
+    createElementNS() { return makeEl(); }, createTextNode(s) { return { textContent: String(s) }; },
+    addEventListener() {}, removeEventListener() {}
+  };
+  return { els, client: loadClient({ document: doc, fetch: fetchImpl }) };
+}
+const bakFiles = n => Array.from({ length: n }, (_, i) => ({ name: 'backup-2026-11-' + String(30 - i).padStart(2, '0') + '.db', size: 524288 + i * 1000, modified: '2026-11-17T12:30:00.000Z' }));
+const bakOk = list => async () => ({ ok: true, status: 200, json: async () => ({ success: true, keepDays: 30, count: list.length, backups: list }) });
+
+test('2.22.0 Sao lưu: danh sách máy chủ 10 dòng/trang, phân trang, kích thước KB/MB', async () => {
+  const { els, client } = bakEnv(bakOk(bakFiles(23)));
+  await client.loadBakList();
+  assert.equal(els.get('bakList').children.length, 10, 'trang 1 đủ 10 dòng');
+  assert.equal(els.get('bakList').children[0].children[0].textContent, 'backup-2026-11-30.db');
+  assert.match(els.get('bakPager').children[0].textContent, /Trang 1 \/ 3/);
+  assert.equal(client.bakSizeText(2048), '2 KB');
+  assert.equal(client.bakSizeText(5.5 * 1048576), '5,5 MB');
+});
+
+test('2.22.0 Sao lưu: lỗi tải (401/mạng) chỉ hiện một dòng báo, trống thì báo chưa có', async () => {
+  let t = bakEnv(async () => ({ ok: false, status: 401, json: async () => ({}) }));
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakList').children.length, 1);
+  assert.equal(t.els.get('bakList').children[0].textContent, 'Không tải được danh sách');
+  t = bakEnv(async () => { throw new Error('mạng'); });
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakList').children[0].textContent, 'Không tải được danh sách');
+  t = bakEnv(bakOk([]));
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakList').children[0].textContent, 'Chưa có bản sao lưu trên máy chủ.');
+});
+
+test('2.22.0 Sao lưu: dòng thư mục ẩn mặc định, chỉ hiện trong Tauri; không có nút Chọn thư mục', () => {
+  assert.match(PAGE, /<div class="bak-dir" hidden>/);
+  assert.ok(PAGE.includes('if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false;'));
+  assert.ok(!PAGE.includes('Chọn thư mục'));
+  assert.match(PAGE, /\.bak-dir\[hidden\]\{display:none\}/);
 });
 
 test('2.20.12 PWA standalone tự bật desktop; desktop=0 nhớ tắt; HD/FHD chỉ chèn trong Tauri', () => {

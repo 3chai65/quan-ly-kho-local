@@ -198,7 +198,7 @@ border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;fon
 .gap-12{gap:12px}
 .lbl--flat{margin:0}
 .inline-row{display:flex;align-items:center;gap:6px}
-.bak-actions{display:flex;flex-wrap:wrap;gap:8px}
+.bak-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .chk{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
 .chk input{width:18px;height:18px;accent-color:var(--brand);cursor:pointer}
 .hintbox{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
@@ -560,6 +560,20 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
+.bak-sec{margin-top:12px;padding:10px 12px;border:1px solid var(--kb,var(--border));border-radius:14px;background:var(--spec,none) top/100% 55% no-repeat,rgba(255,255,255,.2);box-shadow:var(--k3d,none)}
+.bak-sec:first-child{margin-top:0}
+.bak-sec__t{margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.bak-sec__bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.bak-sec__bar .bak-sec__t{margin:0}
+.bak-dir{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.bak-dir[hidden]{display:none}
+.bak-dir__p{flex:1;min-width:0;word-break:break-all}
+.bak-restore{color:var(--red-text)}
+.bak-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.3}
+.bak-row__name{font-weight:700;word-break:break-all}
+.bak-row__size,.bak-row__time{text-align:right;color:var(--muted);white-space:nowrap}
+.bak-pg{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+@media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
 /* 2.20.8 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
@@ -708,6 +722,7 @@ html.desktop .rp-row:disabled{cursor:default}
 html.desktop .rp-row:not(:disabled):hover{background:var(--hv)}
 html.desktop .rp-row[aria-current]{background:var(--sel-bg);font-weight:800}
 html.desktop .rp-row__name{overflow:hidden;white-space:nowrap}
+html:is(.desktop,.pt) .btn.bak-restore{border-color:rgba(255,120,120,.5)}
 html.desktop #backupBox{align-self:start}
 html.desktop #backupBox .card__body{padding:4px 16px 16px}
 html.desktop .chart-year__box:hover{background:rgba(255,255,255,.8)}
@@ -758,7 +773,7 @@ html.pt .bgdots{margin-top:14px}
       });
       if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
       document.body.appendChild(w);
-      var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false; /* 2.20.11 */
+      var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false; /* 2.20.11; 2.22.0: ngoài Tauri ẩn cả dòng thư mục */
       /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */
       var bw = document.querySelector('.top .brand-wrap'), sz = document.createElement('div');
       sz.className = 'szpick'; sz.setAttribute('role', 'group'); sz.setAttribute('aria-label', 'Cỡ cửa sổ');
@@ -806,6 +821,8 @@ html.pt .bgdots{margin-top:14px}
 <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
 <symbol id="i-outbox" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></symbol>
 <symbol id="i-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M8 16H3v5"/></symbol>
 </svg>
 <header class="top">
   <div class="wrap bar">
@@ -1198,23 +1215,36 @@ html.pt .bgdots{margin-top:14px}
       <span class="hint card__bar-count" id="backupHint">Chưa sao lưu</span>
     </div>
     <div class="card__body">
-      <div class="bak-actions mt-12">
-        <button class="btn btn--primary" type="button" data-action="backup-now">
-          <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Sao lưu ngay
-        </button>
-        <button class="btn" type="button" data-action="restore-file">
-          <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Khôi phục từ file
-        </button>
-        <button class="btn" type="button" data-action="open-backup-dir" hidden>
-          <svg class="ico" aria-hidden="true"><use href="#i-warehouse"/></svg>Mở thư mục
-        </button>
-        <input type="file" id="restoreInput" accept=".json,application/json" hidden>
-      </div>
-      <label class="chk mt-12" for="autoBackup">
-        <input type="checkbox" id="autoBackup" checked>
-        <span>Tự sao lưu mỗi ngày khi mở trang</span>
-      </label>
-      <p class="hint mt-10" id="backupLast">Chưa có bản sao lưu nào.</p>
+      <section class="bak-sec">
+        <h3 class="bak-sec__t">File sao lưu trên máy này</h3>
+        <div class="bak-dir" hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="bak-dir__p">Thư mục sao lưu: data\luu-tru</span>
+          <button class="btn" type="button" data-action="open-backup-dir" hidden>Mở thư mục</button>
+        </div>
+        <p class="hint" id="backupLast">Chưa có bản sao lưu nào.</p>
+        <div class="bak-actions mt-10">
+          <button class="btn btn--primary" type="button" data-action="backup-now">
+            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Sao lưu ngay
+          </button>
+          <button class="btn bak-restore" type="button" data-action="restore-file">
+            <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Khôi phục từ file…
+          </button>
+          <input type="file" id="restoreInput" accept=".json,application/json" hidden>
+          <span class="hint">Khôi phục thay thế toàn bộ dữ liệu, kể cả trên máy chủ.</span>
+        </div>
+        <label class="chk mt-10" for="autoBackup">
+          <input type="checkbox" id="autoBackup" checked>
+          <span>Tự sao lưu mỗi ngày khi mở trang</span>
+        </label>
+      </section>
+      <section class="bak-sec">
+        <div class="bak-sec__bar">
+          <h3 class="bak-sec__t">Bản sao lưu trên máy chủ</h3>
+          <button class="btn btn--icon" type="button" data-action="bak-refresh" aria-label="Làm mới danh sách" title="Làm mới"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div id="bakList"><p class="hint bak-empty">Đang tải…</p></div>
+        <div class="bak-pg" id="bakPager"></div>
+      </section>
     </div>
   </details>
 </main>
@@ -4875,6 +4905,51 @@ function renderBackupInfo(){
     ? 'Chưa sao lưu'
     : (last === todayISO() ? 'Đã gửi lệnh tải hôm nay' : 'Sao lưu ' + bakDateText(last));
 }
+/* 2.22.0: danh sách bản .db trên máy chủ (GET /api/backups), chỉ đọc, 10 dòng/trang. */
+var bakList = null, bakPage = 1, bakErr = false, bakSeq = 0;
+function bakSizeText(n){
+  n = Number(n) || 0;
+  return n >= 1048576 ? fmtNum(Math.round(n / 104857.6) / 10) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+}
+function bakTimeText(iso){
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function renderBakList(){
+  var host = $('#bakList'), pg = $('#bakPager');
+  if (!host) return;
+  host.textContent = '';
+  var rows = bakList || [];
+  var pages = Math.max(1, Math.ceil(rows.length / 10));
+  if (bakPage > pages) bakPage = pages;
+  if (bakPage < 1) bakPage = 1;
+  if (bakErr || !rows.length) {
+    host.appendChild(el('p', 'hint bak-empty', bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…')));
+    if (pg) pg.textContent = '';
+    return;
+  }
+  rows.slice((bakPage - 1) * 10, bakPage * 10).forEach(function(b){
+    var r = el('div', 'bak-row');
+    r.appendChild(el('span', 'bak-row__name', b.name));
+    r.appendChild(el('span', 'bak-row__size', bakSizeText(b.size)));
+    r.appendChild(el('span', 'bak-row__time', bakTimeText(b.modified)));
+    host.appendChild(r);
+  });
+  renderPager(pg, bakPage, pages, 'bak', true);
+}
+function loadBakList(){
+  var seq = ++bakSeq;
+  var done = function(list){
+    if (seq !== bakSeq) return;
+    bakErr = !list;
+    if (list) bakList = list;
+    renderBakList();
+  };
+  return apiFetch('/api/backups').then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+    done(j && j.success && Array.isArray(j.backups) ? j.backups : null);
+  }, function(){ done(null); });
+}
 function downloadBackup(manual, filename, skipStamp){
   var url = null;
   try {
@@ -5145,6 +5220,7 @@ function handleAction(btn){
     case 'rec-fix': recFix(id); break;
     case 'rec-fix-all': recFixAll(); break;
     case 'backup-now': downloadBackup(true); break;
+    case 'bak-refresh': loadBakList(); break;
     case 'open-backup-dir': {
       var T = window.__TAURI__;
       if (T && T.core) T.core.invoke('mo_thu_muc_sao_luu').catch(function(){ toast('Không mở được thư mục sao lưu'); });
@@ -5166,6 +5242,7 @@ function handleAction(btn){
       else if (kind === 'note') { notePage = page; renderNote(); }
       else if (kind === 'nnote') { nhapNotePage = page; renderNhapList(); }
       else if (kind === 'order') { orderPage = page; renderOrder(); }
+      else if (kind === 'bak') { bakPage = page; renderBakList(); }
       break;
     }
   }
@@ -5290,6 +5367,8 @@ function bindEvents(){
   if (cb) cb.addEventListener('toggle', function(){
     if (cb.open) requestAnimationFrame(renderChart);
   });
+  var bbx = $('#backupBox');
+  if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) loadBakList(); });
   initTabs();
   initFootBars();
 

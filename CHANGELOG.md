@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.22.0] - 2026-11-18
+
+- Tab Sao lưu giống app Mac: thẻ "File sao lưu trên máy này" (dòng thư mục + Mở thư mục chỉ trong Tauri, khôi phục đỏ nhẹ) và thẻ "Bản sao lưu trên máy chủ" (GET /api/backups, 10 dòng/trang, làm mới, chỉ đọc).
+
 ## [2.21.5] - 2026-11-18
 
 - Sao lưu/khôi phục: chữ bớt khẳng định ("Đã gửi lệnh tải hôm nay"); nút khôi phục không kích hoạt tự sao lưu; chặn khôi phục khi mất xác thực/đang đồng bộ; sửa ký tự điều khiển trong tài liệu (+ test quét *.md); README-LOCAL "giữ N bản".
