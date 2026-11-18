@@ -11,6 +11,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Máy chủ: PUT /api/state với X-Force mà không chụp được bản trước-ghi-đè thì trả 500 và KHÔNG ghi (trước đây vẫn ghi đè); sao lưu hằng ngày vẫn fail-open. Thêm test.
 - Tài liệu: khung cảnh báo hub Mac ở README.md/README-LOCAL.md, mốc kiểm BAO-CAO-REVIEW.md, ghi chú bản Docker cũ trong CLAUDE.md.
 - CI: thêm bước `npm run lint:client` (continue-on-error, chỉ cảnh báo) sau `npm run lint`.
+- CI: job lint chạy `npm ci --ignore-scripts` trước `lint:client` (trước đó thiếu eslint nên bước lỗi âm thầm).
 
 ## [2.23.1] - 2026-11-18
 
