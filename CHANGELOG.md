@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.24.0] - 2026-11-18
+
+### Thay đổi
+- Tab Thống kê (chế độ desktop): một thẻ phẳng mờ có tiêu đề "Thống kê (nghìn đồng)", hàng 4 số (Bán/Lợi nhuận hôm nay, Bán/Lợi nhuận năm, dùng lại computeStats), biểu đồ cột đôi 12 tháng gần nhất (nhãn yy-MM), trục Y bên phải số đầy đủ, chú giải dưới trục X, hover/bấm ra vạch dọc + tooltip. Bỏ ở desktop: ô năm, dải Nhập/Tồn trong tiêu đề thẻ. iPhone/PWA thường giữ nguyên. Màu cột Nhập #44DAFE, Bán #FFA33D (biến --chart-imp/--chart-exp, cả iPhone).
+
 ## [2.23.2] - 2026-11-18
 
 ### Sửa

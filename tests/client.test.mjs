@@ -113,7 +113,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -6246,7 +6246,7 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
 });
 
 test('2.20.1 4 ô lớn desktop: Nhập/Bán(+hôm nay,năm)/Lợi nhuận(+hôm nay,năm)/Tồn, chỉ hiển thị lại số computeStats, ẩn khi không desktop', () => {
-  assert.ok(PAGE.includes('<section class="stats4" aria-label="Nhập, bán, lợi nhuận tháng và tổng tồn kho">') && PAGE.includes('.stats4,.szpick{display:none}'));
+  assert.ok(PAGE.includes('<section class="stats4" aria-label="Nhập, bán, lợi nhuận tháng và tổng tồn kho">') && PAGE.includes('.stats4,.szpick,.thk{display:none}'));
   const KEYS = ['imp', 'exp', 'expDay', 'expYear', 'profit', 'profitDay', 'profitYear', 'stock'];
   for (const k of KEYS) assert.ok(PAGE.includes('data-s4="' + k + '"'), k);
   const labels = [...PAGE.matchAll(/<span class="s4__k">([^<]*)<\/span>/g)].map(m => m[1]);
@@ -6395,11 +6395,11 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
   const block = deskBlock();
-  assert.ok(block.includes('html.desktop .chart-head__stats{display:none}'));
+  assert.ok(block.includes('html.desktop #chartBox>summary{display:none}'), '2.24.0: desktop ẩn cả summary (tiêu đề/năm/Nhập/Tồn), thẻ có tiêu đề riêng .thk');
   assert.ok(PAGE.includes('id="statImport"') && PAGE.includes('id="statStock"'), 'DOM giữ cho iPhone/PWA');
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('.chart-head__stats{display:none}'), 'không ẩn ngoài desktop');
+  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('#chartBox>summary{display:none}'), 'không ẩn ngoài desktop');
   assert.ok(block.includes('html.desktop .chart-year__box{border-radius:999px}'));
-  assert.ok(block.includes('--chart-imp:#22D3EE;--chart-exp:#FB923C') && PAGE.includes("cs.getPropertyValue('--chart-imp')"));
+  assert.ok(block.includes('--chart-imp:#44DAFE;--chart-exp:#FFA33D') && PAGE.includes("cs.getPropertyValue('--chart-imp')"));
   assert.ok(block.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
 });
 
@@ -6963,4 +6963,80 @@ test('2.23.0 công tắc Hiệu ứng kính: mặc định TẮT, khóa kho_glas
   for (const old of [{ glass: '1' }, { kho_glass: '1' }, { kho_glass_v2: '0' }, { kho_glass_v2: 'true' }]) assert.ok(!runHead({ ls: old }).cls.has('glass'), JSON.stringify(old));
   const head = PAGE.slice(0, PAGE.indexOf('</style>'));
   assert.ok(head.includes(':root{') && /--blur:none;--blurb:none;/.test(head));
+});
+
+test('2.24.0 chartMonths: 12 tháng gần nhất kết thúc ở tháng hiện tại, qua ranh năm', () => {
+  const c = loadClient();
+  const m1 = c.chartMonths('2026-11-18');
+  assert.equal(m1.length, 12);
+  assert.equal(m1[0], '2025-12'); assert.equal(m1[11], '2026-11');
+  const m2 = c.chartMonths('2026-01-05');
+  assert.equal(m2[0], '2025-02'); assert.equal(m2[11], '2026-01');
+  assert.equal(c.chartMonths('2026-12-31')[0], '2026-01');
+});
+
+test('2.24.0 chartTicks: vạch đẹp 4-5 vạch, số nguyên, đỉnh >= giá trị lớn nhất', () => {
+  const c = loadClient();
+  assert.deepEqual(Array.from(c.chartTicks(5600)), [0, 2000, 4000, 6000]);
+  assert.deepEqual(Array.from(c.chartTicks(2000)), [0, 500, 1000, 1500, 2000]);
+  assert.deepEqual(Array.from(c.chartTicks(0)), [0, 1]);
+  assert.deepEqual(Array.from(c.chartTicks(8340)), [0, 2500, 5000, 7500, 10000]);
+  for (const v of [1, 7, 99, 1234, 87654, 4100000, 9e9]) {
+    const t = c.chartTicks(v);
+    assert.ok(t.length >= 2 && t.length <= 5, 'số vạch ' + v + ': ' + t.length);
+    assert.ok(t[t.length - 1] >= v && t.every(Number.isInteger), 'đỉnh/nguyên ' + v);
+  }
+});
+
+function deskChart(today, txs, hoverX) {
+  const calls = [];
+  const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : (...a) => { calls.push([k, a, t.fillStyle]); return { width: 0 }; }), set: (t, k, v) => { t[k] = v; return true; } });
+  const mk = () => ({ value: '', textContent: '', style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; } }, focus() {}, select() {} });
+  const cv = { offsetParent: {}, offsetLeft: 0, offsetTop: 0, clientWidth: 970, clientHeight: 400, parentNode: { clientWidth: 970 }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: 970, height: 400 }) };
+  const els = { '#statsChart': cv, '#chartYear': mk(), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartTipSr': mk(), '#chartTip': mk() };
+  const FakeDate = fakeClock(...today);
+  const R = makeEl(); R.classList = { contains: k => k === 'desktop', add() {}, remove() {}, toggle() {} };
+  const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: R, body: makeEl(), querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
+  const c = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, getComputedStyle: () => ({ getPropertyValue: k => (k === '--chart-imp' ? '#44DAFE' : k === '--chart-exp' ? '#FFA33D' : '') }) });
+  c.setDb({ products: [{ id: 'p1', name: 'A', stock: 9, costPrice: 1 }], prescriptions: [], updatedAt: 0, moneyUnit: 'dong', transactions: txs });
+  c.renderChart();
+  if (hoverX != null) { c.onChartMove({ type: 'mousemove', clientX: hoverX, clientY: 100 }); }
+  return { c, calls, els };
+}
+const DESK_TX = [
+  { id: 'a', date: '2025-12-03', type: 'NHAP', productId: 'p1', qty: 1, price: 1, total: 4000000 },
+  { id: 'b', date: '2025-12-20', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 1500000, cost: 1000000 },
+  { id: 'c', date: '2025-11-30', type: 'NHAP', productId: 'p1', qty: 1, price: 1, total: 9000000 },
+  { id: 'd', date: '2026-11-18', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 2300000, cost: 1500000 },
+  { id: 'e', date: '2026-12-01', type: 'BAN', productId: 'p1', qty: 1, price: 1, total: 7000000, cost: 1 }
+];
+
+test('2.24.0 desktop: 12 nhóm yy-MM, trục Y bên phải số đầy đủ, màu cột đúng, giao dịch ngoài cửa sổ không lẫn, NHAP không vào lợi nhuận', () => {
+  const { c, calls } = deskChart([2026, 10, 18, 12], DESK_TX);
+  const d = c.chartData();
+  assert.equal(d.yms[0], '2025-12'); assert.equal(d.yms[11], '2026-11');
+  assert.equal(d.impK[0], 4000000); assert.equal(d.expK[0], 1500000);
+  assert.equal(d.expK[11], 2300000);
+  assert.equal(d.impK.reduce((a, b) => a + b, 0), 4000000, 'NHAP 2025-11 (ngoài cửa sổ) không lẫn');
+  assert.equal(d.expK.reduce((a, b) => a + b, 0), 3800000, 'BAN 2026-12 (ngoài cửa sổ) không lẫn');
+  const texts = calls.filter(x => x[0] === 'fillText').map(x => x[1][0]);
+  for (const l of ['25-12', '26-01', '26-11']) assert.ok(texts.includes(l), 'nhãn ' + l);
+  assert.equal(texts.filter(t => /^\d\d-\d\d$/.test(t)).length, 12);
+  assert.deepEqual(Array.from(texts.filter(t => /^[\d.]+$/.test(t))), ['0', '1.000', '2.000', '3.000', '4.000']);
+  assert.ok(!texts.some(t => /tỷ|triệu/.test(t)), 'không viết tắt');
+  assert.ok(texts.includes('Nhập') && texts.includes('Bán'));
+  const barFills = new Set(calls.filter(x => x[0] === 'fill').map(x => x[2]));
+  assert.ok(barFills.has('#44DAFE') && barFills.has('#FFA33D'));
+  assert.equal(calls.filter(x => x[0] === 'quadraticCurveTo').length, 6, 'chỉ 3 cột có dữ liệu (tháng trống không vẽ cột), mỗi cột 2 góc trên');
+});
+
+test('2.24.0 desktop hover: vạch dọc trắng .25 + tooltip yy-MM, Nhập x, Bán y; rời chuột thì mất', () => {
+  const { c, calls, els } = deskChart([2026, 10, 18, 12], DESK_TX, 5);
+  assert.equal(els['#chartMonth'].textContent, '25-12');
+  assert.equal(els['#chartImpVal'].textContent, c.fmtMoneyInt(4000000));
+  assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(1500000));
+  assert.equal(els['#chartTip'].style.display, 'flex');
+  assert.ok(calls.some(x => x[0] === 'fillRect' && x[2] === 'rgba(255,255,255,.25)'), 'có vạch dọc');
+  c.onChartMove({ type: 'mouseleave' });
+  assert.equal(els['#chartTip'].style.display, '');
 });

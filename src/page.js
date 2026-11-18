@@ -110,7 +110,7 @@ details>.card__head:hover{background:var(--surface2)}
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
-.stats4,.szpick{display:none}
+.stats4,.szpick,.thk{display:none}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
@@ -638,7 +638,7 @@ html:is(.desktop,.pt)[data-bg=emerald],html:is(.desktop,.pt) .bgd[data-bg=emeral
 html:is(.desktop,.pt)[data-bg=gold],html:is(.desktop,.pt) .bgd[data-bg=gold]{--bt:linear-gradient(135deg,#381F05,#6B420A);--muted:rgba(255,255,255,.73);--red-text:#FFBFBF}
 html:is(.desktop,.pt)[data-bg=rose],html:is(.desktop,.pt) .bgd[data-bg=rose]{--bt:linear-gradient(135deg,#3D0D1F,#701A3D);--muted:rgba(255,255,255,.64);--red-text:#FF9A9A}
 html:is(.desktop,.pt)[data-bg=graphite],html:is(.desktop,.pt) .bgd[data-bg=graphite]{--bt:linear-gradient(135deg,#141417,#2E2E33);--muted:rgba(255,255,255,.58);--red-text:#FF8484}
-html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f8fafc;--text2:rgba(255,255,255,.85);--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#FF7373;--surface:#141c3c;--surface2:#1b264f;--border:rgba(255,255,255,.14);--border2:rgba(255,255,255,.07);--vien:rgba(255,255,255,.14);--glass:rgba(255,255,255,.07);--pnl:rgba(255,255,255,.07);--chart-hi:rgba(255,255,255,.08);--glass-bar:rgba(255,255,255,.07);--ring:0 0 0 2px rgba(255,255,255,.35);--kb:rgba(255,255,255,.10);--spec:none;--k3d:none;--k3h:none;--k3t:none;--k3a:none;--chart-imp:#22D3EE;--chart-exp:#FB923C;--nb:rgba(255,255,255,.07);--hv:rgba(255,255,255,.13);--sel-bg:rgba(255,255,255,.14);--sel-hv:rgba(255,255,255,.2);--sel-bd:rgba(255,255,255,.32);--sel-fg:#f8fafc}
+html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f8fafc;--text2:rgba(255,255,255,.85);--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#FF7373;--surface:#141c3c;--surface2:#1b264f;--border:rgba(255,255,255,.14);--border2:rgba(255,255,255,.07);--vien:rgba(255,255,255,.14);--glass:rgba(255,255,255,.07);--pnl:rgba(255,255,255,.07);--chart-hi:rgba(255,255,255,.08);--glass-bar:rgba(255,255,255,.07);--ring:0 0 0 2px rgba(255,255,255,.35);--kb:rgba(255,255,255,.10);--spec:none;--k3d:none;--k3h:none;--k3t:none;--k3a:none;--chart-imp:#44DAFE;--chart-exp:#FFA33D;--nb:rgba(255,255,255,.07);--hv:rgba(255,255,255,.13);--sel-bg:rgba(255,255,255,.14);--sel-hv:rgba(255,255,255,.2);--sel-bd:rgba(255,255,255,.32);--sel-fg:#f8fafc}
 html.glass:is(.desktop,.pt)[data-bg]{--blur:saturate(1.6) blur(18px);--blurb:blur(6px);--spec:linear-gradient(120deg,rgba(255,255,255,.07),rgba(255,255,255,0) 35%);--k3d:inset 1px 1px 0 rgba(255,255,255,.14),inset 0 -4px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.2),0 3px 8px rgba(0,0,0,.14);--k3t:inset 1px 1px 0 rgba(255,255,255,.16),0 1px 1px rgba(0,0,0,.2)}
 html:is(.desktop,.pt)[data-bg] body::before{background:var(--bt)}
 html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}
@@ -686,8 +686,15 @@ html.desktop .note__row--btns{margin:0 0 0 auto}
 html.desktop .sug__list{scrollbar-width:none;background:#141c3c;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:0;max-height:116px;scroll-snap-type:y mandatory}
 html.desktop .sug__item{height:38px;scroll-snap-align:start}
 html.desktop .sug__list::-webkit-scrollbar{display:none}
-html.desktop .chart-head__stats{display:none}
-html.desktop #chartBox .card__body{padding:0 16px 14px}
+html.desktop #chartBox>summary{display:none}
+html.desktop #chartBox .card__body{position:relative;padding:16px}
+html.desktop .thk{display:block}
+html.desktop .thk__t{margin:0 0 10px;font-size:15px;line-height:1.2;font-weight:700}
+html.desktop .thk__n{display:flex;gap:24px;margin-bottom:6px}
+html.desktop .thk__n span{display:flex;flex-direction:column}
+html.desktop .thk__n i{font-style:normal;font-size:10px;line-height:1.5;color:var(--muted)}
+html.desktop .thk__n b{font-size:15px;line-height:1.2;font-weight:600;font-variant-numeric:tabular-nums}
+html.desktop #chartTip{display:none;position:absolute;z-index:2;margin:0;min-height:0;padding:6px 10px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#141c3c;pointer-events:none;white-space:nowrap}
 html.desktop .chart{flex:1;min-height:0;height:auto}
 html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]{display:flex;flex-direction:column}
 html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
@@ -1093,6 +1100,7 @@ html.pt .bgdots{margin-top:14px}
         </span>
       </summary>
       <div class="card__body">
+        <div class="thk"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__n"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div></div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
@@ -3134,6 +3142,10 @@ function renderStats(){
   s4('profitDay', fmtMoneyInt(s.profitDay), s.profitDay < 0);
   s4('profitYear', fmtMoneyInt(s.profitYear), s.profitYear < 0);
   s4('stock', fmtQtyInt(s.stock));
+  s4('tkExpDay', fmtMoneyInt(s.dExp));
+  s4('tkProfitDay', fmtMoneyInt(s.profitDay), s.profitDay < 0);
+  s4('tkExpYear', fmtMoneyInt(s.yExp));
+  s4('tkProfitYear', fmtMoneyInt(s.profitYear), s.profitYear < 0);
 }
 /* ================= PHÂN TRANG ================= */
 function mkPageBtn(label, target, disabled, kind, current){
@@ -3727,12 +3739,27 @@ function recFixAll(){
   renderRec();
 }
 /* ================= BIỂU ĐỒ ================= */
-var chartSel = -1, chartGeo = null;
+var chartSel = -1, chartHover = -1, chartGeo = null;
+/* 2.24.0 desktop: 12 tháng gần nhất kết thúc ở tháng của ngày hôm nay (YYYY-MM-DD), qua ranh năm. Hàm thuần. */
+function chartMonths(today){
+  var y = parseInt(String(today).slice(0, 4), 10), m = parseInt(String(today).slice(5, 7), 10), out = [];
+  for (var i = 11; i >= 0; i--) { var t = y * 12 + m - 1 - i; out.push(Math.floor(t / 12) + '-' + pad2(t % 12 + 1)); }
+  return out;
+}
+/* 2.24.0: vạch trục Y đẹp (nghìn đồng, số nguyên): bước 1/2/2,5/5 x 10^k, 4-5 vạch tính cả 0. Hàm thuần. */
+function chartTicks(maxK){
+  var raw = Math.max(1, maxK / 4), e = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / e;
+  var step = Math.max(1, [1, 2, 2.5, 5, 10].filter(function(v){ return m <= v && Number.isInteger(Math.round(v * e * 1e6) / 1e6); })[0] * e);
+  var n = Math.max(1, Math.ceil(maxK / step - 1e-9)), out = [];
+  for (var i = 0; i <= n; i++) out.push(i * step);
+  return out;
+}
 function chartData(){
   var year = ($('#chartYear') || {}).value || thisYear();
+  var yms = isDesk() ? chartMonths(todayISO()) : null;
   var imp = [], exp = [], impK = [], expK = [];
   for (var m = 1; m <= 12; m++) {
-    var ym = year + '-' + pad2(m);
+    var ym = yms ? yms[m - 1] : year + '-' + pad2(m);
     var a = 0, b = 0, ak = 0, bk = 0;
     db.transactions.forEach(function(t){
       if (!t.date || t.date.indexOf(ym) !== 0) return;
@@ -3743,7 +3770,7 @@ function chartData(){
     imp.push(dec(a)); exp.push(dec(b));
     impK.push(dec(ak)); expK.push(dec(bk));
   }
-  return { imp: imp, exp: exp, impK: impK, expK: expK, year: year };
+  return { imp: imp, exp: exp, impK: impK, expK: expK, year: year, yms: yms };
 }
 /* 2.13.2: tháng mặc định. Năm hiện tại → tháng hiện tại; năm khác → tháng cuối có dữ liệu; không có → 12 (index 11). */
 function chartDefaultMonth(year, nowYear, nowMonth0, hasData){
@@ -3796,6 +3823,7 @@ function renderChart(){
   var colGrid = cs.getPropertyValue('--border').trim() || '#e3e8ef';
 
   var data = chartData();
+  if (data.yms) { drawChartDesk(cv, ctx, cssW, cssH, cs, data); return; }
   var max = 0;
   data.imp.forEach(function(v){ if (v > max) max = v; });
   data.exp.forEach(function(v){ if (v > max) max = v; });
@@ -3844,8 +3872,10 @@ function renderChart(){
   }
 
   chartGeo = { padL: padL, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
-  var mmStr = pad2(shown + 1) + '/' + data.year;
-  var impTxt = fmtMoneyInt(data.impK[shown]), expTxt = fmtMoneyInt(data.expK[shown]);
+  setChartTip(pad2(shown + 1) + '/' + data.year, data.impK[shown], data.expK[shown]);
+}
+function setChartTip(mmStr, impV, expV){
+  var impTxt = fmtMoneyInt(impV), expTxt = fmtMoneyInt(expV);
   var mEl = $('#chartMonth'), sEl = $('#chartTipSr');
   if (mEl) mEl.textContent = mmStr;
   /* 2.15.0: chú giải "[ô màu] Nhập số tiền"; số tiền nằm trong phần tử con (chip còn nhãn + ô màu). */
@@ -3854,17 +3884,73 @@ function renderChart(){
   if (eV) eV.textContent = expTxt;
   if (sEl) sEl.textContent = 'Tháng ' + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
 }
-function onChartClick(e){
+/* 2.24.0 desktop: biểu đồ 12 tháng gần nhất, trục Y bên phải (nghìn đồng, số đầy đủ), cột đôi Nhập/Bán, chú giải dưới trục X; hover/bấm → vạch dọc + tooltip (#chartTip). */
+function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
+  var padT = 10, padB = 36;
+  var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
+  var vmax = 0, i;
+  for (i = 0; i < 12; i++) vmax = Math.max(vmax, data.impK[i], data.expK[i]);
+  var ticks = chartTicks(vmax / 1000), top = ticks[ticks.length - 1] * 1000;
+  var hi = chartHover >= 0 ? chartHover : chartSel;
+  ctx.textBaseline = 'middle';
+  ctx.font = '11px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
+  var padR = Math.ceil(ctx.measureText(NF0.format(ticks[ticks.length - 1])).width) + 8; /* chừa đúng chỗ cho nhãn trục Y bên phải */
+  var W = Math.max(10, cssW - padR), H = Math.max(10, cssH - padT - padB), y0 = padT + H;
+  var groupW = W / 12, bw = groupW * .245, gap = groupW * .1;
+  ticks.forEach(function(v){
+    var y = Math.round(y0 - H * v * 1000 / top) + 0.5;
+    ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'left';
+    ctx.fillText(NF0.format(v), W + 8, y);
+  });
+  ctx.font = '12px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
+  for (i = 0; i < 12; i++) {
+    var cx = groupW * i + groupW / 2;
+    if (i === hi) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(Math.round(cx), padT, 1, H); }
+    ctx.fillStyle = impC; bar(ctx, cx - gap / 2 - bw, y0 - H * data.impK[i] / top, bw, H * data.impK[i] / top, 3);
+    ctx.fillStyle = expC; bar(ctx, cx + gap / 2, y0 - H * data.expK[i] / top, bw, H * data.expK[i] / top, 3);
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'center';
+    ctx.fillText(data.yms[i].slice(2), cx, y0 + 12);
+  }
+  [[impC, 'Nhập', 4], [expC, 'Bán', 53]].forEach(function(l){
+    ctx.fillStyle = l[0]; ctx.beginPath(); ctx.arc(l[2], y0 + 29, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'left'; ctx.fillText(l[1], l[2] + 10, y0 + 29);
+  });
+  chartGeo = { padL: 0, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
+  var tip = $('#chartTip');
+  if (hi < 0) { if (tip) tip.style.display = ''; return; }
+  setChartTip(data.yms[hi].slice(2), data.impK[hi], data.expK[hi]);
+  if (!tip) return;
+  tip.style.display = 'flex';
+  var tw = tip.offsetWidth || 150, lx = groupW * hi + groupW + 4;
+  if (lx + tw > cssW) lx = groupW * hi - 4 - tw;
+  tip.style.left = ((cv.offsetLeft || 0) + lx) + 'px';
+  tip.style.top = ((cv.offsetTop || 0) + padT + 8) + 'px';
+}
+/* Chỉ số nhóm tháng (0..11) dưới con trỏ, -1 nếu ngoài vùng vẽ. */
+function chartIdxAt(e){
   var cv = $('#statsChart');
-  if (!cv || !chartGeo) return;
+  if (!cv || !chartGeo) return -1;
   var r = cv.getBoundingClientRect();
   var g = chartGeo;
   var x = (e.clientX - r.left) * (g.cssW / (r.width || g.cssW));
   var y = (e.clientY - r.top) * (g.cssH / (r.height || g.cssH));
-  if (x < g.padL || x > g.padL + g.W || y < g.padT || y > g.y0 + 14) return;
+  if (x < g.padL || x > g.padL + g.W || y < g.padT || y > g.y0 + 14) return -1;
   var i = Math.floor((x - g.padL) / g.groupW);
-  if (i < 0) i = 0; else if (i > 11) i = 11;
+  return i < 0 ? 0 : i > 11 ? 11 : i;
+}
+function onChartClick(e){
+  var i = chartIdxAt(e);
+  if (i < 0) return;
   chartSel = chartSel === i ? -1 : i;
+  renderChart();
+}
+function onChartMove(e){
+  if (!isDesk()) return;
+  var i = e.type === 'mouseleave' ? -1 : chartIdxAt(e);
+  if (i === chartHover) return;
+  chartHover = i;
   renderChart();
 }
 
@@ -5378,7 +5464,7 @@ function bindEvents(){
   var cy = $('#chartYear');
   if (cy) cy.addEventListener('change', function(){ lastChartYear = (String(cy.value).trim() === String(thisYear())) ? String(thisYear()) : null; chartSel = -1; renderChart(); });
   var ch = $('#statsChart');
-  if (ch) ch.addEventListener('click', onChartClick);
+  if (ch) { ch.addEventListener('click', onChartClick); ch.addEventListener('mousemove', onChartMove); ch.addEventListener('mouseleave', onChartMove); }
 
   var cb = $('#chartBox');
   if (cb) cb.addEventListener('toggle', function(){
