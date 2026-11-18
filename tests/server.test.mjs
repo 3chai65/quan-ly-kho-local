@@ -617,6 +617,20 @@ test('server.js: /inter.woff2 cần cookie thiết bị; đường lên thư m�
   }
 });
 
+test('server.js: icon PWA công khai không cookie (GET/HEAD 200, đúng Content-Type); /api/state vẫn 401', async () => {
+  const want = { '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/apple-touch-icon.png': 'image/png',
+    '/icon-maskable-192.png': 'image/png', '/icon-maskable-512.png': 'image/png',
+    '/favicon.ico': 'image/x-icon', '/favicon.svg': 'image/svg+xml' };
+  for (const [p, ct] of Object.entries(want)) {
+    for (const method of ['GET', 'HEAD']) {
+      const r = await fetch(`${BASE}${p}`, { method });
+      assert.equal(r.status, 200, method + ' ' + p);
+      assert.match(r.headers.get('content-type'), new RegExp(ct.replace('+', '\\+')), p);
+    }
+  }
+  assert.equal((await fetch(`${BASE}/api/state`)).status, 401);
+});
+
 test('server.js: placeholder SSR thay một lượt, giữ nguyên ký tự đặc biệt', async () => {
   const name = "%%NEEDFETCH%% %%BOOT%% $& $' $` </script>";
   const r = await put(emptyState({

@@ -521,7 +521,6 @@ auth.mount(app, express.text({ type: '*/*', limit: '2kb' }));
 app.use(express.text({ type: '*/*', limit: MAX_BODY }));
 
 mountPwa(app);
-app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send('User-agent: *\nDisallow: /\n');
 });

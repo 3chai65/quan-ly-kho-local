@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.21.4] - 2026-11-18
+- Xóa route /favicon.ico 204 đã chết trong server.js; thêm test HTTP icon PWA công khai (GET/HEAD 200, Content-Type) và /api/state vẫn 401.
+
 ## [2.21.3] - 2026-11-18
 - Icon mới (hộp trắng nền navy): PNG thật trong src/icons (192/512/maskable/180, favicon.ico/svg) thay icon sinh bằng mã; logo trong app là hộp trắng; PUBLIC thêm 3 đường icon.
 
