@@ -17,7 +17,7 @@ export const PAGE = String.raw`<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kho">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23fff'/%3E%3Cpath fill='%23000' d='M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0'/%3E%3C/svg%3E">
+<link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
@@ -785,7 +785,7 @@ html.pt .bgdots{margin-top:14px}
 <body>
 <a class="skip" href="#main">Bỏ qua điều hướng</a>
 <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-<symbol id="i-yin" viewBox="0 0 512 512"><circle cx="256" cy="256" r="256" fill="#fff" stroke="none"/><path fill="#000" stroke="none" d="M256 64c53 0 96 43 96 96s-43 96-96 96s-96 43-96 96s43 96 96 96c-106 0-192-86-192-192S150 64 256 64m0 448a256 256 0 1 0 0-512a256 256 0 1 0 0 512m32-352a32 32 0 1 0-64 0a32 32 0 1 0 64 0m-64 192a32 32 0 1 1 64 0a32 32 0 1 1-64 0"/></symbol>
+<symbol id="i-yin" viewBox="0 0 1024 1024"><path fill="currentColor" stroke="none" d="M483.6 900.2L483.6 538.2L483.2 537.3L97.8 316.5L97.2 316.4L96.8 316.8L96.2 319.2L95.1 324.8L94.1 333.2L93.6 343.2L93.6 377.8L93.6 669.2L94.1 685.2L95.1 695.2L96.2 701.8L97.6 708.8L99.8 716.2L102.1 722.8L105.1 729.2L108.2 734.8L112.6 741.2L119.2 749.0L127.8 756.9L139.2 765.4L153.8 774.4L457.8 947.9L479.2 959.8L483.2 961.3L483.6 960.8ZM929.4 561.8L929.4 342.8L928.8 332.2L927.9 324.2L926.3 316.8L925.8 316.4L925.2 316.5L539.9 537.2L539.5 538.2L539.5 716.2L539.5 960.8L539.6 961.2L540.2 961.3L542.8 960.4L546.8 958.4L566.2 947.4L870.2 773.9L880.8 767.4L890.2 760.9L898.2 754.4L903.8 749.1L908.2 744.0L912.3 738.8L916.4 732.2L919.4 726.2L922.3 719.2L924.3 712.8L926.3 704.8L927.8 695.8L928.8 686.2L929.4 674.2ZM371.3 122.2L439.8 83.1L446.2 79.6L459.2 73.7L468.8 70.1L475.2 68.1L484.8 65.6L493.2 64.0L501.8 63.0L511.8 62.6L521.8 63.1L530.2 64.1L540.8 66.1L552.8 69.5L561.2 72.6L569.8 76.1L577.8 80.0L586.2 84.6L877.2 251.1L888.8 258.2L895.2 263.1L898.8 266.4L899.2 267.2L869.7 284.2L747.2 354.4L745.2 355.5L744.2 355.4L354.2 133.4L353.3 132.8L353.8 132.2ZM321.2 379.8L124.2 267.6L123.8 267.2L123.9 266.8L126.8 264.1L131.8 260.2L139.2 255.1L297.8 164.6L488.3 273.8L686.8 387.6L687.2 388.2L686.2 388.9L511.8 487.9L510.2 487.3Z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></symbol>

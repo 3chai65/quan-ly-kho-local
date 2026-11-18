@@ -303,7 +303,7 @@ test('tên cookie giữ nguyên sau khi khởi động lại và sau khi xóa h�
 test('2.16.0 PWA: manifest/sw/icon công khai chỉ GET/HEAD; đường khác vẫn bị chặn', () => {
   const s = setup();
   try {
-    for (const p of ['/manifest.webmanifest', '/sw.js', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']) {
+    for (const p of ['/manifest.webmanifest', '/sw.js', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/icon-maskable-192.png', '/icon-maskable-512.png', '/favicon.svg', '/favicon.ico']) {
       assert.equal(runGate(s.auth, mkReq('GET', p)).passed, true, p);
       assert.equal(runGate(s.auth, mkReq('HEAD', p)).passed, true, p);
       assert.equal(runGate(s.auth, mkReq('POST', p)).passed, false, p + ' POST');

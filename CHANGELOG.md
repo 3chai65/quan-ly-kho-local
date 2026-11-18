@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.21.3] - 2026-11-18
+- Icon mới (hộp trắng nền navy): PNG thật trong src/icons (192/512/maskable/180, favicon.ico/svg) thay icon sinh bằng mã; logo trong app là hộp trắng; PUBLIC thêm 3 đường icon.
+
 ## [2.21.2] - 2026-11-18
 - saveTxEdit: hoàn tác khi giá thấp hơn vốn trả tồn đúng chiều cho dòng NHAP có cờ rx (cùng lỗi delTx 2.21.1); thêm test /inter.woff2.
 

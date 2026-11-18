@@ -51,6 +51,9 @@ const PUBLIC = {
   '/icon-192.png': ['GET', 'HEAD'],
   '/icon-512.png': ['GET', 'HEAD'],
   '/apple-touch-icon.png': ['GET', 'HEAD'],
+  '/icon-maskable-192.png': ['GET', 'HEAD'],
+  '/icon-maskable-512.png': ['GET', 'HEAD'],
+  '/favicon.svg': ['GET', 'HEAD'],
   '/auth/setup': ['GET', 'POST'],
   '/auth/join': ['GET', 'POST']
 };

@@ -5890,13 +5890,27 @@ test('2.16.0 PWA: head có manifest/apple-touch-icon/meta; đăng ký sw.js bọ
   assert.match(PAGE, /try \{ if \('serviceWorker' in navigator\) navigator\.serviceWorker\.register\('\/sw\.js'\)/);
 });
 test('2.16.0 PWA: manifest JSON hợp lệ; sw.js không cache, không nhắc /api; icon là PNG đúng cỡ', async () => {
-  const { MANIFEST, SW_JS, makeIcon } = await import('../pwa.js');
+  const { MANIFEST, SW_JS, mountPwa } = await import('../pwa.js');
   const m = JSON.parse(MANIFEST);
   assert.equal(m.name, 'Quản Lý Kho'); assert.equal(m.short_name, 'Kho'); assert.equal(m.scope, '/');
   assert.equal(m.background_color, '#142844');
   assert.ok(!/\/api|caches\.|respondWith/.test(SW_JS));
-  const b = makeIcon(192);
-  assert.equal(b.subarray(1, 4).toString(), 'PNG'); assert.equal(b.readUInt32BE(16), 192); assert.equal(b.readUInt32BE(20), 192);
+  const routes = {};
+  mountPwa({ get(p, h) { routes[p] = h; } });
+  const want = { '/icon-192.png': 192, '/icon-512.png': 512, '/apple-touch-icon.png': 180, '/icon-maskable-192.png': 192, '/icon-maskable-512.png': 512 };
+  for (const [p, n] of Object.entries(want)) {
+    const out = {}; const res = { set(h) { out.h = h; return res; }, type(x) { out.type = x; return res; }, send(b) { out.body = b; } };
+    routes[p]({}, res);
+    assert.equal(out.type, 'image/png', p); assert.equal(out.h, 'Cache-Control');
+    assert.equal(out.body.subarray(1, 4).toString(), 'PNG', p);
+    assert.equal(out.body.readUInt32BE(16), n, p + ' rộng'); assert.equal(out.body.readUInt32BE(20), n, p + ' cao');
+  }
+  for (const p of ['/favicon.ico', '/favicon.svg']) assert.ok(routes[p], p);
+  for (const n of [192, 512]) {
+    assert.ok(m.icons.some(i => i.src === '/icon-' + n + '.png' && i.purpose === 'any' && i.sizes === n + 'x' + n), 'any ' + n);
+    assert.ok(m.icons.some(i => i.src === '/icon-maskable-' + n + '.png' && i.purpose === 'maskable'), 'maskable ' + n);
+  }
+  assert.match(PAGE, /<link id="favicon" rel="icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
 });
 
 /* 2.17.4: inRange cùng luật với isNonNegNumber ở server.js (chỉ number hữu hạn hoặc chuỗi số thập phân). */
