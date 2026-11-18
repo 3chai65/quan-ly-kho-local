@@ -2142,10 +2142,11 @@ function renderSyncBadge(){
 function renderSyncLine(){
   var el = $('#syncLine');
   if (!el) return;
-  var bad = authLost || syncErrorShown, d = new Date(lastSyncOk);
+  var stale = !!(dirty && dirtySince && Date.now() - dirtySince >= DIRTY_BADGE_MS);  /* cùng điều kiện huy hiệu */
+  var bad = authLost || syncErrorShown || stale, d = new Date(lastSyncOk);
   el.setAttribute('data-st', bad ? 'err' : 'ok');
   el.textContent = authLost ? 'Chưa lưu được' : syncErrorShown ? (syncNet ? 'Mất kết nối — đang thử lại…' : 'Chưa lưu được') :
-    lastSyncOk ? 'Đã đồng bộ ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : 'Đang kết nối…';
+    stale ? 'Chưa đồng bộ' : lastSyncOk ? 'Đã đồng bộ ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : 'Đang kết nối…';
 }
 function scheduleSyncRetry(){
   if (syncRetryTimer || conflictOpen || syncRejected) return;

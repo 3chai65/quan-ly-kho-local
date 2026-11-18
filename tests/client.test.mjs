@@ -7082,6 +7082,18 @@ test('2.25.0 dòng đồng bộ thanh bên (#syncLine): ổn có giờ, mất m�
   assert.ok(/\.sbs\[data-st=err\]::before\{[^}]*background:#FF5F57\}/.test(PAGE) && /\.sbs::before\{[^}]*width:7px;height:7px/.test(PAGE));
 });
 
+test('2.25.1 #syncLine: dirty quá hạn không lỗi → Chưa đồng bộ; hết dirty → Đã đồng bộ; syncNet ưu tiên hơn', () => {
+  const { c, els } = deskChart([2026, 10, 18, 12], []);
+  const L = els['#syncLine'];
+  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime());
+  c.setDirty(true); c.setDirtySince(1); c.renderSyncLine();
+  assert.equal(L.textContent, 'Chưa đồng bộ'); assert.equal(L.attrs['data-st'], 'err');
+  c.noteSyncFailure('x', true, true);
+  assert.equal(L.textContent, 'Mất kết nối — đang thử lại…');
+  c.setSyncErrorShown(false); c.setDirty(false); c.setDirtySince(0); c.renderSyncLine();
+  assert.equal(L.textContent, 'Đã đồng bộ 09:05'); assert.equal(L.attrs['data-st'], 'ok');
+});
+
 test('2.25.0 thanh bên: nút Tải lại (reload-app) luôn có; Thoát chỉ trong Tauri và gọi close; điện thoại không dựng gì', () => {
   const out = runHead({ tauri: false }), box = out.body.children[0];
   const row = box.children.find(x => x.className === 'sbb');

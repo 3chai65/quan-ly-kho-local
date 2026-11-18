@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.25.1] - 2026-11-18
+- Dong trang thai thanh ben (#syncLine): co thay doi chua gui qua han (cung dieu kien huy hieu) thi hien "Chua dong bo" cham do, khong con "Da dong bo" sai.
+
 ## [2.25.0] - 2026-11-18
 
 ### Thay đổi
