@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.26.0] - 2026-11-18
+- Thuoc chen (chi html.desktop; iPhone/PWA hep giu nguyen): hang A chia doi 50/50 cao 32: trai = Thuoc chen + o "Tim vi thuoc", phai = o "Tim don da luu" + nut ngay; an select #remedyPreset (con trong DOM cho dien thoai), khong con "Don moi".
+- O "Tim don da luu": khop tron tu/cum tu (wholeWordMatch), tha xuong toi da 5 dong x 36, ↑/↓ xoay vong, Enter chon dong sang (chua sang = dong dau), Esc xoa o; chon xong nap don, xoa o tim, tro ve "Tim vi thuoc". Dang mo don: o phai hien ten don + nut ✕ (bo don, to ghi ve trong).
+- To ghi: dong dang go la dong thu n+1 trong 10 dong (du 10 dong thi sang trang moi, to ghi tu nhay toi trang do), dong "+ Ten vi thuoc" khi chua chon vi, o Gram rong 52 (placeholder Gram), goi y "(x lang)" viet day du, tong 1 thang cao 38; chan to ghi 1 hang (o thang 44, o gia 58), hep thi xuong 2 hang. Luu don chua co ten: desktop hoi bang hop thoai "Tên đơn mới".
+- Khong doi du lieu/tien/ton kho/luat luu-ban; them data-action close-preset.
+
 ## [2.25.1] - 2026-11-18
 - Dong trang thai thanh ben (#syncLine): co thay doi chua gui qua han (cung dieu kien huy hieu) thi hien "Chua dong bo" cham do, khong con "Da dong bo" sai.
 

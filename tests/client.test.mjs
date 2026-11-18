@@ -49,6 +49,7 @@ globalThis.__test = {
   backupLastDate: (typeof backupLastDate === 'function' ? backupLastDate : null), commitRetailRow: (typeof commitRetailRow === 'function' ? commitRetailRow : null),
   commitRemedyRow: (typeof commitRemedyRow === 'function' ? commitRemedyRow : null), onSuggestKey: (typeof onSuggestKey === 'function' ? onSuggestKey : null),
   getRemedyItems: function(){ return remedyItems; },
+  presetFindOpen: presetFindOpen, presetFindKey: presetFindKey, closePreset: closePreset, pickPresetRow: pickPresetRow, renderRemedyNote: renderRemedyNote, getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; },
   getRetailItems: function(){ return retailItems; },
   getNotePage: function(){ return notePage; }, setNotePage: function(v){ notePage = v; },
   getNhapList: function(){ return nhapList; },
@@ -2706,7 +2707,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('expBox'), 'Lịch sử bán hàng');
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
-  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
+  assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215, ...NEW_226].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
   const ids = [...PAGE.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
   assert.equal(new Set(ids).size, ids.length, 'id trùng nhau: ' + ids.filter((x, k) => ids.indexOf(x) !== k));
 });
@@ -3755,7 +3756,7 @@ test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, n
   assert.match(PAGE, /\.note__pending tr\.is-empty\{display:none\}/);
   assert.match(PAGE, /renumber\(tb, isRetail \? retailItems\.length : remedyItems\.length\);/);
   assert.match(PAGE, /renumber\(pendingRb, remedyItems\.length\);/);
-  assert.ok(PAGE.includes('if (!it) { if (isDesk()) tb.appendChild(blankRow(tb)); continue; }\n    var p = findProduct(it.productId);'));
+  assert.ok(PAGE.includes('if (!it) { if (isDesk() && !(pendHere && i === remedyItems.length)) (fill || tb).appendChild(blankRow(tb)); continue; }\n    var p = findProduct(it.productId);'));
 });
 
 test('2.15.5 Thuốc chén hành vi: chọn "Đơn mới" (value rỗng) xóa tờ ghi như cũ, ô tên ẩn, không lưu', () => {
@@ -4367,6 +4368,7 @@ const NEW_213 = ['nhap-add', 'brand-devices'];
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app', 'open-backup-dir', 'bak-refresh'];
+const NEW_226 = ['close-preset']; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -4387,7 +4389,7 @@ function oldPageFromGit() {
 
 test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự DOM 8 thẻ giữ nguyên', () => {
   const old = oldPageFromGit();
-  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !NEW_214.includes(a) && !NEW_215.includes(a) && !REMOVED_213.includes(a)).sort();
+  const actions = s => [...s.matchAll(/data-action="([^"]*)"/g)].map(m => m[1]).filter(a => !NEW_213.includes(a) && !NEW_214.includes(a) && !NEW_215.includes(a) && !NEW_226.includes(a) && !REMOVED_213.includes(a)).sort();
   assert.deepEqual(actions(PAGE), OLD_DATA_ACTIONS.filter(a => !REMOVED_213.includes(a)), 'data-action đã đổi so với 1023b40');
   if (old !== null) assert.deepEqual(actions(PAGE), actions(old).filter(a => a !== 'copy-preset'), 'data-action đã đổi (git 1023b40)');
   assert.equal(PAGE.split('data-action="nhap-add"').length - 1, 1, 'nhap-add đúng một lần (2.12.0)');
@@ -4817,7 +4819,7 @@ test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn v�
   assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(2 l)')), JSON.stringify(['(2 l)', '2 l', 'l']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
-  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
+  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
   assert.match(PAGE, /.sug__name{[^}]*white-space:nowrap[^}]*}/, '2.17.8 gợi ý tên mỗi vị 1 dòng');
 });
 
@@ -6584,7 +6586,7 @@ test('2.20.6 desktop: ô số ngắn 80px cao 28 căn phải trong cột; ô tê
   assert.ok(block.includes('html.desktop td.c-money .inp--num{margin-left:auto}') && /html\.desktop \.chart-year__in\{width:64px;font-size:15px\}/.test(block));
   // thanh đầu Thuốc chén: tiêu đề, ô nhập tên, chọn đơn, ngày; dời ở JS desktop, không đổi HTML gốc (điện thoại)
   assert.ok(/<span class="card__bar-title"[^>]*>[\s\S]{0,200}?Thuốc chén<\/span>\s*<select class="inp card__bar-preset" id="remedyPreset"/.test(PAGE), 'HTML gốc giữ nguyên thứ tự (iPhone)');
-  assert.ok(PAGE.includes("rs = rs.parentNode; rs.className = 'sug card__bar-search'; rb.insertBefore(rs, rp)") && /if \(rs && rb && rp\)/.test(PAGE));
+  assert.ok(PAGE.includes("rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'") && PAGE.includes('rb.insertBefore(bl, rp); rb.appendChild(br);') && /if \(rs && rb && rp\)/.test(PAGE));
   const head = PAGE.slice(PAGE.indexOf("document.addEventListener('DOMContentLoaded', function(){\n      var w = document.createElement('div'); w.className = 'bgdots'"));
   assert.ok(head.indexOf("getElementById('remedySearch')") > 0 && head.indexOf("getElementById('remedySearch')") < head.indexOf('mark();'), 'dời nằm trong nhánh desktop');
 });
@@ -6648,7 +6650,7 @@ test('2.20.8 desktop: số liệu/icon một màu chữ chung (không xanh lục
 
 test('2.20.9 desktop: Thuốc chén có nửa phải danh sách đơn đã lưu (ẩn ngoài desktop, hook từ updatePresetUI, bấm dòng qua remedyPresetPick)', () => {
   assert.ok(PAGE.includes('id="remedyPresetBox"') && PAGE.includes('id="remedyPresetRows"') && PAGE.includes('id="remedyPresetPager"'));
-  assert.ok(PAGE.includes('#remedyPresetBox{display:none}') && PAGE.includes('html.desktop #remedyPresetBox{display:flex'));
+  assert.ok(PAGE.includes('#remedyPresetBox,#remedyFindBox{display:none}') && PAGE.includes('html.desktop #remedyPresetBox{display:flex'));
   assert.match(PAGE, /function updatePresetUI\(\)\{[\s\S]*?renderPresetList\(\);\n\}/);
   assert.match(PAGE, /function pickPresetRow\(id\)\{[\s\S]*?remedyPresetPick\(\)/);
   assert.ok(PAGE.includes("case 'pick-preset': pickPresetRow(id)") && PAGE.includes("kind === 'rpre'"));
@@ -7105,4 +7107,158 @@ test('2.25.0 thanh bên: nút Tải lại (reload-app) luôn có; Thoát chỉ t
   let n = 0; t.win.__TAURI__.window = { getCurrentWindow: () => ({ close() { n++; } }) };
   ex.onclick(); assert.equal(n, 1);
   assert.equal(runHead({ desktop: false }).body.children.length, 0, 'iPhone/pt: không dựng chân thanh bên');
+});
+
+/* ===== 2.26.0 Thuốc chén desktop: ô "Tìm đơn đã lưu", ✕ bỏ đơn, dòng đang gõ trong tờ ghi ===== */
+function findKit(presets) {
+  const attrs = (e) => { e.attrs = {}; e.setAttribute = (k, v) => { e.attrs[k] = String(v); }; e.getAttribute = (k) => (k in e.attrs ? e.attrs[k] : null); return e; };
+  const list = attrs(makeEl()); list.querySelectorAll = () => list.children; list.hidden = true;
+  Object.defineProperty(list, 'textContent', { get() { return ''; }, set() { list.children.length = 0; } });
+  const els = {
+    '#remedyFind': attrs(makeEl()), '#remedyFindList': list, '#remedyPreset': makeEl(), '#remedySearch': makeEl(), '#remedyName': makeEl(), '#remedyBody': makeEl(),
+    '#remedyThang': makeEl(), '#remedyUnitPrice': makeEl(), '#remedyFindBox': makeEl(), '#remedyOpenName': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl()
+  };
+  const doc = trackDoc(els);
+  doc.documentElement.classList.contains = (k) => k === 'desktop';
+  doc.createElement = () => attrs(makeEl());
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+  c.setDb({ products: [{ id: 'p1', name: 'Cam thảo', stock: 100, costPrice: 1000 }], transactions: [], prescriptions: presets, updatedAt: 1, moneyUnit: 'dong' });
+  c.setBase(1);
+  const names = () => list.children.map(x => x.children[0].textContent);
+  const type = (v) => { els['#remedyFind'].value = v; c.presetFindOpen(); };
+  return { c, els, doc, list, names, type };
+}
+const FIND_RX = [
+  { id: 'RX1', name: 'Nguyễn Thị Nga - Đơn Ông Phi', items: [{ productId: 'p1', grams: 46 }], total: 300000, thang: 3 },
+  { id: 'RX2', name: 'Bạn Nga', items: [{ productId: 'p1', grams: 45 }], total: 100000, thang: 1 },
+  { id: 'RX3', name: 'Đỗ Lan', items: [], total: 0, thang: 1 },
+  { id: 'RX4', name: 'Anh Hùng', items: [{ productId: 'p1', grams: 47 }], total: 200000, thang: 2 }
+];
+
+test('2.26.0 Tìm đơn đã lưu: khớp trọn từ/cụm từ, không dấu/có dấu/đ; "nga" ra 2 đơn, "ng" không ra và không thả xuống', () => {
+  const k = findKit(FIND_RX);
+  k.type('nga');
+  assert.deepEqual(k.names(), ['Bạn Nga', 'Nguyễn Thị Nga - Đơn Ông Phi'], 'sắp theo tên');
+  assert.equal(k.list.hidden, false);
+  assert.equal(k.list.children[0].children[1].textContent, '45 g', 'tổng gram mờ bên phải');
+  k.type('ng');
+  assert.equal(k.list.children.length, 0);
+  assert.equal(k.list.hidden, true, 'không có kết quả thì không thả xuống');
+  k.type('do lan'); assert.deepEqual(k.names(), ['Đỗ Lan'], 'đ = d, cụm từ');
+  k.type('ĐỖ'); assert.deepEqual(k.names(), ['Đỗ Lan']);
+  k.type('thi nga'); assert.deepEqual(k.names(), ['Nguyễn Thị Nga - Đơn Ông Phi'], 'cụm từ liên tiếp');
+  k.type('  '); assert.equal(k.list.hidden, true, 'ô trống thì đóng');
+});
+
+test('2.26.0 Tìm đơn đã lưu: ↑/↓ xoay vòng, Enter chọn dòng sáng (chưa sáng = dòng đầu), chọn xong nạp đơn, xóa ô tìm, trỏ về Tìm vị thuốc; Esc xóa ô', () => {
+  const k = findKit(FIND_RX);
+  const key = (name) => { let prevented = false; k.c.presetFindKey({ key: name, preventDefault() { prevented = true; } }); return prevented; };
+  const sel = () => k.list.children.findIndex(x => x.attrs['aria-selected'] === 'true');
+  k.type('nga');
+  key('ArrowDown'); assert.equal(sel(), 0);
+  key('ArrowDown'); assert.equal(sel(), 1);
+  key('ArrowDown'); assert.equal(sel(), 0, 'xoay vòng xuống');
+  key('ArrowUp'); assert.equal(sel(), 1, 'xoay vòng lên');
+  key('Escape');
+  assert.equal(k.els['#remedyFind'].value, '', 'Esc xóa ô');
+  assert.equal(k.list.hidden, true);
+  k.type('nga');
+  assert.equal(key('Enter'), true);
+  assert.equal(k.els['#remedyPreset'].value, 'RX2', 'chưa có dòng sáng: chọn dòng đầu (Bạn Nga)');
+  assert.equal(k.els['#remedyThang'].value, '1');
+  assert.equal(k.els['#remedyFind'].value, '', 'xóa ô tìm sau khi chọn');
+  assert.equal(k.list.hidden, true);
+  assert.equal(k.doc.activeElement, k.els['#remedySearch'], 'trỏ về ô Tìm vị thuốc');
+  assert.equal(k.c.getRemedyItems().length, 1);
+  k.type('nga'); key('ArrowDown'); key('ArrowDown'); key('Enter');
+  assert.equal(k.els['#remedyPreset'].value, 'RX1', 'dòng thứ 2 đang sáng');
+  assert.equal(k.els['#remedyThang'].value, '3');
+  assert.equal(k.els['#remedyOpenName'].textContent, 'Nguyễn Thị Nga - Đơn Ông Phi', 'ô phải hiện tên đơn đang mở');
+  k.type('zzz');
+  assert.equal(key('Enter'), false, 'không có kết quả: Enter không làm gì');
+  assert.equal(k.els['#remedyPreset'].value, 'RX1');
+});
+
+test('2.26.0 ✕ bỏ đơn đang mở: tờ ghi về trống, giá/thang về mặc định, trỏ về Tìm vị thuốc; không đụng danh sách đơn đã lưu', () => {
+  const k = findKit(FIND_RX);
+  k.c.pickPresetRow('RX1');
+  assert.equal(k.c.getRemedyItems().length, 1);
+  const before = JSON.stringify(k.c.getDb().prescriptions);
+  k.doc.activeElement = null;
+  k.c.closePreset();
+  assert.equal(k.els['#remedyPreset'].value, '');
+  assert.equal(k.c.getRemedyItems().length, 0);
+  assert.equal(k.els['#remedyThang'].value, '1');
+  assert.equal(k.els['#remedyUnitPrice'].value, '');
+  assert.equal(k.els['#remedyOpenName'].textContent, '');
+  assert.equal(k.doc.activeElement, k.els['#remedySearch']);
+  assert.equal(JSON.stringify(k.c.getDb().prescriptions), before, 'không xóa/sửa đơn đã lưu');
+});
+
+test('2.26.0 tờ ghi desktop: dòng đang gõ là dòng n+1, đủ 10 dòng thì sang trang mới; thứ tự dòng ghi, dòng gõ, dòng trống; điện thoại không đổi', () => {
+  const mk = (desk) => {
+    const tb = makeEl(), fill = makeEl(), pend = makeEl(), pg = makeEl();
+    const els = { '#remedyNoteBody': tb, '#remedyFill': fill, '#remedyBody': pend, '#remedyNotePg': pg };
+    const doc = trackDoc(els);
+    doc.documentElement.classList.contains = (k) => desk && k === 'desktop';
+    doc.createTextNode = () => makeEl();
+    for (const e of [tb, fill]) Object.defineProperty(e, 'textContent', { get() { return ''; }, set() { e.children.length = 0; } });
+    const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
+    c.setDb({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+    return { c, tb, fill, pend, pg };
+  };
+  const rows = (n) => Array.from({ length: n }, () => ({ productId: 'p1', grams: 5 }));
+  const d = mk(true);
+  d.c.setRemedyItems(rows(3));
+  d.c.setRemedyNotePage(1);
+  d.c.renderRemedyNote();
+  assert.equal(d.tb.children.length, 3, 'dòng ghi');
+  assert.equal(d.fill.children.length, 6, '10 - 3 dòng ghi - 1 dòng đang gõ');
+  assert.equal(d.pend.hidden, false, 'dòng đang gõ hiện ở trang chứa nó');
+  assert.equal(d.pg.textContent, 'Trang 1 / 1');
+  d.c.setRemedyItems(rows(10));
+  d.c.setRemedyNotePage(1);
+  d.c.renderRemedyNote();
+  assert.equal(d.pg.textContent, 'Trang 1 / 2', 'đủ 10 dòng: dòng đang gõ sang trang 2');
+  assert.equal(d.tb.children.length, 10);
+  assert.equal(d.fill.children.length, 0);
+  assert.equal(d.pend.hidden, true, 'trang 1 không chứa dòng đang gõ');
+  d.c.setRemedyNotePage(1e9);
+  d.c.renderRemedyNote();
+  assert.equal(d.pg.textContent, 'Trang 2 / 2', 'nhảy tới trang chứa dòng đang gõ');
+  assert.equal(d.tb.children.length, 0);
+  assert.equal(d.fill.children.length, 9, 'trang 2: dòng đang gõ + 9 dòng trống');
+  assert.equal(d.pend.hidden, false);
+  const m = mk(false);
+  m.c.setRemedyItems(rows(10));
+  m.c.setRemedyNotePage(1);
+  m.c.renderRemedyNote();
+  assert.equal(m.pg.textContent, 'Trang 1 / 1', 'điện thoại/PWA hẹp: số trang như cũ');
+  assert.equal(m.fill.children.length, 0);
+  assert.equal(m.pend.hidden, false);
+});
+
+test('2.26.0 gợi ý số lượng: desktop viết "lạng", điện thoại giữ "l"; placeholder Gram chỉ desktop', () => {
+  const mk = (desk) => { const doc = trackDoc({}); doc.documentElement.classList.contains = (k) => desk && k === 'desktop'; return loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH }); };
+  assert.equal(mk(true).qtyHintText('450', 'g'), '(4,5 lạng)');
+  assert.equal(mk(false).qtyHintText('450', 'g'), '(4,5 l)');
+  assert.ok(PAGE.includes("qi.placeholder = !isRetail && isDesk() ? 'Gram' : '0'"));
+});
+
+test('2.26.0 cấu trúc: hàng A chỉ 2 ô + ngày ở desktop, #remedyPreset ẩn (không xóa) và còn cho điện thoại; ô tìm đơn ẩn ngoài desktop; không ô tên ở thanh đầu', () => {
+  const bar = PAGE.match(/<div class="card__bar">[\s\S]*?<div class="note" id="remedyNote">/)[0];
+  assert.match(bar, /id="remedyPreset"/);
+  assert.match(bar, /id="remedyFind"[^>]*placeholder="Tìm đơn đã lưu"/);
+  assert.doesNotMatch(bar, /id="remedyName"|id="remedySearch"/, 'ô tên đơn không đặt ở thanh đầu');
+  assert.ok(PAGE.includes('#remedyPresetBox,#remedyFindBox{display:none}'), 'ngoài desktop ô tìm đơn ẩn');
+  const block = PAGE.slice(PAGE.indexOf('/* 2.23.0 chế độ desktop'));
+  assert.ok(block.includes('html.desktop #remedyPreset{display:none}') && block.includes('html.desktop #remedyFindBox{position:relative;display:flex'));
+  assert.ok(block.includes('html.desktop #remedyBox .card__bar{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}'), 'hai nửa bằng nhau');
+  assert.ok(block.includes('html.desktop #remedyFindList{top:38px;max-height:182px}') && block.includes('html.desktop #remedyFindList .sug__item{height:36px}'), 'thả xuống lệch 38, 5 dòng x 36');
+  assert.ok(block.includes('html.desktop #remedyList{top:30px;right:auto;width:380px}'), 'gợi ý vị thuốc lệch 30, rộng 380');
+  assert.ok(block.includes('html.desktop #remedyBody input.inp.inp--num{width:52px;'), 'ô Gram rộng 52');
+  assert.ok(block.includes('html.desktop #remedyNote #remedyThang{width:44px}') && block.includes('html.desktop #remedyNote #remedyUnitPrice{width:58px}'), 'chân tờ ghi: ô thang 44, ô giá 58');
+  assert.match(PAGE, /html:not\(\.desktop\) #remedyNote>\.note__list>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/, 'luật ẩn thead khi rỗng chỉ cho điện thoại');
+  assert.ok(PAGE.includes("rs.placeholder = 'Tìm vị thuốc'") && PAGE.includes('placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén"'), 'đổi chữ gợi ý chỉ ở desktop');
+  assert.ok(PAGE.includes("window.prompt(isDesk() ? 'Tên đơn mới' : 'Tên đơn', '')") && PAGE.includes('if (isDesk() || (window.matchMedia'), 'Lưu đơn chưa có tên: desktop hỏi bằng hộp thoại, không mở ô tên');
 });
