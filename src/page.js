@@ -41,6 +41,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 body{margin:0;background:var(--bg);color:var(--text);
 font:15px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,"Segoe UI",sans-serif;
 padding-bottom:48px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
 [hidden]{display:none!important}
 h1,h2,p{margin:0}
 a{color:var(--brand-text)}
@@ -560,7 +561,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 }
 html.noglass{--glass:var(--surface);--glass-bar:var(--surface);--glass-dark:#111827;--blur:none}
 html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
-.bak-sec{margin-top:12px;padding:10px 12px;border:1px solid var(--kb,var(--border));border-radius:14px;background:var(--spec,none) top/100% 55% no-repeat,rgba(255,255,255,.2);box-shadow:var(--k3d,none)}
+.bak-sec{margin-top:12px;padding:10px 12px;border:1px solid var(--kb,var(--border));border-radius:14px;background:var(--spec,none) top/100% 55% no-repeat,var(--pnl,rgba(255,255,255,.2));box-shadow:var(--k3d,none)}
 .bak-sec:first-child{margin-top:0}
 .bak-sec__t{margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .bak-sec__bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
@@ -577,7 +578,7 @@ html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 /* 2.20.8 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
 html.desktop,html.desktop body{background:transparent}
 html.desktop body::before{background:radial-gradient(45% 40% at 85% 8%,rgba(255,255,255,.3),transparent),radial-gradient(40% 40% at 6% 92%,rgba(255,255,255,.2),transparent),var(--bt)}
-html.desktop{--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text);--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30);--surface:#fbfaf9;--surface2:#eef0ee;--border:rgba(71,85,105,.30);--border2:rgba(71,85,105,.18);--vien:rgba(71,85,105,.34);--kinh:rgba(255,255,255,.46);--kb:rgba(255,255,255,.9) rgba(58,42,51,.16) rgba(58,42,51,.16) rgba(255,255,255,.9);--spec:linear-gradient(120deg,rgba(255,255,255,.55),rgba(255,255,255,0) 35%);--k3d:inset 1px 1px 0 rgba(255,255,255,.3),inset 0 0 10px rgba(255,255,255,.45),inset 0 -4px 8px rgba(58,42,51,.07),0 1px 1px rgba(58,42,51,.1),0 3px 8px rgba(58,42,51,.06),0 8px 18px rgba(58,42,51,.04);--k3h:inset 1px 1px 0 rgba(255,255,255,.4),inset 0 0 12px rgba(255,255,255,.6),inset 0 -4px 8px rgba(58,42,51,.08),0 1px 2px rgba(58,42,51,.12),0 5px 12px rgba(58,42,51,.08),0 10px 22px rgba(58,42,51,.06);--k3t:inset 1px 1px 0 rgba(255,255,255,.35),inset 0 0 8px rgba(255,255,255,.4),0 1px 1px rgba(58,42,51,.08);--k3a:inset 0 3px 6px rgba(58,42,51,.26),inset 0 0 10px rgba(58,42,51,.1),0 1px 0 rgba(255,255,255,.6);--nb:rgba(255,255,255,.16);--hv:rgba(255,255,255,.34);--sel-bg:rgba(255,255,255,.64);--sel-hv:rgba(255,255,255,.78);--sel-bd:rgba(255,255,255,1) rgba(58,42,51,.34) rgba(58,42,51,.34) rgba(255,255,255,1);--sel-fg:#0f172a;--chart-hi:rgba(0,0,0,0)}
+html.desktop{--pnl:rgba(255,255,255,.2);--bt:transparent;--glass:rgba(255,255,255,.50);--glass-bar:rgba(255,255,255,.52);--blur:saturate(1.6) blur(18px);--muted:#475569;--text2:#334155;--brand:#047857;--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text);--brand-soft:#ecfdf5;--ring:0 0 0 3px rgba(4,120,87,.30);--surface:#fbfaf9;--surface2:#eef0ee;--border:rgba(71,85,105,.30);--border2:rgba(71,85,105,.18);--vien:rgba(71,85,105,.34);--kinh:rgba(255,255,255,.46);--kb:rgba(255,255,255,.9) rgba(58,42,51,.16) rgba(58,42,51,.16) rgba(255,255,255,.9);--spec:linear-gradient(120deg,rgba(255,255,255,.55),rgba(255,255,255,0) 35%);--k3d:inset 1px 1px 0 rgba(255,255,255,.3),inset 0 0 10px rgba(255,255,255,.45),inset 0 -4px 8px rgba(58,42,51,.07),0 1px 1px rgba(58,42,51,.1),0 3px 8px rgba(58,42,51,.06),0 8px 18px rgba(58,42,51,.04);--k3h:inset 1px 1px 0 rgba(255,255,255,.4),inset 0 0 12px rgba(255,255,255,.6),inset 0 -4px 8px rgba(58,42,51,.08),0 1px 2px rgba(58,42,51,.12),0 5px 12px rgba(58,42,51,.08),0 10px 22px rgba(58,42,51,.06);--k3t:inset 1px 1px 0 rgba(255,255,255,.35),inset 0 0 8px rgba(255,255,255,.4),0 1px 1px rgba(58,42,51,.08);--k3a:inset 0 3px 6px rgba(58,42,51,.26),inset 0 0 10px rgba(58,42,51,.1),0 1px 0 rgba(255,255,255,.6);--nb:rgba(255,255,255,.16);--hv:rgba(255,255,255,.34);--sel-bg:rgba(255,255,255,.64);--sel-hv:rgba(255,255,255,.78);--sel-bd:rgba(255,255,255,1) rgba(58,42,51,.34) rgba(58,42,51,.34) rgba(255,255,255,1);--sel-fg:#0f172a;--chart-hi:rgba(0,0,0,0)}
 html.desktop{--sw:208px;--g:15px;zoom:var(--z,1);overflow:hidden}
 html.desktop *{scrollbar-width:thin;scrollbar-color:rgba(71,85,105,.4) transparent}
 html.desktop .dlg{max-height:696px}
@@ -646,7 +647,10 @@ html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f1f5f9;--text2:#dbe4f0;
 html:is(.desktop,.pt)[data-bg] body::before{background:var(--bt)}
 html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}
 html:is(.desktop,.pt)[data-bg] .card:not(.dlg__card){background:var(--spec) top left/100% 40% no-repeat,var(--glass)}
-html:is(.desktop,.pt)[data-bg] .note{background:var(--spec) top/100% 55% no-repeat,rgba(255,255,255,.04)}
+html:is(.desktop,.pt)[data-bg]{--pnl:rgba(255,255,255,.105);--glass:var(--pnl)}
+html:is(.desktop,.pt)[data-bg] :is(.note,.bak-sec){background:var(--spec) top/100% 55% no-repeat}
+html:is(.desktop,.pt)[data-bg] .dlg__card .note{background:var(--spec) top/100% 55% no-repeat,rgba(255,255,255,.04)}
+html:is(.desktop,.pt)[data-bg] :is(.s4,.tab){--nb:var(--pnl)}
 html:is(.desktop,.pt)[data-bg] :is(.card__bar .inp,.note .inp,.chart-year__box){background-color:rgba(255,255,255,.07)}
 html:is(.desktop,.pt)[data-bg] :is(.card__bar,.note) .inp:focus{background-color:rgba(255,255,255,.2)}
 html:is(.desktop,.pt)[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}

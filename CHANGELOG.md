@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.22.2] - 2026-11-18
+- Độ sáng kính đồng nhất theo token `--pnl` (thẻ, 4 ô số, tab, khung Sao lưu = độ sáng tờ ghi trên nền tối) và `font-family:inherit` cho button/input/select/textarea (nút chọn nền hết rơi về Arial).
+
 ## [2.22.1] - 2026-11-18
 - Sửa test: bỏ byte NUL thô trong regex, quét *.md đệ quy; dọn tiến trình/thư mục thử ổn định trên Windows; `engines.node` ">=22 <25". Không đổi hành vi app.
 

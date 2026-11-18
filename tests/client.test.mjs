@@ -6881,3 +6881,15 @@ test('2.21.5 tài liệu *.md không chứa ký tự điều khiển (vd \b, \a 
   walk(root);
   for (const f of files) assert.doesNotMatch(fs.readFileSync(f, 'utf8'), /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/, f);
 });
+
+test('2.22.2 kính một token --pnl: thẻ/4 ô/tab/Sao lưu cùng độ sáng tờ ghi trên nền tối; button/input kế thừa font', () => {
+  const css = PAGE;
+  const dark = css.split('\n').filter(l => l.startsWith('html:is(.desktop,.pt)[data-bg]'));
+  const root = dark.filter(l => l.startsWith('html:is(.desktop,.pt)[data-bg]{')).join(' ');
+  assert.ok(/--pnl:rgba\(255,255,255,\.\d+\)/.test(root) && root.includes('--glass:var(--pnl)'), 'thẻ dùng --pnl');
+  assert.ok(/:is\(\.s4,\.tab\)\{--nb:var\(--pnl\)\}/.test(dark.join('\n')), '4 ô và tab dùng --pnl');
+  const nf = dark.find(l => l.startsWith('html:is(.desktop,.pt)[data-bg] :is(.note,.bak-sec){')) || '';
+  assert.ok(nf && !/rgba\(255,255,255,\.\d+\)/.test(nf), 'tờ ghi và khung Sao lưu không chồng thêm nền trên thẻ');
+  assert.ok(/\.bak-sec\{[^}]*var\(--pnl,/.test(css), 'bak-sec dùng token');
+  assert.ok(css.includes('button,input,select,textarea{font-family:inherit}'), 'ô nhập/nút kế thừa font');
+});
