@@ -103,6 +103,7 @@ Bản `kho-backup-2026-11-06.json` trong `data/luu-tru/` xuất lúc 19:48, mu�
 ## Chạy test
 ```powershell
 # Node 22 là bản chuẩn (.nvmrc, CI, Docker). Test server/auth chạy trong Docker vì better-sqlite3 không build được trên Node 26.
+# Dùng Node 22 (`.nvmrc`); không dùng Node 24+/26 (better-sqlite3 11.x không build).
 # Kiểm cú pháp (không cần node_modules): npm run lint
 # Test client (trên máy, chỉ cần Node):
 node --test tests/client.test.mjs

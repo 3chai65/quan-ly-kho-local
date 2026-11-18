@@ -1,12 +1,12 @@
 {
   "name": "quan-ly-kho-local",
-  "version": "2.22.0",
+  "version": "2.22.1",
   "private": true,
   "type": "module",
   "description": "Quản Lý Kho — app một người dùng, chạy local bằng Docker và SQLite",
   "main": "server.js",
   "engines": {
-    "node": ">=22"
+    "node": ">=22 <25"
   },
   "scripts": {
     "start": "node server.js",

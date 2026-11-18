@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.22.1] - 2026-11-18
+- Sửa test: bỏ byte NUL thô trong regex, quét *.md đệ quy; dọn tiến trình/thư mục thử ổn định trên Windows; `engines.node` ">=22 <25". Không đổi hành vi app.
+
 ## [2.22.0] - 2026-11-18
 
 - Tab Sao lưu giống app Mac: thẻ "File sao lưu trên máy này" (dòng thư mục + Mở thư mục chỉ trong Tauri, khôi phục đỏ nhẹ) và thẻ "Bản sao lưu trên máy chủ" (GET /api/backups, 10 dòng/trang, làm mới, chỉ đọc).

@@ -149,9 +149,12 @@ test.before(async () => {
   await enrollDevice();
 });
 
-test.after(() => {
-  if (child) child.kill();
-  if (dataDir) fs.rmSync(dataDir, { recursive: true, force: true });
+const waitExit = (c) => new Promise(r => { if (c.exitCode !== null || c.signalCode) return r(); const t = setTimeout(r, 5000); c.once('exit', () => { clearTimeout(t); r(); }); });
+const rmDir = (d) => fs.rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+
+test.after(async () => {
+  if (child) { child.kill(); await waitExit(child); }
+  if (dataDir) rmDir(dataDir);
 });
 
 test('server.js: GET /api/state trả state rỗng ban đầu', async () => {
@@ -723,7 +726,8 @@ test('server.js: file migration hỏng không chặn khởi động', async () =
     assert.equal(ok, true, 'server phải khởi động dù file migration hỏng');
   } finally {
     child2.kill();
-    fs.rmSync(dir, { recursive: true, force: true });
+    await waitExit(child2);
+    rmDir(dir);
   }
 });
 

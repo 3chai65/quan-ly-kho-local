@@ -6876,6 +6876,8 @@ test('2.21.5 firstUse: cử chỉ đầu là nút khôi phục thì KHÔNG tự 
 
 test('2.21.5 tài liệu *.md không chứa ký tự điều khiển (vd \b, \a do gõ \ trong đường dẫn)', () => {
   const root = fileURLToPath(new URL('..', import.meta.url));
-  const files = fs.readdirSync(root).filter(f => f.endsWith('.md'));
-  for (const f of files) assert.doesNotMatch(fs.readFileSync(root + f, 'utf8'), /[ --]/, f);
+  const files = [];
+  const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { if (e.name === 'node_modules' || e.name === '.git') continue; const q = d + '/' + e.name; if (e.isDirectory()) walk(q); else if (e.name.endsWith('.md')) files.push(q); } };
+  walk(root);
+  for (const f of files) assert.doesNotMatch(fs.readFileSync(f, 'utf8'), /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/, f);
 });
