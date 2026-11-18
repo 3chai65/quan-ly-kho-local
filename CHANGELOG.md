@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.21.0] - 2026-11-18
+
+- Font: ưu tiên SF Pro của hệ điều hành, dự phòng Inter (OFL, subset Latin/Việt, 44 KB, phục vụ `/inter.woff2` sau cổng xác thực); icon: bộ Lucide (ISC) thay sprite cũ, thêm `i-inbox`/`i-outbox`/`i-drive` cho Lịch sử nhập/bán và Sao lưu; không đổi bố cục.
+
 ## [2.20.14] - 2026-11-18
 
 ### Sửa

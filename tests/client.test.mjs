@@ -2694,7 +2694,7 @@ test('2.9.0 nhãn thẻ mới đúng theo hộp; id và data-action không đổ
   assert.equal(titleOf('backupBox'), 'Sao lưu &amp; khôi phục');
   assert.doesNotMatch(PAGE, /1\. Đơn bán lẻ|2\. Đơn thuốc chén|3\. Nhập hàng|Thống kê nhập &amp; bán|Danh sách tồn kho/);
   assert.equal(PAGE.match(/data-action="/g).length - [...NEW_213, ...NEW_214, ...NEW_215].reduce((n, a) => n + PAGE.split('data-action="' + a + '"').length - 1, 0), 15, 'data-action cũ đã đổi (nhap-add, brand-devices thêm; 4 nút Gần nhất/Tất cả đã bỏ ở 2.13.0)');
-  assert.equal(PAGE.match(/ id="/g).length, 163); // 2.20.9 thêm remedyPresetBox, remedyPresetRows, remedyPresetPager: 160 -> 163;  2.20.0 thêm nhapListPager: 159 -> 160; 2.17.6 bỏ remedyQty: 160 -> 159; 2.17.3 thêm retailNoteFoot, nhapListFoot: 158 -> 160; 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
+  assert.equal(PAGE.match(/ id="/g).length, 166); // 2.21.0 thêm symbol i-inbox, i-outbox, i-drive: 163 -> 166; 2.20.9 thêm remedyPresetBox, remedyPresetRows, remedyPresetPager: 160 -> 163;  2.20.0 thêm nhapListPager: 159 -> 160; 2.17.6 bỏ remedyQty: 160 -> 159; 2.17.3 thêm retailNoteFoot, nhapListFoot: 158 -> 160; 2.17.2 thêm remedyNoteFoot: 157 -> 158; 2.17.0 bỏ themeColor, themeMenu, themeLabel, i-sun, i-moon: 162 -> 157; 2.15.17 bỏ remedyCopyPreset: 166 -> 165; 2.15.7 bỏ 2 symbol icon không dùng (i-monitor, i-chart-line): 168 -> 166; 2.15.6 thêm retailNoteList, remedyNoteList; 2.15.5 bỏ remedyNewName; 2.15.0: bỏ invSort, thêm chartImpVal/chartExpVal; // 2.15.0 thêm reloadBtn; 165 - 7 symbol không dùng (vòng 17 nhóm C); 2.10.0 thêm id="tabs"; 2.13.0 thêm brandBtn, brandNote; 2.14.0 thêm remedyNewName, nhapPendingBody, nhapPendName
 });
 
 /* 2.9.1 "khối @media 901px: .main align-items:start" đã BỎ ở 2.10.0 (lưới 2 cột thay bằng tab). */
@@ -5628,7 +5628,7 @@ test('2.15.8 tab máy tính có icon: 8 nút mỗi nút 1 svg aria-hidden trỏ 
   const nav = PAGE.match(/<nav class="tabs"[\s\S]*?<\/nav>/)[0];
   const btns = [...nav.matchAll(/<button [^>]*>[\s\S]*?<\/button>/g)].map(m => m[0]);
   assert.equal(btns.length, 8);
-  const want = { retailBox: 'receipt', remedyBox: 'mortar', nhapBox: 'cart', invBox: 'warehouse', impBox: 'cart', expBox: 'cash', chartBox: 'chart-col', backupBox: 'save' };
+  const want = { retailBox: 'receipt', remedyBox: 'mortar', nhapBox: 'cart', invBox: 'warehouse', impBox: 'inbox', expBox: 'outbox', chartBox: 'chart-col', backupBox: 'drive' };
   for (const b of btns) {
     const id = b.match(/data-tab="(\w+)"/)[1];
     assert.equal((b.match(/<svg /g) || []).length, 1, id + ': đúng 1 icon');
@@ -6659,4 +6659,14 @@ test('2.20.14 nền tối: --red-text đạt tương phản >= 4,5 trên điểm
   const tops = [...PAGE.matchAll(/\[data-bg=\w+\]\{--bt:linear-gradient\(160deg,#[0-9a-f]{6},(#[0-9a-f]{6})\)/g)].map(m => m[1]);
   assert.ok(tops.length >= 7);
   for (const bg of tops) { const x = L(red), y = L(mix(bg)); assert.ok((Math.max(x, y) + .05) / (Math.min(x, y) + .05) >= 4.5, bg); }
+});
+
+test('2.21.0 font: SF trước, Inter dự phòng nhúng woff2 nhỏ cùng nguồn; icon mới có symbol, stroke 1.75', () => {
+  assert.match(PAGE, /font:15px\/1\.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,"Segoe UI",sans-serif/);
+  assert.match(PAGE, /@font-face\{font-family:"Inter";[^}]*font-display:swap;src:url\(\/inter\.woff2\) format\("woff2"\)\}/);
+  const f = fs.readFileSync(new URL('../src/inter-vi.woff2', import.meta.url));
+  assert.equal(f.subarray(0, 4).toString(), 'wOF2');
+  assert.ok(f.length < 60000, 'font nhỏ hơn 60KB: ' + f.length);
+  assert.match(PAGE, /\.ico\{[^}]*stroke-width:1\.75/);
+  for (const id of ['i-inbox', 'i-outbox', 'i-drive']) assert.ok(PAGE.includes('<symbol id="' + id + '"'), id);
 });

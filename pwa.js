@@ -1,6 +1,7 @@
 /* PWA 2.16.0: manifest, icon PNG (sinh bằng mã, không file nhị phân) và service worker.
    Không chứa dữ liệu kho. Service worker KHÔNG cache gì (chỉ passthrough): trang "/" và /api/* luôn lấy mới từ máy chủ. */
 import zlib from 'node:zlib';
+import fs from 'node:fs';
 
 const CRC = (() => {
   const t = new Uint32Array(256);
@@ -58,6 +59,9 @@ export function mountPwa(app) {
   for (const p of Object.keys(icons)) {
     app.get(p, (req, res) => { res.set('Cache-Control', 'public, max-age=86400'); res.type('image/png').send(icons[p]); });
   }
+  /* 2.21.0: font Inter (OFL) cho máy không có SF Pro; nằm sau cổng xác thực (cookie đi kèm yêu cầu font cùng nguồn). */
+  const FONT = fs.readFileSync(new URL('./src/inter-vi.woff2', import.meta.url));
+  app.get('/inter.woff2', (req, res) => { res.set('Cache-Control', 'public, max-age=31536000, immutable'); res.type('font/woff2').send(FONT); });
   app.get('/manifest.webmanifest', (req, res) => {
     res.set('Cache-Control', 'no-cache'); res.type('application/manifest+json').send(MANIFEST);
   });
