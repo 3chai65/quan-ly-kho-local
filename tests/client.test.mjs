@@ -6291,7 +6291,7 @@ function headScript() {
 }
 function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh = 2160, dpr = 1, tauri = true } = {}) {
   const props = {}, attrs = {}, resize = [];
-  const cls = new Set(); const R = { classList: { contains: k => (desktop && k === 'desktop') || cls.has(k), add(k) { if (k === 'glass') cls.add(k); }, toggle(k, on) { if (on) cls.add(k); else cls.delete(k); } }, style: { setProperty(k, v) { props[k] = v; } }, setAttribute(k, v) { attrs[k] = v; } };
+  const cls = new Set(); const R = { classList: { contains: k => (desktop && k === 'desktop') || cls.has(k), add(k) { if (k === 'glass' || k === 'tauri') cls.add(k); }, toggle(k, on) { if (on) cls.add(k); else cls.delete(k); } }, style: { setProperty(k, v) { props[k] = v; } }, setAttribute(k, v) { attrs[k] = v; } };
   const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
   let ready = null;
   const wrapEl = { nextSibling: null, parentNode: null }; const bar = { children: [wrapEl], insertBefore(n, ref) { if (ref) this.children.splice(this.children.indexOf(ref), 0, n); else this.children.push(n); } }; wrapEl.parentNode = bar;
@@ -6322,6 +6322,13 @@ test('2.20.0 khung vẽ 1280x720: CSS cố định (không vw/vh/clamp) + zoom t
   r.ctx.innerWidth = 1920; r.ctx.innerHeight = 1080; r.resize.forEach(f => f());
   assert.equal(r.props['--z'], 1.5);
   assert.deepEqual(Object.keys(runHead({ desktop: false }).props), [], 'không desktop: không đặt --z');
+});
+
+test('2.23.1 html.tauri chỉ khi desktop + __TAURI__; lề trên 34px (tránh nút thanh tiêu đề) chỉ dưới html.desktop.tauri', () => {
+  assert.ok(runHead({ tauri: true }).cls.has('tauri'));
+  assert.ok(!runHead({ tauri: false }).cls.has('tauri'), 'PWA không có __TAURI__');
+  assert.ok(!runHead({ desktop: false, tauri: true }).cls.has('tauri'), 'không desktop thì không tauri');
+  assert.ok(deskBlock().includes('\nhtml.desktop.tauri body{padding-top:34px}\n') && deskBlock().includes('html.desktop.tauri .bak-sec{padding:12px 16px}\nhtml.desktop.tauri .bak-row{padding:0}'), 'Sao lưu có dòng thư mục vẫn vừa 704px');
 });
 
 test('2.20.0 menu dòng: vị trí chia cho window.__dz (zoom), tự hiệu chỉnh theo vị trí thật', () => {

@@ -577,6 +577,7 @@ html.desktop,html.desktop body{background:transparent}
 html.desktop{--sw:230px;--g:16px;zoom:var(--z,1);overflow:hidden}
 html.desktop .dlg{max-height:696px}
 html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--g);width:var(--vw,1280px);height:var(--vh,720px);margin:0;box-sizing:border-box;overflow:hidden;padding:var(--g)}
+html.desktop.tauri body{padding-top:34px}
 html.desktop body::after{content:"";grid-area:1/1/3/2;border:1px solid rgba(255,255,255,.10);border-radius:24px;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);z-index:-1}
 html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop .top .wrap{padding:0 14px}
@@ -716,6 +717,8 @@ html:is(.desktop,.pt) .btn.bak-restore{border-color:rgba(255,120,120,.5)}
 html.desktop #backupBox{align-self:start}
 html.desktop #backupBox .card__body{padding:0}
 html.desktop .bak-sec{padding:16px;border-radius:18px}
+html.desktop.tauri .bak-sec{padding:12px 16px}
+html.desktop.tauri .bak-row{padding:0}
 html.desktop .chart-year__box{border-radius:999px}
 html:is(.desktop,.pt) .bgd{position:relative;display:block;width:22px;height:22px;padding:0;border:0;background:none;font-size:0;cursor:pointer}
 html:is(.desktop,.pt) .bgd::before{content:"";position:absolute;inset:0;box-sizing:border-box;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:var(--bt)}
@@ -744,6 +747,7 @@ html.pt .bgdots{margin-top:14px}
     if (/[?&]desktop=0/.test(q)) localStorage.setItem('desktop', '0'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
     var dk = localStorage.getItem('desktop'); /* 2.20.12: PWA Edge trên PC (standalone, >=900px, chuột) tự bật; '0' = đã tắt */
     if (dk === '1' || (dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900)) document.documentElement.classList.add('desktop');
+    if (window.__TAURI__ && document.documentElement.classList.contains('desktop')) document.documentElement.classList.add('tauri'); /* 2.23.1: chừa lề trên cho thanh tiêu đề của app */
     if (!document.documentElement.classList.contains('desktop') && !/[?&]pt=0/.test(q) && (/[?&]pt=1/.test(q) || matchMedia('(pointer:coarse)').matches)) { document.documentElement.classList.add('pt'); var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', '#142844'); } /* 2.20.13: điện thoại dùng chung lớp màu/nền với desktop */
   } catch (e) {}
   var R = document.documentElement, D = R.classList.contains('desktop');
