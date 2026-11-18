@@ -689,7 +689,11 @@ html.desktop .sug__list::-webkit-scrollbar{display:none}
 html.desktop #chartBox>summary{display:none}
 html.desktop #chartBox .card__body{position:relative;padding:16px}
 html.desktop .thk{display:block}
-html.desktop .thk__t{margin:0 0 10px;font-size:15px;line-height:1.2;font-weight:700}
+html.desktop .thk__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+html.desktop .thk__y{display:flex;align-items:center;gap:8px}
+html.desktop .thk__y .btn{width:30px;min-width:30px;height:30px;min-height:30px;padding:0;font-size:18px;line-height:1}
+html.desktop .thk__y span{width:120px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums}
+html.desktop .thk__t{margin:0;font-size:15px;line-height:1.2;font-weight:700}
 html.desktop .thk__n{display:flex;gap:24px;margin-bottom:6px}
 html.desktop .thk__n span{display:flex;flex-direction:column}
 html.desktop .thk__n i{font-style:normal;font-size:10px;line-height:1.5;color:var(--muted)}
@@ -1100,7 +1104,7 @@ html.pt .bgdots{margin-top:14px}
         </span>
       </summary>
       <div class="card__body">
-        <div class="thk"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__n"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div></div>
+        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span id="chartYrL" aria-live="polite">12 tháng gần nhất</span><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div></div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
@@ -3740,8 +3744,18 @@ function recFixAll(){
 }
 /* ================= BIỂU ĐỒ ================= */
 var chartSel = -1, chartHover = -1, chartGeo = null;
+/* 2.24.1: chartYr null = 12 tháng gần nhất; số Y = tháng 01..12 của năm Y. Bước năm (dir -1/+1) khi null/biên; hàm thuần, vô hiệu thì trả lại cur. */
+var chartYr = null;
+function chartYearStep(cur, dir, nowY){
+  if (dir < 0) return cur == null ? nowY : cur <= 2000 ? cur : cur - 1;
+  return cur == null ? null : cur + 1 <= nowY ? cur + 1 : null;
+}
+function chartYearGo(dir){
+  chartYr = chartYearStep(chartYr, dir, Number(thisYear())); chartSel = -1; chartHover = -1; renderChart();
+}
 /* 2.24.0 desktop: 12 tháng gần nhất kết thúc ở tháng của ngày hôm nay (YYYY-MM-DD), qua ranh năm. Hàm thuần. */
-function chartMonths(today){
+function chartMonths(today, yr){
+  if (yr) { var o = []; for (var k = 1; k <= 12; k++) o.push(yr + '-' + pad2(k)); return o; }
   var y = parseInt(String(today).slice(0, 4), 10), m = parseInt(String(today).slice(5, 7), 10), out = [];
   for (var i = 11; i >= 0; i--) { var t = y * 12 + m - 1 - i; out.push(Math.floor(t / 12) + '-' + pad2(t % 12 + 1)); }
   return out;
@@ -3756,7 +3770,7 @@ function chartTicks(maxK){
 }
 function chartData(){
   var year = ($('#chartYear') || {}).value || thisYear();
-  var yms = isDesk() ? chartMonths(todayISO()) : null;
+  var yms = isDesk() ? chartMonths(todayISO(), chartYr) : null;
   var imp = [], exp = [], impK = [], expK = [];
   for (var m = 1; m <= 12; m++) {
     var ym = yms ? yms[m - 1] : year + '-' + pad2(m);
@@ -3888,7 +3902,10 @@ function setChartTip(mmStr, impV, expV){
 function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var padT = 10, padB = 36;
   var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
-  var vmax = 0, i;
+  var vmax = 0, i, yl = $('#chartYrL'), yp = $('#chartPrev'), yn = $('#chartNext');
+  if (yl) yl.textContent = chartYr ? 'Năm ' + chartYr : '12 tháng gần nhất';
+  if (yp) yp.disabled = chartYr != null && chartYr <= 2000;
+  if (yn) yn.disabled = chartYr == null;
   for (i = 0; i < 12; i++) vmax = Math.max(vmax, data.impK[i], data.expK[i]);
   var ticks = chartTicks(vmax / 1000), top = ticks[ticks.length - 1] * 1000;
   var hi = chartHover >= 0 ? chartHover : chartSel;
@@ -5467,8 +5484,9 @@ function bindEvents(){
   if (ch) { ch.addEventListener('click', onChartClick); ch.addEventListener('mousemove', onChartMove); ch.addEventListener('mouseleave', onChartMove); }
 
   var cb = $('#chartBox');
+  [['#chartPrev', -1], ['#chartNext', 1]].forEach(function(b){ var e = $(b[0]); if (e) e.addEventListener('click', function(){ chartYearGo(b[1]); }); });
   if (cb) cb.addEventListener('toggle', function(){
-    if (cb.open) requestAnimationFrame(renderChart);
+    if (cb.open) { chartYr = null; requestAnimationFrame(renderChart); }
   });
   var bbx = $('#backupBox');
   if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) loadBakList(); });

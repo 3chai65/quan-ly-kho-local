@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.24.1] - 2026-11-18
+
+### Thêm
+- Tab Thống kê (desktop): nút ‹ nhãn › đổi năm của biểu đồ (mặc định "12 tháng gần nhất"; Năm Y = tháng 01..12; chặn ở 2000; › từ năm hiện tại về mặc định; mỗi lần mở tab về mặc định). 4 số phía trên không đổi. iPhone giữ nguyên.
+
 ## [2.24.0] - 2026-11-18
 
 ### Thay đổi

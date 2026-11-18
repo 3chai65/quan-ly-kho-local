@@ -113,7 +113,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -6993,7 +6993,7 @@ function deskChart(today, txs, hoverX) {
   const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : (...a) => { calls.push([k, a, t.fillStyle]); return { width: 0 }; }), set: (t, k, v) => { t[k] = v; return true; } });
   const mk = () => ({ value: '', textContent: '', style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; } }, focus() {}, select() {} });
   const cv = { offsetParent: {}, offsetLeft: 0, offsetTop: 0, clientWidth: 970, clientHeight: 400, parentNode: { clientWidth: 970 }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: 970, height: 400 }) };
-  const els = { '#statsChart': cv, '#chartYear': mk(), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartTipSr': mk(), '#chartTip': mk() };
+  const els = { '#statsChart': cv, '#chartYear': mk(), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartTipSr': mk(), '#chartTip': mk(), '#chartYrL': mk(), '#chartPrev': mk(), '#chartNext': mk() };
   const FakeDate = fakeClock(...today);
   const R = makeEl(); R.classList = { contains: k => k === 'desktop', add() {}, remove() {}, toggle() {} };
   const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: R, body: makeEl(), querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
@@ -7040,3 +7040,41 @@ test('2.24.0 desktop hover: vạch dọc trắng .25 + tooltip yy-MM, Nhập x, 
   c.onChartMove({ type: 'mouseleave' });
   assert.equal(els['#chartTip'].style.display, '');
 });
+
+test('2.24.1 chartYearStep: null -> năm hiện tại -> Y-1; › từ năm hiện tại về null; vô hiệu ở 2000 và khi null', () => {
+  const c = loadClient(), st = c.chartYearStep;
+  assert.equal(st(null, -1, 2026), 2026); assert.equal(st(2026, -1, 2026), 2025); assert.equal(st(2001, -1, 2026), 2000);
+  assert.equal(st(2000, -1, 2026), 2000, 'chặn ở 2000');
+  assert.equal(st(2025, 1, 2026), 2026); assert.equal(st(2026, 1, 2026), null, '› từ năm hiện tại về null');
+  assert.equal(st(null, 1, 2026), null, '› khi null vô hiệu');
+});
+
+test('2.24.1 chartMonths theo năm: Y-01..Y-12; mặc định (null) giữ 12 tháng gần nhất', () => {
+  const c = loadClient(), m = c.chartMonths('2026-11-18', 2025);
+  assert.equal(m.length, 12); assert.equal(m[0], '2025-01'); assert.equal(m[11], '2025-12');
+  assert.equal(c.chartMonths('2026-11-18', null)[0], '2025-12');
+});
+
+test('2.24.1 desktop bộ chọn năm: nhãn, nút vô hiệu, giao dịch năm khác không lẫn, năm trống vẫn vẽ 12 nhóm, mở lại tab về null', () => {
+  const { c, calls, els } = deskChart([2026, 10, 18, 12], DESK_TX);
+  assert.equal(els['#chartYrL'].textContent, '12 tháng gần nhất'); assert.equal(els['#chartNext'].disabled, true); assert.equal(els['#chartPrev'].disabled, false);
+  c.chartYearGo(-1);
+  assert.equal(c.getChartYr(), 2026); assert.equal(els['#chartYrL'].textContent, 'Năm 2026'); assert.equal(els['#chartNext'].disabled, false);
+  let d = c.chartData();
+  assert.equal(d.yms[0], '2026-01'); assert.equal(d.yms[11], '2026-12');
+  assert.equal(d.expK[11], 7000000, 'BAN 2026-12'); assert.equal(d.expK[10], 2300000);
+  assert.equal(d.impK.reduce((a, b) => a + b, 0), 0, 'NHAP 2025 không lẫn vào 2026');
+  c.chartYearGo(-1);
+  d = c.chartData(); assert.equal(d.yms[0], '2025-01'); assert.equal(d.impK[10], 9000000); assert.equal(d.impK[11], 4000000); assert.equal(d.expK[11], 1500000);
+  c.setChartYr(2000); c.chartYearGo(-1);
+  assert.equal(c.getChartYr(), 2000); assert.equal(els['#chartPrev'].disabled, true, 'vô hiệu ở 2000');
+  c.setChartYr(1999 + 27); c.chartYearGo(1);
+  assert.equal(c.getChartYr(), null); assert.equal(els['#chartYrL'].textContent, '12 tháng gần nhất');
+  c.setChartYr(2010); c.chartYearGo(-1); c.chartYearGo(-1);
+  assert.equal(c.chartData().yms[0], '2008-01');
+  const empty = c.chartData(); assert.equal(empty.impK.concat(empty.expK).reduce((a, b) => a + b, 0), 0);
+  c.renderChart(); assert.equal(calls.length > 0, true);
+  assert.ok(/if \(cb\.open\) \{ chartYr = null;/.test(PAGE), 'mở tab Thống kê về null');
+  assert.ok(/id="chartPrev" aria-label="Năm trước"/.test(PAGE) && /id="chartNext" aria-label="Năm sau"/.test(PAGE));
+});
+
