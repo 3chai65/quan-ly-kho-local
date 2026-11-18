@@ -2617,6 +2617,17 @@ test('checkLimits: saveTxEdit giá 1e13 đồng bị từ chối: db không đ�
   assert.match(toastText(dom), /Tiền vượt giới hạn/);
 });
 
+test('2.21.2 saveTxEdit: dòng NHAP có rx, hoàn tác khi giá thấp hơn vốn trả tồn đúng chiều', () => {
+  const dom = limitStock();
+  const tx = { id: 'r1', date: '2026-11-02', type: 'NHAP', productId: 'p1', qty: 1, price: 100, total: 100, cost: 5000, ts: 2000, rx: true, thang: 1, g: 1000, oid: 'R1' };
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 10, costPrice: 1 }], [tx]);
+  c.openTxEdit('r1');
+  dom.set('txEditQty', '2000');
+  c.saveTxEdit();
+  assert.match(toastText(dom), /Giá bán thấp hơn vốn/);
+  assert.equal(c.getDb().products[0].stock, 10);
+});
+
 test('checkLimits: saveTxEdit đơn thuốc sau nhân vượt trần (1e6 g × 1e4 thang = 1e7 kg) bị từ chối', () => {
   const dom = limitStock();
   const tx = { id: 'r1', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, ts: 2000, rx: true, thang: 10000 };

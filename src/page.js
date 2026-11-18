@@ -4589,7 +4589,7 @@ function saveTxEdit(){
       t.qty = prevQty;
       t.g = prevG;
       t.cost = prevCost;
-      if (p) p.stock = dec(num(p.stock) + delta);
+      if (p) p.stock = dec(num(p.stock) + (t.type === 'NHAP' ? -delta : delta));
       toast('Giá bán thấp hơn vốn của đơn', 'error');
       return;
     }

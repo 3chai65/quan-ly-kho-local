@@ -602,6 +602,21 @@ test('server.js: không cookie thì /api/state là 401, /healthz vẫn ok', asyn
   assert.equal(body.code, 'device_not_approved');
 });
 
+test('server.js: /inter.woff2 cần cookie thiết bị; đường lên thư mục cha không lộ mã nguồn', async () => {
+  const ok = await fetch(`${BASE}/inter.woff2`, { headers: { Cookie: deviceCookie } });
+  assert.equal(ok.status, 200);
+  assert.match(ok.headers.get('content-type'), /font\/woff2/);
+  assert.ok((await ok.arrayBuffer()).byteLength > 40000);
+  assert.equal((await fetch(`${BASE}/inter.woff2`)).status, 401);
+  for (const u of ['/inter.woff2/../server.js', '/%2e%2e/server.js']) {
+    for (const h of [{ Cookie: deviceCookie }, {}]) {
+      const r = await fetch(`${BASE}${u}`, { headers: h });
+      assert.ok([401, 404].includes(r.status), u + ' status=' + r.status);
+      assert.ok(!(await r.text()).includes('better-sqlite3'));
+    }
+  }
+});
+
 test('server.js: placeholder SSR thay một lượt, giữ nguyên ký tự đặc biệt', async () => {
   const name = "%%NEEDFETCH%% %%BOOT%% $& $' $` </script>";
   const r = await put(emptyState({
