@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.22.4] - 2026-11-18
+- Danh sách bản .db: ghi chú khôi phục đúng quy trình WAL (xóa app.db-wal/-shm), dòng trạng thái `role="none"` + một dòng `aria-live` riêng (`#bakStat`), pager rỗng không chiếm lề; test nút làm mới (treo/chồng request).
+
 ## [2.22.3] - 2026-11-18
 - Danh sách bản .db: 401 báo "Thiết bị chưa được duyệt" (gọi noteAuthLost), nhãn "trước ghi đè", ẩn phân trang khi 1 trang, nút làm mới khóa + danh sách mờ khi tải, role list/listitem + aria-live, ghi chú "Chỉ xem".
 
@@ -1013,7 +1016,7 @@ Không đổi định dạng dữ liệu.
 ### Refactor
 
 - Tách khối `PAGE` (~3.978 dòng: HTML + CSS + toàn bộ JS client) từ `worker.js` sang
-  `src/page.js` dưới dạng `export const PAGE = String.raw\`...\``. `worker.js` còn ~530 dòng,
+  `src/page.js` dưới dạng `export const PAGE = String.raw`...``. `worker.js` còn ~530 dòng,
   chỉ giữ router/API, xác thực, đồng bộ D1 và lắp trang.
 - `worker.js` import `PAGE` từ `src/page.js`; Wrangler tự bundle ESM nên **không phát sinh
   bước build mới**, không cần `package.json`/`npm install`.

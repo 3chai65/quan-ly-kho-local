@@ -576,6 +576,7 @@ html.noglass .dlg::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
 .bak-busy{opacity:.5}
 .bak-row__tag{margin-left:6px;padding:0 6px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
 .bak-note{margin:6px 0 0}
+.bak-pg:empty{display:none}
 .bak-pg{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
 @media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
 /* 2.20.8 chế độ desktop (app Tauri, WebView2): chỉ áp khi html.desktop (?desktop=1, nhớ bằng localStorage; ?desktop=0 tắt). Khớp app GPUI: thanh bên có logo, HD/FHD, viên thuốc viền mảnh; 4 ô số kính trong; nền hồng nhạt đến xanh lá nhạt. Một họ kính trắng trong + viền mảnh trung tính cho mọi thẻ, ô số, tờ ghi, viên nút. Khung cố định 1280x720 phóng đều, KHÔNG cuộn (trừ khung gợi ý tên). Tối đa 2 phần tử backdrop-filter (thẻ đang mở + toast). */
@@ -1249,9 +1250,9 @@ html.pt .bgdots{margin-top:14px}
           <h3 class="bak-sec__t">Bản sao lưu trên máy chủ</h3>
           <button class="btn btn--icon" type="button" id="bakRefresh" data-action="bak-refresh" aria-label="Làm mới danh sách" title="Làm mới"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
         </div>
-        <div id="bakList" role="list" aria-live="polite"><p class="hint bak-empty">Đang tải…</p></div>
+        <div id="bakList" role="list"><p class="hint bak-empty" role="none">Đang tải…</p></div><p class="sr" id="bakStat" role="status" aria-live="polite"></p>
         <div class="bak-pg" id="bakPager"></div>
-        <p class="hint bak-note">Chỉ xem. Khôi phục bản .db: chép vào data/app.db rồi khởi động lại (xem README).</p>
+        <p class="hint bak-note">Chỉ xem. Khôi phục: dừng máy chủ, chép đè data/app.db, xóa app.db-wal và app.db-shm nếu có, rồi khởi động lại (xem README).</p>
       </section>
     </div>
   </details>
@@ -4925,7 +4926,7 @@ function bakTimeText(iso){
   return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
 }
 function renderBakList(){
-  var host = $('#bakList'), pg = $('#bakPager');
+  var host = $('#bakList'), pg = $('#bakPager'), st = $('#bakStat');
   if (!host) return;
   host.textContent = '';
   var rows = bakList || [];
@@ -4933,7 +4934,9 @@ function renderBakList(){
   if (bakPage > pages) bakPage = pages;
   if (bakPage < 1) bakPage = 1;
   if (bakErr || !rows.length) {
-    host.appendChild(el('p', 'hint bak-empty', bakErr === 'auth' ? 'Thiết bị chưa được duyệt, chưa xem được danh sách.' : bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…')));
+    var msg = (bakErr === 'auth' ? 'Thiết bị chưa được duyệt, chưa xem được danh sách.' : bakErr ? 'Không tải được danh sách' : (bakList ? 'Chưa có bản sao lưu trên máy chủ.' : 'Đang tải…'));
+    var ep = el('p', 'hint bak-empty', msg); ep.setAttribute('role', 'none'); host.appendChild(ep);
+    if (st) st.textContent = msg;
     if (pg) pg.textContent = '';
     return;
   }
@@ -4948,6 +4951,7 @@ function renderBakList(){
     host.appendChild(r);
   });
   if (pages > 1) renderPager(pg, bakPage, pages, 'bak', true); else if (pg) pg.textContent = '';
+  if (st) st.textContent = 'Đã tải ' + Math.min(rows.length, 10) + '/' + rows.length + ' bản';
 }
 function loadBakList(){
   var seq = ++bakSeq, host = $('#bakList'), btn = $('#bakRefresh');

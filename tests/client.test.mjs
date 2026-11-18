@@ -6667,12 +6667,12 @@ test('2.20.11 nút Mở thư mục sao lưu: ẩn mặc định, chỉ hiện kh
 
 function bakEnv(fetchImpl) {
   const els = new Map();
-  for (const id of ['bakList', 'bakPager']) { const e = makeEl(); e.appendChild = function(c){ e.children.push(c); return c; }; els.set(id, e); }
+  for (const id of ['bakList', 'bakPager', 'bakStat', 'bakRefresh']) { const e = makeEl(); e.appendChild = function(c){ e.children.push(c); return c; }; els.set(id, e); }
   const doc = {
     readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
     querySelector(sel) { const m = /^#([\w-]+)$/.exec(String(sel)); return m && els.has(m[1]) ? els.get(m[1]) : null; },
     querySelectorAll() { return []; },
-    createElement(tag) { const e = makeEl(); e.tagName = String(tag || '').toUpperCase(); e.appendChild = function(c){ e.children.push(c); return c; }; return e; },
+    createElement(tag) { const e = makeEl(); e.attrs = {}; e.setAttribute = (k, v) => { e.attrs[k] = v; }; e.tagName = String(tag || '').toUpperCase(); e.appendChild = function(c){ e.children.push(c); return c; }; return e; },
     createElementNS() { return makeEl(); }, createTextNode(s) { return { textContent: String(s) }; },
     addEventListener() {}, removeEventListener() {}
   };
@@ -6710,7 +6710,7 @@ test('2.22.0 Sao lưu: lỗi tải (401/mạng) chỉ hiện một dòng báo, t
 });
 
 test('2.22.3 Sao lưu: nhãn trước ghi đè, ẩn pager 1 trang, role list/listitem, ghi chú chỉ xem', async () => {
-  const list = [{ name: 'app-truoc-ghi-de-20261117.db', size: 2048, modified: '2026-11-17T12:30:00.000Z' }, { name: 'backup-2026-11-17.db', size: 2048, modified: '2026-11-17T12:30:00.000Z' }];
+  const list = [{ name: 'backup-2026-11-17-truoc-ghi-de-123045678.db', size: 2048, modified: '2026-11-17T12:30:00.000Z' }, { name: 'backup-2026-11-17.db', size: 2048, modified: '2026-11-17T12:30:00.000Z' }];
   const { els, client } = bakEnv(bakOk(list));
   await client.loadBakList();
   const rows = els.get('bakList').children;
@@ -6718,8 +6718,36 @@ test('2.22.3 Sao lưu: nhãn trước ghi đè, ẩn pager 1 trang, role list/li
   assert.equal(rows[0].children[0].children[0].className, 'bak-row__tag');
   assert.equal(rows[1].children[0].children.length, 0, 'tên thường không nhãn');
   assert.equal(els.get('bakPager').children.length, 0, 'một trang: không pager');
-  assert.ok(PAGE.includes('id="bakList" role="list" aria-live="polite"') && PAGE.includes("setAttribute('role', 'listitem')"));
-  assert.ok(PAGE.includes('Chỉ xem. Khôi phục bản .db: chép vào data/app.db rồi khởi động lại (xem README).'));
+  assert.ok(PAGE.includes('id="bakList" role="list">') && !PAGE.includes('id="bakList" role="list" aria-live'), 'aria-live không nằm trên list');
+  assert.ok(PAGE.includes('id="bakStat" role="status" aria-live="polite"'));
+  assert.ok(PAGE.includes('Chỉ xem. Khôi phục: dừng máy chủ, chép đè data/app.db, xóa app.db-wal và app.db-shm nếu có, rồi khởi động lại (xem README).'));
+  assert.equal(rows[0].attrs.role, 'listitem');
+});
+
+test('2.22.4 Sao lưu: dòng trạng thái role=none, bakStat báo số bản, lỗi vào bakStat', async () => {
+  let t = bakEnv(bakOk(bakFiles(23)));
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakStat').textContent, 'Đã tải 10/23 bản');
+  t = bakEnv(async () => { throw new Error('x'); });
+  await t.client.loadBakList();
+  assert.equal(t.els.get('bakStat').textContent, 'Không tải được danh sách');
+  assert.equal(t.els.get('bakList').children[0].attrs.role, 'none');
+});
+
+test('2.22.4 Sao lưu: nút làm mới khóa khi tải, mở lại khi xong; hai request chồng nhau theo request sau', async () => {
+  const ctl = [];
+  const { els, client } = bakEnv(() => new Promise(res => ctl.push(res)));
+  const btn = els.get('bakRefresh'), host = els.get('bakList');
+  const cls = new Set(); host.classList = { add: c => cls.add(c), remove: c => cls.delete(c), contains: c => cls.has(c), toggle() {} };
+  const mk = l => ({ ok: true, status: 200, json: async () => ({ success: true, backups: l }) });
+  const p1 = client.loadBakList();
+  assert.equal(btn.disabled, true); assert.ok(cls.has('bak-busy'));
+  const p2 = client.loadBakList();
+  ctl[1](mk(bakFiles(2))); await p2;
+  assert.equal(btn.disabled, false); assert.equal(host.children.length, 2, 'danh sách theo request 2');
+  ctl[0](mk(bakFiles(5))); await p1;
+  assert.equal(host.children.length, 2, 'request 1 chậm không đè');
+  assert.equal(btn.disabled, false); assert.ok(!cls.has('bak-busy'));
 });
 
 test('2.22.0 Sao lưu: dòng thư mục ẩn mặc định, chỉ hiện trong Tauri; không có nút Chọn thư mục', () => {
