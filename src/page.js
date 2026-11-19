@@ -672,7 +672,7 @@ html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:120px;mi
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-money{width:110px}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-act{width:34px}
 html.desktop .note :is(td,th):is(.c-num,.c-qty,.c-money,.c-act,.c-del){width:auto}
-html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left;padding:1px 10px 1px 2px}
+html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left;padding:0 10px 0 2px}
 html.desktop .pend .nhap-add{display:inline-flex;width:22px;min-width:22px;height:22px;min-height:22px;padding:0}
 html.desktop td .qty-hint.qty-hint--label{left:auto;right:96px;top:50%;transform:translateY(-50%);width:max-content;max-width:72px;box-sizing:border-box;padding:1px 5px;border:1px solid var(--kb);border-radius:999px;background:rgba(255,255,255,.10);color:var(--muted);font-size:11px;line-height:16px;text-align:center}
 html.desktop .note__row{flex-wrap:nowrap;justify-content:flex-start}
@@ -731,7 +731,7 @@ html.desktop .pend input.inp.inp--num{height:22px;min-height:22px;padding:2px 5p
 html.desktop #remedyBody input.inp.inp--num{width:52px}
 html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}
 html.desktop #remedyBody .qty-hint--label{right:64px}
-html.desktop :is(#retailBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}
+html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}
 html.desktop .nhap-pend__tot{display:none}
 html.desktop .nhap-hint{display:none}
 html.desktop .nhap-foot__tot{display:block;font-size:15px;color:var(--muted)}
@@ -852,7 +852,7 @@ html.pt .bgdots{margin-top:14px}
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
       /* 2.26.1: nút viên ở thanh đầu (chỉ desktop, tạo bằng JS nên điện thoại không có): Đơn mới (Thuốc chén), Xóa hết (Bán lẻ trái nút ngày, Nhập hàng cuối hàng) */
       var bx = function(act, ico, txt){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn bx'; b.setAttribute('data-action', act); b.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + ico + '"/></svg>' + txt; return b; };
-      if (D) [['retailSearch', 'Tìm vị thuốc'], ['nhapSearch', 'Tìm vị thuốc'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']].forEach(function(p){ var n = document.getElementById(p[0]); if (n) n.placeholder = p[1]; }); /* 2.30.4 desktop theo Mac; aria-label giữ nguyên */
+      if (D) [['retailSearch', 'Nhập tên'], ['nhapSearch', 'Nhập tên'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']].forEach(function(p){ var n = document.getElementById(p[0]); if (n) n.placeholder = p[1]; }); /* 2.30.4 desktop theo Mac; aria-label giữ nguyên */
       var rbar = document.querySelector('#retailBox .card__bar'), nbar = document.querySelector('#nhapBox .card__bar');
       if (rbar) rbar.insertBefore(bx('clear-retail', 'trash', 'Xóa hết'), rbar.querySelector('.card__bar-date'));
       if (nbar) nbar.appendChild(bx('clear-nhap', 'trash', 'Xóa hết'));

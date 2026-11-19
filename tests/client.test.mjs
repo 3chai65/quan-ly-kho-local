@@ -6570,7 +6570,7 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   // (5) cột: STT 40, tên 290, SL 110, giá 100, cột thao tác auto (hấp thụ phần còn lại, nút sát trái)
   assert.equal(px(/col\.cg-num\{width:(\d+)px/), 38); assert.ok(block.includes('col.cg-name{width:auto}'));
   assert.equal(px(/col\.cg-qty\{width:(\d+)px;min-width:120px/), 120); assert.equal(px(/col\.cg-money\{width:(\d+)px/), 110);
-  assert.ok(block.includes('col.cg-act{width:34px}') && block.includes('.c-act,.c-del){text-align:left;padding:1px 10px 1px 2px}'));
+  assert.ok(block.includes('col.cg-act{width:34px}') && block.includes('.c-act,.c-del){text-align:left;padding:0 10px 0 2px}'));
   // (2) đường kẻ: mọi đường ngang 1px solid var(--border); không còn 2px/dashed trong khối desktop
   assert.ok(!/border-(top|bottom):(?:[2-9]px|1px dashed)/.test(block));
   assert.ok(block.includes('html.desktop .note tfoot td{border-top:1px solid var(--border);border-bottom:0}') && block.includes('html.desktop .note__pending tfoot td{border-top:0}'));
@@ -7631,7 +7631,7 @@ test('2.29.0 cấu trúc: 3 tờ ghi gộp dòng gõ + dòng trống vào bảng
   assert.match(PAGE, /<th scope="col">SL \(kg\)<\/th>\s*<th scope="col" class="r">Giá bán<\/th>/);
   for (const id of ['retailBody', 'remedyBody', 'nhapPendingBody']) assert.ok(PAGE.includes('<tbody id="' + id + '" class="pend">'), id + ' có class pend');
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop :is(#retailBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}'), 'ô phẳng không viền');
+  assert.ok(b.includes('html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}'), 'ô phẳng không viền');
   assert.ok(b.includes('html.desktop .pend input.inp.inp--num{height:22px;min-height:22px;padding:2px 5px;margin-left:auto}'), 'ô SL căn phải trong cột: chip gợi ý (right:96px) nằm trái ô');
   assert.ok(b.includes('html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}'), 'gợi ý đổi là chữ mờ, không viên');
   assert.ok(b.includes('html.desktop .pend .c-num::before{content:"+";font-size:13px}') && b.includes('html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}'));
@@ -7666,7 +7666,7 @@ test('2.30.3 Nhập hàng desktop: nút "Lưu đơn", dòng "Tổng tiền nhậ
   assert.ok(!css.includes('html.desktop .nhap-hint:not([hidden])'));
 });
 
-test('2.30.4 desktop theo Mac: tên mờ dòng gõ Nhập hàng/Bán lẻ "Chọn vị thuốc ở ô trên" (Thuốc chén giữ "Tên vị thuốc"); placeholder desktop Tìm vị thuốc/SL/Giá (nghìn); điện thoại giữ nguyên', () => {
+test('2.30.4 desktop theo Mac: tên mờ dòng gõ Nhập hàng/Bán lẻ "Chọn vị thuốc ở ô trên" (Thuốc chén giữ "Tên vị thuốc"); placeholder desktop Nhập tên/SL/Giá (nghìn); điện thoại giữ nguyên', () => {
   for (const desk of [true, false]) {
     const pn = makeEl();
     const k = deskKit29(desk, { '#nhapPendName': pn, '#nhapSearch': { value: '' }, '#nhapTotal': makeEl(), '#nhapHint': makeEl() });
@@ -7675,6 +7675,12 @@ test('2.30.4 desktop theo Mac: tên mờ dòng gõ Nhập hàng/Bán lẻ "Chọ
   }
   assert.ok(PAGE.includes('html.desktop #retailBody .empty-cell::after{content:"Chọn vị thuốc ở ô trên"}'), 'Bán lẻ desktop');
   assert.ok(PAGE.includes('html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}'), 'Thuốc chén giữ chữ cũ');
-  assert.ok(PAGE.includes("if (D) [['retailSearch', 'Tìm vị thuốc'], ['nhapSearch', 'Tìm vị thuốc'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']]"), 'placeholder chỉ khi desktop');
+  assert.ok(PAGE.includes("if (D) [['retailSearch', 'Nhập tên'], ['nhapSearch', 'Nhập tên'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']]"), 'placeholder chỉ khi desktop');
   assert.ok(PAGE.includes('id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên"') && PAGE.includes('id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0"'), 'điện thoại giữ placeholder HTML');
+});
+
+test('2.30.4b desktop: ô tìm tên Nhập hàng/Bán lẻ "Nhập tên"; dòng gõ không cao hơn dòng dữ liệu (c-del không đệm dọc); dòng gõ Thuốc chén phẳng như Bán lẻ/Nhập hàng', () => {
+  assert.ok(!PAGE.includes("['retailSearch', 'Tìm vị thuốc']") && !PAGE.includes("['nhapSearch', 'Tìm vị thuốc']"), 'không còn Tìm vị thuốc ở Nhập hàng/Bán lẻ');
+  assert.ok(PAGE.includes('html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left;padding:0 10px 0 2px}'), 'ô nút cuối không đệm dọc (dòng gõ = dòng dữ liệu)');
+  assert.ok(PAGE.includes('html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}'), 'dòng gõ Thuốc chén phẳng');
 });
