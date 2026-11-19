@@ -724,6 +724,7 @@ html.desktop #remedyFindList .sug__item{height:36px}
 html.desktop #remedyList{top:30px;right:auto;width:380px}
 html.desktop .pend .empty-cell{text-align:left}
 html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}
+html.desktop #retailBody .empty-cell::after{content:"Chọn vị thuốc ở ô trên"}
 html.desktop .pend .c-num{font-size:0}
 html.desktop .pend .c-num::before{content:"+";font-size:13px}
 html.desktop .pend input.inp.inp--num{height:22px;min-height:22px;padding:2px 5px;margin-left:auto}
@@ -851,6 +852,7 @@ html.pt .bgdots{margin-top:14px}
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
       /* 2.26.1: nút viên ở thanh đầu (chỉ desktop, tạo bằng JS nên điện thoại không có): Đơn mới (Thuốc chén), Xóa hết (Bán lẻ trái nút ngày, Nhập hàng cuối hàng) */
       var bx = function(act, ico, txt){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn bx'; b.setAttribute('data-action', act); b.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + ico + '"/></svg>' + txt; return b; };
+      if (D) [['retailSearch', 'Tìm vị thuốc'], ['nhapSearch', 'Tìm vị thuốc'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']].forEach(function(p){ var n = document.getElementById(p[0]); if (n) n.placeholder = p[1]; }); /* 2.30.4 desktop theo Mac; aria-label giữ nguyên */
       var rbar = document.querySelector('#retailBox .card__bar'), nbar = document.querySelector('#nhapBox .card__bar');
       if (rbar) rbar.insertBefore(bx('clear-retail', 'trash', 'Xóa hết'), rbar.querySelector('.card__bar-date'));
       if (nbar) nbar.appendChild(bx('clear-nhap', 'trash', 'Xóa hết'));
@@ -4451,7 +4453,7 @@ function calcNhap(){
   var out = $('#nhapTotal');
   if (out) out.textContent = fmtMoney(kToDong(q * p));
   var pn = $('#nhapPendName');
-  if (pn) { var nm = String(($('#nhapSearch') || {}).value || '').trim(); pn.textContent = nm || (isDesk() ? 'Tên vị thuốc' : 'Chọn vị thuốc ở ô trên'); pn.className = nm ? 'nhap-pend__name' : 'nhap-pend__name is-muted'; var hh = $('#nhapHint'); pn.title = hh && !hh.hidden ? hh.textContent : ''; }
+  if (pn) { var nm = String(($('#nhapSearch') || {}).value || '').trim(); pn.textContent = nm || 'Chọn vị thuốc ở ô trên'; pn.className = nm ? 'nhap-pend__name' : 'nhap-pend__name is-muted'; var hh = $('#nhapHint'); pn.title = hh && !hh.hidden ? hh.textContent : ''; }
 }
 var nhapList = [];
 var nhapNotePage = 1;
@@ -4476,7 +4478,7 @@ function renderNhapList(){
   var sum = 0;
   var dk = isDesk(), pp = pendPaging('#nhapPendingBody', '#nhapFill', nhapList.length, nhapNotePage, 5), npages = dk ? pp.pages : 1, fill = pp.fill, pendHere = pp.here;
   nhapNotePage = dk ? pp.page : 1;
-  if (dk) calcNhap(); /* 2.29.0: chữ mờ "Tên vị thuốc" của dòng gõ trống */
+  if (dk) calcNhap(); /* 2.29.0: chữ mờ của dòng gõ trống */
   nhapList.forEach(function(it, i){
     sum += num(it.qty) * num(it.price);
     if (dk && (i < (nhapNotePage - 1) * PAGE_SIZE || i >= nhapNotePage * PAGE_SIZE)) return;

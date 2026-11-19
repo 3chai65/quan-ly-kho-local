@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.30.4] - 2026-11-19
+- Desktop theo app Mac (dien thoai giu nguyen): Nhap hang o tim ten "Tim vi thuoc", o SL "SL", o gia "Gia (nghin)"; Ban le o tim ten "Tim vi thuoc"; chu mo dong dang go Nhap hang/Ban le "Chon vi thuoc o o tren" (Thuoc chen giu "Ten vi thuoc"). aria-label giu nguyen. Nut "Luu don"/"Ban don" da xanh (rgba(64,128,242,.5)) tu 2.23.0, khong sua.
+- Test them 1 ca + pha thu.
+
 ## [2.30.3] - 2026-11-19
 - Desktop, tab Nhap hang theo app Mac: chan to ghi co chu mo "Tong tien nhap (nghin): N" (tong cac dong da them, cung ham fmtMoney voi hang Tong) ben trai, nut "Luu don" (khong icon) ben phai, mot hang; dong dang go khong con chu "Gia nhap gan nhat" (van dien san o gia, thong tin chuyen vao title o ten). Do 1280x720 va 1920x1080: chan 1 hang, khong tran, tong/nut khong de phan trang; o gia can phai sat nut +. Dien thoai (320/375/800) khong doi (so do tung phan tu trung HEAD), logic luu/tien khong doi.
 - Test client 441 pass; test moi + 5 pha thu bi bat.

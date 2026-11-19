@@ -7665,3 +7665,16 @@ test('2.30.3 Nhập hàng desktop: nút "Lưu đơn", dòng "Tổng tiền nhậ
   assert.ok(css.includes('html.desktop .nhap-foot__tot{display:block;'), 'desktop hiện tổng chân');
   assert.ok(!css.includes('html.desktop .nhap-hint:not([hidden])'));
 });
+
+test('2.30.4 desktop theo Mac: tên mờ dòng gõ Nhập hàng/Bán lẻ "Chọn vị thuốc ở ô trên" (Thuốc chén giữ "Tên vị thuốc"); placeholder desktop Tìm vị thuốc/SL/Giá (nghìn); điện thoại giữ nguyên', () => {
+  for (const desk of [true, false]) {
+    const pn = makeEl();
+    const k = deskKit29(desk, { '#nhapPendName': pn, '#nhapSearch': { value: '' }, '#nhapTotal': makeEl(), '#nhapHint': makeEl() });
+    k.c.calcNhap();
+    assert.equal(pn.textContent, 'Chọn vị thuốc ở ô trên', 'desk=' + desk);
+  }
+  assert.ok(PAGE.includes('html.desktop #retailBody .empty-cell::after{content:"Chọn vị thuốc ở ô trên"}'), 'Bán lẻ desktop');
+  assert.ok(PAGE.includes('html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}'), 'Thuốc chén giữ chữ cũ');
+  assert.ok(PAGE.includes("if (D) [['retailSearch', 'Tìm vị thuốc'], ['nhapSearch', 'Tìm vị thuốc'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']]"), 'placeholder chỉ khi desktop');
+  assert.ok(PAGE.includes('id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên"') && PAGE.includes('id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0"'), 'điện thoại giữ placeholder HTML');
+});
