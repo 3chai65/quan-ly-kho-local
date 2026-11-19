@@ -6603,7 +6603,7 @@ test('2.20.7 desktop: viên kính chung (HD/FHD, phân trang, Lưu đơn+Bán đ
   assert.ok(block.includes('[aria-current],.btn--primary){box-shadow:var(--k3t)}'));
   // mỏng hơn: bóng đáy nhỏ hơn bản 2.20.2 (0 14px 30px -> 0 8px 18px), viền tối .16, bóng viên <= 1px
   // icon tab: một màu trung tính, nét 1,75 cho cả 8, mục chọn theo màu chữ chọn
-  assert.ok(block.includes('html.desktop .tab__ic{margin-right:10px;flex:none;width:22px;height:22px;color:#e2e8f0;stroke-width:1.5}'));
+  assert.ok(block.includes('html.desktop .tab__ic{margin-right:10px;flex:none;width:22px;height:22px;color:var(--text);stroke-width:1.5}'));
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('--k3t'), 'chỉ trong desktop');
 });
 
@@ -7691,4 +7691,14 @@ test('2.30.4c desktop: 4 ô tìm tên (Bán lẻ, Nhập hàng, Kho tồn, Thu�
   });
   assert.ok(!PAGE.includes("placeholder = 'Tìm vị thuốc'") && !/rs\.placeholder/.test(PAGE), 'không gán Tìm vị thuốc');
   assert.ok(PAGE.includes('id="remedyFind" type="search" autocomplete="off" placeholder="Tìm đơn đã lưu"'), 'Tìm đơn đã lưu giữ nguyên');
+});
+
+test('2.30.5 desktop chỉ hai tông chữ (--text, --muted) + đỏ: không xanh/tím, text2 = chính, liên kết đậm + gạch chân mờ không đổi màu khi rê', () => {
+  const b = deskBlock();
+  assert.ok(b.includes('html.desktop[data-bg]{--text2:var(--text);--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text)}'), 'token xanh/tím/text2 về chữ chính');
+  const colors = [...b.matchAll(/[^-\w]color:([^;}]+)/g)].map(m => m[1]);
+  assert.ok(colors.length > 0 && colors.every(c => ['var(--text)', 'var(--muted)', 'var(--sel-fg)', '#fff'].includes(c)), 'màu chữ desktop chỉ chính/phụ/chữ trên nút: ' + colors.join());
+  assert.ok(!/#e2e8f0|--blue-text:#|--brand-text:#/.test(b), 'không còn màu lẻ/xanh/tím/mờ thứ ba');
+  assert.ok(b.includes('html.desktop .linkbtn{text-decoration-color:rgba(255,255,255,.3)}') && b.includes('html.desktop .linkbtn:hover{color:var(--text)}'));
+  assert.match(PAGE, /\.linkbtn\{[^}]*font-weight:700;[^}]*text-decoration:underline/, 'liên kết đậm + gạch chân');
 });

@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.30.5] - 2026-11-19
+- Desktop (dien thoai/PWA hep giu nguyen): chi hai tong chu (--text chinh, --muted phu theo tung nen) + do cho so am. Bo xanh/tim: cot Thanh tien Lich su nhap, "Tong" Nhap hang, lien ket (ten don) ve chu chinh; lien ket dam + gach chan rgba(255,255,255,.3), khong doi mau khi re; --text2 (.85) ve chinh; icon tab #e2e8f0 ve --text. --muted giu tung nen (0.58-0.87) vi 55-60% khong dat tuong phan 4,5 tren Prism/Cyan/Emerald/Amber/Rose. Test 2.30.5 + sua test 2.20.7 (icon tab). So do: D:Softdo-2.30.5.md
+
 ## [2.30.4] - 2026-11-19
 - Desktop theo app Mac (dien thoai giu nguyen): Nhap hang o tim ten "Tim vi thuoc", o SL "SL", o gia "Gia (nghin)"; Ban le o tim ten "Tim vi thuoc"; chu mo dong dang go Nhap hang/Ban le "Chon vi thuoc o o tren" (Thuoc chen giu "Ten vi thuoc"). aria-label giu nguyen. Nut "Luu don"/"Ban don" da xanh (rgba(64,128,242,.5)) tu 2.23.0, khong sua.
 - Test them 1 ca + pha thu.
