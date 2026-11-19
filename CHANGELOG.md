@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.29.0] - 2026-11-19
+- Ban le + Nhap hang theo app Mac, chi desktop (html.desktop); dien thoai giu nguyen (do 320/375/800/1300: 0 khac biet toa do, chi doi chu tieu de an "SL" -> "SL (kg)" o Ban le).
+- Dong dang go = dong thu n+1 ngay duoi hang tieu de cot (dong ghi, dong go, dong trong cung mot bang; du 10 dong thi sang trang moi; chon vi/ghi xong to ghi tu nhay trang chua dong go). Dung lai cach Thuoc chen (ham chung pendPaging; script dau trang gop 3 to ghi).
+- Dong go: "+" mo o cot STT, ten vi dam, goi y doi "(111 kg)" la chu mo nho BEN TRAI o SL (khong de), o SL/Tien phang khong vien (khong khung rieng), o tien chu mo "Tien (nghin)" (khong hien so 0), nut tron "+" 22px; tieu de cot "SL (KG)", "GIA BAN"/"GIA NHAP"; Nhap hang an o "Gia nhap N" cong don, goi y gia nhap gan nhat nam cung dong.
+- Ban phim (desktop): chon vi -> o SL; Enter o SL -> o tien; Enter o tien hoac bam "+" -> dua dong vao, tro ve o tim vi/ten; dong sai bao loi nhu cu, tro o o loi. Dien thoai khong doi (Enter o SL van thu them dong).
+- Khong doi du lieu, tien, ton kho, luat luu/ban/kiem. CSS desktop 20447/20480 byte (gom .pend dung chung cho 3 to ghi, rut gon chu thich).
+
 ## [2.28.0] - 2026-11-18
 - Doi chieu dac ta app Mac (3), chi desktop (html.desktop); dien thoai giu nguyen (do lai 16 phan tu Thuoc chen o 390/800/1300: giong het truoc/sau).
 - Don moi (Thuoc chen): chi mot tac dung, KHONG hoi xac nhan: to ghi moi tinh (bo don dang mo, dong dang ghi, o tim don, so thang/gia ve mac dinh), tro ve "Tim vi thuoc"; khong xoa don da luu.
