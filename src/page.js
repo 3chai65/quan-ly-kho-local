@@ -603,7 +603,6 @@ html.desktop .card__bar{position:static;background:none;padding:12px 16px;border
 html.desktop :is(#retailBox,#remedyBox,#nhapBox) .card__bar{padding:0 0 12px}
 html.desktop .card__bar .inp{height:32px;min-height:32px;padding-top:3px;padding-bottom:3px}
 html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}
-html.desktop .pager .btn,html.desktop .card__bar .btn,html.desktop .note__foot .btn{border-radius:999px}
 html:is(.desktop,.pt) :is(.tab,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
 html:is(.desktop,.pt) .tab{--nb:rgba(255,255,255,.05);--kb:rgba(255,255,255,.09)}
 html.desktop .tab:hover{background-color:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22)}
@@ -702,7 +701,9 @@ html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;f
 html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}
 html.desktop table:is(.inv,.his){height:100%}
-html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px}
+html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}
+html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}
+html.desktop #expBox .card__bar-search{flex-basis:80px}
 html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
 html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px;border-top:0}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;display:flex;flex-direction:column}
@@ -772,7 +773,7 @@ html:is(.desktop,.pt) .glsw::after{content:"";width:34px;height:18px;border-radi
 html:is(.desktop,.pt) .glsw[aria-checked=true]::after{background:radial-gradient(circle at 25px 50%,rgba(255,255,255,.95) 6px,transparent 7px) no-repeat,rgba(64,128,242,.5)}
 html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:column;gap:8px;margin:0 10px 10px}
 html.desktop .sbr{position:relative;display:flex;align-items:center;gap:6px}
-html.desktop .sbp{flex:none;height:32px;padding:0}
+html.desktop .sbp{width:28px;height:28px;padding:3px;border:0;background:none;color:var(--text);cursor:pointer}
 html.desktop .sbp .ico{width:22px;height:22px}
 html.desktop .sbs{flex:1;min-width:0;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
@@ -823,7 +824,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       var sbf = document.createElement('div'), sy = document.createElement('div');
       sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…';
       /* 2.31.0: bỏ hàng 7 chấm; một nút bảng màu cùng dòng với dòng đồng bộ, bấm mở bảng 7 chấm, chọn xong đóng */
-      var sr = document.createElement('div'), pb = document.createElement('button'); sr.className = 'sbr'; pb.type = 'button'; pb.className = 'btn btn--icon sbp'; pb.title = 'Màu nền'; pb.setAttribute('aria-label', 'Màu nền'); pb.setAttribute('aria-expanded', 'false'); pb.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg>';
+      var sr = document.createElement('div'), pb = document.createElement('button'); sr.className = 'sbr'; pb.type = 'button'; pb.className = 'sbp'; pb.title = 'Màu nền'; pb.setAttribute('aria-label', 'Màu nền'); pb.setAttribute('aria-expanded', 'false'); pb.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg>';
       pb.onclick = function(e){ e.stopPropagation(); pb.setAttribute('aria-expanded', w.classList.toggle('is-open') ? 'true' : 'false'); };
       document.addEventListener('click', function(){ w.classList.remove('is-open'); pb.setAttribute('aria-expanded', 'false'); });
       [sy, pb, w].forEach(function(n){ sr.appendChild(n); }); [sr, gl].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);

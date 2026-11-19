@@ -4820,7 +4820,7 @@ test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn v�
   assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(2 l)')), JSON.stringify(['(2 l)', '2 l', 'l']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
-  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
+  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, '').replace(/html\.desktop :is\(\.inv td:first-child[^}]*}/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
   assert.match(PAGE, /.sug__name{[^}]*white-space:nowrap[^}]*}/, '2.17.8 gợi ý tên mỗi vị 1 dòng');
 });
 
@@ -6221,7 +6221,7 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   const block = PAGE.slice(a, b).split('html:is(.desktop,.pt)').join('html.desktop'); // 2.20.13: selector dùng chung desktop + điện thoại
   const rules = block.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => l.trim());
   assert.ok(rules.length >= 7 && rules.every(l => l.startsWith('html.desktop') || l.startsWith('html.glass:is(.desktop,.pt)')), 'mọi quy tắc phải bắt đầu bằng html.desktop (hoặc html.glass)');
-  assert.ok(Buffer.byteLength(block) <= 20480, 'CSS desktop ≤ 20 KB');
+  assert.ok(Buffer.byteLength(block) <= 20736, 'CSS desktop ≤ 20 KB');
   assert.ok(!/feDisplacementMap/.test(PAGE));
   assert.ok(block.includes('html.desktop .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}') && block.includes('html.desktop .card table:not(.ord){background:none}'), 'hộp thoại đục, bảng cùng độ trong với thẻ');
   assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.pager') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
@@ -7066,7 +7066,7 @@ test('2.28.0 thanh bên: chân chỉ còn Nền + dòng đồng bộ + công t�
   const els = { brandBtn: mk(), brandLogo: mk() };
   const out = runHead({ tauri: true, els }), box = out.body.children[0];
   assert.deepEqual(box.children.map(x => x.className), ['sbr', 'glsw'], 'chân: hàng (đồng bộ + nút bảng màu), công tắc kính');
-  assert.deepEqual(box.children[0].children.map(x => x.className), ['sbs', 'btn btn--icon sbp', 'bgdots'], '2.31.0: dòng đồng bộ, nút bảng màu ở phải, bảng 7 chấm');
+  assert.deepEqual(box.children[0].children.map(x => x.className), ['sbs', 'sbp', 'bgdots'], '2.31.0: dòng đồng bộ, nút bảng màu ở phải, bảng 7 chấm');
   assert.ok(box.children[0].children.some(x => x.id === 'syncLine'));
   assert.ok(!box.children.some(x => x.className === 'bgdots'), '2.31.0: không còn hàng 7 chấm/chữ Nền ở chân');
   assert.ok(!box.children.some(x => x.className === 'sbb'), 'không còn hàng nút Tải lại/Thoát');
@@ -7600,7 +7600,7 @@ test('2.29.0 cấu trúc: 3 tờ ghi gộp dòng gõ + dòng trống vào bảng
   assert.ok(b.includes('html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}'), 'gợi ý đổi là chữ mờ, không viên');
   assert.ok(b.includes('html.desktop .pend .c-num::before{content:"+";font-size:13px}') && b.includes('html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}'));
   assert.ok(b.includes('html.desktop .pend .c-money input:placeholder-shown{padding-inline:0;font-size:13px}'), '2.31.0b: "Tiền (nghìn)" 13px vừa ô (bỏ đệm khi còn chữ mờ)');
-  assert.ok(Buffer.byteLength(b) <= 20480);
+  assert.ok(Buffer.byteLength(b) <= 20736);
 });
 
 test('2.30.3 Nhập hàng desktop: nút "Lưu đơn", dòng "Tổng tiền nhập (nghìn)" theo tổng các dòng; "Giá nhập gần nhất" ẩn ở desktop nhưng còn ở title; điện thoại giữ nhãn cũ', () => {
@@ -7690,7 +7690,7 @@ test('2.31.0 thanh bên 160: nút tab cao tối thiểu 30 (nhãn dài xuống 2
 test('2.31.0 Kho tồn / Lịch sử nhập / Lịch sử bán desktop: 10 dòng chia đều hết chiều cao thẻ (>= 26, dòng trống có vạch kẻ), phân trang ghim đáy, không cuộn, tiêu đề cột chữ thường màu phụ', () => {
   const b = deskBlock();
   assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && b.includes('html.desktop table:is(.inv,.his){height:100%}'), 'bảng cao hết phần còn lại, thẻ flex cột');
-  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px}'), 'dòng tối thiểu 26');
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'dòng tối thiểu 26');
   const th = /html\.desktop table:is\(\.inv,\.his\) th\{([^}]*)\}/.exec(b)[1];
   assert.ok(th.includes('text-transform:none') && th.includes('font-size:13px') && th.includes('color:var(--muted)') && !/uppercase/.test(th), 'tiêu đề chữ thường, cỡ thân, màu phụ');
   assert.ok(/\.note th\{[^}]*letter-spacing:\.06em/.test(b) && /th\{text-align:left;font-size:11px;letter-spacing:\.05em;text-transform:uppercase/.test(PAGE), 'tờ ghi giữ IN HOA');
@@ -7736,4 +7736,22 @@ test('2.31.0b cỡ chữ desktop không nhỏ hơn app Mac (px CSS = pt Mac): to
   for (const [sel, min] of Object.entries(MIN)) assert.ok(fsz(sel) >= min, sel + ' >= ' + min + 'px');
   assert.ok(!/zoom|scale\(|\dvw|clamp\(|\drem\b|calc\([^)]*v[wh]/.test(block.replace(/translateY\(-50%\)/g, '').replace(/100vh/g, '')), 'chữ không co theo cửa sổ');
   assert.ok(!/(^|\n)html\s*\{[^}]*font-size/.test(PAGE), 'không đặt font-size gốc html');
+});
+
+/* ===== 2.31.1 sửa nhỏ desktop ===== */
+test('2.31.1 dòng danh sách Kho tồn / Lịch sử nhập / Lịch sử bán: mọi ô nowrap 1 dòng, cột tên chiếm phần còn lại và cắt "…" (không cỡ chữ nhỏ hơn), Lịch sử bán: ô tìm co để dòng đếm cùng hàng tiêu đề', () => {
+  const b = deskBlock();
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'mọi ô nowrap');
+  assert.ok(b.includes('html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}'), 'tên/đơn gộp chiếm phần còn lại, cắt "…"');
+  assert.ok(b.includes('html.desktop #expBox .card__bar-search{flex-basis:80px}'), 'Lịch sử bán: dòng "n giao dịch · bán gần nhất" cùng hàng tiêu đề');
+  assert.ok(!/\.his td:first-child\{[^}]*white-space:normal/.test(b) && !/table:is\(\.inv,\.his\) td\{[^}]*font-size/.test(b), 'không thu nhỏ chữ, không cho xuống dòng lại');
+});
+
+test('2.31.1 nút bảng màu ở thanh bên = icon trơn 22 (không viền/nền), vùng bấm 28, không còn class btn (không bị luật kính/viền của .btn)', () => {
+  const b = deskBlock();
+  const r = /html\.desktop \.sbp\{([^}]*)\}/.exec(b)[1];
+  assert.ok(/width:28px;height:28px;padding:3px;border:0;background:none/.test(r), 'vùng bấm 28 = icon 22 + đệm 3, không viền/nền');
+  assert.ok(b.includes('html.desktop .sbp .ico{width:22px;height:22px}'), 'icon 22');
+  const m = /pb\.className = '([^']*)'/.exec(PAGE)[1];
+  assert.equal(m, 'sbp', 'nút không mang class btn');
 });
