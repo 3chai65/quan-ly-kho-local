@@ -6248,15 +6248,16 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid'));
 });
 
-test('2.30.1 Thống kê desktop: tám số (Nhập/Bán/LN tháng, Bán/LN hôm nay, Bán/LN năm, Tồn), không còn .stats4, chỉ hiển thị lại số computeStats', () => {
+test('2.30.2 Thống kê desktop: 4 ô số (hôm nay, tháng, năm, nhập+tồn), mỗi ô hai số, không còn .stats4, chỉ hiển thị lại số computeStats', () => {
   assert.ok(!PAGE.includes('stats4') && !/\.s4\b|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
   assert.ok(PAGE.includes('.szpick,.thk{display:none}'));
-  const KEYS = ['tkImp', 'tkExpMonth', 'tkProfitMonth', 'tkExpDay', 'tkProfitDay', 'tkExpYear', 'tkProfitYear', 'tkStock'];
-  const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 1400);
+  const KEYS = ['tkExpDay', 'tkProfitDay', 'tkExpMonth', 'tkProfitMonth', 'tkExpYear', 'tkProfitYear', 'tkImp', 'tkStock'];
+  const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 2000);
+  assert.equal((thk.slice(0, 1900).match(/class="thk__g"/g) || []).length, 4, 'bốn ô thk__g, mỗi ô hai số');
   const order = [...thk.matchAll(/data-s4="(\w+)"/g)].map(m => m[1]).slice(0, 8);
   assert.deepEqual(order, KEYS, 'thứ tự tám số');
   const labels = [...thk.matchAll(/<i>([^<]*)<\/i>/g)].map(m => m[1]).slice(0, 8);
-  assert.deepEqual(labels, ['Nhập trong tháng', 'Bán trong tháng', 'Lợi nhuận tháng', 'Bán hôm nay', 'Lợi nhuận hôm nay', 'Bán trong năm', 'Lợi nhuận năm', 'Tổng tồn kho']);
+  assert.deepEqual(labels, ['Bán hôm nay', 'Lợi nhuận hôm nay', 'Bán trong tháng', 'Lợi nhuận tháng', 'Bán trong năm', 'Lợi nhuận năm', 'Nhập trong tháng', 'Tổng tồn kho']);
   const FakeDate = fakeClock(2026, 10, 7, 12);
   const { doc, els } = dateDoc();
   for (const id of STAT_IDS) els['#' + id] = { id, textContent: '', className: '' };
