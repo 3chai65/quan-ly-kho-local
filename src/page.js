@@ -573,7 +573,7 @@ html.glass{--glass:rgba(246,242,239,.90);--glass-bar:rgba(246,242,239,.95);--gla
 .bak-pg:empty{display:none}
 .bak-pg{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
 @media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
-/* 2.23.0 chế độ desktop (Tauri + PWA); 2.31.0 một cỡ ~920x606, co giãn, không zoom */
+/* 2.23.0 chế độ desktop */
 html.desktop,html.desktop body{background:transparent}
 html.desktop{--sw:160px;--g:16px;overflow:hidden}
 html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--g);width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}
@@ -675,6 +675,7 @@ html.desktop .note__row{flex-wrap:nowrap;justify-content:flex-start}
 html.desktop .note__row--btns{margin:0 0 0 auto}
 html.desktop .sug__list{scrollbar-width:none;background:#141c3c;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:0;max-height:116px;scroll-snap-type:y mandatory}
 html.desktop .sug__item{height:38px;scroll-snap-align:start}
+html.desktop :is(.sug__meta,table.his .muted:not(.num)){font-size:13px}
 html.desktop .sug__list::-webkit-scrollbar{display:none}
 html.desktop #chartBox>summary{display:none}
 html.desktop #chartBox .card__body{position:relative;padding:16px}
@@ -690,9 +691,9 @@ html.desktop .thk__g{display:flex;gap:20px;padding:8px 14px;border:1px solid rgb
 html.desktop .thk__n span{display:flex;flex-direction:column}
 html.desktop .thk__n i{font-style:normal;font-size:10px;line-height:1.5;color:var(--muted)}
 html.desktop .thk__n b{font-size:15px;line-height:1.2;font-weight:600;font-variant-numeric:tabular-nums}
-html.desktop #chartTip{align-items:center;gap:12px;height:24px;min-height:0;margin:0 0 12px;font-size:12px;white-space:nowrap}
+html.desktop #chartTip{align-items:center;gap:12px;height:24px;min-height:0;margin:0 0 12px;font-size:13px;white-space:nowrap}
 html.desktop #chartTip .chart-tip__m{min-width:56px}
-html.desktop #chartTip .chart-chip{gap:6px;padding:3px 10px;line-height:18px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
+html.desktop #chartTip .chart-chip{gap:6px;padding:3px 10px;line-height:18px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px}
 html.desktop #chartTip .chart-chip__sw{width:9px;height:9px;flex-basis:9px;border-radius:50%}
 html.desktop #chartTip .chart-chip__k{min-width:0;font-weight:400;color:var(--muted)}
 html.desktop .chart{flex:1;min-height:0;height:auto}
@@ -733,12 +734,11 @@ html.desktop #remedyBody input.inp.inp--num{width:52px}
 html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}
 html.desktop #remedyBody .qty-hint--label{right:64px}
 html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}
-html.desktop .nhap-pend__tot{display:none}
-html.desktop .nhap-hint{display:none}
+html.desktop :is(.nhap-pend__tot,.nhap-hint){display:none}
 html.desktop .nhap-foot__tot{display:block;font-size:15px;color:var(--muted)}
 html.desktop .nhap-foot__tot b{font-weight:400}
 html.desktop .note__foot>.nhap-foot__tot+.btn .ico{display:none}
-html.desktop .pend .c-money input::placeholder{font-size:12px}
+html.desktop .pend .c-money input:placeholder-shown{padding-inline:0;font-size:13px}
 html.desktop .bx{height:32px;white-space:nowrap}
 html.desktop .btn.bx--o{border-color:rgba(255,255,255,.14);background-color:rgba(255,255,255,.10)}
 html.desktop #remedyNoteFoot td{height:38px;background:#ffffff0f}
@@ -759,7 +759,6 @@ html.desktop .rp-row[aria-current]{background:var(--sel-bg);font-weight:800}
 html.desktop .rp-row__name{overflow:hidden;white-space:nowrap}
 html:is(.desktop,.pt) .btn.bak-restore{border-color:rgba(255,120,120,.5)}
 html.desktop #backupBox{align-self:start}
-html.desktop #backupBox .card__body{padding:0}
 html.desktop .bak-sec{padding:16px;border-radius:18px}
 html.desktop.tauri .bak-sec{padding:12px 16px}
 html.desktop.tauri .bak-row{padding:0}

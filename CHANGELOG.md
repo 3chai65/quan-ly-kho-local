@@ -6,6 +6,7 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 ## [2.31.0] - 2026-11-19
+- 2.31.0b: co chu desktop khong nho hon Mac (px CSS = pt Mac, khong zoom/scale/vw): nang ngay gio + "· n vi" Lich su, goi y, placeholder o tien, chip Thong ke len 13; chu lon hon Mac giu nguyen; test chuan co chu + pha thu 7 cho.
 - Desktop theo app Mac, MOT co 920x606 (Tauri 920x602 gom thanh tieu de 24; PWA >=900 van tu bat desktop; dien thoai/pt giu nguyen, do 24/24 bo cuc 320/375/800 khong doi): bo khung ve 1280x720 phong deu (zoom/--z/--vw/--vh/__dz) va nut HD/FHD, bo cuc co gian that theo cua so (phong to: gian theo). Chu giu nguyen co. Le noi dung tren 10, ngang/duoi 16. Thanh ben rong 160 dem 10; nut tab cao toi thieu 30 (nhan dai xuong 2 dong, Sao luu khoi phuc 2 dong), chu 12,5 dam, icon 18 cach chu 6; bo hang 7 cham Nen, thay bang MOT nut bang mau (icon palette 22) cung dong voi dong dong bo, bam mo bang 7 cham, chon xong dong (khoa desktopBg giu nguyen). Kho ton/Lich su nhap/Lich su ban: 10 dong/trang chia deu het chieu cao the (>=26, o 920x578 ~ 39-42), dong trong cuoi trang van co vach ke, phan trang ghim day, tieu de cot chu thuong mau phu (to ghi giu IN HOA). Thong ke: 4 o so xep 2x2. Thuoc chen: bo nut Don moi, them nut + tron 32 ben phai o Nhap ten (action new-remedy cu). Tauri: cua so 920x602, min 880x560, bo khoa 16:9, bo HD/FHD o khay va quyen set-size/unmaximize. Don CSS cu (luat chet chart-year, trung dlg note); CSS desktop 20479/20480 byte.
 
 ## [2.30.5] - 2026-11-19

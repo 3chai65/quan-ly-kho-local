@@ -7599,7 +7599,7 @@ test('2.29.0 cấu trúc: 3 tờ ghi gộp dòng gõ + dòng trống vào bảng
   assert.ok(b.includes('html.desktop .pend input.inp.inp--num{height:22px;min-height:22px;padding:2px 5px;margin-left:auto}'), 'ô SL căn phải trong cột: chip gợi ý (right:96px) nằm trái ô');
   assert.ok(b.includes('html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}'), 'gợi ý đổi là chữ mờ, không viên');
   assert.ok(b.includes('html.desktop .pend .c-num::before{content:"+";font-size:13px}') && b.includes('html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}'));
-  assert.ok(b.includes('html.desktop .pend .c-money input::placeholder{font-size:12px}'), '"Tiền (nghìn)" vừa ô');
+  assert.ok(b.includes('html.desktop .pend .c-money input:placeholder-shown{padding-inline:0;font-size:13px}'), '2.31.0b: "Tiền (nghìn)" 13px vừa ô (bỏ đệm khi còn chữ mờ)');
   assert.ok(Buffer.byteLength(b) <= 20480);
 });
 
@@ -7625,7 +7625,7 @@ test('2.30.3 Nhập hàng desktop: nút "Lưu đơn", dòng "Tổng tiền nhậ
   assert.equal(m.ft.textContent, '160');
   const css = PAGE;
   assert.ok(css.includes('.nhap-foot__tot{display:none}'), 'điện thoại ẩn dòng tổng chân');
-  assert.ok(css.includes('html.desktop .nhap-hint{display:none}'), 'desktop ẩn chữ giá nhập gần nhất');
+  assert.ok(css.includes('html.desktop :is(.nhap-pend__tot,.nhap-hint){display:none}'), 'desktop ẩn chữ giá nhập gần nhất');
   assert.ok(css.includes('html.desktop .nhap-foot__tot{display:block;'), 'desktop hiện tổng chân');
   assert.ok(!css.includes('html.desktop .nhap-hint:not([hidden])'));
 });
@@ -7727,4 +7727,13 @@ test('2.31.0 Thuốc chén: nút "Đơn mới" thay bằng nút + tròn 32 bên 
   assert.ok(/html:is\(\.desktop,\.pt\)\[data-bg\] \.inp,[^{]*\{background-color:rgba\(255,255,255,\.10\);border-color:rgba\(255,255,255,\.14\)\}/.test(PAGE), 'ô viên .10/.14');
   assert.ok(PAGE.includes("rb.insertBefore(bl, rp); rb.appendChild(br);") && PAGE.includes("br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(rb.querySelector('.card__bar-date'));"), 'hàng: Thuốc chén | Nhập tên | + | Tìm đơn đã lưu | ngày');
   assert.ok(b.includes('html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}'), 'tiêu đề không gãy dòng');
+});
+
+test('2.31.0b cỡ chữ desktop không nhỏ hơn app Mac (px CSS = pt Mac): token chính đạt chuẩn; không zoom/scale/vw/rem/clamp co chữ', () => {
+  const block = deskBlock();
+  const fsz = sel => { const i = block.indexOf('\n' + sel + '{'); assert.ok(i >= 0, 'thiếu quy tắc ' + sel); const m = /font-size:([\d.]+)px/.exec(block.slice(i, block.indexOf('}', i))); assert.ok(m, 'thiếu font-size ' + sel); return +m[1]; };
+  const MIN = { 'html.desktop .tab': 12.5, 'html.desktop .card__bar-title': 15, 'html.desktop .note td': 13, 'html.desktop .note th': 10, 'html.desktop .note__head': 10, 'html.desktop table:is(.inv,.his) th': 13, 'html.desktop .thk__t': 15, 'html.desktop .thk__n b': 15, 'html.desktop .thk__n i': 10, 'html.desktop .btn': 13, 'html.desktop #chartTip': 13, 'html.desktop #chartTip .chart-chip': 13, 'html.desktop :is(.sug__meta,table.his .muted:not(.num))': 13, 'html.desktop .rp-row': 13, 'html.desktop .sbs': 10, 'html.desktop .pend .c-money input:placeholder-shown': 13, 'html.desktop .note .inp': 13, 'html.desktop input.inp.inp--num': 15 };
+  for (const [sel, min] of Object.entries(MIN)) assert.ok(fsz(sel) >= min, sel + ' >= ' + min + 'px');
+  assert.ok(!/zoom|scale\(|\dvw|clamp\(|\drem\b|calc\([^)]*v[wh]/.test(block.replace(/translateY\(-50%\)/g, '').replace(/100vh/g, '')), 'chữ không co theo cửa sổ');
+  assert.ok(!/(^|\n)html\s*\{[^}]*font-size/.test(PAGE), 'không đặt font-size gốc html');
 });
