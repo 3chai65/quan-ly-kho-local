@@ -110,7 +110,7 @@ details>.card__head:hover{background:var(--surface2)}
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
-.szpick,.thk{display:none}
+.thk{display:none}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
@@ -573,26 +573,24 @@ html.glass{--glass:rgba(246,242,239,.90);--glass-bar:rgba(246,242,239,.95);--gla
 .bak-pg:empty{display:none}
 .bak-pg{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
 @media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
-/* 2.23.0 chế độ desktop (Tauri + PWA desktop): phẳng mờ như app Mac, mặc định không kính (công tắc "Hiệu ứng kính", html.glass); khung 1280x720 phóng đều (zoom), không cuộn. */
+/* 2.23.0 chế độ desktop (Tauri + PWA); 2.31.0 một cỡ ~920x606, co giãn, không zoom */
 html.desktop,html.desktop body{background:transparent}
-html.desktop{--sw:230px;--g:16px;zoom:var(--z,1);overflow:hidden}
-html.desktop .dlg{max-height:696px}
-html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--g);width:var(--vw,1280px);height:var(--vh,720px);margin:0;box-sizing:border-box;overflow:hidden;padding:var(--g)}
+html.desktop{--sw:160px;--g:16px;overflow:hidden}
+html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--g);width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}
 html.desktop.tauri body{padding-top:34px}
 html.desktop body::after{content:"";grid-area:1/1/3/2;border:1px solid rgba(255,255,255,.10);border-radius:24px;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);z-index:-1}
 html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-html.desktop .top .wrap{padding:0 14px}
+html.desktop .top .wrap{padding:0 10px}
 html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}
-html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0;padding-top:14px}
+html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0;padding-top:10px}
 html.desktop .main{display:contents}
 html.desktop .stats{display:none}
-html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:98px 14px 0;align-self:start}
-html.desktop .tab{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;height:34px;min-height:34px;padding:0 16px;border-radius:999px;border:1px solid;color:var(--text);font-size:13px;font-weight:600;text-align:left}
-html.desktop .tab__ic{margin-right:10px;flex:none;width:22px;height:22px;color:var(--text);stroke-width:1.5}
-html.desktop .tab__l2{margin-left:.15em}
+html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:52px 10px 0;align-self:start}
+html.desktop .tab{position:relative;display:block;min-height:30px;padding:6px 10px 6px 34px;border-radius:999px;border:1px solid;color:var(--text);font-size:12.5px;font-weight:700;line-height:16px;text-align:left}
+html.desktop .tab__ic{position:absolute;left:10px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--text);stroke-width:1.5}
+html.desktop .tab__l1::after{content:" "}
+html.desktop .tab__l2{display:inline-block}
 html.desktop .tab.is-active .tab__ic{background:none;box-shadow:none}
-html.desktop .szpick{display:flex}
-html.desktop .szpick button{flex:1;min-height:28px;border-radius:999px;border:1px solid;color:var(--text);font:600 13px/1 inherit;cursor:pointer}
 html.desktop #tb{height:24px}
 html.desktop #tb span{line-height:24px}
 html.desktop #tb button{width:36px}
@@ -601,30 +599,28 @@ html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#backupBox){border-
 html.desktop .card:not(.dlg__card){border-radius:20px;border:1px solid rgba(255,255,255,.10);background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--k3d)}
 html.desktop .card__body{padding:0}
 html.desktop .dlg__card .card__body{padding:0 16px 16px}
-html.desktop .dlg__card .note{margin-left:0;margin-right:0}
 html.desktop .card__bar{position:static;background:none;padding:12px 16px;border-bottom:0}
 html.desktop :is(#retailBox,#remedyBox,#nhapBox) .card__bar{padding:0 0 12px}
 html.desktop .card__bar .inp{height:32px;min-height:32px;padding-top:3px;padding-bottom:3px}
-html.desktop .card__bar-title{font-size:15px;font-weight:700}
+html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}
 html.desktop .pager .btn,html.desktop .card__bar .btn,html.desktop .note__foot .btn{border-radius:999px}
-html:is(.desktop,.pt) :is(.tab,.szpick button,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
+html:is(.desktop,.pt) :is(.tab,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
 html:is(.desktop,.pt) .tab{--nb:rgba(255,255,255,.05);--kb:rgba(255,255,255,.09)}
 html.desktop .tab:hover{background-color:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22)}
 html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{background-color:rgba(255,255,255,.17);border-color:rgba(255,255,255,.25)}
-html:is(.desktop,.pt) :is(.tab.is-active,.szpick button[aria-pressed=true]){color:var(--sel-fg);font-weight:600;border-color:var(--sel-bd);background-color:var(--sel-bg)}
-html.desktop .szpick button[aria-pressed=true]{background-color:rgba(255,255,255,.09)}
+html:is(.desktop,.pt) .tab.is-active{color:var(--sel-fg);border-color:var(--sel-bd);background-color:var(--sel-bg)}
 html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark){color:#fff;font-weight:600;border-color:transparent;background-color:rgba(64,128,242,.5)}
 html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark):hover{background-color:rgba(64,128,242,.6)}
 html:is(.desktop,.pt) .btn--danger{background-color:var(--nb);border-color:var(--kb)}
 html:is(.desktop,.pt) .pager__num[aria-current]{color:#fff;font-weight:600;border-color:transparent;background-color:rgba(255,255,255,.22)}
 html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}
 html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:24px;height:24px}
-html.desktop :is(.szpick,.pager,#remedyNote .note__row--btns){gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:var(--k3d)}
+html.desktop :is(.pager,#remedyNote .note__row--btns){gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:var(--k3d)}
 html.desktop .pager{display:inline-flex}
 html.desktop #remedyNote .note__row--btns .btn{min-height:26px}
-html.desktop :is(.szpick button,.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
-html.desktop :is(.szpick button,.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
-html.desktop :is(.szpick,.pager,#remedyNote .note__row--btns) :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:var(--k3t)}
+html.desktop :is(.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
+html.desktop :is(.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
+html.desktop :is(.pager,#remedyNote .note__row--btns) :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:var(--k3t)}
 html:is(.desktop,.pt)[data-bg=navy],html:is(.desktop,.pt) .bgd[data-bg=navy]{--bt:linear-gradient(135deg,#0A1433,#12265C);--muted:rgba(255,255,255,.58);--red-text:#FF7676}
 html:is(.desktop,.pt)[data-bg=prism],html:is(.desktop,.pt) .bgd[data-bg=prism]{--bt:linear-gradient(135deg,#291457,#0D4D73);--muted:rgba(255,255,255,.72);--red-text:#FFB9B9}
 html:is(.desktop,.pt)[data-bg=cyan],html:is(.desktop,.pt) .bgd[data-bg=cyan]{--bt:linear-gradient(135deg,#052E3D,#08667A);--muted:rgba(255,255,255,.87);--red-text:#FFE0E0}
@@ -633,7 +629,6 @@ html:is(.desktop,.pt)[data-bg=gold],html:is(.desktop,.pt) .bgd[data-bg=gold]{--b
 html:is(.desktop,.pt)[data-bg=rose],html:is(.desktop,.pt) .bgd[data-bg=rose]{--bt:linear-gradient(135deg,#3D0D1F,#701A3D);--muted:rgba(255,255,255,.64);--red-text:#FF9A9A}
 html:is(.desktop,.pt)[data-bg=graphite],html:is(.desktop,.pt) .bgd[data-bg=graphite]{--bt:linear-gradient(135deg,#141417,#2E2E33);--muted:rgba(255,255,255,.58);--red-text:#FF8484}
 html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f8fafc;--text2:rgba(255,255,255,.85);--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#FF7373;--surface:#141c3c;--surface2:#1b264f;--border:rgba(255,255,255,.14);--border2:rgba(255,255,255,.07);--vien:rgba(255,255,255,.14);--glass:rgba(255,255,255,.07);--pnl:rgba(255,255,255,.07);--chart-hi:rgba(255,255,255,.08);--glass-bar:rgba(255,255,255,.07);--ring:0 0 0 2px rgba(255,255,255,.35);--kb:rgba(255,255,255,.10);--spec:none;--k3d:none;--k3h:none;--k3t:none;--k3a:none;--chart-imp:#44DAFE;--chart-exp:#FFA33D;--nb:rgba(255,255,255,.07);--hv:rgba(255,255,255,.13);--sel-bg:rgba(255,255,255,.14);--sel-hv:rgba(255,255,255,.2);--sel-bd:rgba(255,255,255,.32);--sel-fg:#f8fafc}
-/* 2.30.5 hai tông chữ + đỏ */
 html.desktop[data-bg]{--text2:var(--text);--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text)}
 html.desktop .linkbtn{text-decoration-color:rgba(255,255,255,.3)}
 html.desktop .linkbtn:hover{color:var(--text)}
@@ -649,7 +644,6 @@ html:is(.desktop,.pt) .toast{background:rgba(20,28,60,.92);-webkit-backdrop-filt
 html:is(.desktop,.pt) .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}
 html:is(.desktop,.pt) .card table:not(.ord){background:none}
 html.desktop .note{margin:0;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:var(--glass)}
-html.desktop .dlg__card .note{margin:0}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
 html.desktop .note__head{height:32px;align-items:center;padding:0 14px;background:none;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid var(--border)}
 html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid var(--border)}
@@ -663,7 +657,6 @@ html.desktop .pager .btn{min-height:24px;min-width:24px;padding:1px 9px}
 html.desktop input.inp.inp--num{width:80px;max-width:100%;height:28px;min-height:28px;padding:2px 8px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
 html.desktop input.inp.inp--num::placeholder{font-weight:400}
 html.desktop td.c-money .inp--num{margin-left:auto}
-html.desktop .chart-year__in{width:64px;font-size:15px}
 html.desktop .note .inp{height:28px;min-height:28px;padding-top:2px;padding-bottom:2px;font-size:13px}
 html.desktop .note td .btn--icon{min-height:22px;height:22px;width:22px;min-width:22px}
 html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
@@ -692,7 +685,7 @@ html.desktop .thk__y .btn{width:44px;min-width:44px;height:30px;min-height:30px;
 html.desktop .thk__y span{font-size:13px;color:var(--muted)}
 html.desktop .thk__y b{width:44px;text-align:center;font-size:15px;font-variant-numeric:tabular-nums}
 html.desktop .thk__t{margin:0;font-size:15px;line-height:1.2;font-weight:700}
-html.desktop .thk__n{display:flex;gap:12px;margin-bottom:12px}
+html.desktop .thk__n{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 html.desktop .thk__g{display:flex;gap:20px;padding:8px 14px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.06)}
 html.desktop .thk__n span{display:flex;flex-direction:column}
 html.desktop .thk__n i{font-style:normal;font-size:10px;line-height:1.5;color:var(--muted)}
@@ -703,9 +696,14 @@ html.desktop #chartTip .chart-chip{gap:6px;padding:3px 10px;line-height:18px;bor
 html.desktop #chartTip .chart-chip__sw{width:9px;height:9px;flex-basis:9px;border-radius:50%}
 html.desktop #chartTip .chart-chip__k{min-width:0;font-weight:400;color:var(--muted)}
 html.desktop .chart{flex:1;min-height:0;height:auto}
-html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]{display:flex;flex-direction:column}
-html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
-html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
+html.desktop .main details:not(#backupBox)[open]{display:flex;flex-direction:column}
+html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
+html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
+html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}
+html.desktop table:is(.inv,.his){height:100%}
+html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px}
+html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
+html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px;border-top:0}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#retailNote,#remedyNote) .note__list{flex:1;min-height:0}
 html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}
@@ -742,6 +740,7 @@ html.desktop .nhap-foot__tot b{font-weight:400}
 html.desktop .note__foot>.nhap-foot__tot+.btn .ico{display:none}
 html.desktop .pend .c-money input::placeholder{font-size:12px}
 html.desktop .bx{height:32px;white-space:nowrap}
+html.desktop .btn.bx--o{border-color:rgba(255,255,255,.14);background-color:rgba(255,255,255,.10)}
 html.desktop #remedyNoteFoot td{height:38px;background:#ffffff0f}
 html.desktop .pend button{padding:0}
 html.desktop #remedyNote{margin-right:6px}
@@ -764,17 +763,19 @@ html.desktop #backupBox .card__body{padding:0}
 html.desktop .bak-sec{padding:16px;border-radius:18px}
 html.desktop.tauri .bak-sec{padding:12px 16px}
 html.desktop.tauri .bak-row{padding:0}
-html.desktop .chart-year__box{border-radius:999px}
 html:is(.desktop,.pt) .bgd{position:relative;display:block;width:22px;height:22px;padding:0;border:0;background:none;font-size:0;cursor:pointer}
 html:is(.desktop,.pt) .bgd::before{content:"";position:absolute;inset:0;box-sizing:border-box;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:var(--bt)}
 html:is(.desktop,.pt) .bgd[aria-pressed=true]::before{border:2px solid rgba(255,255,255,.95)}
-html:is(.desktop,.pt) .bgdots{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:0}
-html:is(.desktop,.pt) .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-size:11px;color:var(--muted)}
+html.desktop .bgdots{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:5;width:106px;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--vien);border-radius:14px;background:var(--surface)}
+html.desktop .bgdots.is-open{display:flex}
 html:is(.desktop,.pt) .glsw{display:flex;align-items:center;gap:8px;padding:0;border:0;background:none;color:var(--text);font:inherit;font-size:11px;cursor:pointer}
 html:is(.desktop,.pt) .glsw::after{content:"";width:34px;height:18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:radial-gradient(circle at 9px 50%,rgba(255,255,255,.95) 6px,transparent 7px) no-repeat,rgba(255,255,255,.10)}
 html:is(.desktop,.pt) .glsw[aria-checked=true]::after{background:radial-gradient(circle at 25px 50%,rgba(255,255,255,.95) 6px,transparent 7px) no-repeat,rgba(64,128,242,.5)}
-html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:column;gap:8px;margin:0 14px 16px}
-html.desktop .sbs{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:column;gap:8px;margin:0 10px 10px}
+html.desktop .sbr{position:relative;display:flex;align-items:center;gap:6px}
+html.desktop .sbp{flex:none;height:32px;padding:0}
+html.desktop .sbp .ico{width:22px;height:22px}
+html.desktop .sbs{flex:1;min-width:0;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
 html.desktop .sbs[data-st=err]::before{background:#FF5F57}
 html.desktop .brand__yin{cursor:pointer}
@@ -785,7 +786,8 @@ html.desktop .brand__yin{cursor:pointer}
 html.pt[data-bg]{--bg:#0A1433;--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text);--sh:none;--r:20px}
 html.pt .note{background:var(--glass);border-color:var(--kb)}
 html.pt .note__head{color:var(--muted)}
-html.pt .bgdots{margin-top:14px}
+html.pt .bgdots{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:0;margin-top:14px}
+html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-size:11px;color:var(--muted)}
 </style>
 <script>
 (function(){
@@ -800,10 +802,7 @@ html.pt .bgdots{margin-top:14px}
   } catch (e) {}
   var R = document.documentElement, D = R.classList.contains('desktop');
   if (D || R.classList.contains('pt')) {
-    /* 2.20.0: khung vẽ 1280x720, phóng đều theo cửa sổ (zoom); 7 nền nhớ bằng localStorage 'desktopBg' */
-    var mark = function(){ var g = document.querySelector('.szpick'), pw = innerWidth * (devicePixelRatio || 1); if (g) [].forEach.call(g.children, function(b){ b.setAttribute('aria-pressed', Math.abs(pw - +b.getAttribute('data-w')) <= 6 ? 'true' : 'false'); }); };
-    var fit = function(){ var z = Math.min(innerWidth / 1280, innerHeight / 720); window.__dz = z; R.style.setProperty('--z', z); R.style.setProperty('--vw', innerWidth / z + 'px'); R.style.setProperty('--vh', innerHeight / z + 'px'); mark(); };
-    if (D) { fit(); addEventListener('resize', fit); }
+    /* 2.31.0: MỘT cỡ, bố cục co giãn theo cửa sổ (bỏ khung 1280x720 phóng đều và HD/FHD); 7 nền nhớ bằng localStorage 'desktopBg' */
     var BGS = ['navy', 'prism', 'cyan', 'emerald', 'gold', 'rose', 'graphite'], NM = ['Navy', 'Prism', 'Cyan', 'Emerald', 'Amber', 'Rose', 'Graphite'], cur = 'navy';
     try { cur = localStorage.getItem('desktopBg') || 'navy'; } catch (e) {}
     if (BGS.indexOf(cur) < 0) cur = 'navy';
@@ -814,7 +813,7 @@ html.pt .bgdots{margin-top:14px}
         var b = document.createElement('button'); b.type = 'button'; b.className = 'bgd'; b.setAttribute('data-bg', k); b.title = b.ariaLabel = b.textContent = NM[i];
         b.setAttribute('aria-pressed', k === cur ? 'true' : 'false');
         b.onclick = function(){ cur = k; R.setAttribute('data-bg', k); try { localStorage.setItem('desktopBg', k); } catch (e) {} try { dispatchEvent(new Event('resize')); } catch (e) {} /* vẽ lại biểu đồ theo màu mới */
-          [].forEach.call(w.children, function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); }); };
+          [].forEach.call(w.children, function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); }); w.classList.remove('is-open'); };
         w.appendChild(b);
       });
       var gl = document.createElement('button'); gl.type = 'button'; gl.className = 'glsw'; gl.setAttribute('role', 'switch'); gl.textContent = 'Hiệu ứng kính'; /* 2.23.0 */
@@ -824,7 +823,11 @@ html.pt .bgdots{margin-top:14px}
       /* 2.25.0: chân thanh bên = nền, dòng đồng bộ (#syncLine, chữ do renderSyncLine), công tắc kính. 2.28.0: bỏ nút Tải lại/Thoát; bấm logo hoặc chữ "Quản Lý Kho" = Tải lại (reloadAppClick, có hỏi nháp). */
       var sbf = document.createElement('div'), sy = document.createElement('div');
       sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…';
-      [w, sy, gl].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
+      /* 2.31.0: bỏ hàng 7 chấm; một nút bảng màu cùng dòng với dòng đồng bộ, bấm mở bảng 7 chấm, chọn xong đóng */
+      var sr = document.createElement('div'), pb = document.createElement('button'); sr.className = 'sbr'; pb.type = 'button'; pb.className = 'btn btn--icon sbp'; pb.title = 'Màu nền'; pb.setAttribute('aria-label', 'Màu nền'); pb.setAttribute('aria-expanded', 'false'); pb.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg>';
+      pb.onclick = function(e){ e.stopPropagation(); pb.setAttribute('aria-expanded', w.classList.toggle('is-open') ? 'true' : 'false'); };
+      document.addEventListener('click', function(){ w.classList.remove('is-open'); pb.setAttribute('aria-expanded', 'false'); });
+      [sy, pb, w].forEach(function(n){ sr.appendChild(n); }); [sr, gl].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
       ['brandBtn', 'brandLogo'].forEach(function(i){ var n = document.getElementById(i); if (n) n.setAttribute('data-action', 'reload-app'), n.title = 'Tải lại'; });
       /* 2.28.0: tab Sao lưu khôi phục: viên Sao lưu | Thiết bị (bakView) + thẻ Thiết bị (chỉ dẫn tới trang /auth/devices, không viết lại giao diện) */
       var kb = document.getElementById('backupBox'), kbar = kb && kb.querySelector('.card__bar'), kbody = kb && kb.querySelector('.card__body');
@@ -840,20 +843,8 @@ html.pt .bgdots{margin-top:14px}
       }
       var th = document.querySelector('.thk'), ct = document.getElementById('chartTip'); if (th && ct) th.appendChild(ct); /* 2.25.0: dòng tháng + chip Nhập/Bán nằm dưới hàng 4 số */
       var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false; /* 2.20.11; 2.22.0: ngoài Tauri ẩn cả dòng thư mục */
-      /* 2.20.1: viên HD/FHD dưới logo (như GPUI); chỉ có tác dụng trong app Tauri (window.__TAURI__), kẹp theo vùng làm việc, giữ 16:9 */
-      var bw = document.querySelector('.top .brand-wrap'), sz = document.createElement('div');
-      sz.className = 'szpick'; sz.setAttribute('role', 'group'); sz.setAttribute('aria-label', 'Cỡ cửa sổ');
-      [['HD', 1280, 720], ['FHD', 1920, 1080]].forEach(function(p){
-        var b = document.createElement('button'); b.type = 'button'; b.textContent = p[0]; b.title = p[0] + ' ' + p[1] + '×' + p[2]; b.setAttribute('data-w', p[1]);
-        b.onclick = function(){ var T = window.__TAURI__; if (!T || !T.window) return; var cw = p[1], ch = p[2], aw = screen.availWidth * (devicePixelRatio || 1), ah = screen.availHeight * (devicePixelRatio || 1);
-          if (cw > aw || ch > ah) { ch = Math.min(ah, Math.floor(aw * 9 / 16)); cw = Math.round(ch * 16 / 9); }
-          var win = T.window.getCurrentWindow(), S = T.window.PhysicalSize || (T.dpi && T.dpi.PhysicalSize);
-          Promise.resolve(win.unmaximize()).then(function(){ return win.setSize(new S(cw, ch)); }).catch(function(){}); };
-        sz.appendChild(b);
-      });
-      if (bw && bw.parentNode && window.__TAURI__) bw.parentNode.insertBefore(sz, bw.nextSibling); /* 2.20.12: ngoài Tauri không chèn (không để lại khoảng trống) */
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
-      /* 2.26.1: nút viên ở thanh đầu (chỉ desktop, tạo bằng JS nên điện thoại không có): Đơn mới (Thuốc chén), Xóa hết (Bán lẻ trái nút ngày, Nhập hàng cuối hàng) */
+      /* 2.26.1: nút viên ở thanh đầu (chỉ desktop, tạo bằng JS nên điện thoại không có): Đơn mới (Thuốc chén; 2.31.0 nút + tròn), Xóa hết (Bán lẻ trái nút ngày, Nhập hàng cuối hàng) */
       var bx = function(act, ico, txt){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn bx'; b.setAttribute('data-action', act); b.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + ico + '"/></svg>' + txt; return b; };
       if (D) [['retailSearch', 'Nhập tên'], ['nhapSearch', 'Nhập tên'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']].forEach(function(p){ var n = document.getElementById(p[0]); if (n) n.placeholder = p[1]; }); /* 2.30.4 desktop theo Mac; aria-label giữ nguyên */
       var rbar = document.querySelector('#retailBox .card__bar'), nbar = document.querySelector('#nhapBox .card__bar');
@@ -863,14 +854,14 @@ html.pt .bgdots{margin-top:14px}
       if (rs && rb && rp) { /* 2.26.0: nửa trái = tiêu đề + Tìm vị thuốc; nửa phải = Tìm đơn đã lưu + ngày; dòng đang gõ và dòng trống nằm cùng bảng tờ ghi (thứ tự: dòng ghi, dòng gõ, dòng trống) */
         var bl = document.createElement('div'), br = document.createElement('div');
         rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'; br.className = 'rbr';
-        bl.appendChild(rb.querySelector('.card__bar-title')); bl.appendChild(rs); br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(bx('new-remedy', 'plus', 'Đơn mới')); br.appendChild(rb.querySelector('.card__bar-date')); rb.insertBefore(bl, rp); rb.appendChild(br);
+        bl.appendChild(rb.querySelector('.card__bar-title')); bl.appendChild(rs); br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(rb.querySelector('.card__bar-date'));
+        var nw = bx('new-remedy', 'plus', ''); nw.className += ' btn--icon bx--o'; nw.title = 'Đơn mới'; nw.setAttribute('aria-label', 'Đơn mới'); bl.appendChild(nw); /* 2.31.0: nút + tròn bên phải ô Nhập tên (thay nút "Đơn mới") */ rb.insertBefore(bl, rp); rb.appendChild(br);
       }
       /* 2.26.0/2.29.0: dòng đang gõ và dòng trống nằm cùng bảng tờ ghi (thứ tự: dòng ghi, dòng gõ, dòng trống) cho Thuốc chén, Bán lẻ, Nhập hàng */
       [['remedyNoteBody', 'remedyBody', 'remedyFill'], ['retailNoteBody', 'retailBody', 'retailFill'], ['nhapListBody', 'nhapPendingBody', 'nhapFill']].forEach(function(a){
         var nb = document.getElementById(a[0]), pb = document.getElementById(a[1]), fl = document.createElement('tbody');
         if (nb && pb) { fl.id = a[2]; nb.parentNode.insertBefore(pb, nb.nextSibling); nb.parentNode.insertBefore(fl, pb.nextSibling); }
       });
-      mark();
     });
   }
   window.__DB__=%%BOOT%%;
@@ -902,6 +893,7 @@ html.pt .bgdots{margin-top:14px}
 <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
 <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
 <symbol id="i-outbox" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol>
 <symbol id="i-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/></symbol>
 <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M8 16H3v5"/></symbol>
@@ -1654,7 +1646,7 @@ function attachQtyHint(input, unit){
     var cs = window.getComputedStyle(input);
     var padR = parseFloat(cs.paddingRight) || 0;
     /* M1: bề rộng khung padding (gồm padding, không gồm viền) lấy từ getBoundingClientRect – không dùng clientWidth (tùy trình duyệt/loại ô). */
-    var rw = input.getBoundingClientRect ? input.getBoundingClientRect().width / (window.__dz || 1) : 0;
+    var rw = input.getBoundingClientRect ? input.getBoundingClientRect().width : 0;
     var cw = rw > 0 ? rw - (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0) : 0;
     var place = qtyHintPlacement(cw, padR, 0, !!h._want);
     if (place === 'hidden') { h.hidden = true; return; }
@@ -3405,20 +3397,20 @@ function toggleRowMenu(btn, list){
   if (rowMenuCur && rowMenuCur.btn === btn) { closeRowMenu(); return; }
   closeRowMenu();
   list.hidden = false;
-  var r = btn.getBoundingClientRect(), z = window.__dz || 1;
+  var r = btn.getBoundingClientRect();
   var w = list.offsetWidth, h = list.offsetHeight;
-  var left = r.right / z - w;
+  var left = r.right - w;
   if (left < 8) left = 8;
-  if (left + w > window.innerWidth / z - 8) left = window.innerWidth / z - w - 8;
-  var top = r.bottom / z + 6;
-  if (top + h > window.innerHeight / z - 8) top = Math.max(8, r.top / z - h - 6);
+  if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+  var top = r.bottom + 6;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
   list.style.left = left + 'px';
   list.style.top = top + 'px';
-  /* 2.20.0 desktop: thẻ có backdrop-filter làm "khối chứa" của fixed và có zoom; hiệu chỉnh theo vị trí thật vừa đặt (không đổi gì khi z=1 và khối chứa là cửa sổ). */
+  /* 2.20.0 desktop: thẻ có backdrop-filter làm "khối chứa" của fixed; hiệu chỉnh theo vị trí thật vừa đặt (không đổi gì khi khối chứa là cửa sổ). */
   var q = list.getBoundingClientRect ? list.getBoundingClientRect() : null;
-  if (q && q.left !== undefined && (Math.abs(q.left / z - left) > 0.5 || Math.abs(q.top / z - top) > 0.5)) {
-    list.style.left = (2 * left - q.left / z) + 'px';
-    list.style.top = (2 * top - q.top / z) + 'px';
+  if (q && q.left !== undefined && (Math.abs(q.left - left) > 0.5 || Math.abs(q.top - top) > 0.5)) {
+    list.style.left = (2 * left - q.left) + 'px';
+    list.style.top = (2 * top - q.top) + 'px';
   }
   btn.setAttribute('aria-expanded', 'true');
   rowMenuCur = { btn: btn, list: list };
@@ -3526,6 +3518,7 @@ function renderInventory(){
     tr.appendChild(tdA);
     tbody.appendChild(tr);
   });
+  if (isDesk()) for (var bk = slice.length; bk < PAGE_SIZE; bk++) tbody.appendChild(blankRow(tbody)); /* 2.31.0: đủ PAGE_SIZE dòng, dòng trống có vạch kẻ */
   renderPager($('#invPager'), invPage, totalPages, 'inv');
 }
 
@@ -3858,6 +3851,7 @@ function renderHistory(kind){
     tr.appendChild(td);
     tbody.appendChild(tr);
   });
+  if (isDesk()) for (var bk = slice.length; bk < PAGE_SIZE; bk++) tbody.appendChild(blankRow(tbody));
   renderPager($('#' + kind + 'Pager'), page, totalPages, kind);
 }
 /* ================= ĐỐI CHIẾU TỒN KHO ================= */

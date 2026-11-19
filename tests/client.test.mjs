@@ -6224,7 +6224,7 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   assert.ok(Buffer.byteLength(block) <= 20480, 'CSS desktop ≤ 20 KB');
   assert.ok(!/feDisplacementMap/.test(PAGE));
   assert.ok(block.includes('html.desktop .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}') && block.includes('html.desktop .card table:not(.ord){background:none}'), 'hộp thoại đục, bảng cùng độ trong với thẻ');
-  assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.szpick') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.szpick') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
+  assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.pager') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
   // 2.19.0: màu nhấn xanh lá (phân trang, nút chính, focus) và nút Bán đơn dính đáy khung
   assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}') && !block.includes('position:sticky'));
   assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.setItem\('desktop', '0'\)/.test(PAGE));
@@ -6244,13 +6244,13 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   assert.ok(block.includes('border-radius:20px') && block.includes('html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}'));
   assert.ok(!block.split(String.fromCharCode(10)).some(l => l.includes('.stats') && l.includes('backdrop-filter')));
   // bố cục khung cố định: thanh bên (tabs) + hàng thẻ số + vùng nội dung cuộn trong, không thêm DOM
-  assert.ok(block.includes('var(--vh,720px)') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .main details.card{grid-area:1/2/3/3') && block.includes('overflow:hidden'));
+  assert.ok(block.includes('width:100%;height:100vh;margin:0') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .main details.card{grid-area:1/2/3/3') && block.includes('overflow:hidden'));
   assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid'));
 });
 
 test('2.30.2 Thống kê desktop: 4 ô số (hôm nay, tháng, năm, nhập+tồn), mỗi ô hai số, không còn .stats4, chỉ hiển thị lại số computeStats', () => {
   assert.ok(!PAGE.includes('stats4') && !/\.s4\b|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
-  assert.ok(PAGE.includes('.szpick,.thk{display:none}'));
+  assert.ok(PAGE.includes('.thk{display:none}') && !PAGE.includes('szpick'));
   const KEYS = ['tkExpDay', 'tkProfitDay', 'tkExpMonth', 'tkProfitMonth', 'tkExpYear', 'tkProfitYear', 'tkImp', 'tkStock'];
   const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 2000);
   assert.equal((thk.slice(0, 1900).match(/class="thk__g"/g) || []).length, 4, 'bốn ô thk__g, mỗi ô hai số');
@@ -6299,7 +6299,7 @@ function headScript() {
 function runHead({ desktop = true, iw = 1920, ih = 1080, ls = {}, sw = 3840, sh = 2160, dpr = 1, tauri = true, els = {} } = {}) {
   const props = {}, attrs = {}, resize = [];
   const cls = new Set(); const R = { classList: { contains: k => (desktop && k === 'desktop') || cls.has(k), add(k) { if (k === 'glass' || k === 'tauri') cls.add(k); }, toggle(k, on) { if (on) cls.add(k); else cls.delete(k); } }, style: { setProperty(k, v) { props[k] = v; } }, setAttribute(k, v) { attrs[k] = v; } };
-  const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
+  const mk = () => { const s = new Set(); return { children: [], style: {}, classList: { add: k => s.add(k), remove: k => s.delete(k), contains: k => s.has(k), toggle: k => (s.has(k) ? (s.delete(k), false) : (s.add(k), true)) }, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } }; };
   let ready = null;
   const wrapEl = { nextSibling: null, parentNode: null }; const bar = { children: [wrapEl], insertBefore(n, ref) { if (ref) this.children.splice(this.children.indexOf(ref), 0, n); else this.children.push(n); } }; wrapEl.parentNode = bar;
   const document = { documentElement: R, getElementById: (i) => els[i] || null, createElement: mk, body: mk(), querySelector: q => (q === '.top .brand-wrap' ? wrapEl : q === '.szpick' ? bar.children.find(c => c.className === 'szpick') || null : null), addEventListener(e, f) { if (e === 'DOMContentLoaded') ready = f; } };
@@ -6316,19 +6316,13 @@ function deskBlock() {
   return PAGE.slice(a, b).split('html:is(.desktop,.pt)').join('html.desktop'); // 2.20.13: selector dùng chung desktop + điện thoại
 }
 
-test('2.20.0 khung vẽ 1280x720: CSS cố định (không vw/vh/clamp) + zoom theo --z; JS tính --z = min(w/1280, h/720) và cập nhật khi resize', () => {
+test('2.31.0 một cỡ, bố cục co giãn: không zoom/--z/--vw/--vh/__dz, thân = 100% x 100vh, lề 10 trên + 16 ngang/dưới, thanh bên 160', () => {
   const block = deskBlock();
-  assert.ok(block.includes('zoom:var(--z,1)') && block.includes('width:var(--vw,1280px);height:var(--vh,720px);margin:0'));
-  assert.ok(!/\d(vw|vh|dvh)\b|clamp\(/.test(block), 'desktop không dùng đơn vị theo cửa sổ');
-  for (const [w, h, z] of [[1280, 720, 1], [1600, 900, 1.25], [1920, 1080, 1.5], [1920, 1040, 1040 / 720]]) {
-    const r = runHead({ iw: w, ih: h });
-    assert.ok(Math.abs(r.props['--z'] - z) < 1e-9, w + 'x' + h);
-    assert.equal(r.ctx.window.__dz, r.props['--z']);
-  }
-  const r = runHead({ iw: 1280, ih: 720 });
-  r.ctx.innerWidth = 1920; r.ctx.innerHeight = 1080; r.resize.forEach(f => f());
-  assert.equal(r.props['--z'], 1.5);
-  assert.deepEqual(Object.keys(runHead({ desktop: false }).props), [], 'không desktop: không đặt --z');
+  assert.ok(block.includes('html.desktop{--sw:160px;--g:16px;overflow:hidden}') && block.includes('width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'));
+  assert.ok(!/__dz|--vw|--vh|--z\b|zoom:|\.zoom/.test(PAGE) && !/\bzoom\b/.test(PAGE.replace('không zoom', '')), 'không còn zoom/--z/--vw/--vh/__dz');
+  const r = runHead({ iw: 920, ih: 578 });
+  assert.deepEqual(Object.keys(r.props), [], 'JS không đặt biến cỡ');
+  assert.equal(r.resize.length, 0, 'không nghe resize để phóng khung');
 });
 
 test('2.23.1 html.tauri chỉ khi desktop + __TAURI__; lề trên 34px (tránh nút thanh tiêu đề) chỉ dưới html.desktop.tauri', () => {
@@ -6338,8 +6332,8 @@ test('2.23.1 html.tauri chỉ khi desktop + __TAURI__; lề trên 34px (tránh n
   assert.ok(deskBlock().includes('\nhtml.desktop.tauri body{padding-top:34px}\n') && deskBlock().includes('html.desktop.tauri .bak-sec{padding:12px 16px}\nhtml.desktop.tauri .bak-row{padding:0}'), 'Sao lưu có dòng thư mục vẫn vừa 704px');
 });
 
-test('2.20.0 menu dòng: vị trí chia cho window.__dz (zoom), tự hiệu chỉnh theo vị trí thật', () => {
-  assert.ok(PAGE.includes('var r = btn.getBoundingClientRect(), z = window.__dz || 1;') && PAGE.includes('var left = r.right / z - w;') && PAGE.includes('window.innerHeight / z - 8') && PAGE.includes('list.style.left = (2 * left - q.left / z)'));
+test('2.31.0 menu dòng: vị trí theo cửa sổ (không chia zoom), tự hiệu chỉnh theo vị trí thật', () => {
+  assert.ok(PAGE.includes('var r = btn.getBoundingClientRect();') && PAGE.includes('var left = r.right - w;') && PAGE.includes('window.innerHeight - 8') && PAGE.includes('list.style.left = (2 * left - q.left)') && !PAGE.includes('__dz'));
 });
 
 test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/graphite): mỗi nền có --bt + chấm --dc; bấm lưu desktopBg; giá trị lạ (kể cả nền cũ) về navy', () => {
@@ -6350,7 +6344,7 @@ test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/g
   assert.ok(block.includes('background:var(--bt)}'));
   let r = runHead();
   assert.equal(r.attrs['data-bg'], 'navy', 'nền mặc định navy');
-  const wrap = r.body.children[0].children[0]; /* 2.25.0: chân thanh bên .sbf chứa chấm nền */
+  const wrap = r.body.children[0].children[0].children[2]; /* 2.31.0: .sbf > .sbr > bảng chấm nền (mở bằng nút bảng màu) */
   assert.deepEqual(wrap.children.map(c => c['data-bg']), ks);
   assert.deepEqual(wrap.children.map(c => c.textContent), ['Navy', 'Prism', 'Cyan', 'Emerald', 'Amber', 'Rose', 'Graphite']);
   assert.equal(wrap.children[0]['aria-pressed'], 'true', 'chấm navy được đánh dấu khi mặc định');
@@ -6361,7 +6355,7 @@ test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/g
   assert.equal(wrap.children[0]['aria-pressed'], 'false');
   r = runHead({ ls: { desktopBg: 'rose' } });
   assert.equal(r.attrs['data-bg'], 'rose');
-  assert.equal(r.body.children[0].children[0].children[5]['aria-pressed'], 'true');
+  assert.equal(r.body.children[0].children[0].children[2].children[5]['aria-pressed'], 'true');
   assert.equal(runHead({ ls: { desktopBg: 'xyz' } }).attrs['data-bg'], 'navy');
   assert.equal(runHead({ ls: { desktopBg: 'gpui' } }).attrs['data-bg'], 'navy', 'nền đã xóa → navy');
   assert.equal(runHead({ desktop: false }).body.children.length, 0, 'không desktop: không dựng chấm màu');
@@ -6393,9 +6387,9 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
   assert.ok(block.includes('html.desktop .sug__list{scrollbar-width:none') && block.includes('html.desktop .sug__list::-webkit-scrollbar{display:none}'));
   assert.ok(block.includes('html.desktop[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}'));
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
-  assert.ok(block.includes('box-sizing:border-box;overflow:hidden;padding:var(--g)}'), 'lề ngoài 16px (2.23.0)');
+  assert.ok(block.includes('box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'), 'lề: trên 10, ngang/dưới 16 (2.31.0)');
   assert.ok(block.includes('html.desktop #tb{height:24px}') && block.includes('html.desktop #tb button{width:36px}'));
-  assert.ok(block.includes('margin:98px 14px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:14px}'));
+  assert.ok(block.includes('margin:52px 10px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
 });
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
@@ -6403,7 +6397,7 @@ test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn)
   assert.ok(block.includes('html.desktop #chartBox>summary{display:none}'), '2.24.0: desktop ẩn cả summary (tiêu đề/năm/Nhập/Tồn), thẻ có tiêu đề riêng .thk');
   assert.ok(PAGE.includes('id="statImport"') && PAGE.includes('id="statStock"'), 'DOM giữ cho iPhone/PWA');
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('#chartBox>summary{display:none}'), 'không ẩn ngoài desktop');
-  assert.ok(block.includes('html.desktop .chart-year__box{border-radius:999px}'));
+  assert.ok(!block.includes('html.desktop .chart-year__box'), '2.31.0: ô năm nằm trong summary ẩn, bỏ luật chết');
   assert.ok(block.includes('--chart-imp:#44DAFE;--chart-exp:#FFA33D') && PAGE.includes("cs.getPropertyValue('--chart-imp')"));
   assert.ok(block.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
 });
@@ -6434,53 +6428,22 @@ test('2.20.2 biểu đồ: bỏ dải nền tháng hiện tại ở desktop bằ
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
 });
 
-test('2.20.2 khung phủ kín viewport: --vw/--vh = cỡ cửa sổ / zoom; thẻ lấp đầy chiều cao; Sao lưu co theo nội dung; vùng kéo cửa sổ quanh logo', () => {
+test('2.20.2 khung phủ kín viewport: thẻ lấp đầy chiều cao (cả 3 danh sách), Sao lưu co theo nội dung; vùng kéo cửa sổ quanh logo', () => {
   const block = deskBlock();
-  for (const [w, h] of [[1280, 720], [1300, 740], [1366, 768], [1280, 690], [1920, 1080]]) {
-    const r = runHead({ iw: w, ih: h });
-    const z = Math.min(w / 1280, h / 720);
-    assert.ok(Math.abs(parseFloat(r.props['--vw']) * z - w) < 1e-6 && Math.abs(parseFloat(r.props['--vh']) * z - h) < 1e-6, w + 'x' + h + ': khung x zoom = viewport (không letterbox)');
-  }
-  assert.ok(block.includes('details:is(#retailBox,#remedyBox,#nhapBox,#chartBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
+  assert.ok(block.includes('html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
+  assert.ok(block.includes('html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}'));
   assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}'));
   assert.ok(block.includes('html.desktop #backupBox{align-self:start}'));
   assert.ok(PAGE.includes("['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); });"));
 });
 
-test('2.20.1 viên HD/FHD: dựng dưới logo (chỉ desktop), đánh dấu cỡ hiện tại, bấm gọi unmaximize rồi setSize PhysicalSize, kẹp theo vùng làm việc', async () => {
-  let r = runHead({ iw: 1280, ih: 720 });
-  const g = r.bar.children[1];
-  assert.equal(g.className, 'szpick');
-  assert.deepEqual(g.children.map(b => b.textContent), ['HD', 'FHD']);
-  assert.deepEqual(g.children.map(b => b['aria-pressed']), ['true', 'false']);
-  r = runHead({ iw: 1920, ih: 1080 });
-  assert.deepEqual(r.bar.children[1].children.map(b => b['aria-pressed']), ['false', 'true']);
-  r = runHead({ iw: 1500, ih: 843 });
-  assert.deepEqual(r.bar.children[1].children.map(b => b['aria-pressed']), ['false', 'false'], 'cỡ khác: không đánh dấu');
-  assert.equal(runHead({ desktop: false }).bar.children.length, 1, 'không desktop: không dựng');
-  assert.equal(runHead({ tauri: false }).bar.children.length, 1, '2.20.12 ngoài Tauri: không chèn HD/FHD');
-  const calls = [];
-  class PS { constructor(w, h) { this.w = w; this.h = h; } }
-  const mkTauri = () => ({ window: { PhysicalSize: PS, getCurrentWindow: () => ({ unmaximize: async () => { calls.push('un'); }, setSize: async s => { calls.push(['set', s.w, s.h]); } }) } });
-  r = runHead({ iw: 1280, ih: 720, sw: 3840, sh: 2160 });
-  r.ctx.window.__TAURI__ = mkTauri();
-  r.bar.children[1].children[1].onclick();
-  await new Promise(x => setTimeout(x, 5));
-  assert.deepEqual(calls, ['un', ['set', 1920, 1080]]);
-  calls.length = 0;
-  r.bar.children[1].children[0].onclick();
-  await new Promise(x => setTimeout(x, 5));
-  assert.deepEqual(calls, ['un', ['set', 1280, 720]]);
-  calls.length = 0;
-  r = runHead({ iw: 1280, ih: 720, sw: 1600, sh: 860 });
-  r.ctx.window.__TAURI__ = mkTauri();
-  r.bar.children[1].children[1].onclick();
-  await new Promise(x => setTimeout(x, 5));
-  assert.deepEqual(calls, ['un', ['set', 1529, 860]], 'FHD lớn hơn màn hình: kẹp 16:9');
-  r = runHead({});
-  assert.doesNotThrow(() => r.bar.children[1].children[0].onclick(), 'ngoài Tauri: không lỗi');
-  const cap = 'G:/quan-ly-kho-tauri/src-tauri/capabilities/remote.json';
-  if (fs.existsSync(cap)) { const j = fs.readFileSync(cap, 'utf8'); assert.ok(j.includes('core:window:allow-set-size') && j.includes('core:window:allow-unmaximize')); }
+test('2.31.0 không còn HD/FHD: không viên cỡ cửa sổ, không mã đổi cỡ, không dựng gì dưới logo (Tauri hay không)', () => {
+  for (const tauri of [true, false]) {
+    const r = runHead({ iw: 920, ih: 578, tauri });
+    assert.equal(r.bar.children.length, 1, 'chỉ còn khối logo, không viên cỡ (tauri=' + tauri + ')');
+  }
+  assert.ok(!/szpick|'HD'|'FHD'|Cỡ cửa sổ|setSize|unmaximize|PhysicalSize/.test(PAGE), 'không còn mã/markup/CSS HD-FHD trong trang');
+  assert.ok(!/HD 1280|1920/.test(fs.existsSync('G:/quan-ly-kho-tauri/src-tauri/src/main.rs') ? fs.readFileSync('G:/quan-ly-kho-tauri/src-tauri/src/main.rs', 'utf8') : ''), 'app Tauri không còn khóa 16:9/HD/FHD (bỏ qua nếu không có repo app)');
 });
 
 test('2.20.0 titlebar.js (app Tauri) luôn chèn trong Tauri, không cần html.desktop; có 3 nút (bỏ qua nếu không có repo app)', t => {
@@ -6578,7 +6541,7 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   assert.ok(/html\.desktop \.note\{margin:0;border:1px solid rgba\(255,255,255,\.10\);border-radius:18px;background:var\(--glass\)\}/.test(block));
   // (4) nút chính (green/primary/dark/trang hiện tại) cùng một kiểu kính nhuộm xanh lá, mọi .btn/ô nhập dùng --kb/--spec/--k3d
   assert.ok(block.includes('html.desktop :is(.btn--green,.btn--primary,.btn--dark){color:#fff;font-weight:600;border-color:transparent;background-color:rgba(64,128,242,.5)}') && block.includes(':hover{background-color:rgba(64,128,242,.6)}'), '2.23.0: nút chính xanh .50 / hover .60');
-  assert.ok(block.includes('html.desktop :is(.tab,.szpick button,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not('));
+  assert.ok(block.includes('html.desktop :is(.tab,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not('));
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('col.cg-name{width:290px}'), 'chỉ trong desktop');
 });
 
@@ -6586,24 +6549,24 @@ test('2.20.6 desktop: ô số ngắn 80px cao 28 căn phải trong cột; ô tê
   const block = deskBlock();
   const m = /html\.desktop input\.inp\.inp--num\{width:(\d+)px;max-width:100%;height:(\d+)px;min-height:\2px;padding:2px 8px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums\}/.exec(block);
   assert.ok(m && +m[1] === 80 && +m[2] === 28, 'mọi ô số 80x28');
-  assert.ok(block.includes('html.desktop td.c-money .inp--num{margin-left:auto}') && /html\.desktop \.chart-year__in\{width:64px;font-size:15px\}/.test(block));
+  assert.ok(block.includes('html.desktop td.c-money .inp--num{margin-left:auto}') && !block.includes('.chart-year__in'), '2.31.0: ô năm nằm trong summary ẩn, bỏ luật chết');
   // thanh đầu Thuốc chén: tiêu đề, ô nhập tên, chọn đơn, ngày; dời ở JS desktop, không đổi HTML gốc (điện thoại)
   assert.ok(/<span class="card__bar-title"[^>]*>[\s\S]{0,200}?Thuốc chén<\/span>\s*<select class="inp card__bar-preset" id="remedyPreset"/.test(PAGE), 'HTML gốc giữ nguyên thứ tự (iPhone)');
   assert.ok(PAGE.includes("rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'") && PAGE.includes('rb.insertBefore(bl, rp); rb.appendChild(br);') && /if \(rs && rb && rp\)/.test(PAGE));
   const head = PAGE.slice(PAGE.indexOf("document.addEventListener('DOMContentLoaded', function(){\n      var w = document.createElement('div'); w.className = 'bgdots'"));
-  assert.ok(head.indexOf("getElementById('remedySearch')") > 0 && head.indexOf("getElementById('remedySearch')") < head.indexOf('mark();'), 'dời nằm trong nhánh desktop');
+  assert.ok(head.indexOf("getElementById('remedySearch')") > 0 && head.indexOf("getElementById('remedySearch')") > head.indexOf('if (!D) {'), 'dời nằm sau nhánh thoát của điện thoại (chỉ desktop)');
 });
 
 test('2.20.7 desktop: viên kính chung (HD/FHD, phân trang, Lưu đơn+Bán đơn), kính mỏng hơn, icon tab một màu nét đều', () => {
   const block = deskBlock();
   // viên chung: một khối bo tròn hoàn toàn, viền 1px --kb, nút con phẳng, nút chọn dùng bóng mỏng --k3t
-  const pill = /html\.desktop :is\(\.szpick,\.pager,#remedyNote \.note__row--btns\)\{([^}]*)\}/.exec(block);
+  const pill = /html\.desktop :is\(\.pager,#remedyNote \.note__row--btns\)\{([^}]*)\}/.exec(block);
   assert.ok(pill && /border:1px solid;border-color:var\(--kb\)/.test(pill[1]) && pill[1].includes('border-radius:999px') && pill[1].includes('box-shadow:var(--k3d)'), 'viên chung 1px, bo 999px');
-  assert.ok(block.includes('html.desktop :is(.szpick button,.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}'), 'nút trong viên phẳng');
+  assert.ok(block.includes('html.desktop :is(.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}'), 'nút trong viên phẳng');
   assert.ok(block.includes('[aria-current],.btn--primary){box-shadow:var(--k3t)}'));
   // mỏng hơn: bóng đáy nhỏ hơn bản 2.20.2 (0 14px 30px -> 0 8px 18px), viền tối .16, bóng viên <= 1px
   // icon tab: một màu trung tính, nét 1,75 cho cả 8, mục chọn theo màu chữ chọn
-  assert.ok(block.includes('html.desktop .tab__ic{margin-right:10px;flex:none;width:22px;height:22px;color:var(--text);stroke-width:1.5}'));
+  assert.ok(block.includes('html.desktop .tab__ic{position:absolute;left:10px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--text);stroke-width:1.5}'), '2.31.0: icon 18, đệm trái 10');
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('--k3t'), 'chỉ trong desktop');
 });
 
@@ -6632,7 +6595,7 @@ test('2.20.8 desktop: mặc định navy; nút không còn xanh lục, mục ch�
   // mục chọn: nền sáng hơn nút thường, viền sáng hơn, chữ đậm
   const nv = /--hv:rgba\(255,255,255,\.(\d+)\);--sel-bg:rgba\(255,255,255,\.(\d+)\)/.exec(block);
   assert.ok(nv && +nv[2] > +nv[1], 'mục chọn sáng hơn mức di chuột');
-  assert.ok(/\)\{color:var\(--sel-fg\);font-weight:600;border-color:var\(--sel-bd\);background-color:var\(--sel-bg\)\}/.test(block));
+  assert.ok(/\.tab\.is-active\{color:var\(--sel-fg\);border-color:var\(--sel-bd\);background-color:var\(--sel-bg\)\}/.test(block) && block.includes('font-size:12.5px;font-weight:700'), 'tab chữ 12,5 đậm, mục chọn giữ đậm');
   // select: option có nền/chữ theo token (không để popup trắng + chữ sáng); navy color-scheme dark
   assert.ok(block.includes('html.desktop select option,html.desktop select optgroup{background:var(--surface);color:var(--text)}'));
   assert.ok(/html\.desktop\[data-bg]{color-scheme:dark;/.test(block));
@@ -6647,7 +6610,7 @@ test('2.20.8 desktop: số liệu/icon một màu chữ chung (không xanh lục
   // nút đỏ/số âm giữ nghĩa cảnh báo (--red-text không bị đổi)
   assert.ok(/--red-text:#FF7373/.test(nv) && !block.includes('--red-text:var(--text)'));
   // hộp thoại: thân có lề 16px, tờ ghi trong hộp thoại không thụt thêm → dòng phụ, tờ ghi, tham số cùng lề
-  assert.ok(block.includes('html.desktop .dlg__card .card__body{padding:0 16px 16px}') && block.includes('html.desktop .dlg__card .note{margin:0}'));
+  assert.ok(block.includes('html.desktop .dlg__card .card__body{padding:0 16px 16px}') && block.includes('html.desktop .note{margin:0;'), '.note margin 0 chung (cả trong hộp thoại)');
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('padding:0 16px 16px'));
 });
 
@@ -6769,15 +6732,14 @@ test('2.22.0 Sao lưu: dòng thư mục ẩn mặc định, chỉ hiện trong T
   assert.match(PAGE, /\.bak-dir\[hidden\]\{display:none\}/);
 });
 
-test('2.20.12 PWA standalone tự bật desktop; desktop=0 nhớ tắt; HD/FHD chỉ chèn trong Tauri', () => {
+test('2.20.12 PWA standalone tự bật desktop (rộng >= 900, vừa 920); desktop=0 nhớ tắt', () => {
   assert.ok(PAGE.includes("setItem('desktop', '0')"));
   assert.ok(PAGE.includes("dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900"));
-  assert.ok(PAGE.includes('bw.parentNode && window.__TAURI__) bw.parentNode.insertBefore(sz'));
 });
 
 test('2.20.13 điện thoại html.pt: dùng chung token data-bg, chỉ màu/kính (không radius/size/backdrop mới), bộ chọn nền ở tab Sao lưu, manifest navy', () => {
   const a = PAGE.indexOf('/* 2.20.13 điện thoại'), b = PAGE.indexOf('</style>', a);
-  const ph = PAGE.slice(a, b);
+  const ph = PAGE.slice(a, b).replace(/html\.pt \.bgdots[^\n]*\n/g, ''); // 2.31.0: hai luật .bgdots của điện thoại (giá trị cũ) dời về lớp này vì desktop dùng bảng chấm riêng
   assert.ok(a > 0 && ph.includes('html.pt[data-bg]{--bg:#0A1433;--brand-text:var(--text)'));
   assert.ok(!/backdrop-filter|border-radius|font-size|font-weight|min-height|padding:|width:/.test(ph.replace(/\/\*[\s\S]*?\*\//g, '').replace('padding:0','')), 'lớp điện thoại không đổi hình dạng/kích cỡ');
   assert.ok(PAGE.includes('html:is(.desktop,.pt)[data-bg]{color-scheme:dark;') && PAGE.includes("classList.add('pt')") && PAGE.includes("document.querySelector('#backupBox .card__body')"));
@@ -7103,8 +7065,10 @@ test('2.28.0 thanh bên: chân chỉ còn Nền + dòng đồng bộ + công t�
   const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
   const els = { brandBtn: mk(), brandLogo: mk() };
   const out = runHead({ tauri: true, els }), box = out.body.children[0];
-  assert.deepEqual(box.children.map(x => x.className), ['bgdots', 'sbs', 'glsw'], 'chân: Nền, dòng đồng bộ, công tắc kính, theo thứ tự');
-  assert.ok(box.children.some(x => x.id === 'syncLine'));
+  assert.deepEqual(box.children.map(x => x.className), ['sbr', 'glsw'], 'chân: hàng (đồng bộ + nút bảng màu), công tắc kính');
+  assert.deepEqual(box.children[0].children.map(x => x.className), ['sbs', 'btn btn--icon sbp', 'bgdots'], '2.31.0: dòng đồng bộ, nút bảng màu ở phải, bảng 7 chấm');
+  assert.ok(box.children[0].children.some(x => x.id === 'syncLine'));
+  assert.ok(!box.children.some(x => x.className === 'bgdots'), '2.31.0: không còn hàng 7 chấm/chữ Nền ở chân');
   assert.ok(!box.children.some(x => x.className === 'sbb'), 'không còn hàng nút Tải lại/Thoát');
   for (const k of ['brandBtn', 'brandLogo']) { assert.equal(els[k]['data-action'], 'reload-app', k); assert.equal(els[k].title, 'Tải lại', k); }
   assert.ok(!PAGE.includes("'exit-app'") && !PAGE.includes('exitAppClick') && !PAGE.includes("textContent = 'Thoát'"), 'không còn Thoát/exit-app');
@@ -7415,7 +7379,7 @@ test('2.26.1 Xóa hết: không có gì thì không hỏi, không làm gì; ch�
 });
 
 test('2.26.1 cấu trúc: nút Đơn mới/Xóa hết chỉ do JS desktop tạo (điện thoại không có trong DOM/CSS); ⋯ và + nằm trong thẻ (cột thao tác 34, đệm phải 10); ô Gram không bị cắt chữ', () => {
-  assert.ok(PAGE.includes("bx('new-remedy', 'plus', 'Đơn mới')") && PAGE.includes("bx('clear-retail', 'trash', 'Xóa hết')") && PAGE.includes("bx('clear-nhap', 'trash', 'Xóa hết')"));
+  assert.ok(PAGE.includes("bx('new-remedy', 'plus', '')") && PAGE.includes("bx('clear-retail', 'trash', 'Xóa hết')") && PAGE.includes("bx('clear-nhap', 'trash', 'Xóa hết')"));
   assert.ok(!PAGE.includes('data-action="new-remedy"') && !PAGE.includes('data-action="clear-retail"') && !PAGE.includes('data-action="clear-nhap"'), 'không có nút trong HTML tĩnh');
   assert.equal(PAGE.split('.bx{').length - 1, 1, 'CSS .bx chỉ một chỗ');
   const block = deskBlock();
@@ -7701,4 +7665,66 @@ test('2.30.5 desktop chỉ hai tông chữ (--text, --muted) + đỏ: không xan
   assert.ok(!/#e2e8f0|--blue-text:#|--brand-text:#/.test(b), 'không còn màu lẻ/xanh/tím/mờ thứ ba');
   assert.ok(b.includes('html.desktop .linkbtn{text-decoration-color:rgba(255,255,255,.3)}') && b.includes('html.desktop .linkbtn:hover{color:var(--text)}'));
   assert.match(PAGE, /\.linkbtn\{[^}]*font-weight:700;[^}]*text-decoration:underline/, 'liên kết đậm + gạch chân');
+});
+
+/* ===== 2.31.0 thu gọn khung desktop theo app Mac ===== */
+test('2.31.0 thanh bên 160: nút tab cao tối thiểu 30 (nhãn dài xuống 2 dòng, không cắt …), chữ 12,5 đậm, icon 18 cách chữ 6, đệm ngang 10; bỏ hàng Nền, nút bảng màu cùng dòng đồng bộ', () => {
+  const b = deskBlock();
+  assert.ok(b.includes('html.desktop{--sw:160px;') && b.includes('margin:52px 10px 0'), 'thanh bên rộng 160, đệm trong 10');
+  const tab = /html\.desktop \.tab\{([^}]*)\}/.exec(b)[1];
+  assert.ok(tab.includes('min-height:30px') && tab.includes('padding:6px 10px 6px 34px') && tab.includes('font-size:12.5px;font-weight:700') && tab.includes('display:block') && !/white-space:nowrap|text-overflow|overflow:hidden|height:\d+px;min-height/.test(tab), 'không height cố định, không nowrap/ellipsis (34 = đệm 10 + icon 18 + cách 6)');
+  assert.ok(b.includes('html.desktop .tab__ic{position:absolute;left:10px;') && b.includes('width:18px;height:18px'));
+  assert.ok(b.includes('html.desktop .tab__l2{display:inline-block}'), '"khôi phục" xuống dòng cả cụm');
+  assert.ok(b.includes('html.desktop .sbr{position:relative;display:flex;') && b.includes('html.desktop .sbp .ico{width:22px;height:22px}') && b.includes('html.desktop .bgdots{display:none;') && b.includes('html.desktop .bgdots.is-open{display:flex}'));
+  assert.ok(!/html[^{]*\.bgdots::before/.test(b), 'desktop không còn chữ "Nền"');
+  assert.ok(PAGE.includes('<symbol id="i-palette"'));
+  // JS: bấm nút mở/đóng bảng; chọn chấm xong đóng + lưu như cũ
+  const out = runHead({ tauri: true }), sr = out.body.children[0].children[0], [sy, pb, w] = sr.children;
+  assert.equal(sy.id, 'syncLine'); assert.equal(pb.getAttribute('aria-label'), 'Màu nền'); assert.equal(pb.title, 'Màu nền');
+  pb.onclick({ stopPropagation() {} });
+  assert.ok(w.classList.contains('is-open') && pb['aria-expanded'] === 'true', 'bấm nút: mở');
+  w.children[3].onclick();
+  assert.ok(!w.classList.contains('is-open') && out.store.desktopBg === 'emerald' && out.attrs['data-bg'] === 'emerald', 'chọn xong: đóng, vẫn lưu desktopBg');
+});
+
+test('2.31.0 Kho tồn / Lịch sử nhập / Lịch sử bán desktop: 10 dòng chia đều hết chiều cao thẻ (>= 26, dòng trống có vạch kẻ), phân trang ghim đáy, không cuộn, tiêu đề cột chữ thường màu phụ', () => {
+  const b = deskBlock();
+  assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && b.includes('html.desktop table:is(.inv,.his){height:100%}'), 'bảng cao hết phần còn lại, thẻ flex cột');
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px}'), 'dòng tối thiểu 26');
+  const th = /html\.desktop table:is\(\.inv,\.his\) th\{([^}]*)\}/.exec(b)[1];
+  assert.ok(th.includes('text-transform:none') && th.includes('font-size:13px') && th.includes('color:var(--muted)') && !/uppercase/.test(th), 'tiêu đề chữ thường, cỡ thân, màu phụ');
+  assert.ok(/\.note th\{[^}]*letter-spacing:\.06em/.test(b) && /th\{text-align:left;font-size:11px;letter-spacing:\.05em;text-transform:uppercase/.test(PAGE), 'tờ ghi giữ IN HOA');
+  assert.ok(b.includes('html.desktop :is(#invPager,#impPager,#expPager){flex:none;'), 'phân trang ghim đáy thẻ');
+  // JS: desktop độn đủ PAGE_SIZE dòng (dòng trống có class note__blank), điện thoại không độn
+  for (const [desk, want] of [[true, 10], [false, 4]]) {
+    const body = clearKids29(makeEl()), els = { '#invBody': body, '#invPager': makeEl() };
+    const d = deskKit29(desk, els);
+    d.c.setDb({ products: ['A', 'B', 'C', 'D'].map((n, i) => ({ id: 'p' + i, name: n, stock: 1, costPrice: 1000 })), transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+    d.c.renderInventory();
+    assert.equal(body.children.length, want, (desk ? 'desktop' : 'điện thoại') + ': số dòng');
+    assert.equal(body.children.filter(r => r.className === 'note__blank').length, desk ? 6 : 0);
+  }
+});
+
+test('2.31.0 Thống kê desktop: 4 ô số xếp 2x2 (hàng trên hôm nay | tháng; hàng dưới năm | nhập+tồn), hai ô mỗi hàng chia đều ngang, biểu đồ nhận phần cao còn lại', () => {
+  const b = deskBlock();
+  assert.ok(b.includes('html.desktop .thk__n{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}'), 'lưới 2 cột bằng nhau');
+  const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 2000);
+  const groups = thk.slice(0, 1900).split('class="thk__g"').slice(1, 5).map(g => [...g.matchAll(/<i>([^<]*)<\/i>/g)].slice(0, 2).map(m => m[1]));
+  assert.equal(groups.length, 4, 'đúng 4 ô');
+  assert.deepEqual(groups, [['Bán hôm nay', 'Lợi nhuận hôm nay'], ['Bán trong tháng', 'Lợi nhuận tháng'], ['Bán trong năm', 'Lợi nhuận năm'], ['Nhập trong tháng', 'Tổng tồn kho']], 'thứ tự ô: 2 hàng x 2 cột');
+  assert.ok(b.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
+});
+
+test('2.31.0 Thuốc chén: nút "Đơn mới" thay bằng nút + tròn 32 bên phải ô Nhập tên (cùng nền/viền ô viên), đúng data-action new-remedy; ô ngày luôn 1 dòng', () => {
+  assert.ok(!PAGE.includes("bx('new-remedy', 'plus', 'Đơn mới')"), 'không còn nút chữ Đơn mới');
+  assert.ok(PAGE.includes("var nw = bx('new-remedy', 'plus', ''); nw.className += ' btn--icon bx--o'; nw.title = 'Đơn mới'; nw.setAttribute('aria-label', 'Đơn mới'); bl.appendChild(nw);"), 'nút + nằm trong nửa trái, sau ô Nhập tên');
+  assert.ok(!/br\.appendChild\(nw\)/.test(PAGE));
+  const b = deskBlock();
+  assert.ok(b.includes('html.desktop .btn.bx--o{border-color:rgba(255,255,255,.14);background-color:rgba(255,255,255,.10)}'), 'nền .10, viền .14 như ô viên');
+  assert.ok(b.includes('html.desktop .btn--icon{min-width:32px;padding:3px}') && b.includes('html.desktop .bx{height:32px;white-space:nowrap}'), '32x32 + bo 999 = tròn');
+  assert.ok(b.includes('html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}'));
+  assert.ok(/html:is\(\.desktop,\.pt\)\[data-bg\] \.inp,[^{]*\{background-color:rgba\(255,255,255,\.10\);border-color:rgba\(255,255,255,\.14\)\}/.test(PAGE), 'ô viên .10/.14');
+  assert.ok(PAGE.includes("rb.insertBefore(bl, rp); rb.appendChild(br);") && PAGE.includes("br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(rb.querySelector('.card__bar-date'));"), 'hàng: Thuốc chén | Nhập tên | + | Tìm đơn đã lưu | ngày');
+  assert.ok(b.includes('html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}'), 'tiêu đề không gãy dòng');
 });
