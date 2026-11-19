@@ -6248,15 +6248,15 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid'));
 });
 
-test('2.30.0 Thống kê desktop: sáu số (Nhập tháng, Bán/LN hôm nay, Bán/LN năm, Tồn), không còn .stats4, chỉ hiển thị lại số computeStats', () => {
+test('2.30.1 Thống kê desktop: tám số (Nhập/Bán/LN tháng, Bán/LN hôm nay, Bán/LN năm, Tồn), không còn .stats4, chỉ hiển thị lại số computeStats', () => {
   assert.ok(!PAGE.includes('stats4') && !/\.s4\b|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
   assert.ok(PAGE.includes('.szpick,.thk{display:none}'));
-  const KEYS = ['tkImp', 'tkExpDay', 'tkProfitDay', 'tkExpYear', 'tkProfitYear', 'tkStock'];
-  const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 900);
-  const order = [...thk.matchAll(/data-s4="(\w+)"/g)].map(m => m[1]).slice(0, 6);
-  assert.deepEqual(order, KEYS, 'thứ tự sáu số');
-  const labels = [...thk.matchAll(/<i>([^<]*)<\/i>/g)].map(m => m[1]).slice(0, 6);
-  assert.deepEqual(labels, ['Nhập trong tháng', 'Bán hôm nay', 'Lợi nhuận hôm nay', 'Bán trong năm', 'Lợi nhuận năm', 'Tổng tồn kho']);
+  const KEYS = ['tkImp', 'tkExpMonth', 'tkProfitMonth', 'tkExpDay', 'tkProfitDay', 'tkExpYear', 'tkProfitYear', 'tkStock'];
+  const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 1400);
+  const order = [...thk.matchAll(/data-s4="(\w+)"/g)].map(m => m[1]).slice(0, 8);
+  assert.deepEqual(order, KEYS, 'thứ tự tám số');
+  const labels = [...thk.matchAll(/<i>([^<]*)<\/i>/g)].map(m => m[1]).slice(0, 8);
+  assert.deepEqual(labels, ['Nhập trong tháng', 'Bán trong tháng', 'Lợi nhuận tháng', 'Bán hôm nay', 'Lợi nhuận hôm nay', 'Bán trong năm', 'Lợi nhuận năm', 'Tổng tồn kho']);
   const FakeDate = fakeClock(2026, 10, 7, 12);
   const { doc, els } = dateDoc();
   for (const id of STAT_IDS) els['#' + id] = { id, textContent: '', className: '' };
@@ -6276,12 +6276,16 @@ test('2.30.0 Thống kê desktop: sáu số (Nhập tháng, Bán/LN hôm nay, B�
   const t = k => els['[data-s4="' + k + '"]'].textContent;
   // tính tay (nghìn đồng): bán tháng 300+90=390; hôm nay 300; năm 470; lợi nhuận tháng 390-150=240, hôm nay 200, năm 470-200=270; nhập tháng 210
   assert.equal(t('tkImp'), '210');
+  assert.equal(t('tkExpMonth'), '390');
+  assert.equal(t('tkProfitMonth'), '240');
   assert.equal(t('tkExpDay'), '300');
   assert.equal(t('tkProfitDay'), '200');
   assert.equal(t('tkExpYear'), '470');
   assert.equal(t('tkProfitYear'), '270');
   assert.equal(t('tkStock'), '3 kg');
   assert.equal(t('tkImp'), els['#statImport'].textContent);
+  assert.equal(t('tkExpMonth'), els['#statExport'].textContent);
+  assert.equal(t('tkProfitMonth'), els['#statProfit'].textContent);
   assert.equal(t('tkProfitDay'), els['#statProfitDay'].textContent);
   assert.equal(t('tkProfitYear'), els['#statProfitYear'].textContent);
 });

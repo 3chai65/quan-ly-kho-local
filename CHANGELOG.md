@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.30.1] - 2026-11-19
+- Desktop, tab Thong ke: them lai Ban trong thang va Loi nhuan thang (theo yeu cau nguoi dung), hang so thanh tam so: Nhap trong thang, Ban trong thang, Loi nhuan thang, Ban hom nay, Loi nhuan hom nay, Ban trong nam, Loi nhuan nam, Tong ton kho. Do 1280x720: hang rong 968, het o x=1041, mot dong, khong tran, cao 33. Dien thoai va logic tinh (computeStats) khong doi; so am van do (s4 co co neg).
+- Test client 439 chay, 438 pass, 1 skip; pha thu (doi nguon tkExpMonth sang dExp) bi test bat.
+
 ## [2.30.0] - 2026-11-19
 - Desktop (html.desktop) bo hang 4 o so tren dau: xoa section .stats4 va CSS .stats4/.s4; the noi dung details.card chiem ca hai hang luoi (grid-area:1/2/3/3, cao 670px o 1280x720).
 - Tab Thong ke (desktop): hang so duoi tieu de gom Nhap trong thang, Ban hom nay, Loi nhuan hom nay, Ban trong nam, Loi nhuan nam, Tong ton kho (data-s4 tkImp/tkStock them moi, van chi hien lai so computeStats). Luu y: o desktop khong con hien Ban trong thang va Loi nhuan thang (dien thoai van co).

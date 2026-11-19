@@ -1163,7 +1163,7 @@ html.pt .bgdots{margin-top:14px}
         </span>
       </summary>
       <div class="card__body">
-        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span>Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Nhập trong tháng</i><b data-s4="tkImp">0</b></span><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span><span><i>Tổng tồn kho</i><b data-s4="tkStock">0</b></span></div></div>
+        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span>Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Nhập trong tháng</i><b data-s4="tkImp">0</b></span><span><i>Bán trong tháng</i><b data-s4="tkExpMonth">0</b></span><span><i>Lợi nhuận tháng</i><b data-s4="tkProfitMonth">0</b></span><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span><span><i>Tổng tồn kho</i><b data-s4="tkStock">0</b></span></div></div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
@@ -3340,6 +3340,8 @@ function renderStats(){
   var s4 = function(k, v, neg){ var n = $('[data-s4="' + k + '"]'); if (n) { n.textContent = v; n.className = n.className.replace(/ ?txt-red/, '') + (neg ? ' txt-red' : ''); } };
   s4('tkImp', fmtMoneyInt(s.mImp));
   s4('tkStock', fmtQtyInt(s.stock));
+  s4('tkExpMonth', fmtMoneyInt(s.mExp));
+  s4('tkProfitMonth', fmtMoneyInt(s.profitMonth), s.profitMonth < 0);
   s4('tkExpDay', fmtMoneyInt(s.dExp));
   s4('tkProfitDay', fmtMoneyInt(s.profitDay), s.profitDay < 0);
   s4('tkExpYear', fmtMoneyInt(s.yExp));
