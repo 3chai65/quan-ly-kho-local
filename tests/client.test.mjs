@@ -6240,25 +6240,27 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   const block = deskBlock();
   // 2.20.0: 4 ô lớn đơn sắc (đã bỏ nhuộm tông riêng, xem ca riêng bên dưới)
   assert.ok(!block.includes('--tint'));
-  assert.ok(block.includes('html.desktop .stats{display:none}') && block.includes('html.desktop .stats4{display:grid;grid-template-columns:repeat(4'), 'dải số tách thành các thẻ riêng');
+  assert.ok(block.includes('html.desktop .stats{display:none}') && !block.includes('.stats4'), '2.30.0: không còn dải 4 ô');
   assert.ok(block.includes('border-radius:20px') && block.includes('html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}'));
   assert.ok(!block.split(String.fromCharCode(10)).some(l => l.includes('.stats') && l.includes('backdrop-filter')));
   // bố cục khung cố định: thanh bên (tabs) + hàng thẻ số + vùng nội dung cuộn trong, không thêm DOM
-  assert.ok(block.includes('var(--vh,720px)') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .stats4{display:grid;grid-template-columns:repeat(4') && block.includes('html.desktop .main details.card{grid-area:2/2') && block.includes('overflow:hidden'));
+  assert.ok(block.includes('var(--vh,720px)') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .main details.card{grid-area:1/2/3/3') && block.includes('overflow:hidden'));
   assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid'));
 });
 
-test('2.20.1 4 ô lớn desktop: Nhập/Bán(+hôm nay,năm)/Lợi nhuận(+hôm nay,năm)/Tồn, chỉ hiển thị lại số computeStats, ẩn khi không desktop', () => {
-  assert.ok(PAGE.includes('<section class="stats4" aria-label="Nhập, bán, lợi nhuận tháng và tổng tồn kho">') && PAGE.includes('.stats4,.szpick,.thk{display:none}'));
-  const KEYS = ['imp', 'exp', 'expDay', 'expYear', 'profit', 'profitDay', 'profitYear', 'stock'];
-  for (const k of KEYS) assert.ok(PAGE.includes('data-s4="' + k + '"'), k);
-  const labels = [...PAGE.matchAll(/<span class="s4__k">([^<]*)<\/span>/g)].map(m => m[1]);
-  assert.deepEqual(labels, ['Nhập trong tháng', 'Bán trong tháng', 'Lợi nhuận tháng', 'Tổng tồn kho'], 'thứ tự bốn ô');
-  assert.ok(!PAGE.slice(PAGE.indexOf('<section class="stats4"'), PAGE.indexOf('</section>', PAGE.indexOf('<section class="stats4"'))).includes('nghìn đ'), 'bỏ chữ nghìn đ');
+test('2.30.0 Thống kê desktop: sáu số (Nhập tháng, Bán/LN hôm nay, Bán/LN năm, Tồn), không còn .stats4, chỉ hiển thị lại số computeStats', () => {
+  assert.ok(!PAGE.includes('stats4') && !/\.s4\b|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
+  assert.ok(PAGE.includes('.szpick,.thk{display:none}'));
+  const KEYS = ['tkImp', 'tkExpDay', 'tkProfitDay', 'tkExpYear', 'tkProfitYear', 'tkStock'];
+  const thk = PAGE.slice(PAGE.indexOf('class="thk__n"'), PAGE.indexOf('class="thk__n"') + 900);
+  const order = [...thk.matchAll(/data-s4="(\w+)"/g)].map(m => m[1]).slice(0, 6);
+  assert.deepEqual(order, KEYS, 'thứ tự sáu số');
+  const labels = [...thk.matchAll(/<i>([^<]*)<\/i>/g)].map(m => m[1]).slice(0, 6);
+  assert.deepEqual(labels, ['Nhập trong tháng', 'Bán hôm nay', 'Lợi nhuận hôm nay', 'Bán trong năm', 'Lợi nhuận năm', 'Tổng tồn kho']);
   const FakeDate = fakeClock(2026, 10, 7, 12);
   const { doc, els } = dateDoc();
   for (const id of STAT_IDS) els['#' + id] = { id, textContent: '', className: '' };
-  for (const k of KEYS) els['[data-s4="' + k + '"]'] = { textContent: '', className: 's4__v' };
+  for (const k of KEYS) els['[data-s4="' + k + '"]'] = { textContent: '', className: '' };
   const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
   client.setDb({
     products: [{ id: 'p1', name: 'A', stock: 1.5, costPrice: 100000 }, { id: 'p2', name: 'B', stock: 2, costPrice: 50000 }], prescriptions: [], updatedAt: 1, moneyUnit: 'dong',
@@ -6273,18 +6275,15 @@ test('2.20.1 4 ô lớn desktop: Nhập/Bán(+hôm nay,năm)/Lợi nhuận(+hôm
   client.renderStats();
   const t = k => els['[data-s4="' + k + '"]'].textContent;
   // tính tay (nghìn đồng): bán tháng 300+90=390; hôm nay 300; năm 470; lợi nhuận tháng 390-150=240, hôm nay 200, năm 470-200=270; nhập tháng 210
-  assert.equal(t('imp'), '210');
-  assert.equal(t('exp'), '390');
-  assert.equal(t('expDay'), '300');
-  assert.equal(t('expYear'), '470');
-  assert.equal(t('profit'), '240');
-  assert.equal(t('profitDay'), '200');
-  assert.equal(t('profitYear'), '270');
-  assert.equal(t('stock'), '3 kg');
-  assert.equal(t('exp'), els['#statExport'].textContent);
-  assert.equal(t('imp'), els['#statImport'].textContent);
-  assert.equal(t('profitDay'), els['#statProfitDay'].textContent);
-  assert.equal(t('profitYear'), els['#statProfitYear'].textContent);
+  assert.equal(t('tkImp'), '210');
+  assert.equal(t('tkExpDay'), '300');
+  assert.equal(t('tkProfitDay'), '200');
+  assert.equal(t('tkExpYear'), '470');
+  assert.equal(t('tkProfitYear'), '270');
+  assert.equal(t('tkStock'), '3 kg');
+  assert.equal(t('tkImp'), els['#statImport'].textContent);
+  assert.equal(t('tkProfitDay'), els['#statProfitDay'].textContent);
+  assert.equal(t('tkProfitYear'), els['#statProfitYear'].textContent);
 });
 
 /* ===== 2.20.0 ===== */
@@ -6363,13 +6362,11 @@ test('2.20.10 7 nền tối (navy mặc định + prism/cyan/emerald/gold/rose/g
   assert.equal(runHead({ desktop: false }).body.children.length, 0, 'không desktop: không dựng chấm màu');
 });
 
-test('2.20.1 4 ô lớn: một kiểu kính trong viền mảnh trung tính (không màu riêng từng ô), nhãn HOA đậm, số lớn, hàng phụ', () => {
+test('2.30.0 thẻ nội dung desktop chiếm cả hai hàng lưới, không còn ô số riêng', () => {
   const block = deskBlock();
-  assert.ok(!/--tint|\.s4:nth-child/.test(block));
-  assert.ok(/html\.desktop \.s4\{[^}]*min-height:96px;padding:16px;border:1px solid;border-radius:20px\}/.test(block) && block.includes('html.desktop :is(.tab,.szpick button,.s4,'), '2.23.0: ô số cao bằng nhau, bo 20, cùng token viên với danh mục');
-  assert.ok(block.includes('html.desktop .s4__k{font-size:10px;font-weight:400;color:var(--muted)') && /\.s4__v\{font-size:26px;font-weight:600/.test(block));
-  assert.ok(!block.includes('.s4__v:not(.txt-red)'), 'số ô lớn màu chữ chuẩn, chỉ số âm đỏ');
-  assert.equal((PAGE.match(/class="s4"/g) || []).length, 4);
+  assert.ok(!/--tint|\.s4/.test(block));
+  assert.ok(block.includes('html.desktop .main details.card{grid-area:1/2/3/3;'), 'thẻ chiếm hàng 1-2');
+  assert.equal((PAGE.match(/class="s4"/g) || []).length, 0);
 });
 
 test('2.20.1 tờ ghi đồng bộ kính: không nền kem/amber, không viền trái đỏ, chữ tiêu đề không nâu; ba tờ ghi cùng một kiểu', () => {
@@ -6386,14 +6383,14 @@ test('2.20.1 tờ ghi đồng bộ kính: không nền kem/amber, không viền 
 
 test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll trong desktop; ngoại lệ duy nhất là khung gợi ý (ẩn thanh cuộn)', () => {
   const block = deskBlock();
-  assert.ok(block.includes('html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:0;overflow:hidden}'));
+  assert.ok(block.includes('html.desktop .main details.card{grid-area:1/2/3/3;min-height:0;min-width:0;margin:0;overflow:hidden}'));
   assert.ok(!/overflow(-[xy])?:\s*(auto|scroll)/.test(block));
   assert.ok(block.includes('html.desktop .sug__list{scrollbar-width:none') && block.includes('html.desktop .sug__list::-webkit-scrollbar{display:none}'));
   assert.ok(block.includes('html.desktop[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}'));
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
   assert.ok(block.includes('box-sizing:border-box;overflow:hidden;padding:var(--g)}'), 'lề ngoài 16px (2.23.0)');
   assert.ok(block.includes('html.desktop #tb{height:24px}') && block.includes('html.desktop #tb button{width:36px}'));
-  assert.ok(block.includes('gap:12px;grid-area:1/2}') && block.includes('margin:98px 14px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:14px}'));
+  assert.ok(block.includes('margin:98px 14px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:14px}'));
 });
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
@@ -6576,7 +6573,7 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   assert.ok(/html\.desktop \.note\{margin:0;border:1px solid rgba\(255,255,255,\.10\);border-radius:18px;background:var\(--glass\)\}/.test(block));
   // (4) nút chính (green/primary/dark/trang hiện tại) cùng một kiểu kính nhuộm xanh lá, mọi .btn/ô nhập dùng --kb/--spec/--k3d
   assert.ok(block.includes('html.desktop :is(.btn--green,.btn--primary,.btn--dark){color:#fff;font-weight:600;border-color:transparent;background-color:rgba(64,128,242,.5)}') && block.includes(':hover{background-color:rgba(64,128,242,.6)}'), '2.23.0: nút chính xanh .50 / hover .60');
-  assert.ok(block.includes('html.desktop :is(.tab,.szpick button,.s4,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not('));
+  assert.ok(block.includes('html.desktop :is(.tab,.szpick button,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not('));
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('col.cg-name{width:290px}'), 'chỉ trong desktop');
 });
 

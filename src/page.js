@@ -110,7 +110,7 @@ details>.card__head:hover{background:var(--surface2)}
 /* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
 border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
-.stats4,.szpick,.thk{display:none}
+.szpick,.thk{display:none}
 .stats__c{padding:6px 12px;min-width:0}
 .stats__c+.stats__c{border-left:1px solid var(--border2)}
 .stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
@@ -593,16 +593,10 @@ html.desktop .tab__l2{margin-left:.15em}
 html.desktop .tab.is-active .tab__ic{background:none;box-shadow:none}
 html.desktop .szpick{display:flex}
 html.desktop .szpick button{flex:1;min-height:28px;border-radius:999px;border:1px solid;color:var(--text);font:600 13px/1 inherit;cursor:pointer}
-html.desktop .stats4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;grid-area:1/2}
-html.desktop .s4{display:flex;flex-direction:column;gap:2px;min-width:0;min-height:96px;padding:16px;border:1px solid;border-radius:20px}
-html.desktop .s4__k{font-size:10px;font-weight:400;color:var(--muted);white-space:nowrap}
-html.desktop .s4__v{font-size:26px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
-html.desktop .s4__sub{display:flex;gap:12px;margin:auto 0 0;font-size:12px;color:var(--muted);white-space:nowrap}
-html.desktop .s4__sub b{font-weight:700;font-variant-numeric:tabular-nums}
 html.desktop #tb{height:24px}
 html.desktop #tb span{line-height:24px}
 html.desktop #tb button{width:36px}
-html.desktop .main details.card{grid-area:2/2;min-height:0;min-width:0;margin:0;overflow:hidden}
+html.desktop .main details.card{grid-area:1/2/3/3;min-height:0;min-width:0;margin:0;overflow:hidden}
 html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#backupBox){border-color:transparent;background:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop .card:not(.dlg__card){border-radius:20px;border:1px solid rgba(255,255,255,.10);background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--k3d)}
 html.desktop .card__body{padding:0}
@@ -613,7 +607,7 @@ html.desktop :is(#retailBox,#remedyBox,#nhapBox) .card__bar{padding:0 0 12px}
 html.desktop .card__bar .inp{height:32px;min-height:32px;padding-top:3px;padding-bottom:3px}
 html.desktop .card__bar-title{font-size:15px;font-weight:700}
 html.desktop .pager .btn,html.desktop .card__bar .btn,html.desktop .note__foot .btn{border-radius:999px}
-html:is(.desktop,.pt) :is(.tab,.szpick button,.s4,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
+html:is(.desktop,.pt) :is(.tab,.szpick button,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
 html:is(.desktop,.pt) .tab{--nb:rgba(255,255,255,.05);--kb:rgba(255,255,255,.09)}
 html.desktop .tab:hover{background-color:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22)}
 html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{background-color:rgba(255,255,255,.17);border-color:rgba(255,255,255,.25)}
@@ -935,13 +929,6 @@ html.pt .bgdots{margin-top:14px}
     </div>
   </section>
 
-  <section class="stats4" aria-label="Nhập, bán, lợi nhuận tháng và tổng tồn kho">
-    <div class="s4"><span class="s4__k">Nhập trong tháng</span><b class="s4__v" data-s4="imp">0</b></div>
-    <div class="s4"><span class="s4__k">Bán trong tháng</span><b class="s4__v" data-s4="exp">0</b><p class="s4__sub"><span>Hôm nay <b data-s4="expDay">0</b></span><span>Năm <b data-s4="expYear">0</b></span></p></div>
-    <div class="s4"><span class="s4__k">Lợi nhuận tháng</span><b class="s4__v" data-s4="profit">0</b><p class="s4__sub"><span>Hôm nay <b data-s4="profitDay">0</b></span><span>Năm <b data-s4="profitYear">0</b></span></p></div>
-    <div class="s4"><span class="s4__k">Tổng tồn kho</span><b class="s4__v" data-s4="stock">0</b></div>
-  </section>
-
   <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
     <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
     <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
@@ -1176,7 +1163,7 @@ html.pt .bgdots{margin-top:14px}
         </span>
       </summary>
       <div class="card__body">
-        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span>Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div></div>
+        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span>Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><span><i>Nhập trong tháng</i><b data-s4="tkImp">0</b></span><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span><span><i>Tổng tồn kho</i><b data-s4="tkStock">0</b></span></div></div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
@@ -3351,14 +3338,8 @@ function renderStats(){
   set('statStock', fmtQtyInt(s.stock));
   /* 2.20.1 desktop: 4 ô lớn chỉ HIỂN THỊ lại các số vừa tính ở trên (cùng hàm định dạng), không tính thêm. */
   var s4 = function(k, v, neg){ var n = $('[data-s4="' + k + '"]'); if (n) { n.textContent = v; n.className = n.className.replace(/ ?txt-red/, '') + (neg ? ' txt-red' : ''); } };
-  s4('imp', fmtMoneyInt(s.mImp));
-  s4('exp', fmtMoneyInt(s.mExp));
-  s4('expDay', fmtMoneyInt(s.dExp));
-  s4('expYear', fmtMoneyInt(s.yExp));
-  s4('profit', fmtMoneyInt(s.profitMonth), s.profitMonth < 0);
-  s4('profitDay', fmtMoneyInt(s.profitDay), s.profitDay < 0);
-  s4('profitYear', fmtMoneyInt(s.profitYear), s.profitYear < 0);
-  s4('stock', fmtQtyInt(s.stock));
+  s4('tkImp', fmtMoneyInt(s.mImp));
+  s4('tkStock', fmtQtyInt(s.stock));
   s4('tkExpDay', fmtMoneyInt(s.dExp));
   s4('tkProfitDay', fmtMoneyInt(s.profitDay), s.profitDay < 0);
   s4('tkExpYear', fmtMoneyInt(s.yExp));

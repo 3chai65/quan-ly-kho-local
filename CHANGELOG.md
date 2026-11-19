@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.30.0] - 2026-11-19
+- Desktop (html.desktop) bo hang 4 o so tren dau: xoa section .stats4 va CSS .stats4/.s4; the noi dung details.card chiem ca hai hang luoi (grid-area:1/2/3/3, cao 670px o 1280x720).
+- Tab Thong ke (desktop): hang so duoi tieu de gom Nhap trong thang, Ban hom nay, Loi nhuan hom nay, Ban trong nam, Loi nhuan nam, Tong ton kho (data-s4 tkImp/tkStock them moi, van chi hien lai so computeStats). Luu y: o desktop khong con hien Ban trong thang va Loi nhuan thang (dien thoai van co).
+- Do: nut cua so (#tb, y 0-24) cach nhom nut nam ‹ 2026 › (y 51-81) 27px, khong de; 8 tab khong tran; 320/375/800 giong HEAD. Khong doi du lieu/tien/ton kho; app Tauri khong can sua.
+
 ## [2.29.0] - 2026-11-19
 - Ban le + Nhap hang theo app Mac, chi desktop (html.desktop); dien thoai giu nguyen (do 320/375/800/1300: 0 khac biet toa do, chi doi chu tieu de an "SL" -> "SL (kg)" o Ban le).
 - Dong dang go = dong thu n+1 ngay duoi hang tieu de cot (dong ghi, dong go, dong trong cung mot bang; du 10 dong thi sang trang moi; chon vi/ghi xong to ghi tu nhay trang chua dong go). Dung lai cach Thuoc chen (ham chung pendPaging; script dau trang gop 3 to ghi).
