@@ -859,7 +859,7 @@ html.pt .bgdots{margin-top:14px}
       var rs = document.getElementById('remedySearch'), rb = document.querySelector('#remedyBox .card__bar'), rp = document.getElementById('remedyPreset'); /* 2.20.6: ô nhập tên Thuốc chén lên thanh đầu như Bán lẻ/Nhập hàng (chỉ dời nút, giữ id) */
       if (rs && rb && rp) { /* 2.26.0: nửa trái = tiêu đề + Tìm vị thuốc; nửa phải = Tìm đơn đã lưu + ngày; dòng đang gõ và dòng trống nằm cùng bảng tờ ghi (thứ tự: dòng ghi, dòng gõ, dòng trống) */
         var bl = document.createElement('div'), br = document.createElement('div');
-        rs.placeholder = 'Tìm vị thuốc'; rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'; br.className = 'rbr';
+        rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'; br.className = 'rbr';
         bl.appendChild(rb.querySelector('.card__bar-title')); bl.appendChild(rs); br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(bx('new-remedy', 'plus', 'Đơn mới')); br.appendChild(rb.querySelector('.card__bar-date')); rb.insertBefore(bl, rp); rb.appendChild(br);
       }
       /* 2.26.0/2.29.0: dòng đang gõ và dòng trống nằm cùng bảng tờ ghi (thứ tự: dòng ghi, dòng gõ, dòng trống) cho Thuốc chén, Bán lẻ, Nhập hàng */

@@ -7264,7 +7264,7 @@ test('2.26.0 cấu trúc: hàng A chỉ 2 ô + ngày ở desktop, #remedyPreset 
   assert.ok(block.includes('html.desktop #remedyBody input.inp.inp--num{width:52px}'), 'ô Gram rộng 52');
   assert.ok(block.includes('html.desktop #remedyNote #remedyThang{width:44px}') && block.includes('html.desktop #remedyNote #remedyUnitPrice{width:58px}'), 'chân tờ ghi: ô thang 44, ô giá 58');
   assert.match(PAGE, /html:not\(\.desktop\) #remedyNote>\.note__list>table:has\(#remedyNoteBody:empty\)>thead\{display:none\}/, 'luật ẩn thead khi rỗng chỉ cho điện thoại');
-  assert.ok(PAGE.includes("rs.placeholder = 'Tìm vị thuốc'") && PAGE.includes('placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén"'), 'đổi chữ gợi ý chỉ ở desktop');
+  assert.ok(!PAGE.includes("rs.placeholder =") && PAGE.includes('placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén"'), 'Thuốc chén: ô tìm tên là Nhập tên, JS không đổi chữ');
   assert.ok(PAGE.includes("window.prompt(isDesk() ? 'Tên đơn mới' : 'Tên đơn', '')") && PAGE.includes('if (isDesk() || (window.matchMedia'), 'Lưu đơn chưa có tên: desktop hỏi bằng hộp thoại, không mở ô tên');
 });
 
@@ -7683,4 +7683,12 @@ test('2.30.4b desktop: ô tìm tên Nhập hàng/Bán lẻ "Nhập tên"; dòng 
   assert.ok(!PAGE.includes("['retailSearch', 'Tìm vị thuốc']") && !PAGE.includes("['nhapSearch', 'Tìm vị thuốc']"), 'không còn Tìm vị thuốc ở Nhập hàng/Bán lẻ');
   assert.ok(PAGE.includes('html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left;padding:0 10px 0 2px}'), 'ô nút cuối không đệm dọc (dòng gõ = dòng dữ liệu)');
   assert.ok(PAGE.includes('html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}'), 'dòng gõ Thuốc chén phẳng');
+});
+
+test('2.30.4c desktop: 4 ô tìm tên (Bán lẻ, Nhập hàng, Kho tồn, Thuốc chén) đều "Nhập tên", không JS nào đổi thành Tìm vị thuốc; Tìm đơn đã lưu giữ nguyên', () => {
+  ['retailSearch', 'nhapSearch', 'invSearch', 'remedySearch'].forEach((id) => {
+    assert.match(PAGE, new RegExp('id="' + id + '"[^>]*placeholder="Nhập tên"'), id + ' là Nhập tên');
+  });
+  assert.ok(!PAGE.includes("placeholder = 'Tìm vị thuốc'") && !/rs\.placeholder/.test(PAGE), 'không gán Tìm vị thuốc');
+  assert.ok(PAGE.includes('id="remedyFind" type="search" autocomplete="off" placeholder="Tìm đơn đã lưu"'), 'Tìm đơn đã lưu giữ nguyên');
 });

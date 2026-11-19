@@ -8,6 +8,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 ## [2.30.4] - 2026-11-19
 - Desktop theo app Mac (dien thoai giu nguyen): Nhap hang o tim ten "Tim vi thuoc", o SL "SL", o gia "Gia (nghin)"; Ban le o tim ten "Tim vi thuoc"; chu mo dong dang go Nhap hang/Ban le "Chon vi thuoc o o tren" (Thuoc chen giu "Ten vi thuoc"). aria-label giu nguyen. Nut "Luu don"/"Ban don" da xanh (rgba(64,128,242,.5)) tu 2.23.0, khong sua.
 - Test them 1 ca + pha thu.
+- 2.30.4c: Thuoc chen desktop o tim ten cung "Nhap ten" (bo dong gan "Tim vi thuoc"); 4 o tim ten desktop dong nhat; "Tim don da luu" giu nguyen.
 - 2.30.4b (sua theo ban bao cao Mac): o tim ten Nhap hang/Ban le desktop la "Nhap ten" (sua loi "Tim vi thuoc"); dong dang go cao dung bang dong du lieu (c-act/c-del padding doc 0, 10 hang deu nhau <=0,5px o 1280x720 va 1920x1080); Thuoc chen dong go phang (o Gram khong vien/nen, dung lai quy tac Ban le/Nhap hang).
 
 ## [2.30.3] - 2026-11-19
