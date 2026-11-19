@@ -3912,7 +3912,7 @@ test('2.14.0 Nhập hàng: dòng đang nhập (nhapQty, nhapPrice, nhap-add) n�
   assert.match(pend, /data-action="nhap-add"/);
   const foot = note.slice(iFoot);
   assert.match(note, /<tfoot id="nhapListFoot" hidden>[\s\S]*?id="nhapListTotal"/, '2.17.3: Tổng là hàng cuối bảng');
-  assert.doesNotMatch(foot, /Tổng/, '2.17.3: chân Nhập hàng chỉ còn nút');
+  assert.doesNotMatch(foot.replace(/<span class="nhap-foot__tot">[\s\S]*?<\/span>/, ''), /Tổng/, '2.17.3: chân Nhập hàng chỉ còn nút (2.30.3: thêm dòng tổng riêng cho desktop)');
   assert.doesNotMatch(PAGE, /nhap-pend__tot">Thành tiền/);
   assert.match(foot, /<button class="btn btn--dark" type="submit"[^>]*>[\s\S]*?id="nhapSaveLabel"/);
   assert.equal((PAGE.match(/id="nhapTotal"/g) || []).length, 1);
@@ -7637,4 +7637,31 @@ test('2.29.0 cấu trúc: 3 tờ ghi gộp dòng gõ + dòng trống vào bảng
   assert.ok(b.includes('html.desktop .pend .c-num::before{content:"+";font-size:13px}') && b.includes('html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}'));
   assert.ok(b.includes('html.desktop .pend .c-money input::placeholder{font-size:12px}'), '"Tiền (nghìn)" vừa ô');
   assert.ok(Buffer.byteLength(b) <= 20480);
+});
+
+test('2.30.3 Nhập hàng desktop: nút "Lưu đơn", dòng "Tổng tiền nhập (nghìn)" theo tổng các dòng; "Giá nhập gần nhất" ẩn ở desktop nhưng còn ở title; điện thoại giữ nhãn cũ', () => {
+  const mk = (desk) => {
+    const lbl = makeEl(), ft = makeEl(), pn = makeEl(), hint = makeEl(), tot = makeEl();
+    const k = deskKit29(desk, { '#nhapListBox': makeEl(), '#nhapListBody': makeEl(), '#nhapSaveLabel': lbl, '#nhapFootTot': ft, '#nhapPendName': pn, '#nhapHint': hint, '#nhapSearch': { value: 'A' }, '#nhapTotal': tot });
+    return { ...k, lbl, ft, pn, hint };
+  };
+  const rows = [{ pid: 'p0', name: 'X', qty: 2, price: 5000 }, { pid: 'p1', name: 'Y', qty: 1.5, price: 100000 }];
+  const d = mk(true);
+  d.c.setNhapList(rows); d.c.renderNhapList();
+  assert.equal(d.lbl.textContent, 'Lưu đơn');
+  assert.equal(d.ft.textContent, '160'); // 2*5 + 1,5*100 = 160 nghìn
+  d.c.setNhapList([]); d.c.renderNhapList();
+  assert.equal(d.ft.textContent, '0'); assert.equal(d.lbl.textContent, 'Lưu đơn');
+  d.hint.textContent = 'Giá nhập gần nhất: 85/kg'; d.hint.hidden = false; d.c.calcNhap();
+  assert.equal(d.pn.title, 'Giá nhập gần nhất: 85/kg');
+  d.hint.hidden = true; d.c.calcNhap(); assert.equal(d.pn.title, '');
+  const m = mk(false);
+  m.c.setNhapList(rows); m.c.renderNhapList();
+  assert.equal(m.lbl.textContent, 'Lưu nhập hàng (2)', 'điện thoại: nhãn cũ');
+  assert.equal(m.ft.textContent, '160');
+  const css = PAGE;
+  assert.ok(css.includes('.nhap-foot__tot{display:none}'), 'điện thoại ẩn dòng tổng chân');
+  assert.ok(css.includes('html.desktop .nhap-hint{display:none}'), 'desktop ẩn chữ giá nhập gần nhất');
+  assert.ok(css.includes('html.desktop .nhap-foot__tot{display:block;'), 'desktop hiện tổng chân');
+  assert.ok(!css.includes('html.desktop .nhap-hint:not([hidden])'));
 });

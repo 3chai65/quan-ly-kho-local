@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.30.3] - 2026-11-19
+- Desktop, tab Nhap hang theo app Mac: chan to ghi co chu mo "Tong tien nhap (nghin): N" (tong cac dong da them, cung ham fmtMoney voi hang Tong) ben trai, nut "Luu don" (khong icon) ben phai, mot hang; dong dang go khong con chu "Gia nhap gan nhat" (van dien san o gia, thong tin chuyen vao title o ten). Do 1280x720 va 1920x1080: chan 1 hang, khong tran, tong/nut khong de phan trang; o gia can phai sat nut +. Dien thoai (320/375/800) khong doi (so do tung phan tu trung HEAD), logic luu/tien khong doi.
+- Test client 441 pass; test moi + 5 pha thu bi bat.
+
 ## [2.30.2] - 2026-11-19
 - Desktop, tab Thong ke: 8 so gom thanh 4 o (moi o hai so, vien manh, nen trang .06, bo 14): Ban/Loi nhuan hom nay | Ban/Loi nhuan trong thang | Ban/Loi nhuan trong nam | Nhap trong thang + Tong ton kho (theo yeu cau nguoi dung). Do 1280x720: 4 o rong 202/204/190/197, het o x=1109 (hang rong 968 den x=1247), cao 51, khong tran; bieu do 513 cao. Dien thoai, logic tinh khong doi.
 - Test client 439 chay + 1 skip pass; kiem thu tu khoa/nhan va 4 o thk__g.

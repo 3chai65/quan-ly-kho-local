@@ -342,6 +342,7 @@ td.c-qty{position:relative}
 .nhap-pend__name.is-muted{color:var(--muted);font-weight:400}
 .nhap-pend__tot{float:right;font-size:13px}
 .nhap-hint{font-size:11px;margin:4px 0 0;text-align:left}
+.nhap-foot__tot{display:none}
 #nhapListBox .note__pending tr.is-row>td{align-self:end}
 #nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}
 /* 2.14.0 (giai đoạn 4, M8): máy tính – nút + dòng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) 36×36 bằng ô inp--sm. Điện thoại ghi đè 44×44 ở khối ≤600px phía sau. */
@@ -731,7 +732,10 @@ html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}
 html.desktop #remedyBody .qty-hint--label{right:64px}
 html.desktop :is(#retailBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}
 html.desktop .nhap-pend__tot{display:none}
-html.desktop .nhap-hint:not([hidden]){display:inline;margin:0 0 0 8px}
+html.desktop .nhap-hint{display:none}
+html.desktop .nhap-foot__tot{display:block;font-size:15px;color:var(--muted)}
+html.desktop .nhap-foot__tot b{font-weight:400}
+html.desktop .note__foot>.nhap-foot__tot+.btn .ico{display:none}
 html.desktop .pend .c-money input::placeholder{font-size:12px}
 html.desktop .bx{height:32px;white-space:nowrap}
 html.desktop #remedyNoteFoot td{height:38px;background:#ffffff0f}
@@ -1140,6 +1144,7 @@ html.pt .bgdots{margin-top:14px}
         </div>
         <div class="foot" id="nhapListPager" hidden></div>
         <div class="note__foot">
+          <span class="nhap-foot__tot">Tổng tiền nhập (nghìn): <b id="nhapFootTot">0</b></span>
           <button class="btn btn--dark" type="submit" data-keep-focus>
             <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
           </button>
@@ -4446,7 +4451,7 @@ function calcNhap(){
   var out = $('#nhapTotal');
   if (out) out.textContent = fmtMoney(kToDong(q * p));
   var pn = $('#nhapPendName');
-  if (pn) { var nm = String(($('#nhapSearch') || {}).value || '').trim(); pn.textContent = nm || (isDesk() ? 'Tên vị thuốc' : 'Chọn vị thuốc ở ô trên'); pn.className = nm ? 'nhap-pend__name' : 'nhap-pend__name is-muted'; }
+  if (pn) { var nm = String(($('#nhapSearch') || {}).value || '').trim(); pn.textContent = nm || (isDesk() ? 'Tên vị thuốc' : 'Chọn vị thuốc ở ô trên'); pn.className = nm ? 'nhap-pend__name' : 'nhap-pend__name is-muted'; var hh = $('#nhapHint'); pn.title = hh && !hh.hidden ? hh.textContent : ''; }
 }
 var nhapList = [];
 var nhapNotePage = 1;
@@ -4504,7 +4509,9 @@ function renderNhapList(){
   var cnt = $('#nhapListCount');
   if (cnt) cnt.textContent = nhapList.length ? nhapList.length + ' vị' : '';
   var lbl = $('#nhapSaveLabel');
-  if (lbl) lbl.textContent = nhapList.length ? 'Lưu nhập hàng (' + nhapList.length + ')' : 'Lưu nhập hàng';
+  if (lbl) lbl.textContent = dk ? 'Lưu đơn' : nhapList.length ? 'Lưu nhập hàng (' + nhapList.length + ')' : 'Lưu nhập hàng';
+  var ft = $('#nhapFootTot');
+  if (ft) ft.textContent = fmtMoney(sum);
 }
 function resetNhapInputs(){
   nhapPid = null;
