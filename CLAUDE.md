@@ -24,7 +24,7 @@ Kính: người dùng chốt 16/11/2026 giữ 4 phần tử `backdrop-filter` (h
 - Test: `tests/client.test.mjs` (client, chạy trên máy), `tests/server.test.mjs` và `tests/auth*.test.mjs` (cần better-sqlite3, Node 22; CI chạy trong Docker). `npm run lint` kiểm cú pháp. Chạy test trên Windows/CI, không chạy trên hub.
 - Công cụ: `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `tools/kiem-cu-phap.mjs`, `scripts/lint-client.mjs`, `scripts/auth-reset.mjs`.
 - Docker (`Dockerfile`, `docker-compose.yml`, `Caddyfile`) chỉ còn là bản lùi và để CI chạy test server; hub thật không dùng.
-- Phiên bản hiện tại: 2.30.0. `BAO-CAO-REVIEW.md` — lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
+- Phiên bản hiện tại: 2.34.0. `BAO-CAO-REVIEW.md` — lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI (`G:\quan-ly-kho-gpui`) dùng chung schema SQLite, chỉ-đọc trên bản chép của `app.db`; không đụng `data/` từ app đó khi chưa có duyệt. Chuẩn đối chiếu giao diện desktop là app GPUI thật, không phải ảnh mô phỏng.
 
 ## Vùng nhạy cảm
@@ -49,7 +49,7 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt v�
 ## Dữ liệu
 - Không bao giờ đụng `~/kho/data`, `~/kho/Caddyfile.mac`, `~/kho/caddy-data` (mất CA nội bộ là phải cài lại chứng chỉ trên mọi thiết bị).
 - Sao lưu: server tự tạo `data/backups/backup-<ngày>.db` (30 bản) + `truoc-ghi-de` (10 bản); `sao-luu.sh` 19:00 chép `backups`, `auth.db`, `caddy-data`, `luu-tru` sang Drive, không dùng `--delete`. Tài khoản Google Drive này DÀNH RIÊNG cho sao lưu kho; không thêm thứ khác vào; rà dung lượng khi `Kho-sao-luu` vượt ~1 GB.
-- Không có thông báo khi sao lưu hỏng: đọc dòng cuối `~/kho/logs/sao-luu.log`. File cert trong `caddy-data` có thể thuộc root (do Caddy chạy bằng root) làm `rsync` báo CẢNH BÁO: `sudo chown -R thangnt ~/kho/caddy-data`, không ảnh hưởng `app.db`/`auth.db`.
+- Không có thông báo khi sao lưu hỏng: đọc dòng cuối `~/kho/logs/sao-luu.log`. Từ 20/11/2026 `sao-luu.sh` bỏ qua `certificates/` và `last_clean.json` của `caddy-data` (cert lá Caddy tự sinh lại), nên cảnh báo cert thuộc root không còn; CA gốc `pki/authorities/local/` vẫn được chép đủ. Bản cũ của script: `~/kho/sao-luu.sh.bak-19-11`. Nếu LaunchAgent sao lưu báo `Operation not permitted` thì cần Full Disk Access cho `/bin/zsh` và `/usr/bin/rsync`.
 - Khôi phục: xem `README-LOCAL.md` mục "Khôi phục từ bản sao lưu". Nên diễn tập trên thư mục thử, cổng khác cổng thật.
 - `auth.js`/`scripts/auth-reset.mjs`: mất thiết bị chủ thì đặt lại (xóa `devices` + `invites`, không đụng `app.db`), rồi người dùng tự đọc mã thiết lập trong log và nhập tại `/auth/setup`. Không dán mã vào báo cáo hay chat.
 - Người dùng tự giữ: xác thực hai bước Google, mật khẩu riêng, không chia sẻ thư mục, không đăng nhập máy lạ.
@@ -85,7 +85,7 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt v�
   - CSP `default-src 'none'` từng chặn manifest/SW mà lỗi bị `.catch` nuốt; test tĩnh không bắt được, phải thử trình duyệt thật.
   - Test không được phụ thuộc lịch sử git của repo (CI clone nông); kiểm tab Actions sau mỗi lần push.
   - `saveLocal` khi ghi KEY lỗi thì KHÔNG ghi BASE mới (giữ base cũ để máy chủ trả 409, tránh đè lặng lẽ).
-  - Sao lưu 19:00 cần Google Drive đang mở; cert `caddy-data` thuộc root làm CẢNH BÁO, `chown` lại.
+  - Sao lưu 19:00 cần Google Drive đang mở; cảnh báo cert `caddy-data` đã hết từ 20/11/2026 (script bỏ qua `certificates/`).
   - Server từ chối 400/428 thì client hiện "Chưa lưu được: <lý do>" một lần; chưa xóa tờ đơn khi lưu thất bại.
   - Ba đường ghi máy chủ có thể từ chối số liệu ngoài thực tế: `saveRetail` không kiểm `cost`; xóa/giảm đơn bán làm tồn vượt trần; sửa gram đơn thuốc chén làm đơn giá vượt trần. `applyRemedyBalance`/`allocateRemedyByCost` chưa kiểm trần đơn giá khi kg rất nhỏ.
   - Gợi ý đơn vị trong ô số lượng dùng "l" cho lạng (chỉ ở gợi ý). Luật tìm kiếm trọn chữ dùng chung cho gợi ý tên, Kho tồn và Lịch sử (từ 2.27.0).
