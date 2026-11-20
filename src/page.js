@@ -4097,6 +4097,14 @@ function setChartTip(mmStr, impV, expV, prfV){
 function chartYearBw(groupW){ return Math.max(1, Math.min(36, (groupW - 8) / 2)); } /* 2.34.1 hàm thuần: bề rộng mỗi cột trong ô năm (36, thu lại khi nhiều năm để không chồng) */
 /* 2.35.0 hàm thuần: bước nhãn trục X khi ô hẹp (điện thoại): nhỏ nhất trong 1/2/3/5 mà bước*groupW >= bề rộng viên nhãn + 4 (năm 44, còn lại 25). */
 function chartLabelStep(groupW, mode){ var need = mode === 'Y' ? 44 : 25, k = [1, 2, 3, 5]; for (var i = 0; i < k.length; i++) if (k[i] * groupW >= need) return k[i]; return 5; }
+/* 2.35.1 hàm thuần: vị trí x nhãn trục X {chỉ số: x}. Nhãn cuối luôn có, kẹp để vòng nằm trọn canvas (lề 1px); nhãn thưa nào chồng nhãn cuối thì bỏ. */
+function chartLabelPlan(n, groupW, cssW, rw, lst){
+  var m = {}, i, lx = cssW - rw / 2 - 1;
+  for (i = 0; i < n; i++) if (lst <= 1 || (i + 1) % lst === 0) m[i] = groupW * i + groupW / 2;
+  m[n - 1] = Math.min(groupW * (n - 1) + groupW / 2, lx);
+  for (i = 0; i < n - 1; i++) if (m[i] != null && m[i] > m[n - 1] - rw - 3) delete m[i];
+  return m;
+}
 function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var padT = 10, padB = 32, mode = data.mode, n = data.n, i;
   var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
@@ -4120,12 +4128,14 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
   ctx.font = '12px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
   var rw = mode === 'Y' ? 40 : ph ? 21 : Math.min(21, groupW - 1), rh = 21, ly = y0 + 17, r = rh / 2;
+  var lp = chartLabelPlan(n, groupW, cssW, rw, lst);
   for (i = 0; i < n; i++) {
     var cx = groupW * i + groupW / 2, on = i === hi;
     if (on) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(Math.round(cx), padT, 1, H); }
     ctx.fillStyle = impC; bar(ctx, cx - gap / 2 - bw, y0 - H * data.impK[i] / top, bw, H * data.impK[i] / top, 3);
     ctx.fillStyle = expC; bar(ctx, cx + gap / 2, y0 - H * data.expK[i] / top, bw, H * data.expK[i] / top, 3);
-    if (lst > 1 && (i + 1) % lst) continue; /* điện thoại: nhãn thưa (ngày chẵn / mỗi 3,5 ngày), cột vẫn đủ */
+    if (lp[i] == null) continue; /* điện thoại: nhãn thưa (ngày chẵn / mỗi 3,5 ngày), cột vẫn đủ */
+    cx = lp[i];
     ctx.beginPath(); ctx.arc(cx - rw / 2 + r, ly, r, Math.PI / 2, Math.PI * 1.5); ctx.arc(cx + rw / 2 - r, ly, r, -Math.PI / 2, Math.PI / 2); ctx.closePath();
     if (on) { ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fill(); }
     ctx.strokeStyle = on ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.25)'; ctx.lineWidth = 1; ctx.stroke();

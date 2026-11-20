@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.35.1] - 2026-11-20
+
+### Sửa
+- Thống kê điện thoại: nhãn cuối trục X (vd `30`) không còn bị cắt ở mép phải canvas; nhãn cuối luôn hiện, nhãn thưa chồng nó thì bỏ (hàm thuần `chartLabelPlan`).
+
 ## [2.35.0] - 2026-11-20
 
 ### Thêm
