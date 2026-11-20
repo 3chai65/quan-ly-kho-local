@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.36.1] - 2026-11-20
+
+### Sửa
+- Thống kê desktop, chế độ Ngày: nhãn trục X hiện đủ 01..N đúng tâm cột (trước đây khi ô ngày hẹp ~22px, nhãn cuối bị kẹp 0,5px làm mất nhãn 29 và lệch nhãn 30); lề kẹp 1px thành 0,5px và khoảng tối thiểu = min(rw+3, ô).
+
 ## [2.36.0] - 2026-11-20
 
 ### Thêm

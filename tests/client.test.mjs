@@ -7923,6 +7923,23 @@ test('2.35.1 nhãn cuối trục X nằm trọn canvas (điện thoại/desktop,
   }
 });
 
+/* ===== 2.36.1 ===== */
+test('2.36.1 desktop đủ chỗ: nhãn hiện ĐỦ 1..n, đúng tâm nhóm (cssW 868 và 660 = lỗi ảnh Tauri 920); hẹp thật vẫn không chồng/không cắt', () => {
+  const { chartLabelPlan: plan } = loadClient();
+  for (const W of [868, 660]) for (const n of [28, 30, 31]) {
+    const g = W / n, rw = Math.min(21, g - 1), m = plan(n, g, W, rw, 1);
+    assert.equal(Object.keys(m).length, n, 'đủ nhãn ' + n + '/' + W);
+    for (let i = 0; i < n; i++) assert.ok(Math.abs(m[i] - (g * i + g / 2)) < 1e-9, 'đúng tâm nhóm ' + n + '/' + W + ' i=' + i);
+  }
+  { const m = plan(20, 32.6, 652, 40, 1), xs = Object.keys(m).map(Number); xs.sort((a, b) => a - b); assert.ok(m[19] - m[xs[xs.length - 2]] >= 43 - 1e-9, 'năm: nhãn cuối không chồng nhãn trước (như 2.35.1)'); }
+  for (const [n, W] of [[31, 300], [31, 200], [30, 150]]) {
+    const g = W / n, rw = Math.min(21, g - 1), m = plan(n, g, W, rw, 1), xs = Object.keys(m).map(Number).sort((a, b) => a - b);
+    assert.ok(m[n - 1] != null);
+    for (const i of xs) assert.ok(m[i] + rw / 2 <= W && m[i] - rw / 2 >= 0);
+    for (let k = 1; k < xs.length; k++) assert.ok(m[xs[k]] - m[xs[k - 1]] >= rw + 1 - 1e-9, 'không chồng ' + n + '/' + W);
+  }
+});
+
 /* ===== 2.36.0 ===== */
 test('2.36.0 chartWideW / chartScrollLeft (hàm thuần): canvas = n/12 khung; hôm nay vào giữa khung, kẹp hai đầu', () => {
   const { chartWideW: w, chartScrollLeft: s } = loadClient();
