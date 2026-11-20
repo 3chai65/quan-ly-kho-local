@@ -371,6 +371,20 @@ html.desktop #chartTip .chart-chip--prf,html.desktop #chartTip .chart-chip--stk{
 html.desktop #chartTip .chart-chip--stk{margin-left:auto}
 .chart-chip--prf .chart-chip__sw{background:#4ade80}
 .chart-chip--stk .chart-chip__sw{background:#a78bfa}
+/* 2.35.0: Thống kê điện thoại dùng chung công tắc Năm|Tháng|Ngày, biểu đồ cột đôi và 4 chip với desktop (ngoài khối cap desktop) */
+html:not(.desktop) .thk{display:block}
+html:not(.desktop) .thk__h{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+html:not(.desktop) .thk__t{margin:0;font-size:14px;font-weight:700}
+html:not(.desktop) .thk__r{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+html:not(.desktop) .thk__m{display:inline-flex;height:36px;box-sizing:border-box;padding:2px;border-radius:999px;background:var(--surface2)}
+html:not(.desktop) .thk__m button{border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:0 16px;min-height:32px}
+html:not(.desktop) .thk__m button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+html:not(.desktop) .thk__y{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+html:not(.desktop) .thk__y .btn{min-width:40px;height:36px;padding:0;font-size:18px;line-height:1}
+html:not(.desktop) .thk__y b{min-width:60px;text-align:center;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
+html:not(.desktop) .chart-year{display:none}
+html:not(.desktop) .chart-chip--prf,html:not(.desktop) .chart-chip--stk{display:inline-flex}
+html:not(.desktop) #statsChart{touch-action:pan-y}
 #chartBox .card__body:focus{outline:none}
 #invBox .card__bar-btn{position:relative}
 .inv-dot{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
@@ -1524,9 +1538,6 @@ function svg(name, cls){
   s.appendChild(u);
   return s;
 }
-var NF0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
-var NF1 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
-var NF2 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
 /* Giữ tối đa 15 chữ số có nghĩa: chỉ dọn nhiễu nhị phân của JavaScript
    (ví dụ 0.1 + 0.2 = 0.30000000000000004 → 0.3), không làm tròn số liệu thực. */
@@ -4030,49 +4041,13 @@ function chartBuckets(txs, prods, n, idxOf){
 }
 function chartDayTotals(txs, y, m, prods){ var ym = y + '-' + pad2(m); return chartBuckets(txs, prods, chartDaysIn(y, m), function(k){ return k.slice(0, 7) === ym ? parseInt(k.slice(8, 10), 10) - 1 : -1; }); }
 function chartData(){
-  if (isDesk()) {
-    var txs = db.transactions, yl = chartYears(txs, Number(thisYear())), d, lab = [], i;
-    if (chartMode === 'D') d = chartDayTotals(txs, chartDy, chartDm, db.products);
-    else if (chartMode === 'M') d = chartBuckets(txs, db.products, 12, function(k){ return parseInt(k.slice(0, 4), 10) === chartYr ? parseInt(k.slice(5, 7), 10) - 1 : -1; });
-    else d = chartBuckets(txs, db.products, yl.length, function(k){ return parseInt(k.slice(0, 4), 10) - yl[0]; });
-    for (i = 0; i < d.n; i++) lab.push(chartMode === 'Y' ? String(yl[0] + i) : pad2(i + 1));
-    d.labels = lab; d.desk = true; d.mode = chartMode; d.def = chartDefIdx(chartMode, chartDy, chartDm, chartYr, yl, todayISO());
-    return d;
-  }
-  var year = ($('#chartYear') || {}).value || thisYear();
-  var imp = [], exp = [], impK = [], expK = [];
-  for (var m = 1; m <= 12; m++) {
-    var ym = year + '-' + pad2(m);
-    var a = 0, b = 0, ak = 0, bk = 0;
-    db.transactions.forEach(function(t){
-      if (!t.date || t.date.indexOf(ym) !== 0) return;
-      var v = num(t.total);
-      if (t.type === 'NHAP') { a += v / 1000000; ak += v; }
-      else { b += v / 1000000; bk += v; }
-    });
-    imp.push(dec(a)); exp.push(dec(b));
-    impK.push(dec(ak)); expK.push(dec(bk));
-  }
-  return { imp: imp, exp: exp, impK: impK, expK: expK, year: year };
-}
-/* 2.13.2: tháng mặc định. Năm hiện tại → tháng hiện tại; năm khác → tháng cuối có dữ liệu; không có → 12 (index 11). */
-function chartDefaultMonth(year, nowYear, nowMonth0, hasData){
-  if (String(year) === String(nowYear)) return nowMonth0;
-  for (var m = 11; m >= 0; m--) if (hasData[m]) return m;
-  return 11;
-}
-function niceMax(v){
-  if (v <= 0) return 1;
-  var e = Math.pow(10, Math.floor(Math.log10(v)));
-  var m = v / e;
-  var n = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
-  return n * e;
-}
-function axisLabel(v){
-  if (v >= 1000) return NF1.format(v / 1000) + ' tỷ';
-  if (v >= 10) return NF0.format(v);
-  if (v >= 1) return NF1.format(v);
-  return v === 0 ? '0' : NF2.format(v);
+  var txs = db.transactions, yl = chartYears(txs, Number(thisYear())), d, lab = [], i;
+  if (chartMode === 'D') d = chartDayTotals(txs, chartDy, chartDm, db.products);
+  else if (chartMode === 'M') d = chartBuckets(txs, db.products, 12, function(k){ return parseInt(k.slice(0, 4), 10) === chartYr ? parseInt(k.slice(5, 7), 10) - 1 : -1; });
+  else d = chartBuckets(txs, db.products, yl.length, function(k){ return parseInt(k.slice(0, 4), 10) - yl[0]; });
+  for (i = 0; i < d.n; i++) lab.push(chartMode === 'Y' ? String(yl[0] + i) : pad2(i + 1));
+  d.labels = lab; d.desk = true; d.mode = chartMode; d.def = chartDefIdx(chartMode, chartDy, chartDm, chartYr, yl, todayISO());
+  return d;
 }
 function bar(ctx, x, y, w, h, r){
   if (h <= 0.2 || w <= 0) return;
@@ -4102,60 +4077,8 @@ function renderChart(){
   ctx.clearRect(0, 0, cssW, cssH);
 
   var cs = getComputedStyle(doc.documentElement);
-  var colText = cs.getPropertyValue('--muted').trim() || '#5b6b81';
-  var colGrid = cs.getPropertyValue('--border').trim() || '#e3e8ef';
 
-  var data = chartData();
-  if (data.desk) { drawChartDesk(cv, ctx, cssW, cssH, cs, data); return; }
-  var max = 0;
-  data.imp.forEach(function(v){ if (v > max) max = v; });
-  data.exp.forEach(function(v){ if (v > max) max = v; });
-  max = niceMax(max);
-  var hasData = [];
-  for (var hm = 0; hm < 12; hm++) hasData.push(data.impK[hm] + data.expK[hm] > 0);
-  var shown = chartSel >= 0 && chartSel < 12 ? chartSel : chartDefaultMonth(data.year, thisYear(), parseInt(todayISO().slice(5, 7), 10) - 1, hasData);
-
-  var padL = 44, padR = 8, padT = 12, padB = 26;
-  var W = Math.max(10, cssW - padL - padR);
-  var H = Math.max(10, cssH - padT - padB);
-  var groupW = W / 12;
-  var bw = Math.max(3, Math.min(16, groupW / 3));
-  var y0 = padT + H;
-
-  ctx.font = '11px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
-  ctx.textBaseline = 'middle';
-
-  for (var g = 0; g <= 4; g++) {
-    var val = max * g / 4;
-    var y = Math.round(y0 - H * g / 4) + 0.5;
-    ctx.strokeStyle = colGrid;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padL, y);
-    ctx.lineTo(padL + W, y);
-    ctx.stroke();
-    ctx.fillStyle = colText;
-    ctx.textAlign = 'right';
-    ctx.fillText(axisLabel(val), padL - 7, y);
-  }
-
-  for (var i = 0; i < 12; i++) {
-    var cx = padL + groupW * i + groupW / 2;
-    if (i === shown) {
-      ctx.fillStyle = cs.getPropertyValue('--chart-hi').trim() || 'rgba(99,102,241,.14)';
-      ctx.fillRect(padL + groupW * i, padT, groupW, H);
-    }
-    ctx.fillStyle = cs.getPropertyValue('--chart-imp').trim() || '#6366f1';
-    bar(ctx, cx - bw - 1, y0 - H * data.imp[i] / max, bw, H * data.imp[i] / max, 3);
-    ctx.fillStyle = cs.getPropertyValue('--chart-exp').trim() || '#10b981';
-    bar(ctx, cx + 1, y0 - H * data.exp[i] / max, bw, H * data.exp[i] / max, 3);
-    ctx.fillStyle = colText;
-    ctx.textAlign = 'center';
-    ctx.fillText('T' + (i + 1), cx, y0 + 13);
-  }
-
-  chartGeo = { padL: padL, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
-  setChartTip(pad2(shown + 1) + '/' + data.year, data.impK[shown], data.expK[shown]);
+  drawChartDesk(cv, ctx, cssW, cssH, cs, chartData());
 }
 function setChartTip(mmStr, impV, expV, prfV){
   var impTxt = impV == null ? '—' : fmtMoneyInt(impV), expTxt = expV == null ? '—' : fmtMoneyInt(expV); /* null = chưa trỏ tháng nào (desktop) */
@@ -4168,10 +4091,12 @@ function setChartTip(mmStr, impV, expV, prfV){
   var pV = $('#chartPrfVal');
   var prfTxt = prfV == null ? '—' : fmtMoneyInt(prfV);
   if (pV) { pV.textContent = prfTxt; pV.className = 'chart-chip__v' + (prfV < 0 ? ' txt-red' : ''); }
-  if (sEl) sEl.textContent = (!isDesk() ? 'Tháng ' : chartMode === 'D' ? 'Ngày ' : chartMode === 'Y' ? 'Năm ' : 'Tháng ') + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt + (prfV == null ? '' : ' · Lợi nhuận: ' + prfTxt);
+  if (sEl) sEl.textContent = (chartMode === 'D' ? 'Ngày ' : chartMode === 'Y' ? 'Năm ' : 'Tháng ') + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt + (prfV == null ? '' : ' · Lợi nhuận: ' + prfTxt);
 }
 /* 2.34.0 desktop: cột đôi Nhập/Bán theo Năm/Tháng/Ngày, chỉ lưới ngang mờ (không nhãn trục Y), nhãn trục X trong viên viền tròn 21px (năm: 40px); mục hiện = rê > giữ > mặc định; hover/bấm → vạch dọc + chú thích (#chartTip). */
 function chartYearBw(groupW){ return Math.max(1, Math.min(36, (groupW - 8) / 2)); } /* 2.34.1 hàm thuần: bề rộng mỗi cột trong ô năm (36, thu lại khi nhiều năm để không chồng) */
+/* 2.35.0 hàm thuần: bước nhãn trục X khi ô hẹp (điện thoại): nhỏ nhất trong 1/2/3/5 mà bước*groupW >= bề rộng viên nhãn + 4 (năm 44, còn lại 25). */
+function chartLabelStep(groupW, mode){ var need = mode === 'Y' ? 44 : 25, k = [1, 2, 3, 5]; for (var i = 0; i < k.length; i++) if (k[i] * groupW >= need) return k[i]; return 5; }
 function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var padT = 10, padB = 32, mode = data.mode, n = data.n, i;
   var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
@@ -4185,7 +4110,8 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var hi = chartHover >= 0 ? chartHover : chartSel >= 0 ? chartSel : data.def;
   var groupW = cssW / n, W = groupW * n; /* 2.34.1: mỗi năm một ô chia đều chiều rộng, cặp cột ở GIỮA ô */
   var H = Math.max(10, cssH - padT - padB), y0 = padT + H;
-  var bw = mode === 'Y' ? chartYearBw(groupW) : groupW * .245, gap = mode === 'Y' ? 2 : groupW * .1;
+  var ph = !isDesk(), lst = ph ? chartLabelStep(groupW, mode) : 1;
+  var bw = mode === 'Y' ? chartYearBw(groupW) : groupW * (ph ? .38 : .245), gap = mode === 'Y' ? 2 : groupW * (ph ? .08 : .1);
   ticks.forEach(function(v){
     var y = Math.round(y0 - H * v * 1000 / top) + 0.5;
     ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1;
@@ -4193,12 +4119,13 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   });
   ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
   ctx.font = '12px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
-  var rw = mode === 'Y' ? 40 : Math.min(21, groupW - 1), rh = 21, ly = y0 + 17, r = rh / 2;
+  var rw = mode === 'Y' ? 40 : ph ? 21 : Math.min(21, groupW - 1), rh = 21, ly = y0 + 17, r = rh / 2;
   for (i = 0; i < n; i++) {
     var cx = groupW * i + groupW / 2, on = i === hi;
     if (on) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(Math.round(cx), padT, 1, H); }
     ctx.fillStyle = impC; bar(ctx, cx - gap / 2 - bw, y0 - H * data.impK[i] / top, bw, H * data.impK[i] / top, 3);
     ctx.fillStyle = expC; bar(ctx, cx + gap / 2, y0 - H * data.expK[i] / top, bw, H * data.expK[i] / top, 3);
+    if (lst > 1 && (i + 1) % lst) continue; /* điện thoại: nhãn thưa (ngày chẵn / mỗi 3,5 ngày), cột vẫn đủ */
     ctx.beginPath(); ctx.arc(cx - rw / 2 + r, ly, r, Math.PI / 2, Math.PI * 1.5); ctx.arc(cx + rw / 2 - r, ly, r, -Math.PI / 2, Math.PI / 2); ctx.closePath();
     if (on) { ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fill(); }
     ctx.strokeStyle = on ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.25)'; ctx.lineWidth = 1; ctx.stroke();
@@ -4225,7 +4152,7 @@ function chartIdxAt(e){
 function onChartClick(e){
   var i = chartIdxAt(e);
   if (i < 0) return;
-  chartSel = isDesk() ? i : (chartSel === i ? -1 : i); /* desktop: bấm = giữ (bấm cột khác để đổi); điện thoại: bấm lại = bỏ */
+  chartSel = i; /* bấm/chạm = giữ (cột khác để đổi); desktop và điện thoại như nhau */
   renderChart();
 }
 function onChartMove(e){

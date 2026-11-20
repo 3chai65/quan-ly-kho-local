@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.35.0] - 2026-11-20
+
+### Thêm
+- Thống kê trên điện thoại (PWA/iPhone) dùng chung chức năng với desktop: công tắc Năm | Tháng | Ngày (cao 36px, mặc định Ngày, chọn sẵn hôm nay), bộ đổi kỳ ‹ ›, biểu đồ cột đôi Nhập/Bán, chip Nhập / Bán / Lợi nhuận / Tổng tồn kho (xuống dòng, không tràn ngang). Chạm cột để giữ, chạm cột khác để đổi; biểu đồ `touch-action: pan-y` nên vẫn cuộn dọc. Nhãn trục X thưa khi ô hẹp (`chartLabelStep`: ngày chẵn/mỗi 3-5 ngày), cột vẫn đủ.
+
+### Đổi
+- Bỏ đường vẽ biểu đồ tháng cũ của điện thoại (`chartDefaultMonth`, `niceMax`, `axisLabel`); ô "Năm" trong tiêu đề thẻ điện thoại bị ẩn. Desktop và máy chủ không đổi.
+
 ## [2.34.1] - 2026-11-20
 
 ### Sửa
