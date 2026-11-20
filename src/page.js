@@ -709,7 +709,7 @@ html.desktop .sug__list::-webkit-scrollbar{display:none}
 html.desktop #chartBox>summary{display:none}
 html.desktop #chartBox .card__body{position:relative;padding:16px}
 html.desktop .thk{display:block}
-html.desktop .thk__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+html.desktop .thk__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;height:32px}
 html.desktop .thk__y{display:flex;align-items:center;gap:8px}
 html.desktop .thk__y .btn{width:44px;min-width:44px;height:30px;min-height:30px;padding:0;font-size:18px;line-height:1}
 html.desktop .thk__y span{font-size:13px;color:var(--muted)}
@@ -4171,6 +4171,7 @@ function setChartTip(mmStr, impV, expV, prfV){
   if (sEl) sEl.textContent = (!isDesk() ? 'Tháng ' : chartMode === 'D' ? 'Ngày ' : chartMode === 'Y' ? 'Năm ' : 'Tháng ') + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt + (prfV == null ? '' : ' · Lợi nhuận: ' + prfTxt);
 }
 /* 2.34.0 desktop: cột đôi Nhập/Bán theo Năm/Tháng/Ngày, chỉ lưới ngang mờ (không nhãn trục Y), nhãn trục X trong viên viền tròn 21px (năm: 40px); mục hiện = rê > giữ > mặc định; hover/bấm → vạch dọc + chú thích (#chartTip). */
+function chartYearBw(groupW){ return Math.max(1, Math.min(36, (groupW - 8) / 2)); } /* 2.34.1 hàm thuần: bề rộng mỗi cột trong ô năm (36, thu lại khi nhiều năm để không chồng) */
 function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var padT = 10, padB = 32, mode = data.mode, n = data.n, i;
   var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
@@ -4182,9 +4183,9 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   for (i = 0; i < n; i++) vmax = Math.max(vmax, data.impK[i], data.expK[i]);
   var ticks = chartTicks(vmax / 1000), top = ticks[ticks.length - 1] * 1000;
   var hi = chartHover >= 0 ? chartHover : chartSel >= 0 ? chartSel : data.def;
-  var groupW = mode === 'Y' ? Math.min(60, cssW / n) : cssW / n, W = groupW * n; /* năm: ô cố định, cặp cột rộng 36 */
+  var groupW = cssW / n, W = groupW * n; /* 2.34.1: mỗi năm một ô chia đều chiều rộng, cặp cột ở GIỮA ô */
   var H = Math.max(10, cssH - padT - padB), y0 = padT + H;
-  var bw = mode === 'Y' ? 17 : groupW * .245, gap = mode === 'Y' ? 2 : groupW * .1;
+  var bw = mode === 'Y' ? chartYearBw(groupW) : groupW * .245, gap = mode === 'Y' ? 2 : groupW * .1;
   ticks.forEach(function(v){
     var y = Math.round(y0 - H * v * 1000 / top) + 0.5;
     ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1;

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.34.1] - 2026-11-20
+
+### Sửa
+- Thống kê desktop chế độ Năm giống app Mac: mỗi năm một ô chia đều chiều rộng, cặp cột Nhập/Bán 36px ở giữa ô (nhiều năm thu lại, không chồng); hàng tiêu đề cao cố định 32px nên không nhảy khi đổi Năm/Tháng/Ngày.
+
 ## [2.34.0] - 2026-11-20
 - Thong ke desktop theo ban chuan Mac moi: bo han 4 o so 2x2 va nhan truc Y (chi giu luoi ngang mo). Bo chon 3 nut Nam | Thang | Ngay (mac dinh Ngay); doi ky: Ngay `< Thang MM/yyyy >`, Thang `< Nam yyyy >` (2000-2100), Nam khong co mui ten. Hang chu thich: nhan ky (dd/MM/yyyy | MM/yyyy | yyyy), Nhap cyan, Ban cam, Loi nhuan xanh la (tong total - von cac giao dich BAN trong cot; von dung chung `txCost` voi `computeStats`), chip Tong ton kho tim sat phai. Cot doi; che do Nam tu nam som nhat co giao dich den nam nay (cap 36px). Nhan truc X trong vien tron 21px (nam: 40px). Re chuot = xem tam, bam = giu, mac dinh chon hom nay/thang nay/nam nay, phim trai/phai di chuyen (dung hai dau), tu focus khi mo tab. Dien thoai khong doi. Quy tac CSS moi dat ngoai khoi desktop (tran 20736). Xoa chartMonths, 4 o so (thk__n, data-s4, tk*). Test + pha thu (ghi de, tinh ca NHAP, sai von, quay vong phim, nam som nhat).
 
