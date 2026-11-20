@@ -384,7 +384,8 @@ html:not(.desktop) .thk__y .btn{min-width:40px;height:36px;padding:0;font-size:1
 html:not(.desktop) .thk__y b{min-width:60px;text-align:center;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
 html:not(.desktop) .chart-year{display:none}
 html:not(.desktop) .chart-chip--prf,html:not(.desktop) .chart-chip--stk{display:inline-flex}
-html:not(.desktop) #statsChart{touch-action:pan-y}
+html:not(.desktop) #statsChart{touch-action:pan-x pan-y}
+html:not(.desktop) .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 #chartBox .card__body:focus{outline:none}
 #invBox .card__bar-btn{position:relative}
 .inv-dot{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
@@ -1207,7 +1208,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       </summary>
       <div class="card__body" tabindex="-1">
         <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__r"><div class="thk__m" role="group" aria-label="Xem theo"><button type="button" id="chartModeY" aria-pressed="false">Năm</button><button type="button" id="chartModeM" aria-pressed="false">Tháng</button><button type="button" id="chartModeD" class="on" aria-pressed="true">Ngày</button></div><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span id="chartYrK">Tháng</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div></div></div>
-        <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
+        <div class="chart-scroll" id="chartScroll"><canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas></div>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
           <span class="chart-chip chart-chip--imp" id="chartImpChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Nhập</span><b class="chart-chip__v" id="chartImpVal">0</b></span>
@@ -3988,14 +3989,18 @@ function recFixAll(){
   renderRec();
 }
 /* ================= BIỂU ĐỒ ================= */
-var chartSel = -1, chartHover = -1, chartGeo = null;
+var chartSel = -1, chartHover = -1, chartGeo = null, chartScrollNow = true;
 /* 2.25.0: desktop luôn là một năm (số), 12 nhóm Y-01..Y-12; mặc định và mỗi lần mở tab = năm hiện tại. Bước năm kẹp 2000..2100; hàm thuần. */
 var chartYr = Number(thisYear());
 var chartMode = 'D', chartDy = chartYr, chartDm = parseInt(todayISO().slice(5, 7), 10); /* 2.34.0 desktop: 'Y' năm | 'M' tháng | 'D' ngày (mặc định Ngày); chartSel = cột đang GIỮ, chartHover = xem tạm */
 function chartYearStep(cur, dir){ return Math.min(2100, Math.max(2000, cur + dir)); }
-function chartYearGo(dir){ if (chartMode === 'D') { var s = chartMonthStep(chartDy, chartDm, dir); chartDy = s.y; chartDm = s.m; } else if (chartMode === 'M') chartYr = chartYearStep(chartYr, dir); chartSel = -1; chartHover = -1; renderChart(); }
+function chartYearGo(dir){ if (chartMode === 'D') { var s = chartMonthStep(chartDy, chartDm, dir); chartDy = s.y; chartDm = s.m; } else if (chartMode === 'M') chartYr = chartYearStep(chartYr, dir); chartSel = -1; chartHover = -1; chartScrollNow = true; renderChart(); }
+/* 2.36.0 điện thoại, chế độ Ngày: canvas rộng n/12 khung (khung thấy 12 ngày, vuốt ngang); hàm thuần: bề rộng canvas và scrollLeft đưa mục idx vào giữa khung (idx < 0 → 0). */
+function chartWideW(frameW, n){ return Math.round(frameW * n / 12); }
+function chartScrollLeft(idx, groupW, frameW, totalW){ return idx < 0 ? 0 : Math.round(Math.max(0, Math.min(totalW - frameW, idx * groupW + groupW / 2 - frameW / 2))); }
 function chartModeSet(m){
-  chartMode = m; chartSel = -1; chartHover = -1;
+  chartMode = m; chartSel = -1; chartHover = -1; chartScrollNow = true;
+  chartYr = Number(thisYear()); chartDy = chartYr; chartDm = parseInt(todayISO().slice(5, 7), 10); /* 2.36.0: đổi chế độ bằng công tắc = về kỳ hiện tại (hôm nay / tháng này / năm nay) */
   [['#chartModeY', 'Y'], ['#chartModeM', 'M'], ['#chartModeD', 'D']].forEach(function(b){ var e = $(b[0]); if (e) { e.classList.toggle('on', b[1] === m); e.setAttribute('aria-pressed', b[1] === m ? 'true' : 'false'); } });
   var k = $('#chartYrK'); if (k) k.textContent = m === 'D' ? 'Tháng' : 'Năm';
   var yb = $('.thk__y'); if (yb) yb.style.display = m === 'Y' ? 'none' : '';
@@ -4066,6 +4071,8 @@ function renderChart(){
   var cv = $('#statsChart');
   if (!cv || !cv.offsetParent) return;
   var host = cv.parentNode;
+  var wide = !isDesk() && chartMode === 'D', dd = chartData();
+  if (cv.style) cv.style.width = wide && host.clientWidth ? chartWideW(host.clientWidth, dd.n) + 'px' : ''; /* 2.36.0 */
   var cssW = cv.clientWidth || host.clientWidth || 600;
   var cssH = cv.clientHeight || 300;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -4078,7 +4085,8 @@ function renderChart(){
 
   var cs = getComputedStyle(doc.documentElement);
 
-  drawChartDesk(cv, ctx, cssW, cssH, cs, chartData());
+  drawChartDesk(cv, ctx, cssW, cssH, cs, dd);
+  if (wide && chartScrollNow) { chartScrollNow = false; host.scrollLeft = chartScrollLeft(chartSel >= 0 ? chartSel : dd.def, cssW / dd.n, host.clientWidth, cssW); }
 }
 function setChartTip(mmStr, impV, expV, prfV){
   var impTxt = impV == null ? '—' : fmtMoneyInt(impV), expTxt = expV == null ? '—' : fmtMoneyInt(expV); /* null = chưa trỏ tháng nào (desktop) */
@@ -4118,7 +4126,7 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var hi = chartHover >= 0 ? chartHover : chartSel >= 0 ? chartSel : data.def;
   var groupW = cssW / n, W = groupW * n; /* 2.34.1: mỗi năm một ô chia đều chiều rộng, cặp cột ở GIỮA ô */
   var H = Math.max(10, cssH - padT - padB), y0 = padT + H;
-  var ph = !isDesk(), lst = ph ? chartLabelStep(groupW, mode) : 1;
+  var ph = !isDesk(), lst = ph && mode !== 'D' ? chartLabelStep(groupW, mode) : 1; /* 2.36.0: điện thoại Ngày = canvas rộng, nhãn đủ mọi ngày */
   var bw = mode === 'Y' ? chartYearBw(groupW) : groupW * (ph ? .38 : .245), gap = mode === 'Y' ? 2 : groupW * (ph ? .08 : .1);
   ticks.forEach(function(v){
     var y = Math.round(y0 - H * v * 1000 / top) + 0.5;
@@ -6092,6 +6100,7 @@ function initTabs(){
   var saved = null;
   try { saved = localStorage.getItem('qlk_tab'); } catch (e) {}
   var start = ids.indexOf(saved) >= 0 ? saved : 'retailBox';
+  if ((isDesk() || isStandaloneMode()) && ids.indexOf('chartBox') >= 0) start = 'chartBox'; /* 2.36.0: app (Tauri/PWA) mở là vào Thống kê; chỉ lúc khởi động */
   var sb = doc.getElementById(start);
   if (sb) { sb.open = true; activate(start); }
 }

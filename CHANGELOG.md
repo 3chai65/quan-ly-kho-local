@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.36.0] - 2026-11-20
+
+### Thêm
+- Mở app (Tauri/desktop, PWA standalone kể cả iPhone) là vào tab Thống kê, chỉ lúc khởi động; trình duyệt thường vẫn nhớ tab cũ.
+- Thống kê iPhone, chế độ Ngày: hiện đủ mọi ngày của tháng, khung thấy 12 ngày, vuốt ngang xem tiếp (canvas rộng n/12 khung trong `#chartScroll`); tự cuộn đưa hôm nay vào giữa khung khi mở/đổi tháng. Tháng/Năm vẫn vừa khung.
+
+### Đổi
+- Công tắc Năm|Tháng|Ngày luôn đưa về kỳ hiện tại (hôm nay / tháng này / năm nay) và chọn sẵn mục hiện tại; ‹ › chỉ đổi kỳ trong chế độ đang xem.
+
 ## [2.35.1] - 2026-11-20
 
 ### Sửa

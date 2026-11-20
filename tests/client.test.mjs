@@ -116,7 +116,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -6384,12 +6384,12 @@ test('2.31.0 không còn HD/FHD: không viên cỡ cửa sổ, không mã đổi
   assert.ok(!/HD 1280|1920/.test(fs.existsSync('G:/quan-ly-kho-tauri/src-tauri/src/main.rs') ? fs.readFileSync('G:/quan-ly-kho-tauri/src-tauri/src/main.rs', 'utf8') : ''), 'app Tauri không còn khóa 16:9/HD/FHD (bỏ qua nếu không có repo app)');
 });
 
-test('2.20.0 titlebar.js (app Tauri) luôn chèn trong Tauri, không cần html.desktop; có 3 nút (bỏ qua nếu không có repo app)', t => {
+test('2.20.0 titlebar.js (app Tauri) luôn chèn trong Tauri, không cần html.desktop; có 2 nút (bỏ qua nếu không có repo app)', t => {
   const f = 'G:/quan-ly-kho-tauri/src-tauri/titlebar.js';
   if (!fs.existsSync(f)) return t.skip('không có repo app Tauri');
   const js = fs.readFileSync(f, 'utf8');
   assert.ok(!/classList\.contains\('desktop'\)/.test(js), 'không được phụ thuộc html.desktop');
-  assert.ok(js.includes('data-a="min"') && js.includes('data-a="max"') && js.includes('data-a="close"'));
+  assert.ok(js.includes('data-a="min"') && js.includes('data-a="close"') && !js.includes('data-a="max"') && !js.includes('toggleMaximize'), 'Thu nhỏ + Đóng, không còn Phóng to');
   assert.ok(js.includes("'body{padding-top:32px}") && !js.includes('html.desktop body{padding-top'));
 });
 
@@ -7868,13 +7868,14 @@ function phoneChart(today, txs, W) {
   const calls = [];
   const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : (...a) => { calls.push([k, a]); return { width: 0 }; }), set: (t, k, v) => { t[k] = v; return true; } });
   const mk = () => ({ value: '', textContent: '', style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} }, focus() {}, select() {} });
-  const cv = { offsetParent: {}, clientWidth: W, clientHeight: 260, parentNode: { clientWidth: W }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: W, height: 260 }) };
+  const host = { clientWidth: W, scrollLeft: 0 }; /* khung cuộn; canvas rộng = style.width đặt bởi renderChart */
+  const cv = { offsetParent: {}, style: {}, get clientWidth() { return this.style.width ? parseFloat(this.style.width) : W; }, clientHeight: 260, parentNode: host, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: cv.clientWidth, height: 260 }) };
   const els = { '#statsChart': cv, '#chartMonth': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartPrfVal': mk(), '#chartTipSr': mk(), '#chartTip': mk(), '#chartYrL': mk(), '#chartPrev': mk(), '#chartNext': mk() };
   const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(), querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
   const c = loadClient({ document: doc, Date: fakeClock(...today), setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, getComputedStyle: () => ({ getPropertyValue: () => '' }) });
   c.setDb({ products: [{ id: 'p1', name: 'A', stock: 9, costPrice: 1 }], prescriptions: [], updatedAt: 0, moneyUnit: 'dong', transactions: txs });
   c.renderChart();
-  return { c, calls, els };
+  return { c, calls, els, host, cv };
 }
 
 test('2.35.0 điện thoại: Thống kê mặc định Ngày + chọn sẵn hôm nay; lợi nhuận cột bằng desktop; chạm chọn/đổi cột; đổi chế độ bỏ giữ', () => {
@@ -7882,7 +7883,7 @@ test('2.35.0 điện thoại: Thống kê mặc định Ngày + chọn sẵn hô
   assert.equal(els['#chartMonth'].textContent, '18/11/2026');
   assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(2300000));
   assert.equal(els['#chartPrfVal'].textContent, c.fmtMoneyInt(800000), 'lợi nhuận = bán - vốn');
-  const x = i => (i + 0.5) * 320 / 30;
+  const x = i => (i + 0.5) * 800 / 30; /* 2.36.0: canvas rộng = 30/12 x khung 320 */
   c.onChartClick({ clientX: x(4), clientY: 100 }); assert.equal(c.getChartSel(), 4);
   c.onChartClick({ clientX: x(4), clientY: 100 }); assert.equal(c.getChartSel(), 4, 'chạm lại vẫn giữ');
   c.onChartClick({ clientX: x(6), clientY: 100 }); assert.equal(c.getChartSel(), 6, 'chạm cột khác đổi');
@@ -7895,7 +7896,9 @@ test('2.35.0 điện thoại: nhãn trục thưa khi ô hẹp (hàm thuần), c�
   const ls = loadClient().chartLabelStep;
   assert.equal(ls(320 / 31, 'D'), 3); assert.equal(ls(320 / 12, 'M'), 1); assert.equal(ls(40, 'Y'), 2); assert.equal(ls(970 / 31, 'D'), 1);
   const labels = calls.filter(k => k[0] === 'fillText').map(k => k[1][0]);
-  assert.deepEqual(labels, ['03', '06', '09', '12', '15', '18', '21', '24', '27', '30']);
+  assert.deepEqual(labels, Array.from({ length: 30 }, (_, i) => String(i + 1).padStart(2, '0')), '2.36.0: Ngày điện thoại đủ 30 nhãn (canvas rộng)');
+  const m = phoneChart(DESK_TODAY, DESK_TX, 320); m.c.chartModeSet('M');
+  assert.deepEqual(m.calls.filter(k => k[0] === 'fillText').slice(-12).map(k => k[1][0]), Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')), 'Tháng 12 nhãn đủ');
   assert.equal(calls.filter(k => k[0] === 'quadraticCurveTo').length > 0, true);
 });
 
@@ -7904,7 +7907,7 @@ test('2.35.0 điện thoại: CSS công tắc cao >= 32, chip wrap, canvas pan-y
   assert.ok(/html:not\(\.desktop\) \.thk__m\{[^}]*height:36px/.test(PAGE) && /html:not\(\.desktop\) \.thk__m button\{[^}]*min-height:32px/.test(PAGE));
   assert.ok(/html:not\(\.desktop\) \.thk__r\{[^}]*flex-wrap:wrap/.test(PAGE) && /\.chart-tip\{flex-direction:row;flex-wrap:wrap/.test(PAGE));
   assert.ok(PAGE.includes('html:not(.desktop) .chart-chip--prf,html:not(.desktop) .chart-chip--stk{display:inline-flex}'));
-  assert.ok(PAGE.includes('html:not(.desktop) #statsChart{touch-action:pan-y}'));
+  assert.ok(PAGE.includes('html:not(.desktop) #statsChart{touch-action:pan-x pan-y}'));
   assert.ok(!deskBlock().includes('html:not(.desktop)'));
   assert.ok(Buffer.byteLength(deskBlock()) <= 20736);
 });
@@ -7918,4 +7921,45 @@ test('2.35.1 nhãn cuối trục X nằm trọn canvas (điện thoại/desktop,
     for (const i of xs) assert.ok(m[i] + rw / 2 <= W && m[i] - rw / 2 >= 0, 'trong canvas ' + n + '/' + W + ' i=' + i);
     for (let k = 1; k < xs.length; k++) assert.ok(m[xs[k]] - m[xs[k - 1]] >= rw + 3 - 1e-9, 'không chồng ' + n + '/' + W);
   }
+});
+
+/* ===== 2.36.0 ===== */
+test('2.36.0 chartWideW / chartScrollLeft (hàm thuần): canvas = n/12 khung; hôm nay vào giữa khung, kẹp hai đầu', () => {
+  const { chartWideW: w, chartScrollLeft: s } = loadClient();
+  assert.equal(w(360, 30), 900); assert.equal(w(360, 28), 840); assert.equal(w(360, 31), 930);
+  const g = 900 / 30;
+  assert.equal(s(-1, g, 360, 900), 0); assert.equal(s(0, g, 360, 900), 0, 'đầu tháng kẹp 0');
+  assert.equal(s(17, g, 360, 900), 17 * 30 + 15 - 180, 'giữa khung');
+  assert.equal(s(29, g, 360, 900), 540, 'cuối tháng kẹp totalW - frame');
+});
+
+test('2.36.0 điện thoại Ngày: canvas rộng n/12 khung, vẽ đủ cột, scrollLeft đưa hôm nay vào khung; đổi công tắc về kỳ hiện tại; Tháng/Năm vừa khung', () => {
+  const { c, host, cv, els } = phoneChart(DESK_TODAY, DESK_TX, 360);
+  assert.equal(cv.style.width, '900px');
+  const g = 30, left = host.scrollLeft; // hôm nay = 18 -> idx 17
+  assert.ok(17 * g + g / 2 >= left && 17 * g + g / 2 <= left + 360, 'hôm nay nằm trong khung');
+  assert.equal(left, 17 * g + g / 2 - 180);
+  host.scrollLeft = 7; c.onChartClick({ clientX: 5.5 * g, clientY: 100 }); assert.equal(host.scrollLeft, 7, 'chạm không tự cuộn');
+  c.chartYearGo(-1); assert.equal(cv.style.width, '930px', 'tháng 10 có 31 ngày'); assert.equal(host.scrollLeft, 0, 'đổi tháng (không có hôm nay) cuộn về đầu');
+  c.chartYearGo(1); assert.equal(host.scrollLeft, 17 * g + g / 2 - 180, 'về tháng này cuộn tới hôm nay');
+  c.chartModeSet('M'); assert.equal(cv.style.width, ''); c.chartModeSet('Y'); assert.equal(cv.style.width, '');
+  c.chartYearGo(1); c.chartModeSet('D'); assert.deepEqual(Array.from(c.getChartDay()), ['D', 2026, 11]);
+  assert.equal(els['#chartMonth'].textContent, '18/11/2026');
+});
+
+test('2.36.0 công tắc đổi chế độ luôn về kỳ hiện tại (không giữ kỳ đã lùi/tiến) và chọn mục hiện tại', () => {
+  const { c, els } = deskChart(DESK_TODAY, DESK_TX);
+  c.chartYearGo(-3); c.chartModeSet('M'); assert.equal(els['#chartMonth'].textContent, '11/2026');
+  c.chartYearGo(-1); assert.equal(els['#chartMonth'].textContent, '--/2025'); c.chartModeSet('Y'); assert.equal(els['#chartMonth'].textContent, '2026');
+  c.chartYearGo(-1); c.chartModeSet('D'); assert.equal(els['#chartMonth'].textContent, '18/11/2026');
+  assert.deepEqual(Array.from(c.getChartDay()), ['D', 2026, 11]); assert.equal(c.getChartYr(), 2026);
+});
+
+test('2.36.0 mở app (desktop hoặc PWA standalone) vào Thống kê; trình duyệt thường giữ tab nhớ', () => {
+  const run = (saved, opts) => { const env = makeTabEnv(saved); const c = loadClient(Object.assign({ document: env.doc, localStorage: env.LS }, opts && opts(env))); c.initTabs(); return env; };
+  assert.deepEqual(run('expBox').openIds(), ['expBox'], 'trình duyệt thường: giữ tab nhớ');
+  assert.deepEqual(run('expBox', e => { e.doc.documentElement.classList.add('desktop'); return {}; }).openIds(), ['chartBox'], 'desktop');
+  assert.deepEqual(run('expBox', () => ({ navigator: { standalone: true } })).openIds(), ['chartBox'], 'PWA iPhone');
+  assert.deepEqual(run(null, () => ({ matchMedia: q => ({ matches: /standalone/.test(q) }) })).openIds(), ['chartBox'], 'PWA display-mode');
+  const e2 = run('expBox', () => ({ navigator: { standalone: true } })); e2.clickTab('invBox'); assert.deepEqual(e2.openIds(), ['invBox'], 'không ép lại khi đang dùng');
 });
