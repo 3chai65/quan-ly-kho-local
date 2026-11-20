@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.32.0] - 2026-11-20
+- Kho ton: hai loc bat/tat "Gan het" (0 < ton <= 1 kg) va "Het hang" (ton <= 0, dung sai 1e-9), moi nut co so dem tren toan kho, chi mot loc mot luc, AND voi o Nhap ten, doi loc/tim ve trang 1. Desktop: `Kho ton · n vi thuoc ... [Nhap ten] [Gan het N] [Het hang M] [doi chieu]`; nut Doi chieu chi con icon 30x30 + cham so lech do. Dien thoai: ca 3 nut la icon (kem so dem). Chi loc hien thi, khong doi server/du lieu; test ca bien + pha thu.
+
 ## [2.31.1] - 2026-11-19
 - Desktop: dong danh sach (Kho ton, Lich su nhap, Lich su ban) luon 1 dong (nowrap, cot ten chiem phan con lai va cat "..."); nut bang mau thanh ben = icon tron 22 (vung bam 28, khong vien/nen); Lich su ban: dong "n giao dich" cung hang tieu de. Chu khong thu nho; dien thoai khong doi; tran CSS desktop test 20480 -> 20736.
 

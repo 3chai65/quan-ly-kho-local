@@ -58,6 +58,7 @@ globalThis.__test = {
   getOrderCur: function(){ return orderCur; }, setOrderCur: function(v){ orderCur = v; },
   getNhapPid: function(){ return nhapPid; }, setNhapPid: function(v){ nhapPid = v; },
   setTxEdit: function(v){ txEditCur = v; },
+  getInvFilter: function(){ return invFilter; }, setInvFilter: function(v){ invFilter = v; },
   getInvPage: function(){ return invPage; },
   setInvPage: function(v){ invPage = v; },
   renderPresetOptions: (typeof renderPresetOptions === 'function' ? renderPresetOptions : null),
@@ -3994,7 +3995,7 @@ test('2.14.0 Kho/Nhập/Bán: thanh card__bar có tên mục, ô tìm/lọc, s�
 });
 
 test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu tượng; ô tìm lịch sử nhập xuống hàng 2 cả hàng; số liệu Lịch sử nhập ở hàng 1 cùng tên', () => {
-  assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.card__bar-lbl\{display:none\}/);
+  assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.card__bar-lbl,\.inv-chip__l\{display:none\}/);
   assert.match(PAGE, /\.card__bar-search\.is-inline,\.card__bar>\.inp\.card__bar-search\{order:1;flex:1 1 80px;min-width:0\}/, 'ô tìm cùng hàng tiêu đề (2.15.0)');
   assert.match(PAGE, /\.card__bar-count\{order:4;margin-left:0\}/, 'số liệu xuống hàng cuối nếu hết chỗ');
   
@@ -4369,7 +4370,7 @@ const NEW_213 = ['nhap-add', 'brand-devices'];
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app', 'open-backup-dir', 'bak-refresh'];
-const NEW_226 = ['close-preset']; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
+const NEW_226 = ['close-preset', 'inv-low', 'inv-out']; // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -7754,4 +7755,46 @@ test('2.31.1 nút bảng màu ở thanh bên = icon trơn 22 (không viền/nề
   assert.ok(b.includes('html.desktop .sbp .ico{width:22px;height:22px}'), 'icon 22');
   const m = /pb\.className = '([^']*)'/.exec(PAGE)[1];
   assert.equal(m, 'sbp', 'nút không mang class btn');
+});
+
+/* ===== 2.32.0 Kho tồn: lọc Gần hết / Hết hàng ===== */
+const STOCK_NAMES = [['Cam Thảo', 0, 'out'], ['Bạch Chỉ', 1e-9, 'out'], ['Đảng Sâm', 0.5, 'low'], ['Hoàng Kỳ', 1.0, 'low'], ['Kỷ Tử', 1.001, ''], ['Đương Quy', -2, 'out']];
+function stockFixture() {
+  const els = {};
+  for (const k of ['#invSearch', '#invCount', '#invBody', '#invLowN', '#invOutN', '#invLowBtn', '#invOutBtn', '#invRecN', '#invRecBtn']) els[k] = makeEl();
+  const doc = trackDoc(els);
+  doc.createTextNode = () => makeEl();
+  const c = loadClient({ document: doc });
+  c.setDb({ products: STOCK_NAMES.map(([name, stock], i) => ({ id: 'p' + i, name, stock, costPrice: 1000 })), transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const act = a => c.handleAction({ getAttribute: k => (k === 'data-action' ? a : null) });
+  return { els, c, act, rows: () => els['#invBody'].children.filter(r => r.className === 'is-row').length };
+}
+test('2.32.0 Kho tồn: ngưỡng gần hết/hết hàng theo ca biên 0 / 1e-9 / 0,5 / 1,0 / 1,001 / -2; số đếm trên toàn kho', () => {
+  const f = stockFixture();
+  f.c.renderInventory();
+  assert.equal(f.els['#invLowN'].textContent, 2, 'gần hết: 0,5 và 1,0 (1 kg tính là gần hết; 1,001 thì không)');
+  assert.equal(f.els['#invOutN'].textContent, 3, 'hết hàng: 0, 1e-9, -2');
+  assert.equal(f.els['#invCount'].textContent, '6 vị thuốc');
+  f.act('inv-low'); assert.equal(f.c.getInvFilter(), 'low'); assert.equal(f.els['#invCount'].textContent, '2 vị thuốc');
+  f.act('inv-out'); assert.equal(f.c.getInvFilter(), 'out', 'chỉ một lọc một lúc'); assert.equal(f.els['#invCount'].textContent, '3 vị thuốc');
+  assert.equal(f.els['#invLowN'].textContent, 2, 'số đếm không đổi khi lọc');
+  f.act('inv-out'); assert.equal(f.c.getInvFilter(), ''); assert.equal(f.els['#invCount'].textContent, '6 vị thuốc', 'bấm lại bỏ lọc');
+});
+test('2.32.0 Kho tồn: lọc AND ô Nhập tên, đổi lọc về trang 1, danh sách rỗng báo không tìm thấy', () => {
+  const f = stockFixture();
+  f.c.renderInventory();
+  f.act('inv-low'); f.els['#invSearch'].value = 'ky'; f.c.renderInventory();
+  assert.equal(f.els['#invCount'].textContent, '1 vị thuốc', 'low + "ky" -> Hoàng Kỳ (Kỷ Tử là 1,001 nên không)');
+  assert.equal(f.els['#invLowN'].textContent, 2, 'số đếm không phụ thuộc ô tìm');
+  f.act('inv-out'); assert.equal(f.els['#invCount'].textContent, '0 vị thuốc');
+  assert.ok(f.els['#invBody'].children.some(r => r.className === 'is-empty'));
+  f.els['#invSearch'].value = '';
+  f.c.setInvPage(3); f.act('inv-low'); assert.equal(f.c.getInvPage(), 1, 'đổi lọc -> trang 1');
+});
+test('2.32.0 Kho tồn: HTML có 3 nút (Gần hết, Hết hàng, Đối chiếu chỉ icon + chấm số lệch), CSS desktop vẫn trong trần', () => {
+  const inv = PAGE.slice(PAGE.indexOf('id="invBox"'), PAGE.indexOf('<div class="tw">', PAGE.indexOf('id="invBox"')));
+  for (const id of ['invLowBtn', 'invOutBtn', 'invLowN', 'invOutN', 'invRecBtn', 'invRecN']) assert.equal((PAGE.match(new RegExp('id="' + id + '"', 'g')) || []).length, 1, id);
+  assert.match(inv, /data-action="inv-low"[^>]*aria-label="Gần hết"/); assert.match(inv, /data-action="inv-out"[^>]*aria-label="Hết hàng"/);
+  assert.doesNotMatch(inv.slice(inv.indexOf('data-action="reconcile"')), /card__bar-lbl|>Đối chiếu tồn kho</, 'Đối chiếu chỉ còn icon');
+  assert.ok(deskBlock().length <= 20736);
 });

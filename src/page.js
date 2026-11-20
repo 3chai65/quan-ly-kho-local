@@ -354,11 +354,28 @@ td.c-qty{position:relative}
 .card__bar-search.is-inline{flex:1 1 220px}
 .card__bar-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
 .card__bar-btn{flex:0 0 auto}
+/* 2.32.0: Kho tồn – viên lọc Gần hết/Hết hàng (chữ ≥601px, icon + số đếm ≤600px), nút Đối chiếu chỉ icon + chấm số lệch. Bật/tắt qua --nb/--kb của luật nút kính. */
+#invBox .inv-chip{flex:none;min-height:30px;padding:0 12px;gap:6px;font-size:13px;white-space:nowrap;--nb:rgba(255,255,255,.08);--kb:rgba(255,255,255,.12)}
+#invBox .inv-chip.on{font-weight:700;--nb:rgba(255,255,255,.22);--kb:rgba(255,255,255,.4)}
+#invBox .inv-chip .ico{display:none}
+.inv-chip__n{color:var(--muted)}
+#invBox .card__bar-btn{position:relative}
+.inv-dot{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
+.inv-dot[hidden]{display:none}
+@media (min-width:601px){
+#invBox .card__bar-btn{width:30px;min-width:30px;height:30px;min-height:30px;padding:0}
+#invBox :is(.card__bar-title,.card__bar-count){order:-1;margin:0}
+#invBox .card__bar-count{margin-right:auto;font-size:13px}
+#invBox .card__bar-count::before{content:"· "}
+}
 .card__bar>.inp.card__bar-search{flex:1 1 220px;min-width:0}
 @media (max-width:600px){
 .card__bar-month{order:2}
 .card__bar-btn{order:2}
-.card__bar-lbl{display:none}
+.card__bar-lbl,.inv-chip__l{display:none}
+#invBox .inv-chip{order:2;min-height:38px;padding:0 9px;gap:4px}
+#invBox .inv-chip .ico{display:inline-block}
+.inv-chip__n{font-size:11px}
 /* 2.15.0: điện thoại – ô tìm nằm cùng hàng tiêu đề (giữa tên mục và ô ngày/tháng); không đủ chỗ thì ô ngày/tháng xuống hàng dưới. */
 .card__bar{gap:6px}
 .card__bar-search,.card__bar-search.is-inline,.card__bar>.inp.card__bar-search{order:1;flex:1 1 80px;min-width:0}
@@ -887,7 +904,8 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
 <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
-<symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></symbol>
+<symbol id="i-edit"viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
 <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
 <symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/></symbol>
 <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
@@ -1189,8 +1207,10 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để lọc kho" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
             <div class="sug__list" id="invList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
-          <button class="btn btn--sm card__bar-btn" type="button" data-action="reconcile" aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho">
-            <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span class="card__bar-lbl">Đối chiếu tồn kho</span>
+          <button class="btn btn--sm inv-chip" id="invLowBtn" type="button" data-action="inv-low" aria-pressed="false" aria-label="Gần hết" title="Gần hết (còn từ 0 đến 1 kg)"><svg class="ico" aria-hidden="true"><use href="#i-warn"/></svg><span class="inv-chip__l">Gần hết</span><span class="inv-chip__n" id="invLowN">0</span></button>
+          <button class="btn btn--sm inv-chip" id="invOutBtn" type="button" data-action="inv-out" aria-pressed="false" aria-label="Hết hàng" title="Hết hàng (tồn 0 hoặc âm)"><svg class="ico" aria-hidden="true"><use href="#i-ban"/></svg><span class="inv-chip__l">Hết hàng</span><span class="inv-chip__n" id="invOutN">0</span></button>
+          <button class="btn btn--sm card__bar-btn" id="invRecBtn" type="button" data-action="reconcile" aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho">
+            <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span class="inv-dot" id="invRecN" hidden></span>
           </button>
           <span class="hint card__bar-count" id="invCount"></span>
         </div>
@@ -1947,6 +1967,8 @@ function blankRow(tb){
 }
 var db = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
 var invPage = 1, impPage = 1, expPage = 1;
+var LOW_STOCK_KG = 1, STOCK_EPS = 1e-9, invFilter = ''; /* 2.32.0: Kho tồn lọc 'low' (0 < tồn ≤ 1 kg) / 'out' (tồn ≤ 0, dung sai 1e-9) */
+function stockKind(s){ s = num(s); return s <= STOCK_EPS ? 'out' : (s <= LOW_STOCK_KG ? 'low' : ''); }
 var cloudBase = 0;
 var dirty = false;
 var syncErrorShown = false;
@@ -3467,7 +3489,17 @@ function renderInventory(){
   if (!tbody) return;
   tbody.textContent = '';
   var kw = normSearch(($('#invSearch') || {}).value || '');
-  var list = db.products.filter(function(p){ return !kw || wholeWordMatch(p.name, kw); }); /* 2.27.0: một luật tìm chung (trọn chữ) */
+  var nk = { low: 0, out: 0 };
+  db.products.forEach(function(p){ var k = stockKind(p.stock); if (k) nk[k]++; }); /* 2.32.0: số đếm trên TOÀN kho, không phụ thuộc ô tìm */
+  var list = db.products.filter(function(p){ return (!kw || wholeWordMatch(p.name, kw)) && (!invFilter || stockKind(p.stock) === invFilter); }); /* 2.27.0: một luật tìm chung (trọn chữ); 2.32.0: AND với lọc Gần hết/Hết hàng */
+  [['low', 'Low', 'Gần hết'], ['out', 'Out', 'Hết hàng']].forEach(function(f){
+    var b = $('#inv' + f[1] + 'Btn'), n = $('#inv' + f[1] + 'N');
+    if (n) n.textContent = nk[f[0]];
+    if (b) { b.classList.toggle('on', invFilter === f[0]); b.setAttribute('aria-pressed', invFilter === f[0] ? 'true' : 'false'); b.setAttribute('aria-label', f[2] + ': ' + nk[f[0]] + ' vị thuốc'); }
+  });
+  var nr = reconcileList().length, rb = $('#invRecBtn'), rd = $('#invRecN');
+  if (rd) { rd.textContent = nr; rd.hidden = !nr; }
+  if (rb) { var rt = 'Đối chiếu tồn kho' + (nr ? ' (' + nr + ' lệch)' : ''); rb.title = rt; rb.setAttribute('aria-label', rt); }
 
   // Tổng kg đã bán theo từng vị (BAN: bán lẻ + đơn chén, đều lưu qty_kg)
   var sales = {};
@@ -5533,6 +5565,7 @@ function handleAction(btn){
     case 'bak-view': bakView(btn.getAttribute('data-view')); break;
     case 'open-devices': location.href = '/auth/devices'; break;
     case 'close-edit': closeEdit(); break;
+    case 'inv-low': case 'inv-out': { var fk = a.slice(4); invFilter = invFilter === fk ? '' : fk; invPage = 1; renderInventory(); break; } /* 2.32.0 */
     case 'reconcile': openRec(); break;
     case 'close-rec': closeRec(); break;
     case 'rec-fix': recFix(id); break;
