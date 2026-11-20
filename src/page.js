@@ -359,6 +359,12 @@ td.c-qty{position:relative}
 #invBox .inv-chip.on{font-weight:700;--nb:rgba(255,255,255,.22);--kb:rgba(255,255,255,.4)}
 #invBox .inv-chip .ico{display:none}
 .inv-chip__n{color:var(--muted)}
+/* 2.33.0: công tắc Tháng|Ngày của Thống kê (ngoài khối desktop để khỏi vượt trần 20736 B; .thk chỉ hiện ở desktop) */
+html.desktop .thk__r{display:flex;align-items:center;gap:12px}
+html.desktop .thk__m{display:inline-flex;height:26px;border-radius:999px;background:rgba(255,255,255,.08);padding:2px;box-sizing:border-box}
+html.desktop .thk__m button{border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:0 12px;cursor:pointer}
+html.desktop .thk__m button.on{background:rgba(255,255,255,.18);color:var(--text)}
+html.desktop #chartTip[data-m=D] .chart-tip__m{min-width:84px}
 #invBox .card__bar-btn{position:relative}
 .inv-dot{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
 .inv-dot[hidden]{display:none}
@@ -700,7 +706,7 @@ html.desktop .thk__h{display:flex;justify-content:space-between;align-items:cent
 html.desktop .thk__y{display:flex;align-items:center;gap:8px}
 html.desktop .thk__y .btn{width:44px;min-width:44px;height:30px;min-height:30px;padding:0;font-size:18px;line-height:1}
 html.desktop .thk__y span{font-size:13px;color:var(--muted)}
-html.desktop .thk__y b{width:44px;text-align:center;font-size:15px;font-variant-numeric:tabular-nums}
+html.desktop .thk__y b{min-width:44px;text-align:center;font-size:15px;font-variant-numeric:tabular-nums}
 html.desktop .thk__t{margin:0;font-size:15px;line-height:1.2;font-weight:700}
 html.desktop .thk__n{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 html.desktop .thk__g{display:flex;gap:20px;padding:8px 14px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.06)}
@@ -1184,7 +1190,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
         </span>
       </summary>
       <div class="card__body">
-        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span>Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div><div class="thk__n"><div class="thk__g"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span></div><div class="thk__g"><span><i>Bán trong tháng</i><b data-s4="tkExpMonth">0</b></span><span><i>Lợi nhuận tháng</i><b data-s4="tkProfitMonth">0</b></span></div><div class="thk__g"><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div><div class="thk__g"><span><i>Nhập trong tháng</i><b data-s4="tkImp">0</b></span><span><i>Tổng tồn kho</i><b data-s4="tkStock">0</b></span></div></div></div>
+        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__r"><div class="thk__m" role="group" aria-label="Xem theo"><button type="button" id="chartModeM" class="on" aria-pressed="true">Tháng</button><button type="button" id="chartModeD" aria-pressed="false">Ngày</button></div><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span id="chartYrK">Năm</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div></div><div class="thk__n"><div class="thk__g"><span><i>Bán hôm nay</i><b data-s4="tkExpDay">0</b></span><span><i>Lợi nhuận hôm nay</i><b data-s4="tkProfitDay">0</b></span></div><div class="thk__g"><span><i>Bán trong tháng</i><b data-s4="tkExpMonth">0</b></span><span><i>Lợi nhuận tháng</i><b data-s4="tkProfitMonth">0</b></span></div><div class="thk__g"><span><i>Bán trong năm</i><b data-s4="tkExpYear">0</b></span><span><i>Lợi nhuận năm</i><b data-s4="tkProfitYear">0</b></span></div><div class="thk__g"><span><i>Nhập trong tháng</i><b data-s4="tkImp">0</b></span><span><i>Tổng tồn kho</i><b data-s4="tkStock">0</b></span></div></div></div>
         <canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
@@ -3979,8 +3985,15 @@ function recFixAll(){
 var chartSel = -1, chartHover = -1, chartGeo = null;
 /* 2.25.0: desktop luôn là một năm (số), 12 nhóm Y-01..Y-12; mặc định và mỗi lần mở tab = năm hiện tại. Bước năm kẹp 2000..2100; hàm thuần. */
 var chartYr = Number(thisYear());
+var chartMode = 'M', chartDy = chartYr, chartDm = parseInt(todayISO().slice(5, 7), 10); /* 2.33.0: 'M' tháng | 'D' ngày (desktop) */
 function chartYearStep(cur, dir){ return Math.min(2100, Math.max(2000, cur + dir)); }
-function chartYearGo(dir){ chartYr = chartYearStep(chartYr, dir); chartSel = -1; chartHover = -1; renderChart(); }
+function chartYearGo(dir){ if (chartMode === 'D') { var s = chartMonthStep(chartDy, chartDm, dir); chartDy = s.y; chartDm = s.m; } else chartYr = chartYearStep(chartYr, dir); chartSel = -1; chartHover = -1; renderChart(); }
+function chartModeSet(m){
+  chartMode = m; chartSel = -1; chartHover = -1;
+  [['#chartModeM', 'M'], ['#chartModeD', 'D']].forEach(function(b){ var e = $(b[0]); if (e) { e.classList.toggle('on', b[1] === m); e.setAttribute('aria-pressed', b[1] === m ? 'true' : 'false'); } });
+  var k = $('#chartYrK'); if (k) k.textContent = m === 'D' ? 'Tháng' : 'Năm';
+  renderChart();
+}
 function chartMonths(yr){ var o = []; for (var k = 1; k <= 12; k++) o.push(yr + '-' + pad2(k)); return o; }
 /* 2.24.0: vạch trục Y đẹp (nghìn đồng, số nguyên): bước 1/2/2,5/5 x 10^k, 4-5 vạch tính cả 0. Hàm thuần. */
 function chartTicks(maxK){
@@ -3990,7 +4003,21 @@ function chartTicks(maxK){
   for (var i = 0; i <= n; i++) out.push(i * step);
   return out;
 }
+/* 2.33.0: theo NGÀY. Hàm thuần: số ngày của tháng m (1..12) năm y; bước tháng kẹp 01/2000..12/2100; tổng Nhập/Bán từng ngày (cộng dồn). */
+function chartDaysIn(y, m){ return m === 2 ? ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28) : (m === 4 || m === 6 || m === 9 || m === 11 ? 30 : 31); }
+function chartMonthStep(y, m, dir){ var k = Math.min(2100 * 12 + 11, Math.max(2000 * 12, y * 12 + m - 1 + dir)); return { y: Math.floor(k / 12), m: k % 12 + 1 }; }
+function chartDayTotals(txs, y, m){
+  var n = chartDaysIn(y, m), ym = y + '-' + pad2(m), impK = [], expK = [], i;
+  for (i = 0; i < n; i++) { impK.push(0); expK.push(0); }
+  txs.forEach(function(t){
+    var k = t.date ? String(t.date).slice(0, 10) : '', d = parseInt(k.slice(8, 10), 10);
+    if (k.slice(0, 7) !== ym || !(d >= 1 && d <= n)) return;
+    if (t.type === 'NHAP') impK[d - 1] += num(t.total); else expK[d - 1] += num(t.total);
+  });
+  return { impK: impK.map(dec), expK: expK.map(dec), n: n };
+}
 function chartData(){
+  if (isDesk() && chartMode === 'D') { var dd = chartDayTotals(db.transactions, chartDy, chartDm); return { impK: dd.impK, expK: dd.expK, n: dd.n, yms: null, day: true }; }
   var year = ($('#chartYear') || {}).value || thisYear();
   var yms = isDesk() ? chartMonths(chartYr) : null;
   var imp = [], exp = [], impK = [], expK = [];
@@ -4059,7 +4086,7 @@ function renderChart(){
   var colGrid = cs.getPropertyValue('--border').trim() || '#e3e8ef';
 
   var data = chartData();
-  if (data.yms) { drawChartDesk(cv, ctx, cssW, cssH, cs, data); return; }
+  if (data.yms || data.day) { drawChartDesk(cv, ctx, cssW, cssH, cs, data); return; }
   var max = 0;
   data.imp.forEach(function(v){ if (v > max) max = v; });
   data.exp.forEach(function(v){ if (v > max) max = v; });
@@ -4118,24 +4145,25 @@ function setChartTip(mmStr, impV, expV){
   var iV = $('#chartImpVal'), eV = $('#chartExpVal');
   if (iV) iV.textContent = impTxt;
   if (eV) eV.textContent = expTxt;
-  if (sEl) sEl.textContent = 'Tháng ' + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
+  if (sEl) sEl.textContent = (chartMode === 'D' && isDesk() ? 'Ngày ' : 'Tháng ') + mmStr + ' — Nhập: ' + impTxt + ' · Bán: ' + expTxt;
 }
 /* 2.25.0 desktop: biểu đồ 12 tháng của năm chartYr, trục Y bên phải (nghìn đồng, số đầy đủ), cột đôi Nhập/Bán, trục X 01..12; hover/bấm → vạch dọc + dòng tháng/chip (#chartTip, nằm dưới hàng 4 số). */
 function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
   var padT = 10, padB = 24;
   var impC = cs.getPropertyValue('--chart-imp').trim() || '#44DAFE', expC = cs.getPropertyValue('--chart-exp').trim() || '#FFA33D';
-  var vmax = 0, i, yl = $('#chartYrL'), yp = $('#chartPrev'), yn = $('#chartNext');
-  if (yl) yl.textContent = chartYr;
-  if (yp) yp.disabled = chartYr <= 2000;
-  if (yn) yn.disabled = chartYr >= 2100;
-  for (i = 0; i < 12; i++) vmax = Math.max(vmax, data.impK[i], data.expK[i]);
+  var vmax = 0, i, yl = $('#chartYrL'), yp = $('#chartPrev'), yn = $('#chartNext'), day = !!data.day, n = data.impK.length;
+  if (yl) yl.textContent = day ? pad2(chartDm) + '/' + chartDy : chartYr;
+  if (yp) yp.disabled = day ? chartDy * 12 + chartDm <= 24001 : chartYr <= 2000;
+  if (yn) yn.disabled = day ? chartDy * 12 + chartDm >= 2100 * 12 + 12 : chartYr >= 2100;
+  var tipEl = $('#chartTip'); if (tipEl) tipEl.setAttribute('data-m', day ? 'D' : 'M');
+  for (i = 0; i < n; i++) vmax = Math.max(vmax, data.impK[i], data.expK[i]);
   var ticks = chartTicks(vmax / 1000), top = ticks[ticks.length - 1] * 1000;
   var hi = chartHover >= 0 ? chartHover : chartSel;
   ctx.textBaseline = 'middle';
   ctx.font = '11px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
   var padR = Math.ceil(ctx.measureText(NF0.format(ticks[ticks.length - 1])).width) + 8; /* chừa đúng chỗ cho nhãn trục Y bên phải */
   var W = Math.max(10, cssW - padR), H = Math.max(10, cssH - padT - padB), y0 = padT + H;
-  var groupW = W / 12, bw = groupW * .245, gap = groupW * .1;
+  var groupW = W / n, bw = groupW * .245, gap = groupW * .1;
   ticks.forEach(function(v){
     var y = Math.round(y0 - H * v * 1000 / top) + 0.5;
     ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1;
@@ -4144,17 +4172,19 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
     ctx.fillText(NF0.format(v), W + 8, y);
   });
   ctx.font = '12px -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",sans-serif';
-  for (i = 0; i < 12; i++) {
+  var lstep = day && groupW < 18 ? 2 : 1; /* ngày: chật thì chỉ nhãn ngày chẵn, cột vẫn đủ */
+  for (i = 0; i < n; i++) {
     var cx = groupW * i + groupW / 2;
     if (i === hi) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(Math.round(cx), padT, 1, H); }
     ctx.fillStyle = impC; bar(ctx, cx - gap / 2 - bw, y0 - H * data.impK[i] / top, bw, H * data.impK[i] / top, 3);
     ctx.fillStyle = expC; bar(ctx, cx + gap / 2, y0 - H * data.expK[i] / top, bw, H * data.expK[i] / top, 3);
     ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'center';
-    ctx.fillText(data.yms[i].slice(5), cx, y0 + 12);
+    if ((i + 1) % lstep === 0) ctx.fillText(day ? pad2(i + 1) : data.yms[i].slice(5), cx, y0 + 12);
   }
-  chartGeo = { padL: 0, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
-  if (hi < 0) setChartTip('--/----', null, null);
-  else setChartTip(pad2(hi + 1) + '/' + chartYr, data.impK[hi], data.expK[hi]);
+  chartGeo = { n: n, padL: 0, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH };
+  var mm = day ? pad2(chartDm) + '/' + chartDy : null;
+  if (hi < 0) setChartTip(day ? '--/' + mm : '--/----', null, null);
+  else setChartTip(day ? pad2(hi + 1) + '/' + mm : pad2(hi + 1) + '/' + chartYr, data.impK[hi], data.expK[hi]);
 }
 /* Chỉ số nhóm tháng (0..11) dưới con trỏ, -1 nếu ngoài vùng vẽ. */
 function chartIdxAt(e){
@@ -4166,7 +4196,7 @@ function chartIdxAt(e){
   var y = (e.clientY - r.top) * (g.cssH / (r.height || g.cssH));
   if (x < g.padL || x > g.padL + g.W || y < g.padT || y > g.y0 + 14) return -1;
   var i = Math.floor((x - g.padL) / g.groupW);
-  return i < 0 ? 0 : i > 11 ? 11 : i;
+  return i < 0 ? 0 : i > (g.n || 12) - 1 ? (g.n || 12) - 1 : i;
 }
 function onChartClick(e){
   var i = chartIdxAt(e);
@@ -5722,9 +5752,10 @@ function bindEvents(){
   if (ch) { ch.addEventListener('click', onChartClick); ch.addEventListener('mousemove', onChartMove); ch.addEventListener('mouseleave', onChartMove); }
 
   var cb = $('#chartBox');
+  [['#chartModeM', 'M'], ['#chartModeD', 'D']].forEach(function(b){ var e = $(b[0]); if (e) e.addEventListener('click', function(){ chartModeSet(b[1]); }); });
   [['#chartPrev', -1], ['#chartNext', 1]].forEach(function(b){ var e = $(b[0]); if (e) e.addEventListener('click', function(){ chartYearGo(b[1]); }); });
   if (cb) cb.addEventListener('toggle', function(){
-    if (cb.open) { chartYr = Number(thisYear()); chartSel = -1; chartHover = -1; requestAnimationFrame(renderChart); }
+    if (cb.open) { chartYr = Number(thisYear()); chartDy = chartYr; chartDm = parseInt(todayISO().slice(5, 7), 10); chartSel = -1; chartHover = -1; requestAnimationFrame(renderChart); }
   });
   var bbx = $('#backupBox');
   if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) { loadBakList(); bakView('bak'); } });

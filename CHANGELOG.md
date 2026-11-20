@@ -5,6 +5,9 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.33.0] - 2026-11-20
+- Thong ke desktop: cong tac Thang | Ngay (vien lien cao 26, chu 13) ngay trai bo chon ky. Che do Ngay: bo chon `< Thang MM/YYYY >` (qua ranh gioi nam), moi ngay cua thang mot cap cot Nhap/Ban (28-31 cot, ngay trong = 0; Nhap = tong total NHAP, Ban = tong total BAN, khong tru von; cong don theo 10 ky tu dau cua date), nhan 01..31 (chat thi chi ngay chan), chu thich DD/MM/YYYY hoac --/MM/YYYY. Doi che do/ky bo cot chon. Khong doi 4 o so, du lieu, server; dien thoai khong doi. CSS cong tac nam ngoai khoi desktop (tran 20736 B). Test ca 28/29/30/31 ngay, cong don, tach nhap/ban, thang khac, ranh gioi nam + pha thu.
+
 ## [2.32.0] - 2026-11-20
 - Kho ton: hai loc bat/tat "Gan het" (0 < ton <= 1 kg) va "Het hang" (ton <= 0, dung sai 1e-9), moi nut co so dem tren toan kho, chi mot loc mot luc, AND voi o Nhap ten, doi loc/tim ve trang 1. Desktop: `Kho ton · n vi thuoc ... [Nhap ten] [Gan het N] [Het hang M] [doi chieu]`; nut Doi chieu chi con icon 30x30 + cham so lech do. Dien thoai: ca 3 nut la icon (kem so dem). Chi loc hien thi, khong doi server/du lieu; test ca bien + pha thu.
 

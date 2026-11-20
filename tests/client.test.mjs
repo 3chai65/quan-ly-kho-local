@@ -116,7 +116,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartMonths: (typeof chartMonths === 'function' ? chartMonths : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -7797,4 +7797,72 @@ test('2.32.0 Kho tồn: HTML có 3 nút (Gần hết, Hết hàng, Đối chiế
   assert.match(inv, /data-action="inv-low"[^>]*aria-label="Gần hết"/); assert.match(inv, /data-action="inv-out"[^>]*aria-label="Hết hàng"/);
   assert.doesNotMatch(inv.slice(inv.indexOf('data-action="reconcile"')), /card__bar-lbl|>Đối chiếu tồn kho</, 'Đối chiếu chỉ còn icon');
   assert.ok(deskBlock().length <= 20736);
+});
+
+// ===== 2.33.0: Thống kê theo NGÀY =====
+const DAY_TX = [
+  { id: '1', date: '2026-11-03', type: 'NHAP', total: 1000000 },
+  { id: '2', date: '2026-11-03T09:00:00', type: 'NHAP', total: 250000 },
+  { id: '3', date: '2026-11-03', type: 'BAN', total: 700000, cost: 1 },
+  { id: '4', date: '2026-11-30', type: 'BAN', total: 50000 },
+  { id: '5', date: '2026-10-31', type: 'NHAP', total: 9e6 },
+  { id: '6', date: '2026-12-01', type: 'BAN', total: 8e6 },
+  { id: '7', date: '2025-11-03', type: 'NHAP', total: 7e6 }
+];
+
+test('2.33.0 chartDaysIn: 28/29/30/31 ngày, năm nhuận (chia 100 không, chia 400 có)', () => {
+  const c = loadClient();
+  assert.equal(c.chartDaysIn(2026, 2), 28); assert.equal(c.chartDaysIn(2028, 2), 29);
+  assert.equal(c.chartDaysIn(2100, 2), 28); assert.equal(c.chartDaysIn(2000, 2), 29);
+  for (const m of [4, 6, 9, 11]) assert.equal(c.chartDaysIn(2026, m), 30);
+  for (const m of [1, 3, 5, 7, 8, 10, 12]) assert.equal(c.chartDaysIn(2026, m), 31);
+});
+
+test('2.33.0 chartDayTotals: cộng dồn cùng ngày, Nhập/Bán tách riêng (không trừ vốn), tháng/năm khác không lọt, ngày trống = 0, đủ số ngày', () => {
+  const c = loadClient(), r = c.chartDayTotals(DAY_TX, 2026, 11);
+  assert.equal(r.n, 30); assert.equal(r.impK.length, 30); assert.equal(r.expK.length, 30);
+  assert.equal(r.impK[2], 1250000, 'cộng dồn 2 phiếu nhập cùng ngày (date có giờ vẫn tính)');
+  assert.equal(r.expK[2], 700000, 'Bán = total, không trừ vốn');
+  assert.equal(r.expK[29], 50000);
+  assert.equal(r.impK.reduce((a, b) => a + b, 0), 1250000, 'T10/T12/2025 không lọt');
+  assert.equal(r.expK.reduce((a, b) => a + b, 0), 750000);
+  assert.equal(r.impK[0], 0);
+  assert.equal(c.chartDayTotals(DAY_TX, 2026, 10).impK[30], 9e6, 'tháng 31 ngày: ngày 31');
+  assert.equal(c.chartDayTotals([], 2028, 2).impK.length, 29); assert.equal(c.chartDayTotals([], 2026, 2).impK.length, 28);
+  assert.equal(c.chartDayTotals([{ date: '2026-02-29', type: 'NHAP', total: 5 }], 2026, 2).impK.reduce((a, b) => a + b, 0), 0, '29/02 không có ở năm thường');
+});
+
+test('2.33.0 chartMonthStep qua ranh giới năm, kẹp 01/2000..12/2100', () => {
+  const c = loadClient(), s = c.chartMonthStep;
+  assert.deepEqual({ ...s(2026, 12, 1) }, { y: 2027, m: 1 }); assert.deepEqual({ ...s(2026, 1, -1) }, { y: 2025, m: 12 });
+  assert.deepEqual({ ...s(2026, 5, 1) }, { y: 2026, m: 6 });
+  assert.deepEqual({ ...s(2000, 1, -1) }, { y: 2000, m: 1 }); assert.deepEqual({ ...s(2100, 12, 1) }, { y: 2100, m: 12 });
+});
+
+test('2.33.0 desktop chế độ Ngày: 30 cột/nhãn 01..30 (không tràn), chip DD/MM/YYYY, --/MM/YYYY khi chưa chọn, ‹ › qua năm, đổi chế độ/kỳ bỏ cột chọn', () => {
+  const { c, calls, els } = deskChart([2026, 10, 18, 12], DAY_TX);
+  assert.deepEqual(Array.from(c.getChartDay()), ['M', 2026, 11], 'mặc định Tháng, kỳ = tháng hiện tại');
+  c.chartModeSet('D');
+  assert.equal(els['#chartYrL'].textContent, '11/2026'); assert.equal(els['#chartMonth'].textContent, '--/11/2026');
+  const texts = calls.slice(-400).filter(x => x[0] === 'fillText').map(x => x[1][0]);
+  const labels = texts.filter(t => /^\d\d$/.test(t));
+  assert.deepEqual(Array.from(labels.slice(-30)), Array.from({ length: 30 }, (_, i) => String(i + 1).padStart(2, '0')), 'nhãn trục 01..30 (970px đủ rộng)');
+  c.onChartMove({ type: 'mousemove', clientX: 2.5 * (970 - 20) / 30, clientY: 100 });
+  assert.equal(els['#chartMonth'].textContent, '03/11/2026');
+  assert.equal(els['#chartImpVal'].textContent, c.fmtMoneyInt(1250000)); assert.equal(els['#chartExpVal'].textContent, c.fmtMoneyInt(700000));
+  c.onChartClick({ clientX: 2.5 * (970 - 20) / 30, clientY: 100 }); assert.equal(c.getChartSel(), 2);
+  c.chartYearGo(1); assert.equal(c.getChartSel(), -1, 'đổi kỳ bỏ cột chọn'); assert.deepEqual(Array.from(c.getChartDay()), ['D', 2026, 12]);
+  c.chartYearGo(1); assert.deepEqual(Array.from(c.getChartDay()), ['D', 2027, 1]); assert.equal(els['#chartYrL'].textContent, '01/2027');
+  c.chartYearGo(-1); c.chartYearGo(-1); c.chartYearGo(-1); assert.deepEqual(Array.from(c.getChartDay()), ['D', 2026, 10]);
+  c.onChartClick({ clientX: 100, clientY: 100 }); assert.notEqual(c.getChartSel(), -1);
+  c.chartModeSet('M'); assert.equal(c.getChartSel(), -1, 'đổi chế độ bỏ cột chọn'); assert.equal(els['#chartMonth'].textContent, '--/----');
+  assert.equal(els['#chartYrL'].textContent, 2026);
+});
+
+test('2.33.0 giao diện: công tắc Tháng|Ngày cao 26 chữ 13, ngoài khối desktop; điện thoại không đổi (.thk ẩn); trần CSS desktop còn nguyên', () => {
+  assert.ok(/id="chartModeM" class="on" aria-pressed="true">Tháng<\/button><button type="button" id="chartModeD" aria-pressed="false">Ngày/.test(PAGE));
+  assert.ok(PAGE.includes('html.desktop .thk__m{display:inline-flex;height:26px;') && PAGE.includes('.thk__m button{border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:600;') && PAGE.includes('.thk__m button.on{background:rgba(255,255,255,.18)'));
+  assert.ok(!deskBlock().includes('thk__m'), 'quy tắc công tắc nằm ngoài khối desktop (trần 20736)');
+  assert.ok(/^\.thk\{display:none\}$/m.test(PAGE), '.thk ẩn ở điện thoại => công tắc không xuất hiện ở iPhone');
+  assert.ok(Buffer.byteLength(deskBlock()) <= 20736);
 });
