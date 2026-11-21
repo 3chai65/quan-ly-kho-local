@@ -2,7 +2,7 @@
 
 App quản lý kho dược liệu cá nhân (1 người dùng): nhập hàng, bán lẻ, đơn thuốc chén,
 tồn kho, thống kê doanh thu 12 tháng. Chạy **hoàn toàn trong mạng nội bộ**, dữ liệu là
-**file SQLite trên ổ cứng** — không phụ thuộc cloud. Phiên bản hiện tại: **2.30.0**.
+**file SQLite trên ổ cứng** — không phụ thuộc cloud. Phiên bản hiện tại: **2.37.2**.
 
 Hub thật chạy trên **Mac mini 192.168.2.46** (Node 22 + Caddy cài trực tiếp, **không Docker**).
 Windows (192.168.2.47) chỉ để phát triển; Docker/`G:\...\data` là bản lùi đóng băng từ

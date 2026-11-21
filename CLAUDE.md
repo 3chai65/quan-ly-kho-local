@@ -38,7 +38,7 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt v�
 - Mac (Người làm; người dùng nhập `sudo`), trong `~/kho/quan-ly-kho-local`:
   1. `git rev-parse --short HEAD > ~/kho/truoc-khi-bat.txt` (đường lui);
   2. `~/kho/sao-luu.sh` (phải ra "xong", không CẢNH BÁO);
-  3. `git fetch origin --tags`, kiểm thông điệp thẻ và `git rev-list --count <thẻ cũ>..<thẻ mới>` = 1, rồi `git checkout --detach vX.Y.Z`;
+  3. `git fetch origin --tags`, kiểm thông điệp thẻ và số commit `git rev-list --count <thẻ cũ>..<thẻ mới>` phải khớp danh sách commit đã được Người duyệt duyệt (một đợt có thể gồm nhiều commit; đối chiếu `git log --oneline <thẻ cũ>..<thẻ mới>`), khác thì dừng và hỏi; rồi `git checkout --detach vX.Y.Z`;
   4. `PATH=/opt/homebrew/opt/node@22/bin:$PATH npm ci --omit=dev`;
   5. `sudo launchctl kickstart -k system/vn.kho.server` (lỗi `Input/output error` thì chờ vài giây rồi thử lại);
   6. kiểm: `healthz` ok ở `127.0.0.1:8787` và `https://192.168.2.46`, `package.json` đúng version, `pragma integrity_check` ok, số sản phẩm không đổi, `/` chưa đăng nhập trả 401, `~/kho/logs/server.err.log` không lỗi mới.
@@ -49,7 +49,7 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt v�
 ## Dữ liệu
 - Không bao giờ đụng `~/kho/data`, `~/kho/Caddyfile.mac`, `~/kho/caddy-data` (mất CA nội bộ là phải cài lại chứng chỉ trên mọi thiết bị).
 - Sao lưu: server tự tạo `data/backups/backup-<ngày>.db` (30 bản) + `truoc-ghi-de` (10 bản); `sao-luu.sh` 19:00 chép `backups`, `auth.db`, `caddy-data`, `luu-tru` sang Drive, không dùng `--delete`. Tài khoản Google Drive này DÀNH RIÊNG cho sao lưu kho; không thêm thứ khác vào; rà dung lượng khi `Kho-sao-luu` vượt ~1 GB.
-- Không có thông báo khi sao lưu hỏng: đọc dòng cuối `~/kho/logs/sao-luu.log`. Từ 20/11/2026 `sao-luu.sh` bỏ qua `certificates/` và `last_clean.json` của `caddy-data` (cert lá Caddy tự sinh lại), nên cảnh báo cert thuộc root không còn; CA gốc `pki/authorities/local/` vẫn được chép đủ. Bản cũ của script: `~/kho/sao-luu.sh.bak-19-11`. Nếu LaunchAgent sao lưu báo `Operation not permitted` thì cần Full Disk Access cho `/bin/zsh` và `/usr/bin/rsync`.
+- Không có thông báo khi sao lưu hỏng: đọc dòng cuối `~/kho/logs/sao-luu.log`. Từ 20/11/2026 `sao-luu.sh` bỏ qua `certificates/` và `last_clean.json` của `caddy-data` (cert lá Caddy tự sinh lại), nên cảnh báo cert thuộc root không còn; CA gốc `pki/authorities/local/` vẫn được chép đủ; từ 21/11/2026 cũng bỏ `intermediate.*` trong `pki/authorities/local/` (Caddy gia hạn bằng quyền root, tự sinh lại từ root; `root.*` vẫn được chép); bản gốc script `~/kho/sao-luu.sh.bak-21-11`. Bản cũ của script: `~/kho/sao-luu.sh.bak-19-11`. Nếu LaunchAgent sao lưu báo `Operation not permitted` thì cần Full Disk Access cho `/bin/zsh` và `/usr/bin/rsync`.
 - Khôi phục: xem `README-LOCAL.md` mục "Khôi phục từ bản sao lưu". Nên diễn tập trên thư mục thử, cổng khác cổng thật.
 - `auth.js`/`scripts/auth-reset.mjs`: mất thiết bị chủ thì đặt lại (xóa `devices` + `invites`, không đụng `app.db`), rồi người dùng tự đọc mã thiết lập trong log và nhập tại `/auth/setup`. Không dán mã vào báo cáo hay chat.
 - Người dùng tự giữ: xác thực hai bước Google, mật khẩu riêng, không chia sẻ thư mục, không đăng nhập máy lạ.
