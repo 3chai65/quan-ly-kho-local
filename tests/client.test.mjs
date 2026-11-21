@@ -391,6 +391,9 @@ test('scaledRemedyCost co giãn theo vốn lịch sử của chính dòng, khôn
   assert.equal(app.scaledRemedyCost({ productId: 'A', qty: 0.06 }, 0.04, 4), 6);
   /* Không có vốn cũ thì mới dùng giá nhập hiện tại. */
   assert.equal(app.scaledRemedyCost({ productId: 'A', qty: 0.05 }, 0.04, null), 8);
+  /* 2.37.1: vốn 0 là vốn thật, co giãn vẫn 0 (không lấy giá nhập hiện tại 160k/kg). */
+  assert.equal(app.scaledRemedyCost({ productId: 'A', qty: 0.2 }, 0.1, 0), 0);
+  assert.equal(app.scaledRemedyCost({ productId: 'A', qty: 0.2 }, 0, 0), 32, 'qty cũ 0: fallback giá hiện tại');
 });
 
 /* ------------------------------------------------------------------ */
@@ -4875,7 +4878,7 @@ test('2.15.0 Kho tồn: không còn ô #invSort; thiếu ô thì vẫn sắp the
 test('2.15.0 Thống kê: (2.37.0 bỏ #chartYear) chú giải tháng "[ô màu] Nhập số tiền" rồi "[ô màu] Bán số tiền"', () => {
   const sum = PAGE.match(/<summary class="card__head chart-head">[\s\S]*?<\/summary>/)[0];
   assert.ok(sum.includes('Thống kê'));
-  assert.ok(!/id="chartYear"|chartYear|chart-year|autoChartYear|lastChartYear/.test(PAGE), '2.37.0: cụm ô Năm cũ đã xóa, 0 tham chiếu');
+  assert.ok(!/id="chartYear"|\bchartYear\b|chart-year|autoChartYear|lastChartYear/.test(PAGE), '2.37.0: cụm ô Năm cũ đã xóa, 0 tham chiếu');
   assert.match(PAGE, /id="chartImpChip"[^>]*><i class="chart-chip__sw"><\/i><span class="chart-chip__k">Nhập<\/span><b class="chart-chip__v" id="chartImpVal">/);
   assert.match(PAGE, /id="chartExpChip"[^>]*><i class="chart-chip__sw"><\/i><span class="chart-chip__k">Bán<\/span><b class="chart-chip__v" id="chartExpVal">/);
   assert.ok(PAGE.indexOf('id="chartImpChip"') < PAGE.indexOf('id="chartExpChip"'));
@@ -6186,7 +6189,7 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
 });
 
 test('2.34.0 Thống kê desktop: bỏ hẳn 4 ô số (không data-s4/thk__n/.stats4), tồn kho nằm ở chip; renderStats vẫn khớp số điện thoại', () => {
-  assert.ok(!PAGE.includes('stats4') && !/\.s4|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
+  assert.ok(!PAGE.includes('stats4') && !/\.s4\b|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
   assert.ok(PAGE.includes('.thk{display:none}') && !PAGE.includes('szpick'));
   assert.ok(!/data-s4|tkExp|tkProfit|tkImp|tkStock|thk__n|thk__g/.test(PAGE), 'không còn ô số / khóa tk*');
   const FakeDate = fakeClock(2026, 10, 7, 12);
@@ -8003,4 +8006,50 @@ test('2.37.0 pickSuggest: vị đã có trong tờ ghi thì mở sửa dòng đ�
   c2.pickSuggest('retail', 'p2');
   assert.equal(c2.getNoteEditIdx(), 1);
   assert.equal(c2.getRetailItems().length, 2);
+});
+
+test('2.37.1 xung đột: chọn OK rồi trong lúc pullState chờ, pushState (poll/retry) không gửi PUT thứ hai và không hiện hộp lần 2', async () => {
+  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20 };
+  let puts = 0, confirms = 0, releaseGet;
+  const getGate = new Promise(r => { releaseGet = r; });
+  const fetchStub = async (url, opts = {}) => {
+    if ((opts.method || 'GET') === 'PUT') { puts++; return { status: 409, json: async () => ({ success: false, conflict: true, updatedAt: 20 }) }; }
+    await getGate;
+    return { status: 200, json: async () => ({ success: true, data: remote }) };
+  };
+  const client = loadClient({ fetch: fetchStub, confirm: () => { confirms++; return true; } });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
+  client.setBase(10);
+  client.setDirty(true);
+  const first = client.pushState(true, false);
+  for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r)); /* PUT 409 -> confirm OK -> pullState đang chờ GET */
+  assert.equal(puts, 1);
+  assert.equal(confirms, 1);
+  const second = client.pushState(false, false); /* vòng thử lại/poll chen vào lúc đang chờ */
+  for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  releaseGet();
+  await first; await second;
+  assert.equal(puts, 1, 'không PUT thứ hai khi đang xử lý xung đột');
+  assert.equal(confirms, 1, 'không hộp xung đột lần 2');
+  assert.equal(client.getDb().products[0].name, 'Remote');
+});
+
+test('2.37.1 GET khởi động đang chờ: người dùng ghi (dirty bật) trong lúc chờ thì pullState KHÔNG thay db và không đổi cloudBase', async () => {
+  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20 };
+  let release;
+  const gate = new Promise(r => { release = r; });
+  const fetchStub = async () => { await gate; return { status: 200, json: async () => ({ success: true, data: remote }) }; };
+  const client = loadClient({ fetch: fetchStub });
+  client.setDb({ products: [{ id: 'p1', name: 'Old', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
+  client.setBase(10);
+  client.setDirty(false);
+  const p = client.pullState(false);
+  await new Promise(r => setImmediate(r));
+  client.setDb({ products: [{ id: 'p1', name: 'Edited', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 15 });
+  client.setDirty(true); /* như commit() lúc GET còn chờ */
+  release();
+  await p;
+  assert.equal(client.getDb().products[0].name, 'Edited', 'không được mất thay đổi vừa ghi');
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.getBase(), 10, 'base giữ nguyên để PUT của bản vừa ghi gặp 409 nếu máy khác đã đổi');
 });

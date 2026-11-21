@@ -687,6 +687,7 @@ function loadFractionalTransactions() {
     return null;
   }
 }
+// XÓA SAU 06/12/2026 (cùng file truoc-lam-tron-*.json): chỉ cần khi còn backup cũ đơn vị nghìn.
 function migrateMoneyToDong() {
   const row = db.prepare("SELECT value FROM app_meta WHERE key = 'money_unit'").get();
   if (row && row.value === 'dong') return;

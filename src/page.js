@@ -4655,7 +4655,7 @@ function remedyLineCost(t){
 /* Vốn mới của dòng bị sửa gram: co giãn theo vốn lịch sử của chính dòng đó. */
 function scaledRemedyCost(t, prevQty, prevCost){
   var nq = num(t.qty);
-  if (prevCost != null && num(prevCost) > 0 && num(prevQty) > 0) {
+  if (prevCost != null && num(prevQty) > 0) { /* vốn 0 là vốn thật; chỉ prevCost null mới lấy giá nhập hiện tại */
     return money(num(prevCost) * nq / num(prevQty));
   }
   var prod = findProduct(t.productId);
@@ -4935,13 +4935,15 @@ function cloudConflict(){
     'Hủy: giữ bản trên máy này và ghi đè lên máy chủ.';
   if (inMemory) msg += LF + LF + 'Các dòng đang soạn trong bộ nhớ cũng sẽ bị xóa.';
   var useLatest = confirm(msg);
-  conflictOpen = false;
   if (useLatest) {
+    /* 2.37.1: giữ conflictOpen tới khi pullState xong (kể cả lỗi) để poll/retry không gửi PUT thứ hai và hiện hộp lần 2. */
     if (!downloadBackup(false, 'kho-nhap-xung-dot-' + backupStamp() + '.json', true)) {
+      conflictOpen = false;
       toast('Không tải được bản nháp — đã hủy tải bản máy chủ', 'error');
       return Promise.resolve(false);
     }
     return pullState(true).then(function(ok){
+      conflictOpen = false;
       if (ok) {
         if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
         syncRetryDelay = DIRTY_BADGE_MS;
@@ -4955,6 +4957,7 @@ function cloudConflict(){
       return false;
     });
   }
+  conflictOpen = false;
   return pushState(true, true);
 }
 function syncFailText(d, fallback){
@@ -4986,7 +4989,7 @@ function noteStockWarnings(list){
 }
 var pendingOpSig = '', pendingOpId = '';
 function pushState(manual, force){
-  if (pushing) return Promise.resolve(false);
+  if (pushing || conflictOpen) return Promise.resolve(false);
   pushing = true;
   touch();
   renderSyncBadge();
@@ -5061,6 +5064,7 @@ function pushState(manual, force){
   });
 }
 function pullState(manual){
+  var wasDirty = dirty; /* 2.37.1: dirty bật SAU khi gửi GET = người dùng vừa ghi, không được đè */
   return apiFetch('/api/state?t=' + Date.now())
     .then(function(r){
       if (r && r.status === 401) { noteAuthLost(); return null; }
@@ -5075,6 +5079,7 @@ function pullState(manual){
       authLost = false;
       lastSyncOk = Date.now();
       renderSyncLine();
+      if (!wasDirty && dirty) return true; /* giữ db và cloudBase: PUT của bản vừa ghi gặp 409 nếu máy khác đã đổi (luồng xung đột bình thường) */
       cloudBase = num(server.updatedAt);
       /* Luôn thay db bằng bản máy chủ (cả ba chỗ gọi đều là chủ động bỏ nháp/khởi động); không bao giờ gửi PUT ở đây. */
       db = server;

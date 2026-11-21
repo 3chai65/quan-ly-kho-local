@@ -5,6 +5,17 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.37.1] - 2026-11-21
+
+### Sửa
+- Hộp xung đột: chọn OK thì `conflictOpen` giữ tới khi `pullState` xong (cả khi lỗi) và `pushState` thoát sớm khi đang xử lý xung đột; poll/retry chen vào không còn gửi PUT thứ hai hay hiện hộp lần 2 (đã tái hiện bằng test).
+- `pullState`: nếu `dirty` bật sau lúc gửi GET (vd. GET khởi động đang chờ mà người dùng vừa ghi) thì không thay `db`, giữ `cloudBase`; PUT của bản vừa ghi đi theo luồng xung đột bình thường (đã tái hiện bằng test).
+- `scaledRemedyCost`: vốn 0 là vốn thật (bỏ `num(prevCost) > 0`), chỉ vốn trống mới lấy giá nhập hiện tại.
+- Test: thay ký tự backspace thật bằng `\b` ở hai regex.
+
+### Khác
+- Chú thích `XÓA SAU 06/12/2026` đầu `migrateMoneyToDong` (chưa xóa). Rà class CSS không dùng: 0/201.
+
 ## [2.37.0] - 2026-11-21
 
 ### Sửa
