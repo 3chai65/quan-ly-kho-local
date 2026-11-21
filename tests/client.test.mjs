@@ -49,6 +49,7 @@ globalThis.__test = {
   backupLastDate: (typeof backupLastDate === 'function' ? backupLastDate : null), commitRetailRow: (typeof commitRetailRow === 'function' ? commitRetailRow : null),
   commitRemedyRow: (typeof commitRemedyRow === 'function' ? commitRemedyRow : null), onSuggestKey: (typeof onSuggestKey === 'function' ? onSuggestKey : null),
   getRemedyItems: function(){ return remedyItems; },
+  getRemedyEditIdx: function(){ return remedyEditIdx; }, getNoteEditIdx: function(){ return noteEditIdx; },
   presetFindOpen: presetFindOpen, presetFindKey: presetFindKey, closePreset: closePreset, pickPresetRow: pickPresetRow, renderRemedyNote: renderRemedyNote, getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; },
   getRetailItems: function(){ return retailItems; },
   getNotePage: function(){ return notePage; }, setNotePage: function(v){ notePage = v; },
@@ -104,13 +105,11 @@ globalThis.__test = {
   todayISO: (typeof todayISO === 'function' ? todayISO : null), thisYear: (typeof thisYear === 'function' ? thisYear : null),
   getDateInput: (typeof getDateInput === 'function' ? getDateInput : null), setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   bindDateInput: (typeof bindDateInput === 'function' ? bindDateInput : null), userPickedDate: (typeof userPickedDate === 'function' ? userPickedDate : null),
-  refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), autoDateInput: (typeof autoDateInput === 'function' ? autoDateInput : null), autoChartYear: (typeof autoChartYear === 'function' ? autoChartYear : null),
+  refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), autoDateInput: (typeof autoDateInput === 'function' ? autoDateInput : null), 
   getLastAuto: function(id){ return lastAuto[id]; },
   setLastAuto: function(id, v){ lastAuto[id] = v; },
-  getLastChartYear: function(){ return lastChartYear; },
-  setLastChartYear: function(v){ lastChartYear = v; },
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
-  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; var cy = $('#chartYear'); if (cy) cy.value = thisYear(); lastChartYear = thisYear(); },
+  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
   historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
@@ -1639,7 +1638,6 @@ function dateDoc() {
     '#retailDateNative': mkInput('retailDateNative'),
     '#remedyDate': mkInput('remedyDate'),
     '#remedyDateNative': mkInput('remedyDateNative'),
-    '#chartYear': mkInput('chartYear'),
     '#impSearch': mkInput('impSearch'),
     '#impSearchList': mkInput('impSearchList'),
     '#expMonth': mkInput('expMonth'),
@@ -1809,23 +1807,6 @@ test('handler ô chữ: để trống về hôm nay, văn bản sai giữ ngày 
   els['#retailDate'].value = 'không phải ngày';
   els['#retailDate'].fire('change');
   assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-});
-
-test('ô năm biểu đồ: qua hai ranh giới năm liên tiếp vẫn theo', () => {
-  const FakeDate = fakeClock(2026, 11, 31, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  assert.equal(els['#chartYear'].value, '2026');
-  assert.equal(typeof client.getLastChartYear(), 'string');
-  FakeDate.setNow(2027, 0, 1, 12);
-  client.refreshAutoDates();
-  assert.equal(els['#chartYear'].value, '2027');
-  assert.equal(client.getLastChartYear(), '2027');
-  FakeDate.setNow(2028, 0, 1, 12);
-  client.refreshAutoDates();
-  assert.equal(els['#chartYear'].value, '2028');
-  assert.equal(client.getLastChartYear(), '2028');
 });
 
 test('ô đang mở bộ chọn gốc (Native) không bị đổi', () => {
@@ -3409,10 +3390,6 @@ test('2.13.2 statImport/statStock nằm trong summary đầu thẻ #chartBox (id
   assert.doesNotMatch(sum, /class="hint">Năm</);
 });
 
-test('2.13.2 ô năm: #chartYear có aria-label "Năm" và nằm trong khung .chart-year__box cùng chữ "Năm"', () => {
-  assert.match(PAGE, /<label class="chart-year__box">\s*<span class="chart-year__k">Năm<\/span>\s*<input class="chart-year__in" id="chartYear"[^>]*aria-label="Năm"/);
-});
-
 test('2.13.2 hai ô màu dùng đúng biến màu của cột và chữ tương phản token; canvas cũng đọc cùng biến', () => {
   assert.match(PAGE, /\.chart-chip--imp \.chart-chip__sw\{background:var\(--chart-imp\)\}/);
   assert.match(PAGE, /\.chart-chip--exp \.chart-chip__sw\{background:var\(--chart-exp\)\}/);
@@ -4360,7 +4337,7 @@ test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Btn|Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon' && id !== 'remedyQty') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && id !== 'chartYear' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Btn|Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon' && id !== 'remedyQty') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
@@ -4895,12 +4872,10 @@ test('2.15.0 Kho tồn: không còn ô #invSort; thiếu ô thì vẫn sắp the
   assert.deepEqual(body.children.map(tr => tr.children[0].textContent), ['Cam thảo', 'Bạch chỉ', 'Atiso']);
 });
 
-test('2.15.0 Thống kê: #chartYear nằm trong summary tiêu đề; chú giải tháng "[ô màu] Nhập số tiền" rồi "[ô màu] Bán số tiền"', () => {
+test('2.15.0 Thống kê: (2.37.0 bỏ #chartYear) chú giải tháng "[ô màu] Nhập số tiền" rồi "[ô màu] Bán số tiền"', () => {
   const sum = PAGE.match(/<summary class="card__head chart-head">[\s\S]*?<\/summary>/)[0];
-  assert.match(sum, /id="chartYear"/);
-  assert.ok(sum.indexOf('Thống kê') < sum.indexOf('id="chartYear"'));
-  const after = PAGE.slice(PAGE.indexOf('</summary>', PAGE.indexOf('id="chartBox"')));
-  assert.doesNotMatch(after.slice(0, after.indexOf('id="statsChart"')), /id="chartYear"/);
+  assert.ok(sum.includes('Thống kê'));
+  assert.ok(!/id="chartYear"|chartYear|chart-year|autoChartYear|lastChartYear/.test(PAGE), '2.37.0: cụm ô Năm cũ đã xóa, 0 tham chiếu');
   assert.match(PAGE, /id="chartImpChip"[^>]*><i class="chart-chip__sw"><\/i><span class="chart-chip__k">Nhập<\/span><b class="chart-chip__v" id="chartImpVal">/);
   assert.match(PAGE, /id="chartExpChip"[^>]*><i class="chart-chip__sw"><\/i><span class="chart-chip__k">Bán<\/span><b class="chart-chip__v" id="chartExpVal">/);
   assert.ok(PAGE.indexOf('id="chartImpChip"') < PAGE.indexOf('id="chartExpChip"'));
@@ -5088,8 +5063,7 @@ test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗ
 });
 
 test('2.15.3 nút "+" của dòng đang nhập có data-keep-focus (không làm ô số mất focus/bàn phím trước khi xử lý); CSS thanh fixed', () => {
-  assert.ok(/data-action', 'note-add'\);\s+b\.setAttribute\('data-keep-focus', ''\)/.test(PAGE), 'nút + Bán lẻ có data-keep-focus');
-  assert.ok(/data-action', 'rnote-add'\);\s+b\.setAttribute\('data-keep-focus', ''\)/.test(PAGE), 'nút + Thuốc chén có data-keep-focus');
+  assert.ok(/data-action', isRetail \? 'note-add' : 'rnote-add'\);\s+b\.setAttribute\('data-keep-focus', ''\)/.test(PAGE), 'nút + Bán lẻ và Thuốc chén có data-keep-focus (2.37.0: một khối dùng chung)');
   assert.ok(!/note__foot,#remedyNote \.note__foot\{position:sticky/.test(PAGE), 'không còn sticky');
   assert.ok(PAGE.includes('.foot-fixed.foot-off #retailNote .note__foot'), 'có quy tắc ẩn khi foot-off');
   assert.match(PAGE, /foot-fixed>\.card__body[^}]*padding-bottom:calc\(var\(--foot-h,72px\) \+ 8px\)/);
@@ -6346,7 +6320,7 @@ test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn)
 
 test('2.20.1 mọi trạng thái (thường/hover/focus/mở) cùng họ kính trắng trong, không be/đục: tiêu đề thẻ, ô năm, ô nhập, hàng bảng, nút viên', () => {
   const block = deskBlock();
-  assert.ok(block.includes('html.desktop[data-bg] .inp,html.desktop[data-bg] .chart-year__box{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}') && block.includes('html.desktop[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35)'), 'ô nhập .10/.14, focus viền .35 không xanh');
+  assert.ok(block.includes('html.desktop[data-bg] .inp{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}') && block.includes('html.desktop[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35)'), 'ô nhập .10/.14, focus viền .35 không xanh');
   assert.ok(block.includes('html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}'));
   assert.ok(block.includes('html.desktop .tab:hover{background-color:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22)}') && block.includes('transition:background-color .12s,border-color .12s'), 'hover nút danh sách sáng lên, 120ms');
   assert.ok(!/var\(--surface2\)|#f6f2ef|#e9e2de/.test(block), 'không màu be trong khối desktop');
@@ -6482,7 +6456,7 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   assert.ok(/html\.desktop \.note\{margin:0;border:1px solid rgba\(255,255,255,\.10\);border-radius:18px;background:var\(--glass\)\}/.test(block));
   // (4) nút chính (green/primary/dark/trang hiện tại) cùng một kiểu kính nhuộm xanh lá, mọi .btn/ô nhập dùng --kb/--spec/--k3d
   assert.ok(block.includes('html.desktop :is(.btn--green,.btn--primary,.btn--dark){color:#fff;font-weight:600;border-color:transparent;background-color:rgba(64,128,242,.5)}') && block.includes(':hover{background-color:rgba(64,128,242,.6)}'), '2.23.0: nút chính xanh .50 / hover .60');
-  assert.ok(block.includes('html.desktop :is(.tab,.card__bar .inp,.note .inp,.chart-year__box),html.desktop .btn:not('));
+  assert.ok(block.includes('html.desktop :is(.tab,.card__bar .inp,.note .inp),html.desktop .btn:not('));
   assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('col.cg-name{width:290px}'), 'chỉ trong desktop');
 });
 
@@ -6891,7 +6865,7 @@ function deskChart(today, txs, hoverX) {
   const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : (...a) => { calls.push([k, a, t.fillStyle, t.strokeStyle]); return { width: 0 }; }), set: (t, k, v) => { t[k] = v; return true; } });
   const mk = () => ({ value: '', textContent: '', style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k] || null; }, classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} }, focus() {}, select() {} });
   const cv = { offsetParent: {}, offsetLeft: 0, offsetTop: 0, clientWidth: 970, clientHeight: 400, parentNode: { clientWidth: 970 }, width: 0, height: 0, getContext: () => ctx, getBoundingClientRect: () => ({ left: 0, top: 0, width: 970, height: 400 }) };
-  const els = { '#syncLine': mk(), '#statsChart': cv, '#chartYear': mk(), '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartPrfVal': mk(), '#chartTipSr': mk(), '#chartTip': mk(), '#chartYrL': mk(), '#chartPrev': mk(), '#chartNext': mk() };
+  const els = { '#syncLine': mk(), '#statsChart': cv, '#chartMonth': mk(), '#chartImpChip': mk(), '#chartExpChip': mk(), '#chartImpVal': mk(), '#chartExpVal': mk(), '#chartPrfVal': mk(), '#chartTipSr': mk(), '#chartTip': mk(), '#chartYrL': mk(), '#chartPrev': mk(), '#chartNext': mk() };
   const FakeDate = fakeClock(...today);
   const R = makeEl(); R.classList = { contains: k => k === 'desktop', add() {}, remove() {}, toggle() {} };
   const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: R, body: makeEl(), querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; }, createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
@@ -7040,7 +7014,7 @@ test('2.34.0 bước kỳ: Ngày qua ranh giới năm (12/2026 → 01/2027), Th�
   c.setChartYr(2099); c.chartYearGo(1); assert.equal(els['#chartNext'].disabled, true); c.chartYearGo(1); assert.equal(c.getChartYr(), 2100);
   assert.equal(c.chartData().impK.concat(c.chartData().expK).reduce((x, y) => x + y, 0), 0, 'năm trống vẫn 12 nhóm');
   c.setChartYr(2026); c.chartModeSet('Y'); c.chartYearGo(1); assert.equal(c.getChartYr(), 2026, 'chế độ Năm: không đổi kỳ');
-  assert.ok(/if \(cb\.open\) \{ chartYr = Number\(thisYear\(\)\);[^}]*chartModeSet\('D'\)/.test(PAGE), 'mở tab Thống kê: về năm/tháng hiện tại + chế độ Ngày');
+  assert.ok(/if \(cb\.open\) \{ chartModeSet\('D'\)/.test(PAGE), 'mở tab Thống kê: về năm/tháng hiện tại + chế độ Ngày');
 });
 
 test('2.34.0 giao diện: 3 nút Năm|Tháng|Ngày (Ngày chọn sẵn), không còn 4 ô số, chip Lợi nhuận xanh lá + Tổng tồn kho tím sát phải (chỉ desktop), CSS ngoài khối desktop; trần 20736 còn nguyên', () => {
@@ -7742,7 +7716,7 @@ test('2.31.0 Thuốc chén: nút "Đơn mới" thay bằng nút + tròn 32 bên 
   assert.ok(b.includes('html.desktop .btn.bx--o{border-color:rgba(255,255,255,.14);background-color:rgba(255,255,255,.10)}'), 'nền .10, viền .14 như ô viên');
   assert.ok(b.includes('html.desktop .btn--icon{min-width:32px;padding:3px}') && b.includes('html.desktop .bx{height:32px;white-space:nowrap}'), '32x32 + bo 999 = tròn');
   assert.ok(b.includes('html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}'));
-  assert.ok(/html:is\(\.desktop,\.pt\)\[data-bg\] \.inp,[^{]*\{background-color:rgba\(255,255,255,\.10\);border-color:rgba\(255,255,255,\.14\)\}/.test(PAGE), 'ô viên .10/.14');
+  assert.ok(/html:is\(\.desktop,\.pt\)\[data-bg\] \.inp\{background-color:rgba\(255,255,255,\.10\);border-color:rgba\(255,255,255,\.14\)\}/.test(PAGE), 'ô viên .10/.14');
   assert.ok(PAGE.includes("rb.insertBefore(bl, rp); rb.appendChild(br);") && PAGE.includes("br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(rb.querySelector('.card__bar-date'));"), 'hàng: Thuốc chén | Nhập tên | + | Tìm đơn đã lưu | ngày');
   assert.ok(b.includes('html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}'), 'tiêu đề không gãy dòng');
 });
@@ -8015,4 +7989,18 @@ test('2.37.0 saveTxEdit: dòng BÁN cost 0 sửa SL vẫn cost 0; cost null mớ
   };
   run({ cost: 0 }, 0);
   run({}, 270000);
+});
+
+test('2.37.0 pickSuggest: vị đã có trong tờ ghi thì mở sửa dòng đó (retail theo pid, remedy theo productId)', () => {
+  const prods = [{ id: 'p1', name: 'A', stock: 5, costPrice: 1 }, { id: 'p2', name: 'B', stock: 5, costPrice: 1 }];
+  const c = limitClient(limitStock(), prods);
+  c.setRemedyItems([{ productId: 'p1', grams: 5 }, { productId: 'p2', grams: 7 }]);
+  c.pickSuggest('remedy', 'p2');
+  assert.equal(c.getRemedyEditIdx(), 1);
+  assert.equal(c.getRemedyItems().length, 2, 'không thêm dòng trùng');
+  const c2 = limitClient(limitStock(), prods);
+  c2.setRetailItems([{ pid: 'p1', kg: 1, amount: 1000 }, { pid: 'p2', kg: 2, amount: 2000 }]);
+  c2.pickSuggest('retail', 'p2');
+  assert.equal(c2.getNoteEditIdx(), 1);
+  assert.equal(c2.getRetailItems().length, 2);
 });

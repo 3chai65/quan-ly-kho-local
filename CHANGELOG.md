@@ -12,6 +12,11 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 - Sửa giao dịch BÁN: vốn 0 là vốn thật (`cost != null`), sửa SL không còn gán lại vốn theo giá nhập hiện tại; chỉ cost trống mới lấy giá nhập hiện tại.
 - Biểu đồ Năm: giao dịch có ngày sau năm hiện tại (tới 2100) có cột năm của nó, không còn rơi khỏi biểu đồ.
 
+### Dọn (không đổi hành vi)
+- Xóa cụm ô Năm cũ (`#chartYear`, `autoChartYear`, `lastChartYear`, CSS `.chart-year*`): ô đã bị ẩn và không điều khiển biểu đồ.
+- `page.js`: bỏ nhánh không chạy (`renderOrder` trong `autoRefresh`, `kg > 0 ?` ở `saveRemedy`, `isFinite` sau `num()`, `d.desk`, dự phòng `padL/yMax/n` của `chartGeo`), `calcRetail` thay bằng `renderNote`, gộp khối nút "+" của `addOrderRow` và hai vòng kiểm trùng của `pickSuggest`, bỏ gán trùng ở `savePreset` và lúc mở tab Thống kê, `money(grand)` thống nhất.
+- Giữ có chủ ý (thêm chú thích): kiểm kg/qty/giá ở `saveRetail`/`saveNhap` là lưới an toàn; `moneyUnit` lớp ngoài của `parseBackup` dành cho file viết tay.
+
 ## [2.36.2] - 2026-11-21
 
 ### Sửa

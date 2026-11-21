@@ -231,12 +231,6 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .chart-head__c{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
 .chart-head__c>span{display:block}
 .chart-head__c .stat__v{font-size:15px;margin-top:0}
-.chart-year{display:flex;justify-content:flex-end}
-.chart-year__box{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);cursor:text}
-.chart-year__box:focus-within{box-shadow:var(--ring)}
-.chart-year__k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.chart-year__in{width:88px;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:700;padding:2px 0;text-align:right;font-variant-numeric:tabular-nums}
-.chart-year__in:focus{outline:none}
 .chart-tip{display:flex;margin-top:10px;min-height:28px;font-size:13px;color:var(--text2)}
 .chart-tip__m{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .chart-chip{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text)}
@@ -247,7 +241,6 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .chart-chip--prf,.chart-chip--stk{display:none}
 /* 2.15.0: chú giải tháng – mỗi dòng "[ô màu] Nhập  số tiền"; ô năm nằm cùng hàng tiêu đề Thống kê. */
 .chart-tip{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px}
-#chartBox>summary.chart-head .chart-year{margin-left:auto}
 #chartBox>summary.chart-head .chart-head__stats{margin-left:0}
 @media (max-width:600px){
 #chartBox>summary.chart-head .chart-head__stats{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -382,7 +375,6 @@ html:not(.desktop) .thk__m button.on{background:var(--surface);color:var(--text)
 html:not(.desktop) .thk__y{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 html:not(.desktop) .thk__y .btn{min-width:40px;height:36px;padding:0;font-size:18px;line-height:1}
 html:not(.desktop) .thk__y b{min-width:60px;text-align:center;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
-html:not(.desktop) .chart-year{display:none}
 html:not(.desktop) .chart-chip--prf,html:not(.desktop) .chart-chip--stk{display:inline-flex}
 html:not(.desktop) #statsChart{touch-action:pan-x pan-y}
 html:not(.desktop) .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
@@ -648,7 +640,7 @@ html.desktop .card__bar{position:static;background:none;padding:12px 16px;border
 html.desktop :is(#retailBox,#remedyBox,#nhapBox) .card__bar{padding:0 0 12px}
 html.desktop .card__bar .inp{height:32px;min-height:32px;padding-top:3px;padding-bottom:3px}
 html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}
-html:is(.desktop,.pt) :is(.tab,.card__bar .inp,.note .inp,.chart-year__box),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
+html:is(.desktop,.pt) :is(.tab,.card__bar .inp,.note .inp),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
 html:is(.desktop,.pt) .tab{--nb:rgba(255,255,255,.05);--kb:rgba(255,255,255,.09)}
 html.desktop .tab:hover{background-color:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22)}
 html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{background-color:rgba(255,255,255,.17);border-color:rgba(255,255,255,.25)}
@@ -680,7 +672,7 @@ html.glass:is(.desktop,.pt)[data-bg]{--blur:saturate(1.6) blur(18px);--blurb:blu
 html:is(.desktop,.pt)[data-bg] body::before{background:var(--bt)}
 html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}
 html:is(.desktop,.pt)[data-bg] .dlg__card .note{background:rgba(255,255,255,.04)}
-html:is(.desktop,.pt)[data-bg] .inp,html:is(.desktop,.pt)[data-bg] .chart-year__box{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}
+html:is(.desktop,.pt)[data-bg] .inp{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}
 html:is(.desktop,.pt)[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);box-shadow:none}
 html:is(.desktop,.pt)[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}
 html:is(.desktop,.pt) select option,html:is(.desktop,.pt) select optgroup{background:var(--surface);color:var(--text)}
@@ -1195,12 +1187,6 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       <summary class="card__head chart-head">
         <svg class="ico txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg>
         <h2 class="card__title">Thống kê</h2>
-        <div class="chart-year">
-          <label class="chart-year__box">
-            <span class="chart-year__k">Năm</span>
-            <input class="chart-year__in" id="chartYear" type="number" min="2000" max="2100" step="1" aria-label="Năm">
-          </label>
-        </div>
         <span class="chart-head__stats">
           <span class="chart-head__c"><span class="stat__k">Nhập trong tháng</span><span class="stat__v" id="statImport">0</span></span>
           <span class="chart-head__c"><span class="stat__k">Tổng tồn kho</span><span class="stat__v" id="statStock">0g</span></span>
@@ -1592,9 +1578,7 @@ function isRealDateISO(s){ s = String(s || ''); return parseDateVN(s) === s; }
 function money(v){ return Math.round(num(v)); }
 function kToDong(k){ return Math.round(num(k) * DONG_PER_K); }
 function kInput(dong){
-  var d = num(dong);
-  if (!isFinite(d)) return '0';
-  return String(Math.round(d) / DONG_PER_K);
+  return String(Math.round(num(dong)) / DONG_PER_K);
 }
 /* Hiển thị đầy đủ chữ số, không làm tròn. Dùng dấu . phân cách nghìn, , thập phân. */
 function fmtNum(n){
@@ -1625,7 +1609,7 @@ function fmtQty(kg){
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng – cùng hàm fmtQty như khi hiển thị sau lưu; không đổi value. */
 function qtyHintText(v, unit){
   var n = num(v);
-  if (!isFinite(n) || !(n > 0)) return '';
+  if (!(n > 0)) return '';
   var kg = unit === 'g' ? n / 1000 : n;
   /* Chỉ trong gợi ý: "lạng" viết tắt "l" cho gọn; fmtQty (toàn app) giữ nguyên. */
   return '(' + (isDesk() ? fmtQty(kg) : fmtQty(kg).replace(' lạng', ' l')) + ')'; /* 2.26.0: desktop viết đủ "lạng" */
@@ -1729,7 +1713,6 @@ function attachQtyHint(input, unit){
 function fmtMoney(dong){
   /* Hiển thị nghìn đồng, giữ tới 3 số lẻ để thấy từng đồng (0,4 nghĩa là 400 đồng). */
   var v = num(dong) / DONG_PER_K;
-  if (!isFinite(v)) v = 0;
   var neg = v < 0;
   if (neg) v = -v;
   var rounded = Math.round(v * DONG_PER_K) / DONG_PER_K;
@@ -1741,7 +1724,6 @@ function fmtMoney(dong){
 /* 2.15.1: chỉ để hiển thị chú giải tháng – phần nguyên của nghìn đồng, CẮT bỏ phần lẻ (không làm tròn). Không đổi dữ liệu. */
 function fmtMoneyInt(dong){
   var d = Math.abs(Math.round(num(dong)));
-  if (!isFinite(d)) d = 0;
   var k = Math.floor(d / DONG_PER_K);
   return (num(dong) < 0 && k > 0 ? '-' : '') + String(k).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
@@ -1822,26 +1804,13 @@ function autoDateInput(id){
   if (cur && cur !== (lastAuto[id] || '')) return;
   if (cur === t) { lastAuto[id] = t; return; }
   var n = $('#' + id);
-  if (n && doc.activeElement && (doc.activeElement === n || (doc.activeElement.id && (doc.activeElement.id === id || doc.activeElement.id === id + 'Native')))) return;
+  if (n && doc.activeElement && (doc.activeElement === n || doc.activeElement.id === id + 'Native')) return;
   setDateInput(id, t);
   lastAuto[id] = t;
-}
-function autoChartYear(){
-  var t = String(thisYear());
-  var n = $('#chartYear');
-  if (!n) return;
-  var cur = String(n.value || '').trim();
-  if (cur && cur !== (lastChartYear || '')) return;
-  if (cur === t) { lastChartYear = t; return; }
-  if (doc.activeElement && (doc.activeElement === n || (doc.activeElement.id && doc.activeElement.id === 'chartYear'))) return;
-  chartSel = -1;
-  n.value = t;
-  lastChartYear = t;
 }
 function refreshAutoDates(){
   autoDateInput('retailDate');
   autoDateInput('remedyDate');
-  autoChartYear();
   var today = todayISO();
   if (lastStatsDay && lastStatsDay !== today) {
     renderStats();
@@ -2010,7 +1979,6 @@ var DIRTY_BADGE_MS = 4000;
 var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
 var lastAuto = {};
-var lastChartYear = '';
 var lastStatsDay = '';
 
 function willScaleMoney(d){
@@ -2632,24 +2600,13 @@ function addOrderRow(kind, pid){
   }
 
   var tdD = el('td', 'c-del');
-  var b;
-  if (isRetail) {
-    b = el('button', 'btn btn--icon btn--primary');
-    b.type = 'button';
-    b.setAttribute('data-action', 'note-add');
-    b.setAttribute('data-keep-focus', '');
-    b.setAttribute('aria-label', 'Thêm vào tờ ghi');
-    b.setAttribute('title', 'Thêm vào tờ ghi');
-    b.appendChild(svg('plus'));
-  } else {
-    b = el('button', 'btn btn--icon btn--primary');
-    b.type = 'button';
-    b.setAttribute('data-action', 'rnote-add');
-    b.setAttribute('data-keep-focus', '');
-    b.setAttribute('aria-label', 'Thêm vào tờ ghi');
-    b.setAttribute('title', 'Thêm vào tờ ghi');
-    b.appendChild(svg('plus'));
-  }
+  var b = el('button', 'btn btn--icon btn--primary');
+  b.type = 'button';
+  b.setAttribute('data-action', isRetail ? 'note-add' : 'rnote-add');
+  b.setAttribute('data-keep-focus', '');
+  b.setAttribute('aria-label', 'Thêm vào tờ ghi');
+  b.setAttribute('title', 'Thêm vào tờ ghi');
+  b.appendChild(svg('plus'));
   tdD.appendChild(b);
   tr.appendChild(tdD);
 
@@ -2668,7 +2625,7 @@ function resetRetail(){
   notePage = 1;
   var s = $('#retailSearch');
   if (s) s.value = '';
-  calcRetail();
+  renderNote();
   refreshAllQtyHints();
 }
 function resetRemedy(){
@@ -2832,7 +2789,7 @@ function addRetailToNote(){
   var qi = $('.retail-qty', row);
   if (num(qi.value) <= 0) { toast('Nhập số lượng lớn hơn 0', 'error'); focusNS(qi); return; }
   if (!commitRetailRow()) return;
-  calcRetail();
+  renderNote();
   refocusSearch('#retailSearch', 'retail');
 }
 function noteSave(){
@@ -2848,9 +2805,6 @@ function noteSave(){
   it.kg = dec(q);
   it.amount = kToDong(m);
   noteEditIdx = -1;
-  calcRetail();
-}
-function calcRetail(){
   renderNote();
 }
 function remedyThang(){
@@ -3182,21 +3136,19 @@ function savePreset(){
 
   if (cur) {
     cur.items = items;
-    cur.total = dec(grand);
+    cur.total = money(grand);
     cur.thang = thang;
     cur.updatedAt = Date.now();
     msg = 'Đã cập nhật đơn "' + cur.name + '"';
   } else {
-    cur = { id: uid('RX'), name: name, items: items, total: dec(grand), thang: thang, updatedAt: Date.now() };
+    cur = { id: uid('RX'), name: name, items: items, total: money(grand), thang: thang, updatedAt: Date.now() };
     db.prescriptions.push(cur);
     msg = 'Đã lưu đơn "' + name + '"';
   }
   commit(msg);
-  if (sel) sel.value = cur.id;
+  if (sel) sel.value = cur.id; /* renderPresetOptions giữ lựa chọn này và tự gọi updatePresetUI */
   renderPresetOptions();
-  if (sel) sel.value = cur.id;
   if (nameInp) nameInp.value = cur.name;
-  updatePresetUI();
 }
 function delPreset(){
   var sel = $('#remedyPreset');
@@ -3226,6 +3178,7 @@ function saveRetail(){
   if (!commitRetailRow()) return;
   var items = retailItems.map(function(it){ return { pid: it.pid, kg: it.kg, amount: it.amount }; });
   if (!items.length) { toast('Chọn vị thuốc và nhập số lượng hợp lệ', 'error'); return; }
+  /* Lưới an toàn ở chỗ ghi tiền/tồn: commitRetailRow/noteSave đã chặn, giữ để một đường nhập mới không ghi số xấu. */
   for (var k = 0; k < items.length; k++) {
     if (items[k].kg <= 0) { toast('Số lượng phải lớn hơn 0', 'error'); return; }
     if (!(items[k].amount > 0)) { toast('Nhập thành tiền lớn hơn 0', 'error'); return; }
@@ -3303,7 +3256,7 @@ function saveRemedy(){
   var balanced = balanceRemedyMoney(grand, priced);
   if (!balanced) { toast('Giá bán thấp hơn vốn của đơn', 'error'); return; }
   for (var rk2 = 0; rk2 < priced.length; rk2++) {
-    var rlim2 = checkLimits('money', priced[rk2].kg > 0 ? money(balanced[rk2].total / priced[rk2].kg) : 0);
+    var rlim2 = checkLimits('money', money(balanced[rk2].total / priced[rk2].kg));
     if (rlim2) { toast('Đơn giá vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng/kg)', 'error'); return; }
   }
   var oname = capWords(($('#remedyName') || {}).value) || 'Đơn thuốc lẻ';
@@ -3317,7 +3270,7 @@ function saveRemedy(){
     var amount = balanced[idx].total;
     var tx = {
       id: uid('TX'), date: date, type: 'BAN', productId: it.pid,
-      qty: kg, price: kg > 0 ? money(amount / kg) : 0,
+      qty: kg, price: money(amount / kg),
       total: amount, cost: balanced[idx].cost,
       rx: true, g: dec(it.g), thang: thang, unitPrice: money(grand / thang),
       ts: ts
@@ -4020,11 +3973,11 @@ function chartDefIdx(mode, dy, dm, yr, years, today){
   return years.indexOf(ty);
 }
 function chartKeyStep(cur, def, n, dir){ var c = cur >= 0 ? cur : def; return c < 0 ? (dir > 0 ? 0 : n - 1) : Math.min(n - 1, Math.max(0, c + dir)); }
-function chartKey(dir){ var d = chartData(); if (!d.desk) return; chartSel = chartKeyStep(chartSel, d.def, d.n, dir); renderChart(); }
+function chartKey(dir){ var d = chartData(); chartSel = chartKeyStep(chartSel, d.def, d.n, dir); renderChart(); }
 /* 2.24.0: vạch trục Y đẹp (nghìn đồng, số nguyên): bước 1/2/2,5/5 x 10^k, 4-5 vạch tính cả 0. Hàm thuần. */
 function chartTicks(maxK){
   var raw = Math.max(1, maxK / 4), e = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / e;
-  var step = Math.max(1, [1, 2, 2.5, 5, 10].filter(function(v){ return m <= v && Number.isInteger(Math.round(v * e * 1e6) / 1e6); })[0] * e);
+  var step = [1, 2, 2.5, 5, 10].filter(function(v){ return m <= v && Number.isInteger(Math.round(v * e * 1e6) / 1e6); })[0] * e; /* raw >= 1 nên e >= 1 và step >= 1 */
   var n = Math.max(1, Math.ceil(maxK / step - 1e-9)), out = [];
   for (var i = 0; i <= n; i++) out.push(i * step);
   return out;
@@ -4051,7 +4004,7 @@ function chartData(){
   else if (chartMode === 'M') d = chartBuckets(txs, db.products, 12, function(k){ return parseInt(k.slice(0, 4), 10) === chartYr ? parseInt(k.slice(5, 7), 10) - 1 : -1; });
   else d = chartBuckets(txs, db.products, yl.length, function(k){ return parseInt(k.slice(0, 4), 10) - yl[0]; });
   for (i = 0; i < d.n; i++) lab.push(chartMode === 'Y' ? String(yl[0] + i) : pad2(i + 1));
-  d.labels = lab; d.desk = true; d.mode = chartMode; d.def = chartDefIdx(chartMode, chartDy, chartDm, chartYr, yl, todayISO());
+  d.labels = lab; d.mode = chartMode; d.def = chartDefIdx(chartMode, chartDy, chartDm, chartYr, yl, todayISO());
   return d;
 }
 function bar(ctx, x, y, w, h, r){
@@ -4151,7 +4104,7 @@ function drawChartDesk(cv, ctx, cssW, cssH, cs, data){
     ctx.fillStyle = on ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.7)';
     ctx.fillText(data.labels[i], cx, ly);
   }
-  chartGeo = { n: n, padL: 0, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH, yMax: cssH };
+  chartGeo = { n: n, padT: padT, W: W, H: H, groupW: groupW, y0: y0, cssW: cssW, cssH: cssH, yMax: cssH };
   var none = mode === 'D' ? '--/' + pad2(chartDm) + '/' + chartDy : mode === 'M' ? '--/' + chartYr : '----';
   if (hi < 0) setChartTip(none, null, null, null);
   else setChartTip(mode === 'D' ? pad2(hi + 1) + '/' + pad2(chartDm) + '/' + chartDy : mode === 'M' ? pad2(hi + 1) + '/' + chartYr : data.labels[hi], data.impK[hi], data.expK[hi], data.profK[hi]);
@@ -4164,9 +4117,9 @@ function chartIdxAt(e){
   var g = chartGeo;
   var x = (e.clientX - r.left) * (g.cssW / (r.width || g.cssW));
   var y = (e.clientY - r.top) * (g.cssH / (r.height || g.cssH));
-  if (x < g.padL || x > g.padL + g.W || y < g.padT || y > (g.yMax || g.y0 + 14)) return -1;
-  var i = Math.floor((x - g.padL) / g.groupW);
-  return i < 0 ? 0 : i > (g.n || 12) - 1 ? (g.n || 12) - 1 : i;
+  if (x < 0 || x > g.W || y < g.padT || y > g.yMax) return -1;
+  var i = Math.floor(x / g.groupW);
+  return i < 0 ? 0 : i > g.n - 1 ? g.n - 1 : i;
 }
 function onChartClick(e){
   var i = chartIdxAt(e);
@@ -4302,32 +4255,17 @@ function pickSuggest(key, id){
   if (key === 'retail' || key === 'remedy') {
     var isR = key === 'retail';
     var dup = dupOrderRow(isR ? '#retailBody' : '#remedyBody', p.id);
-    if (isR && !dup) {
-      for (var di = 0; di < retailItems.length; di++) {
-        if (String(retailItems[di].pid) !== String(p.id)) continue;
-        toast('"' + p.name + '" đã có trong tờ ghi — bấm sửa để đổi SL', 'error');
-        noteEditIdx = di;
-        notePage = Math.floor(di / PAGE_SIZE) + 1;
-        renderNote();
-        var eq2 = $('#noteEditQty');
+    if (!dup) {
+      var arr = isR ? retailItems : remedyItems, idk = isR ? 'pid' : 'productId';
+      for (var di = 0; di < arr.length; di++) {
+        if (String(arr[di][idk]) !== String(p.id)) continue;
+        toast('"' + p.name + '" đã có trong tờ ghi — bấm sửa để đổi ' + (isR ? 'SL' : 'gram'), 'error');
+        if (isR) { noteEditIdx = di; notePage = Math.floor(di / PAGE_SIZE) + 1; renderNote(); }
+        else { remedyEditIdx = di; remedyNotePage = Math.floor(di / PAGE_SIZE) + 1; renderRemedyNote(); }
+        var eq2 = $(isR ? '#noteEditQty' : '#remedyNoteEditQty');
         if (eq2) { focusNS(eq2); eq2.select(); }
-        var s9 = $('#retailSearch');
+        var s9 = $(isR ? '#retailSearch' : '#remedySearch');
         if (s9) s9.value = '';
-        closeSuggest(key);
-        return;
-      }
-    }
-    if (!isR && !dup) {
-      for (var dj = 0; dj < remedyItems.length; dj++) {
-        if (String(remedyItems[dj].productId) !== String(p.id)) continue;
-        toast('"' + p.name + '" đã có trong tờ ghi — bấm sửa để đổi gram', 'error');
-        remedyEditIdx = dj;
-        remedyNotePage = Math.floor(dj / PAGE_SIZE) + 1;
-        renderRemedyNote();
-        var eq3 = $('#remedyNoteEditQty');
-        if (eq3) { focusNS(eq3); eq3.select(); }
-        var s8 = $('#remedySearch');
-        if (s8) s8.value = '';
         closeSuggest(key);
         return;
       }
@@ -4348,7 +4286,7 @@ function pickSuggest(key, id){
     var s1 = $('#retailSearch');
     if (s1) s1.value = '';
     if (isDesk()) notePage = 1e9; /* 2.29.0: tờ ghi nhảy tới trang chứa dòng đang gõ; vẽ xong mới trỏ vào ô SL */
-    calcRetail();
+    renderNote();
     if (row) focusNS($('.retail-qty', row));
   } else if (key === 'remedy') {
     if (!commitRemedyRow()) return;
@@ -4608,6 +4546,7 @@ function saveNhap(e){
     entries.push({ pid: cp ? cp.id : null, name: name, qty: dec(qty), price: price });
   }
   if (!entries.length) { toast('Nhập tên vị thuốc', 'error'); var i0 = $('#nhapSearch'); if (i0) i0.focus(); return; }
+  /* Lưới an toàn ở chỗ ghi tồn/tiền: dòng gõ dở và nhapList đã được kiểm, giữ phòng đường nhập mới. */
   for (var ei = 0; ei < entries.length; ei++) {
     if (entries[ei].qty < 0) { toast('Số lượng không được âm', 'error'); return; }
     if (entries[ei].price < 0) { toast('Giá nhập không được âm', 'error'); return; }
@@ -4690,7 +4629,7 @@ function saveEdit(){
   var d = dupName(name, id);
   if (d) { toast('Đã có "' + d.name + '" trong kho', 'error'); return; }
   p.name = name;
-  p.costPrice = money(price);
+  p.costPrice = price; /* price đã là đồng nguyên (kToDong) */
   closeEdit();
   commit('Đã cập nhật vị thuốc');
 }
@@ -5185,8 +5124,7 @@ function autoRefresh(){
         dirty = false;
         saveLocal();
         renderAll();
-        if (orderCur) renderOrder();
-        toast('Đã cập nhật dữ liệu mới từ thiết bị khác');
+        toast('Đã cập nhật dữ liệu mới từ thiết bị khác'); /* hộp đơn đang mở thì busyEditing() đã chặn ở trên */
         return true;
       }
       return false;
@@ -5404,7 +5342,7 @@ function parseBackup(text){
     return null;
   }
   if (obj.app && obj.app !== 'quan-ly-kho') { backupParseError = 'File không phải bản sao lưu của Quản Lý Kho'; return null; }
-  if (obj && obj.moneyUnit === 'dong') d.moneyUnit = 'dong';
+  if (obj && obj.moneyUnit === 'dong') d.moneyUnit = 'dong'; /* cho file viết tay: downloadBackup không ghi moneyUnit ở lớp ngoài */
   var scale = willScaleMoney(d);
   var sample = null;
   for (var s = 0; s < d.products.length; s++) {
@@ -5527,7 +5465,7 @@ function handleAction(btn){
     }
     case 'note-del': {
       var ni = parseInt(btn.getAttribute('data-idx'), 10);
-      if (ni >= 0 && ni < retailItems.length) { retailItems.splice(ni, 1); noteEditIdx = -1; calcRetail(); }
+      if (ni >= 0 && ni < retailItems.length) { retailItems.splice(ni, 1); noteEditIdx = -1; renderNote(); }
       break;
     }
     case 'rnote-add': addRemedyToNote(); break;
@@ -5634,7 +5572,7 @@ function bindEvents(){
 
   var body = $('#retailBody');
   if (body) body.addEventListener('input', function(e){
-    if (e.target.classList.contains('retail-money') || e.target.classList.contains('retail-qty')) calcRetail();
+    if (e.target.classList.contains('retail-money') || e.target.classList.contains('retail-qty')) renderNote();
   });
   var nbody = $('#retailNoteBody');
   if (nbody) nbody.addEventListener('keydown', function(e){
@@ -5709,8 +5647,6 @@ function bindEvents(){
   if (expS) expS.addEventListener('input', function(){ expPage = 1; renderHistory('exp'); });
   bindMonthInput('expMonth', function(){ expPage = 1; renderHistory('exp'); });
 
-  var cy = $('#chartYear');
-  if (cy) cy.addEventListener('change', function(){ lastChartYear = (String(cy.value).trim() === String(thisYear())) ? String(thisYear()) : null; chartSel = -1; renderChart(); });
   var ch = $('#statsChart');
   if (ch) { ch.addEventListener('click', onChartClick); ch.addEventListener('mousemove', onChartMove); ch.addEventListener('mouseleave', onChartMove); }
 
@@ -5718,7 +5654,7 @@ function bindEvents(){
   [['#chartModeY', 'Y'], ['#chartModeM', 'M'], ['#chartModeD', 'D']].forEach(function(b){ var e = $(b[0]); if (e) e.addEventListener('click', function(){ chartModeSet(b[1]); }); });
   [['#chartPrev', -1], ['#chartNext', 1]].forEach(function(b){ var e = $(b[0]); if (e) e.addEventListener('click', function(){ chartYearGo(b[1]); }); });
   if (cb) cb.addEventListener('toggle', function(){
-    if (cb.open) { chartYr = Number(thisYear()); chartDy = chartYr; chartDm = parseInt(todayISO().slice(5, 7), 10); chartModeSet('D'); requestAnimationFrame(renderChart); var fb = cb.querySelector('.card__body'); if (fb && isDesk()) try { fb.focus({ preventScroll: true }); } catch (e) { fb.focus(); } }
+    if (cb.open) { chartModeSet('D'); requestAnimationFrame(renderChart); var fb = cb.querySelector('.card__body'); if (fb && isDesk()) try { fb.focus({ preventScroll: true }); } catch (e) { fb.focus(); } }
   });
   if (cb) cb.addEventListener('keydown', function(e){ if (isDesk() && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); chartKey(e.key === 'ArrowLeft' ? -1 : 1); } }); /* 2.34.0 */
   var bbx = $('#backupBox');
@@ -6137,9 +6073,6 @@ function init(){
   setDateInput('remedyDate', t);
   lastAuto.retailDate = t;
   lastAuto.remedyDate = t;
-  var cy = $('#chartYear');
-  if (cy) cy.value = thisYear();
-  lastChartYear = String(thisYear());
 
   bindEvents();
   initSuggest();
