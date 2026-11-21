@@ -4953,7 +4953,7 @@ function cloudConflict(){
         syncRejected = false;
         renderSyncBadge();
         resetDrafts();
-      }
+      } else scheduleSyncRetry(); /* 2.37.2: pull lỗi (mạng) thì dirty vẫn bật: hẹn thử lại */
       return false;
     });
   }

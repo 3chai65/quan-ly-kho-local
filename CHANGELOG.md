@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.37.2] - 2026-11-21
+
+### Sửa
+- Hộp xung đột: chọn OK nhưng `pullState` lỗi (mạng) thì `dirty` vẫn bật và nay có hẹn thử lại (`scheduleSyncRetry`), không còn im lặng.
+
 ## [2.37.1] - 2026-11-21
 
 ### Sửa

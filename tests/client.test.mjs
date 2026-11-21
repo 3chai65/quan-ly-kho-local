@@ -8053,3 +8053,22 @@ test('2.37.1 GET khởi động đang chờ: người dùng ghi (dirty bật) tr
   assert.equal(client.isDirty(), true);
   assert.equal(client.getBase(), 10, 'base giữ nguyên để PUT của bản vừa ghi gặp 409 nếu máy khác đã đổi');
 });
+
+test('2.37.2 xung đột: chọn OK nhưng GET lỗi mạng thì dirty còn và có hẹn thử lại (không im lặng)', async () => {
+  const timers = []; let puts = 0;
+  const fetchStub = async (url, opts = {}) => {
+    if ((opts.method || 'GET') === 'PUT') { puts++; return { status: 409, json: async () => ({ success: false, conflict: true, updatedAt: 20 }) }; }
+    throw new Error('mất mạng');
+  };
+  const client = loadClient({ fetch: fetchStub, confirm: () => true, setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
+  client.setBase(10);
+  client.setDirty(true);
+  await client.pushState(true, false);
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.getDb().products[0].name, 'Local');
+  assert.equal(puts, 1);
+  timers.filter(t => t.ms === 4000).forEach(t => t.fn()); /* gồm timer thử lại; huy hiệu dirty không gửi gì */
+  for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  assert.equal(puts, 2, 'timer thử lại đã gửi lại PUT');
+});
