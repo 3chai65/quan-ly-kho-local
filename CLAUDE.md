@@ -24,7 +24,7 @@ Kính: người dùng chốt 16/11/2026 giữ 4 phần tử `backdrop-filter` (h
 - Test: `tests/client.test.mjs` (client, chạy trên máy), `tests/server.test.mjs` và `tests/auth*.test.mjs` (cần better-sqlite3, Node 22; CI chạy trong Docker). `npm run lint` kiểm cú pháp. Chạy test trên Windows/CI, không chạy trên hub.
 - Công cụ: `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `tools/kiem-cu-phap.mjs`, `scripts/lint-client.mjs`, `scripts/auth-reset.mjs`.
 - Docker (`Dockerfile`, `docker-compose.yml`, `Caddyfile`) chỉ còn là bản lùi và để CI chạy test server; hub thật không dùng.
-- Phiên bản hiện tại: 2.34.0. `BAO-CAO-REVIEW.md` — lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
+- Phiên bản hiện tại: 2.37.2. `BAO-CAO-REVIEW.md` — lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI (`G:\quan-ly-kho-gpui`) dùng chung schema SQLite, chỉ-đọc trên bản chép của `app.db`; không đụng `data/` từ app đó khi chưa có duyệt. Chuẩn đối chiếu giao diện desktop là app GPUI thật, không phải ảnh mô phỏng.
 
 ## Vùng nhạy cảm
@@ -76,7 +76,8 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt v�
 - Mỗi giai đoạn lớn dùng worker mới khi ngữ cảnh đã dài.
 
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
-- **Hiện tại:** bản trên máy Windows là **2.30.0** (commit da892a5; CHƯA PUSH/CHƯA GẮN THẺ cho tới khi người dùng chốt). Mac đang chạy thẻ `v2.28.0` (ef5b1a2), chờ `v2.30.0`. 2.29.0 = Bán lẻ/Nhập hàng desktop theo app Mac (dòng đang gõ = dòng n+1 ngay dưới tiêu đề cột, ô phẳng không viền, `Tiền (nghìn)`, Enter SL → ô tiền); 2.30.0 = bỏ hàng 4 ô số ở desktop, tab Thống kê có 6 số (Nhập tháng, Bán/Lợi nhuận hôm nay, Bán/Lợi nhuận năm, Tồn kho; 'Bán tháng' và 'Lợi nhuận tháng' không còn ở desktop). Trọng điểm: app Mac native + Tauri + PWA phải giống nhau tối đa, Mac là chuẩn giao diện/nhập liệu. Chi tiết từng bản nằm trong `CHANGELOG.md`; kiểm lại hash đường lui trong `~/kho/truoc-khi-bat.txt` trước khi triển khai.
+- **Hiện tại:** bản Windows và Mac đều là **2.37.2** (thẻ `v2.37.2`, commit ea0f28e, triển khai 21/11/2026); thẻ đã push. Trọng điểm: Mac là chuẩn giao diện/nhập liệu; app Mac native + Tauri + PWA phải giống nhau tối đa. Chi tiết từng bản nằm trong `CHANGELOG.md`; kiểm lại hash đường lui trong `~/kho/truoc-khi-bat.txt` trước khi triển khai.
+  `migrateMoneyToDong` (server.js) và file `truoc-lam-tron-*.json` có chú thích `XÓA SAU 06/12/2026`: xóa khi bản backup cũ nhất còn đơn vị nghìn đã bị xóa (cần chủ đồng ý).
 - Đo giao diện: Mac đã kiểm lint/test (411 pass, 1 skip vì `titlebar.js` cần repo Tauri) tại 2.25.1; xác nhận/tên đơn vẫn dùng `window.confirm/prompt`, chưa thử trong Tauri thật; nút Thoát chưa thử trên iPhone/Tauri thật.
 - Chưa làm có chủ ý: Hoàn tác khôi phục, server làm chứng sao lưu, ngày phiếu nhập lùi (P2.4), danh sách thiết bị/Thu hồi/Tạo mã mời ngay trong app desktop (dùng trang `/auth/devices` có sẵn). Sao lưu tự động có thể bị trình duyệt chặn tải im lặng (không phát hiện được).
 - App Tauri: exe cài ở `C:\Users\Yellows\AppData\Local\QuanLyKho\`; PWA Edge phải cài từ `https://192.168.2.46`. Tắt app Tauri bằng nút X, không `Stop-Process -Force` (mất cookie thiết bị). Bản exe cũ vẫn dùng được vì giao diện lấy từ hub; hub lùi bản thì giao diện lùi theo.
