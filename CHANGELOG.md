@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.0] - 2026-11-21
+
+### Thêm
+- Desktop (Mac, Tauri, PWA rộng): thẻ "Bán trong tháng" và "Lợi nhuận tháng" hiện trong thanh bên, dưới logo, trên tab Bán lẻ; xếp dọc 2 ô (Hôm nay / Năm mỗi dòng một hàng). Dùng chính thẻ `.stats` và `renderStats` của điện thoại, chỉ đổi CSS (bỏ `html.desktop .stats{display:none}`); không đổi logic tiền.
+
 ## [2.37.2] - 2026-11-21
 
 ### Sửa

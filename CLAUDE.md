@@ -24,7 +24,7 @@ Kính: người dùng chốt 16/11/2026 giữ 4 phần tử `backdrop-filter` (h
 - Test: `tests/client.test.mjs` (client, chạy trên máy), `tests/server.test.mjs` và `tests/auth*.test.mjs` (cần better-sqlite3, Node 22; CI chạy trong Docker). `npm run lint` kiểm cú pháp. Chạy test trên Windows/CI, không chạy trên hub.
 - Công cụ: `tools/kiem-tra-ngay.mjs`, `tools/doi-ngay-don.mjs`, `tools/kiem-cu-phap.mjs`, `scripts/lint-client.mjs`, `scripts/auth-reset.mjs`.
 - Docker (`Dockerfile`, `docker-compose.yml`, `Caddyfile`) chỉ còn là bản lùi và để CI chạy test server; hub thật không dùng.
-- Phiên bản hiện tại: 2.37.2. `BAO-CAO-REVIEW.md` — lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
+- Phiên bản hiện tại: 2.38.0. `BAO-CAO-REVIEW.md` — lỗi reviewer đã báo, đã sửa/không sửa và lý do; tra trước khi báo hoặc sửa lỗi tương tự.
 - App desktop Rust+GPUI (`G:\quan-ly-kho-gpui`) dùng chung schema SQLite, chỉ-đọc trên bản chép của `app.db`; không đụng `data/` từ app đó khi chưa có duyệt. Chuẩn đối chiếu giao diện desktop là app GPUI thật, không phải ảnh mô phỏng.
 
 ## Vùng nhạy cảm

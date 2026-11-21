@@ -118,6 +118,11 @@ border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
 .stat__sub{font-size:10px;color:var(--muted);margin-top:1px;line-height:1.3}
 .stat__sub b{color:var(--text2);font-weight:700;font-variant-numeric:tabular-nums}
 .stat__sub span+span::before{content:"· "}
+/* 2.38.0: desktop — thẻ Bán/Lợi nhuận tháng nằm trong thanh bên, dưới logo, trên tab (ngoài khối desktop vì trần 20736 B) */
+html.desktop .stats{grid-area:1/1/3/2;align-self:start;grid-template-columns:minmax(0,1fr);margin:52px 10px 0;z-index:1}
+html.desktop .stats__c+.stats__c{border-left:0;border-top:1px solid var(--border2)}
+html.desktop .stat__sub span{display:block}
+html.desktop .stat__sub span+span::before{content:none}
 @media (max-width:600px){
 .stats__c{padding:6px 10px}
 .stat__sub span{display:block}
@@ -621,8 +626,7 @@ html.desktop .top .wrap{padding:0 10px}
 html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}
 html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0;padding-top:10px}
 html.desktop .main{display:contents}
-html.desktop .stats{display:none}
-html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:52px 10px 0;align-self:start}
+html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:203px 10px 0;align-self:start}
 html.desktop .tab{position:relative;display:block;min-height:30px;padding:6px 10px 6px 34px;border-radius:999px;border:1px solid;color:var(--text);font-size:12.5px;font-weight:700;line-height:16px;text-align:left}
 html.desktop .tab__ic{position:absolute;left:10px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--text);stroke-width:1.5}
 html.desktop .tab__l1::after{content:" "}

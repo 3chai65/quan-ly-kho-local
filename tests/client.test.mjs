@@ -6180,7 +6180,7 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   const block = deskBlock();
   // 2.20.0: 4 ô lớn đơn sắc (đã bỏ nhuộm tông riêng, xem ca riêng bên dưới)
   assert.ok(!block.includes('--tint'));
-  assert.ok(block.includes('html.desktop .stats{display:none}') && !block.includes('.stats4'), '2.30.0: không còn dải 4 ô');
+  assert.ok(!PAGE.includes('html.desktop .stats{display:none}') && !block.includes('.stats4') && PAGE.includes('html.desktop .stats{grid-area:1/1/3/2;align-self:start;'), '2.38.0: thẻ Bán/Lợi nhuận tháng hiện trong thanh bên desktop (không còn ẩn)');
   assert.ok(block.includes('border-radius:20px') && block.includes('html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}'));
   assert.ok(!block.split(String.fromCharCode(10)).some(l => l.includes('.stats') && l.includes('backdrop-filter')));
   // bố cục khung cố định: thanh bên (tabs) + hàng thẻ số + vùng nội dung cuộn trong, không thêm DOM
@@ -6308,7 +6308,7 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
   assert.ok(block.includes('box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'), 'lề: trên 10, ngang/dưới 16 (2.31.0)');
   assert.ok(block.includes('html.desktop #tb{height:24px}') && block.includes('html.desktop #tb button{width:36px}'));
-  assert.ok(block.includes('margin:52px 10px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
+  assert.ok(block.includes('margin:203px 10px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
 });
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
@@ -7671,7 +7671,7 @@ test('2.30.5 desktop chỉ hai tông chữ (--text, --muted) + đỏ: không xan
 /* ===== 2.31.0 thu gọn khung desktop theo app Mac ===== */
 test('2.31.0 thanh bên 160: nút tab cao tối thiểu 30 (nhãn dài xuống 2 dòng, không cắt …), chữ 12,5 đậm, icon 18 cách chữ 6, đệm ngang 10; bỏ hàng Nền, nút bảng màu cùng dòng đồng bộ', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop{--sw:160px;') && b.includes('margin:52px 10px 0'), 'thanh bên rộng 160, đệm trong 10');
+  assert.ok(b.includes('html.desktop{--sw:160px;') && b.includes('margin:203px 10px 0'), 'thanh bên rộng 160, đệm trong 10');
   const tab = /html\.desktop \.tab\{([^}]*)\}/.exec(b)[1];
   assert.ok(tab.includes('min-height:30px') && tab.includes('padding:6px 10px 6px 34px') && tab.includes('font-size:12.5px;font-weight:700') && tab.includes('display:block') && !/white-space:nowrap|text-overflow|overflow:hidden|height:\d+px;min-height/.test(tab), 'không height cố định, không nowrap/ellipsis (34 = đệm 10 + icon 18 + cách 6)');
   assert.ok(b.includes('html.desktop .tab__ic{position:absolute;left:10px;') && b.includes('width:18px;height:18px'));
