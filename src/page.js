@@ -2301,7 +2301,7 @@ function discardUnsynced(){
     toast('Không tải được bản nháp — đã giữ nguyên dữ liệu trên máy này', 'error');
     return Promise.resolve(false);
   }
-  return pullState(true, true).then(function(ok){
+  return pullState(true).then(function(ok){
     if (ok) {
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
       syncRetryDelay = DIRTY_BADGE_MS;
@@ -4006,11 +4006,11 @@ function chartModeSet(m){
   var yb = $('.thk__y'); if (yb) yb.style.display = m === 'Y' ? 'none' : '';
   renderChart();
 }
-/* 2.34.0 hàm thuần: danh sách năm (từ năm có giao dịch sớm nhất tới nowY), cột mặc định (hôm nay / tháng này / năm nay, -1 nếu kỳ đang xem không chứa), bước phím ←→ (dừng hai đầu). */
+/* 2.34.0 hàm thuần: danh sách năm (từ năm có giao dịch sớm nhất tới năm lớn nhất có giao dịch, tối thiểu nowY), cột mặc định (hôm nay / tháng này / năm nay, -1 nếu kỳ đang xem không chứa), bước phím ←→ (dừng hai đầu). */
 function chartYears(txs, nowY){
-  var lo = nowY, o = [], y;
-  (txs || []).forEach(function(t){ y = parseInt(String(t && t.date || '').slice(0, 4), 10); if (y >= 2000 && y < lo) lo = y; });
-  for (y = lo; y <= nowY; y++) o.push(y);
+  var lo = nowY, hi = nowY, o = [], y;
+  (txs || []).forEach(function(t){ y = parseInt(String(t && t.date || '').slice(0, 4), 10); if (y >= 2000 && y <= 2100) { if (y < lo) lo = y; if (y > hi) hi = y; } }); /* 2.37.0: cả năm sau (ngày phiếu tới 2100) để không rơi khỏi biểu đồ Năm */
+  for (y = lo; y <= hi; y++) o.push(y);
   return o;
 }
 function chartDefIdx(mode, dy, dm, yr, years, today){
@@ -4907,7 +4907,7 @@ function saveTxEdit(){
 
   var p = findProduct(t.productId);
   var oldQty = num(t.qty);
-  var oldCost = num(t.cost);
+  var oldCost = t.cost != null ? num(t.cost) : null; /* cost 0 là vốn thật; chỉ cost null mới lấy giá nhập hiện tại */
   var delta = dec(q - oldQty);
   if (p) {
     if (t.type === 'NHAP') {
@@ -4953,7 +4953,7 @@ function saveTxEdit(){
   }
   /* Giữ giá vốn lịch sử: nhân theo đơn giá vốn cũ của chính giao dịch,
      chỉ fallback về giá hiện tại khi giao dịch cũ không có cost. */
-  var oldUnitCost = oldQty > 0 && oldCost > 0 ? dec(oldCost / oldQty) : (p ? num(p.costPrice) : 0);
+  var oldUnitCost = oldQty > 0 && oldCost != null ? dec(oldCost / oldQty) : (p ? num(p.costPrice) : 0);
   t.qty = dec(q);
   t.price = money(price);
   t.total = money(q * price);
@@ -5002,7 +5002,7 @@ function cloudConflict(){
       toast('Không tải được bản nháp — đã hủy tải bản máy chủ', 'error');
       return Promise.resolve(false);
     }
-    return pullState(true, true).then(function(ok){
+    return pullState(true).then(function(ok){
       if (ok) {
         if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
         syncRetryDelay = DIRTY_BADGE_MS;
@@ -5121,7 +5121,7 @@ function pushState(manual, force){
     return ok;
   });
 }
-function pullState(manual, forceLatest){
+function pullState(manual){
   return apiFetch('/api/state?t=' + Date.now())
     .then(function(r){
       if (r && r.status === 401) { noteAuthLost(); return null; }
@@ -5137,19 +5137,12 @@ function pullState(manual, forceLatest){
       lastSyncOk = Date.now();
       renderSyncLine();
       cloudBase = num(server.updatedAt);
-      /* Chỉ ưu tiên server khi máy này không có thay đổi chưa gửi.
-         Nếu đang dirty, đẩy bản local lên trước; server sẽ trả 409 nếu
-         thiết bị khác đã sửa, và người dùng quyết định. */
-      if (forceLatest || !dirty) {
-        db = server;
-        dirty = false;
-        saveLocal();
-        renderAll();
-        if (manual) toast('Đã tải dữ liệu mới nhất');
-        return true;
-      }
-      pushState(false);
-      if (manual) toast('Dữ liệu trên máy chưa gửi — đang lưu lên máy chủ');
+      /* Luôn thay db bằng bản máy chủ (cả ba chỗ gọi đều là chủ động bỏ nháp/khởi động); không bao giờ gửi PUT ở đây. */
+      db = server;
+      dirty = false;
+      saveLocal();
+      renderAll();
+      if (manual) toast('Đã tải dữ liệu mới nhất');
       return true;
     })
     .catch(function(e){ if (manual) toast(e && e.name === 'AbortError' ? 'Máy chủ không phản hồi sau 15 giây' : 'Không tải được dữ liệu', 'error'); return false; });
@@ -6163,7 +6156,7 @@ function init(){
     /* Đẩy bản local chưa gửi lên trước; server trả 409 nếu máy khác đã sửa. */
     pushState(false);
   } else if (window.__NEED_FETCH__ || !remote) {
-    pullState(false, true);
+    pullState(false);
   }
   startAutoRefresh();
 

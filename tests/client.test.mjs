@@ -993,7 +993,7 @@ test('pushState khi 409: chọn giữ bản máy này thì ghi đè bằng X-For
   assert.equal(client.getBase(), 30);
 });
 
-test('pullState khi dirty không ghi đè local, đẩy bản local lên', async () => {
+test('2.37.0 pullState khi dirty: thay db bằng bản máy chủ, KHÔNG gửi PUT nào (không ghi đè lặng lẽ)', async () => {
   const calls = [];
   const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20 };
   const fetchStub = async (url, opts = {}) => {
@@ -1007,9 +1007,12 @@ test('pullState khi dirty không ghi đè local, đẩy bản local lên', async
   client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
   client.setBase(10);
   client.setDirty(true);
-  await client.pullState(true, false);
-  assert.equal(client.getDb().products[0].name, 'Local');
-  assert.deepEqual(calls, ['GET', 'PUT']);
+  await client.pullState(true);
+  await new Promise(r => setImmediate(r));
+  assert.deepEqual(calls, ['GET'], 'không PUT');
+  assert.equal(client.getDb().products[0].name, 'Remote');
+  assert.equal(client.isDirty(), false);
+  assert.equal(client.getBase(), 20);
 });
 
 /* ------------------------------------------------------------------ */
@@ -1502,7 +1505,7 @@ test('401 pullState thủ công (page.js thật): không ghi đè db, không đ�
   client.setBase(1);
   client.setDirty(true);
   const before = JSON.stringify(client.getDb());
-  const ok = await client.pullState(true, true);
+  const ok = await client.pullState(true);
   assert.equal(ok, false);
   assert.equal(JSON.stringify(client.getDb()), before);
   assert.equal(client.isDirty(), true);
@@ -6131,7 +6134,7 @@ test('W4b: header nhanh nhưng json() treo thì sau 15 s bị AbortError, pushin
   assert.equal(client.isPushing(), false);
   const t2 = [];
   const c2 = mk(t2);
-  const g = c2.pullState(false, false);
+  const g = c2.pullState(false);
   await new Promise(r => setImmediate(r));
   assert.ok(t2[0] && !t2[0].cleared);
   t2[0].fn();
@@ -6979,7 +6982,8 @@ test('2.34.0 chartYears: từ năm có giao dịch sớm nhất tới năm nay; 
   assert.deepEqual(Array.from(c.chartYears(DESK_TX, 2026)), [2025, 2026]);
   assert.deepEqual(Array.from(c.chartYears([], 2026)), [2026]);
   assert.deepEqual(Array.from(c.chartYears([{ date: '2022-01-05' }, { date: 'x' }, { date: '1999-01-01' }, { date: '2023-02-02' }, null], 2026)), [2022, 2023, 2024, 2025, 2026]);
-  assert.deepEqual(Array.from(c.chartYears([{ date: '2030-01-01' }], 2026)), [2026]);
+  assert.deepEqual(Array.from(c.chartYears([{ date: '2028-01-01' }], 2026)), [2026, 2027, 2028], '2.37.0: có cột năm sau');
+  assert.deepEqual(Array.from(c.chartYears([{ date: '2101-01-01' }], 2026)), [2026], 'trên 2100 bỏ qua');
 });
 
 test('2.34.0 lợi nhuận cột: có cost (kể cả 0) / thiếu cost = qty x costPrice hiện tại / vị đã xóa = 0 vốn / NHẬP không tính / ngày-tháng-năm khác không lẫn / cộng dồn', () => {
@@ -7993,4 +7997,22 @@ test('2.36.2 client: ts true/\'\'/[] bị bỏ giao dịch; thang lẻ làm trò
   assert.equal(c.kInput(1234.6), '1.235');
   assert.equal(c.kInput(NaN), '0');
   assert.equal(c.kInput(0.1 + 0.2), '0');
+});
+
+test('2.37.0 saveTxEdit: dòng BÁN cost 0 sửa SL vẫn cost 0; cost null mới lấy giá nhập hiện tại', () => {
+  const run = (txExtra, expectCost) => {
+    const dom = stockDom();
+    const client = loadClient({ document: dom.document, Date: fakeClock(2026, 10, 8, 12), confirm: () => true,
+      fetch: () => Promise.resolve({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+    client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 135000 }], transactions: [{ id: 'b1', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 200000, total: 200000, ts: 2000, ...txExtra }], prescriptions: [], updatedAt: 1 });
+    client.setBase(1);
+    client.openTxEdit('b1');
+    dom.set('txEditQty', '2');
+    client.saveTxEdit();
+    const t = client.getDb().transactions.find(x => x.id === 'b1');
+    assert.equal(t.qty, 2);
+    assert.equal(t.cost, expectCost);
+  };
+  run({ cost: 0 }, 0);
+  run({}, 270000);
 });

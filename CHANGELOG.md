@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.37.0] - 2026-11-21
+
+### Sửa
+- `pullState` luôn thay dữ liệu bằng bản máy chủ và không bao giờ gửi PUT (bỏ tham số `forceLatest` và nhánh dirty có thể ghi đè lặng lẽ vì `cloudBase` đã bị đẩy lên trước).
+- Sửa giao dịch BÁN: vốn 0 là vốn thật (`cost != null`), sửa SL không còn gán lại vốn theo giá nhập hiện tại; chỉ cost trống mới lấy giá nhập hiện tại.
+- Biểu đồ Năm: giao dịch có ngày sau năm hiện tại (tới 2100) có cột năm của nó, không còn rơi khỏi biểu đồ.
+
 ## [2.36.2] - 2026-11-21
 
 ### Sửa
