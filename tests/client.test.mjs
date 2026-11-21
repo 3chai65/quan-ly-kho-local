@@ -7980,3 +7980,17 @@ test('2.36.0 mở app (desktop hoặc PWA standalone) vào Thống kê; trình d
   assert.deepEqual(run(null, () => ({ matchMedia: q => ({ matches: /standalone/.test(q) }) })).openIds(), ['chartBox'], 'PWA display-mode');
   const e2 = run('expBox', () => ({ navigator: { standalone: true } })); e2.clickTab('invBox'); assert.deepEqual(e2.openIds(), ['invBox'], 'không ép lại khi đang dùng');
 });
+
+test('2.36.2 client: ts true/\'\'/[] bị bỏ giao dịch; thang lẻ làm tròn (1.5 → 2); kInput làm tròn đồng nguyên rồi chia 1000', () => {
+  const c = loadClient({ setTimeout() { return 0; }, clearTimeout() {} });
+  const mk = extra => c.sanitize({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }], prescriptions: [], moneyUnit: 'dong',
+    transactions: [{ id: 't1', date: '2026-11-06', type: 'NHAP', productId: 'p1', qty: 1, price: 1, total: 1, ...extra }] });
+  for (const v of [true, '', [], '0x10']) assert.equal(mk({ ts: v }).transactions.length, 0, 'ts=' + JSON.stringify(v));
+  assert.equal(mk({ ts: 5 }).transactions.length, 1);
+  assert.equal(mk({ ts: 5, thang: 1.5 }).transactions[0].thang, 2);
+  assert.equal(mk({ ts: 5, thang: '2.4' }).transactions[0].thang, 2);
+  assert.equal(c.kInput(1234500), '1234.5');
+  assert.equal(c.kInput(1234.6), '1.235');
+  assert.equal(c.kInput(NaN), '0');
+  assert.equal(c.kInput(0.1 + 0.2), '0');
+});

@@ -1208,7 +1208,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       </summary>
       <div class="card__body" tabindex="-1">
         <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__r"><div class="thk__m" role="group" aria-label="Xem theo"><button type="button" id="chartModeY" aria-pressed="false">Năm</button><button type="button" id="chartModeM" aria-pressed="false">Tháng</button><button type="button" id="chartModeD" class="on" aria-pressed="true">Ngày</button></div><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span id="chartYrK">Tháng</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div></div></div>
-        <div class="chart-scroll" id="chartScroll"><canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas></div>
+        <div class="chart-scroll"><canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas></div>
         <div class="chart-tip" id="chartTip" aria-live="polite">
           <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
           <span class="chart-chip chart-chip--imp" id="chartImpChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Nhập</span><b class="chart-chip__v" id="chartImpVal">0</b></span>
@@ -1592,9 +1592,9 @@ function isRealDateISO(s){ s = String(s || ''); return parseDateVN(s) === s; }
 function money(v){ return Math.round(num(v)); }
 function kToDong(k){ return Math.round(num(k) * DONG_PER_K); }
 function kInput(dong){
-  var k = num(dong) / DONG_PER_K;
-  if (!isFinite(k)) return '0';
-  return String(Math.round(k * DONG_PER_K) / DONG_PER_K);
+  var d = num(dong);
+  if (!isFinite(d)) return '0';
+  return String(Math.round(d) / DONG_PER_K);
 }
 /* Hiển thị đầy đủ chữ số, không làm tròn. Dùng dấu . phân cách nghìn, , thập phân. */
 function fmtNum(n){
@@ -2091,7 +2091,7 @@ function sanitize(d, drops){
           (t.g != null && !inRange(t.g, 0, GRAMS_MAX)) ||
           (t.thang != null && !inRange(t.thang, 1, THANG_MAX)) ||
           (t.unitPrice != null && !inRange(t.unitPrice, 0, MONEY_MAX)) ||
-          (t.ts != null && !isFinite(Number(t.ts)))) {
+          (t.ts != null && !isNumLike(t.ts))) {
         if (drops) drops.push('Giao dịch không hợp lệ: ' + id);
         return;
       }
@@ -2116,7 +2116,7 @@ function sanitize(d, drops){
       if (t.retail) tx.retail = true;
       if (t.rx) tx.rx = true;
       if (t.g != null) tx.g = dec(t.g);
-      if (t.thang != null) tx.thang = dec(t.thang);
+      if (t.thang != null) tx.thang = Math.round(Number(t.thang));
       if (t.unitPrice != null) tx.unitPrice = money(t.unitPrice);
       if (num(t.ts) > 0) tx.ts = num(t.ts);
       o.transactions.push(tx);
@@ -5378,7 +5378,7 @@ function validateBackupState(d){
     if (t.g != null && !inRange(t.g, 0, GRAMS_MAX)) return tl + ': grams phải từ 0 đến ' + GRAMS_MAX;
     if (t.thang != null && !inRange(t.thang, 1, THANG_MAX)) return tl + ': số thang phải từ 1 đến ' + THANG_MAX;
     if (t.unitPrice != null && !inRange(t.unitPrice, 0, MONEY_MAX)) return tl + ': giá 1 thang phải từ 0 đến ' + MONEY_MAX;
-    if (t.ts != null && !isFinite(Number(t.ts))) return tl + ': ts không hợp lệ';
+    if (t.ts != null && !isNumLike(t.ts)) return tl + ': ts không hợp lệ';
     var oname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : '');
     if (oname && oname.length > NAME_MAX) return tl + ': tên đơn quá dài (tối đa ' + NAME_MAX + ' ký tự)';
   }

@@ -18,8 +18,6 @@
  * SQLite đồng bộ (better-sqlite3), mỗi lần ghi là một transaction.
  */
 
-'use strict';
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -230,7 +228,7 @@ function validateState(d) {
   const errors = [];
   const warnings = [];
   const stockDrift = [];
-  const state = { products: [], transactions: [], prescriptions: [], updatedAt: 0 };
+  const state = { products: [], transactions: [], prescriptions: [] };
   if (!d || typeof d !== 'object' || Array.isArray(d)) {
     return { state, errors: ['Dữ liệu không phải object'], warnings, stockDrift };
   }
@@ -244,7 +242,6 @@ function validateState(d) {
     if (!Array.isArray(d[key])) fail('Thiếu mảng ' + key);
   }
   if (errors.length) return { state, errors, warnings, stockDrift };
-  state.updatedAt = decNum(d.updatedAt);
 
   const productIds = new Set();
   const productNames = new Set();
@@ -278,7 +275,7 @@ function validateState(d) {
     if (!isNonNegNumber(t.price, MONEY_MAX)) fail(label + ': đơn giá phải từ 0 đến ' + MONEY_MAX);
     if (!isNonNegNumber(t.total, MONEY_MAX)) fail(label + ': thành tiền phải từ 0 đến ' + MONEY_MAX);
     if (t.cost != null && !isNonNegNumber(t.cost, MONEY_MAX)) fail(label + ': giá vốn phải từ 0 đến ' + MONEY_MAX);
-    if (t.ts != null && !Number.isFinite(Number(t.ts))) fail(label + ': ts không hợp lệ');
+    if (t.ts != null && !isNumLike(t.ts)) fail(label + ': ts không hợp lệ');
     if (t.g != null && !isNonNegNumber(t.g, GRAMS_MAX)) fail(label + ': grams phải từ 0 đến ' + GRAMS_MAX);
     if (t.thang != null && (!isNumLike(t.thang) || Number(t.thang) < 1 || Number(t.thang) > THANG_MAX)) fail(label + ': số thang phải từ 1 đến ' + THANG_MAX);
     if (t.unitPrice != null && !isNonNegNumber(t.unitPrice, MONEY_MAX)) fail(label + ': giá 1 thang phải từ 0 đến ' + MONEY_MAX);
@@ -294,7 +291,7 @@ function validateState(d) {
       id, date: String(t.date), type: t.type, productId,
       qty: decNum(t.qty), price: money(t.price), total: money(t.total), cost: moneyNullable(t.cost),
       orderId, orderName,
-      retail: !!t.retail, rx: !!t.rx, grams: decNullable(t.g), thang: decNullable(t.thang),
+      retail: !!t.retail, rx: !!t.rx, grams: decNullable(t.g), thang: t.thang == null ? null : Math.round(Number(t.thang)),
       unitPrice: moneyNullable(t.unitPrice), ts: decNullable(t.ts)
     });
   });
@@ -363,12 +360,8 @@ function randomId() {
   return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
-const insertProduct = () => db.prepare('INSERT INTO products (id, name, stock_kg, cost_price_vnd, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
-const insertTx = () => db.prepare('INSERT INTO transactions (id, date, type, product_id, qty_kg, price_vnd, total_vnd, cost_vnd, order_id, order_name, retail, rx, grams, thang, unit_price_vnd, ts, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-const insertRx = () => db.prepare('INSERT INTO prescriptions (id, name, total_vnd, thang, updated_at) VALUES (?, ?, ?, ?, ?)');
-const insertRxItem = () => db.prepare('INSERT INTO prescription_items (prescription_id, product_id, grams) VALUES (?, ?, ?)');
-
-const writeStateTx = db.transaction((state, now) => {
+/* Gọi trong transaction của writeState. */
+function writeStateRows(state, now) {
   // Giữ created_at gốc của bản ghi đã tồn tại (writeState xóa sạch rồi ghi lại).
   const prevProductCreated = new Map(
     db.prepare('SELECT id, created_at FROM products').all().map(r => [r.id, r.created_at])
@@ -384,22 +377,22 @@ const writeStateTx = db.transaction((state, now) => {
   db.prepare(`INSERT INTO app_meta (key, value) VALUES ('source_updated_at', ?)
     ON CONFLICT(key) DO UPDATE SET value = excluded.value`).run(String(now));
 
-  const ip = insertProduct();
+  const ip = db.prepare('INSERT INTO products (id, name, stock_kg, cost_price_vnd, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
   for (const p of state.products) ip.run(p.id, p.name, p.stock, p.costPrice, prevProductCreated.get(p.id) || now, now);
 
-  const it = insertTx();
+  const it = db.prepare('INSERT INTO transactions (id, date, type, product_id, qty_kg, price_vnd, total_vnd, cost_vnd, order_id, order_name, retail, rx, grams, thang, unit_price_vnd, ts, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   for (const t of state.transactions) {
     it.run(t.id, t.date, t.type, t.productId, t.qty, t.price, t.total, t.cost, t.orderId, t.orderName,
       t.retail ? 1 : 0, t.rx ? 1 : 0, t.grams, t.thang, t.unitPrice, t.ts, prevTxCreated.get(t.id) || now);
   }
 
-  const ir = insertRx();
-  const ii = insertRxItem();
+  const ir = db.prepare('INSERT INTO prescriptions (id, name, total_vnd, thang, updated_at) VALUES (?, ?, ?, ?, ?)');
+  const ii = db.prepare('INSERT INTO prescription_items (prescription_id, product_id, grams) VALUES (?, ?, ?)');
   for (const r of state.prescriptions) {
     ir.run(r.id, r.name, r.total, r.thang, r.updatedAt || now);
     for (const item of r.items) ii.run(r.id, item.productId, item.grams);
   }
-});
+}
 
 /* opId (tùy chọn, X-Op-Id): lưu cùng lần ghi gần nhất để PUT gửi lại (mất phản hồi) không bị 409.
    Ghi không có opId thì xóa dấu cũ. */
@@ -412,7 +405,7 @@ function getLastOp() {
 function writeState(state, opId) {
   const now = Date.now();
   db.transaction(() => {
-    writeStateTx(state, now);
+    writeStateRows(state, now);
     const up = db.prepare('INSERT INTO app_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
     if (opId) { up.run('last_op_id', opId); up.run('last_op_updated_at', String(now)); }
     else db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
@@ -575,7 +568,7 @@ app.put('/api/state', (req, res) => {
       warnReject(428, 'thiếu X-Base-Updated');
       return res.status(428).json({ success: false, error: 'Thiếu X-Base-Updated (hoặc gửi X-Force: 1 để chủ động ghi đè)' });
     }
-    if (baseHdr != null && !force) {
+    if (!force) {
       const baseNum = Number(baseHdr);
       // Header không phải số hợp lệ → coi như xung đột (an toàn) thay vì bỏ qua kiểm tra.
       if (!Number.isFinite(baseNum)) {
@@ -736,7 +729,7 @@ migrateMoneyToDong();
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('Quản Lý Kho (local) đang chạy:');
   console.log('  PC    : https://localhost (dự phòng http://localhost:' + PORT + ')');
-  console.log('  Khác  : https://<IP-máy-tính> (ứng dụng nghe 0.0.0.0 trong container; docker-compose chỉ mở cổng ' + PORT + ' ở 127.0.0.1)');
+  console.log('  Khác  : https://<IP-máy-tính> (ứng dụng nghe 0.0.0.0:' + PORT + '; mã thiết lập nằm trong log máy chủ, vd logs/server.out.log)');
   console.log('  DB    : ' + DB_FILE);
   console.log('  Backup: ' + BACKUP_DIR + ' (giữ ' + BACKUP_KEEP_DAYS + ' bản)');
   auth.announce(PORT);

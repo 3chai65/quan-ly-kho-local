@@ -5,6 +5,20 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.36.2] - 2026-11-21
+
+### Sửa
+- `ts` của giao dịch: server và client sanitize/validate dùng `isNumLike` (trước đây `true`, `''`, `[]` lọt qua vì `Number()` ra 0/1).
+- `thang` của giao dịch: số lẻ được `Math.round` (như đơn thuốc) ở cả server và client sanitize, không lưu 1.5 vào cột INTEGER.
+- Trang thiết lập và log khởi động: bỏ câu nhắc `docker compose logs`, chỉ tới log máy chủ (`logs/server.out.log`).
+- `auth.js`: thu hồi thiết bị xóa luôn mục gia hạn cookie trong bộ nhớ.
+
+### Dọn
+- `server.js`: bỏ `'use strict'` thừa, bỏ `state.updatedAt` không dùng, `!force` thay `baseHdr != null && !force`, `writeStateTx` thành hàm thường trong transaction của `writeState`, bỏ bốn hàm `insert*` (prepare tại chỗ).
+- `auth.js`: dùng lại `forbiddenText` và `formOf` ở `/auth/setup`.
+- `src/page.js`: `kInput` rút gọn (`Math.round(đồng) / 1000`, kết quả y nguyên); bỏ id `chartScroll` không ai gọi. Giữ `orderNote` (test 2.10.0 cố định id cũ), các id `*Native` (gọi động `'#' + id + 'Native'`) và id chip (test bắt).
+- Thêm test server và client cho `ts`, `thang`, `kInput`.
+
 ## [2.36.1] - 2026-11-20
 
 ### Sửa

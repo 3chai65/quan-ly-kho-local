@@ -912,3 +912,18 @@ test('2.21.1 đường không có thật: 404 JSON kèm header bảo mật (khô
   assert.match(r.headers.get('content-security-policy') || '', /default-src 'none'/);
   assert.equal((await r.json()).success, false);
 });
+
+test('2.36.2 giao dịch: ts true/\'\'/[] → 400 (cùng isNumLike); thang lẻ được làm tròn như đơn thuốc (1.5 → 2, 1.4 → 1)', async () => {
+  const prod = [{ id: 'TS1', name: 'Ts Mot', stock: 10, costPrice: 1 }];
+  const tx = extra => ({ id: 'TST', date: '2026-11-06', type: 'NHAP', productId: 'TS1', qty: 1, price: 1, total: 1, ...extra });
+  for (const v of [true, '', ' ', [], '0x10']) {
+    const r = await put(emptyState({ products: prod, transactions: [tx({ ts: v })] }), { 'X-Force': '1' });
+    assert.equal(r.status, 400, 'tx.ts=' + JSON.stringify(v));
+  }
+  for (const [v, want] of [[1.5, 2], [1.4, 1], ['2.6', 3], [3, 3]]) {
+    const r = await put(emptyState({ products: prod, transactions: [tx({ ts: 5, thang: v })] }), { 'X-Force': '1' });
+    assert.equal(r.status, 200, 'tx.thang=' + v);
+    const st = await getState();
+    assert.equal(st.transactions.find(t => t.id === 'TST').thang, want, 'thang ' + v + ' → ' + want);
+  }
+});

@@ -143,7 +143,7 @@ function lockedPage(res, ownerExists) {
 function setupPage(res, status, errorText) {
   sendHtml(res, status, 'Thiết lập thiết bị chủ',
     '<h1>Thiết lập thiết bị chủ</h1>' +
-    '<p>Nhập mã thiết lập (xem bằng <code>docker compose logs</code>) để thiết bị này trở thành thiết bị chủ.</p>' +
+    '<p>Nhập mã thiết lập (xem trong <code>logs/server.out.log</code> của máy chủ) để thiết bị này trở thành thiết bị chủ.</p>' +
     (errorText ? '<p class="err">' + errorText + '</p>' : '') +
     '<form method="post" action="/auth/setup" autocomplete="off">' +
     '<input name="code" placeholder="XXXX-XXXX-XXXX" required autocapitalize="characters" spellcheck="false">' +
@@ -407,9 +407,8 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
     });
     app.post('/auth/setup', textParser, (req, res) => {
       if (!ensureSetupCode()) return notFound(res);
-      if (!sameOrigin(req)) return res.status(403).type('text/plain').send('Forbidden');
-      let params;
-      try { params = new URLSearchParams(typeof req.body === 'string' ? req.body : ''); } catch (e) { params = new URLSearchParams(''); }
+      if (!sameOrigin(req)) return forbiddenText(res);
+      const params = formOf(req);
       const verdict = tryCode(params.get('code'));
       if (verdict === 'locked') return setupPage(res, 429, 'Nhập sai quá nhiều lần. Đợi 15 phút hoặc khởi động lại máy chủ.');
       if (verdict === 'closed') return notFound(res);
@@ -487,6 +486,7 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
         return renderDevices(req, res, 400, { error: true, notice: 'Cần xác nhận khi thu hồi thiết bị chủ.' });
       }
       qRevoke.run(now(), target.id);
+      renewedAt.delete(target.id);
       log.log('[auth] Thiết bị ' + req.device.id + ' thu hồi thiết bị ' + target.id + ' (' + target.role + ').');
       return renderDevices(req, res, 200, { notice: 'Đã thu hồi "' + target.name + '".' });
     });
