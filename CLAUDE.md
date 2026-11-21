@@ -78,7 +78,7 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt v�
 ## Ghi chú bàn giao (cập nhật mỗi lần triển khai)
 - **Hiện tại:** bản Windows và Mac đều là **2.37.2** (thẻ `v2.37.2`, commit ea0f28e, triển khai 21/11/2026); thẻ đã push. Trọng điểm: Mac là chuẩn giao diện/nhập liệu; app Mac native + Tauri + PWA phải giống nhau tối đa. Chi tiết từng bản nằm trong `CHANGELOG.md`; kiểm lại hash đường lui trong `~/kho/truoc-khi-bat.txt` trước khi triển khai.
   `migrateMoneyToDong` (server.js) và file `truoc-lam-tron-*.json` có chú thích `XÓA SAU 06/12/2026`: xóa khi bản backup cũ nhất còn đơn vị nghìn đã bị xóa (cần chủ đồng ý).
-- Đo giao diện: Mac đã kiểm lint/test (411 pass, 1 skip vì `titlebar.js` cần repo Tauri) tại 2.25.1; xác nhận/tên đơn vẫn dùng `window.confirm/prompt`, chưa thử trong Tauri thật; nút Thoát chưa thử trên iPhone/Tauri thật.
+- Đo giao diện: test hiện tại (2.37.2): client 477 ca (Windows), server 45, auth 45 (trong Docker); xác nhận/tên đơn vẫn dùng `window.confirm/prompt`, chưa thử trong Tauri thật; nút Thoát chưa thử trên iPhone/Tauri thật.
 - Chưa làm có chủ ý: Hoàn tác khôi phục, server làm chứng sao lưu, ngày phiếu nhập lùi (P2.4), danh sách thiết bị/Thu hồi/Tạo mã mời ngay trong app desktop (dùng trang `/auth/devices` có sẵn). Sao lưu tự động có thể bị trình duyệt chặn tải im lặng (không phát hiện được).
 - App Tauri: exe cài ở `C:\Users\Yellows\AppData\Local\QuanLyKho\`; PWA Edge phải cài từ `https://192.168.2.46`. Tắt app Tauri bằng nút X, không `Stop-Process -Force` (mất cookie thiết bị). Bản exe cũ vẫn dùng được vì giao diện lấy từ hub; hub lùi bản thì giao diện lùi theo.
 - Bài học còn hiệu lực:
