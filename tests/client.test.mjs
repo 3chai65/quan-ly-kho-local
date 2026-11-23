@@ -8311,5 +8311,6 @@ test('2.38.10 "Đọc hết" điện thoại: sau dòng thông tin, canh phải,
   assert.match(PAGE.slice(open, open + 30), /@media \(max-width:600px\)/, 'nằm trong khối điện thoại');
   const ord = +/\.card__bar-count\{order:(\d+);margin-left:0\}/.exec(PAGE.slice(open, close))[1];
   assert.ok(5 > ord, 'nút order sau .card__bar-count');
+  assert.ok(PAGE.slice(open, close).includes('html:not(.desktop) :is(#expCount,#impCount){flex:1 1 200px;min-width:0;white-space:normal}'), 'dòng thông tin co giãn để nút cùng hàng');
   assert.ok(!/html\.desktop[^{]*unread-all/.test(PAGE), 'không đụng desktop');
 });

@@ -416,6 +416,7 @@ html:not(.desktop) .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touc
 .card__bar-title{margin-right:0;flex:0 0 auto}
 .card__bar-count{order:4;margin-left:0}
 /* 2.38.10: "Đọc hết" cuối dòng thông tin (sau số giao dịch), canh phải, chữ nhỏ dạng liên kết, vùng chạm 44px; không chen vào hàng tiêu đề. */
+html:not(.desktop) :is(#expCount,#impCount){flex:1 1 200px;min-width:0;white-space:normal}
 html:not(.desktop) .card__bar>.btn[data-action=unread-all]{order:5;margin-left:auto;min-height:44px;padding:0 4px;border:0;background:none;box-shadow:none;font-size:12px;color:var(--text2);text-decoration:underline}
 /* 2.14.0 (giai đoạn 4, M3c): phân trang điện thoại gọn – nút cao 36px (vùng bấm do khoảng cách), khoảng cách 4px. */
 .pager{gap:4px}
