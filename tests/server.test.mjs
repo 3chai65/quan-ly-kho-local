@@ -927,3 +927,117 @@ test('2.36.2 giao dịch: ts true/\'\'/[] → 400 (cùng isNumLike); thang lẻ 
     assert.equal(st.transactions.find(t => t.id === 'TST').thang, want, 'thang ' + v + ' → ' + want);
   }
 });
+
+/* ===== Chưa đọc của Lịch sử (bảng unread) ===== */
+const uTx = (id, type, extra = {}) => ({ id, date: '2026-11-06', type, productId: 'P1', qty: 1, price: 1, total: 1, ts: 1, ...extra });
+const uState = (txs) => emptyState({ products: [{ id: 'P1', name: 'Cam thảo', stock: 0, costPrice: 1 }], transactions: txs });
+async function getUnread() {
+  const r = await fetch(`${BASE}/api/unread`, { headers: { Cookie: deviceCookie } });
+  return (await r.json()).data;
+}
+async function postRead(body, raw, extraHeaders = {}) {
+  const r = await fetch(`${BASE}/api/unread/read`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: deviceCookie, ...extraHeaders }, body: raw ?? JSON.stringify(body) });
+  return r.status;
+}
+async function resetUnread() {
+  assert.equal((await put(uState([]), { 'X-Force': '1' })).status, 200);
+  await postRead({ all: 'BAN' }); await postRead({ all: 'NHAP' });
+}
+const baseOf = async () => String((await getState()).updatedAt);
+
+test('unread: khóa mới → có; khóa cũ giữ nguyên; đơn nhiều dòng = 1 mục; BAN/NHAP tách loại', async () => {
+  await resetUnread();
+  assert.equal((await put(uState([uTx('A1', 'BAN', { orderId: 'O1' }), uTx('A2', 'BAN', { orderId: 'O1' }), uTx('N1', 'NHAP')]), { 'X-Base-Updated': await baseOf() })).status, 200);
+  assert.deepEqual(await getUnread(), { BAN: ['O1'], NHAP: ['N1'] });
+  await postRead({ all: 'BAN' }); await postRead({ all: 'NHAP' });
+  assert.equal((await put(uState([uTx('A1', 'BAN', { orderId: 'O1' }), uTx('A2', 'BAN', { orderId: 'O1' }), uTx('N1', 'NHAP'), uTx('B1', 'BAN')]), { 'X-Base-Updated': await baseOf() })).status, 200);
+  assert.deepEqual(await getUnread(), { BAN: ['B1'], NHAP: [] }, 'chỉ khóa mới B1');
+});
+
+test('unread: sửa đơn cũ (thêm dòng id mới cùng order_id, đã đọc) không thành chưa đọc lại', async () => {
+  await resetUnread();
+  await put(uState([uTx('A1', 'BAN', { orderId: 'O1' })]), { 'X-Base-Updated': await baseOf() });
+  await postRead({ kind: 'BAN', keys: ['O1'] });
+  assert.deepEqual(await getUnread(), { BAN: [], NHAP: [] });
+  await put(uState([uTx('A1', 'BAN', { orderId: 'O1' }), uTx('A9', 'BAN', { orderId: 'O1' })]), { 'X-Base-Updated': await baseOf() });
+  assert.deepEqual(await getUnread(), { BAN: [], NHAP: [] }, 'thêm dòng cùng order_id không đánh dấu lại');
+  await put(uState([uTx('A10', 'BAN', { orderId: 'O1' })]), { 'X-Base-Updated': await baseOf() });
+  assert.deepEqual(await getUnread(), { BAN: [], NHAP: [] }, 'đổi hết id dòng vẫn cùng khóa');
+});
+
+test('unread: xóa đơn thì dọn; X-Force không đánh dấu; >500 khóa mới không đánh dấu cái nào; đúng 500 thì có', async () => {
+  await resetUnread();
+  await put(uState([uTx('A1', 'BAN')]), { 'X-Base-Updated': await baseOf() });
+  assert.deepEqual((await getUnread()).BAN, ['A1']);
+  await put(uState([]), { 'X-Base-Updated': await baseOf() });
+  assert.deepEqual((await getUnread()).BAN, [], 'xóa đơn → dọn');
+  await put(uState([uTx('F1', 'BAN')]), { 'X-Force': '1' });
+  assert.deepEqual((await getUnread()).BAN, [], 'X-Force không đánh dấu');
+  await put(uState([]), { 'X-Force': '1' });
+  const many = Array.from({ length: 501 }, (_, i) => uTx('M' + i, 'NHAP'));
+  await put(uState(many), { 'X-Base-Updated': await baseOf() });
+  assert.deepEqual((await getUnread()).NHAP, [], '>500 không đánh dấu');
+  await put(uState([]), { 'X-Force': '1' });
+  const ok = Array.from({ length: 500 }, (_, i) => uTx('K' + i, 'NHAP'));
+  await put(uState(ok), { 'X-Base-Updated': await baseOf() });
+  assert.equal((await getUnread()).NHAP.length, 500, 'đúng 500 khóa mới thì đánh dấu');
+});
+
+test('unread: POST read idempotent, sai dạng 400, không đổi updatedAt, chưa đăng nhập bị chặn', async () => {
+  await resetUnread();
+  await put(uState([uTx('A1', 'BAN'), uTx('A2', 'BAN')]), { 'X-Base-Updated': await baseOf() });
+  const up = await baseOf();
+  assert.equal(await postRead({ kind: 'BAN', keys: ['A1'] }), 200);
+  assert.equal(await postRead({ kind: 'BAN', keys: ['A1'] }), 200, 'lặp lại vẫn 200');
+  assert.deepEqual((await getUnread()).BAN, ['A2']);
+  assert.equal(await baseOf(), up, 'POST không đổi updatedAt');
+  assert.equal((await put(uState([uTx('A1', 'BAN'), uTx('A2', 'BAN')]), { 'X-Base-Updated': up })).status, 200, 'base cũ vẫn dùng được, không 409');
+  assert.equal(await postRead({ all: 'BAN' }), 200); assert.equal(await postRead({ all: 'BAN' }), 200);
+  assert.deepEqual((await getUnread()).BAN, []);
+  for (const bad of [{ all: 'X' }, { kind: 'BAN' }, { kind: 'BAN', keys: [1] }, { kind: 'BAN', keys: ['x'.repeat(65)] }, { kind: 'BAN', keys: Array(501).fill('a') }, { all: 'BAN', kind: 'BAN', keys: [] }, [], 'x']) {
+    assert.equal(await postRead(bad), 400, JSON.stringify(bad).slice(0, 40));
+  }
+  assert.equal(await postRead(null, '{hỏng'), 400);
+  assert.equal((await fetch(`${BASE}/api/unread`)).status, 401, 'GET chưa đăng nhập');
+  assert.equal((await fetch(`${BASE}/api/unread/read`, { method: 'POST', body: '{"all":"BAN"}' })).status, 401, 'POST chưa đăng nhập');
+});
+
+test('unread: DB cũ chưa có bảng unread → migrate tạo bảng rỗng, lịch sử cũ không chưa đọc', async () => {
+  const { default: Database } = await import('better-sqlite3');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-unread-old-'));
+  const port = await freePort();
+  const old = new Database(path.join(dir, 'app.db'));
+  old.exec(`CREATE TABLE products (id TEXT PRIMARY KEY, name TEXT NOT NULL, stock_kg REAL NOT NULL DEFAULT 0, cost_price_vnd REAL NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+    CREATE TABLE transactions (id TEXT PRIMARY KEY, date TEXT NOT NULL, type TEXT NOT NULL CHECK (type IN ('NHAP','BAN')), product_id TEXT NOT NULL, qty_kg REAL NOT NULL, price_vnd REAL NOT NULL, total_vnd REAL NOT NULL, cost_vnd REAL, order_id TEXT, order_name TEXT, retail INTEGER NOT NULL DEFAULT 0, rx INTEGER NOT NULL DEFAULT 0, grams REAL, thang INTEGER, unit_price_vnd REAL, ts INTEGER, created_at INTEGER NOT NULL);
+    INSERT INTO transactions (id,date,type,product_id,qty_kg,price_vnd,total_vnd,created_at) VALUES ('OLD','2026-01-01','BAN','P1',1,1,1,1);
+    CREATE TABLE app_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO app_meta VALUES ('money_unit','dong');`);
+  old.close();
+  const c2 = spawn(process.execPath, ['server.js'], { cwd: root, env: { ...process.env, PORT: String(port), DATA_DIR: dir, QLK_SETUP_CODE: SETUP_CODE }, stdio: 'ignore' });
+  try {
+    const b2 = `http://127.0.0.1:${port}`;
+    for (let i = 0; i < 100; i++) { try { if ((await fetch(b2 + '/healthz')).ok) break; } catch (e) {} await new Promise(r => setTimeout(r, 150)); }
+    const s = await fetch(`${b2}/auth/setup`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code: SETUP_CODE, name: 'May cu' }).toString() });
+    const cookie = String(s.headers.getSetCookie()[0]).split(';')[0];
+    const r = await fetch(`${b2}/api/unread`, { headers: { Cookie: cookie } });
+    assert.deepEqual((await r.json()).data, { BAN: [], NHAP: [] });
+  } finally { c2.kill(); await waitExit(c2); rmDir(dir); }
+});
+
+test('unread: POST khác nguồn bị 403 và dữ liệu không đổi; cùng nguồn hoặc không Origin vẫn 200', async () => {
+  await resetUnread();
+  await put(uState([uTx('A1', 'BAN')]), { 'X-Base-Updated': await baseOf() });
+  assert.equal(await postRead({ all: 'BAN' }, undefined, { 'Sec-Fetch-Site': 'cross-site', Origin: 'https://evil.example' }), 403);
+  assert.equal(await postRead({ all: 'BAN' }, undefined, { Origin: 'https://evil.example' }), 403, 'Origin lạ không kèm Sec-Fetch-Site');
+  assert.equal(await postRead({ all: 'BAN' }, undefined, { Origin: 'null' }), 403, 'Origin: null');
+  assert.deepEqual((await getUnread()).BAN, ['A1'], 'bị chặn thì không xóa gì');
+  assert.equal(await postRead({ kind: 'BAN', keys: ['A1'] }, undefined, { 'Sec-Fetch-Site': 'same-origin', Origin: BASE }), 200, 'cùng nguồn');
+  assert.deepEqual((await getUnread()).BAN, []);
+  assert.equal(await postRead({ all: 'BAN' }), 200, 'không Origin (client cùng nguồn, curl)');
+});
+
+test('unread: khóa dài hơn 64 ký tự không được đánh dấu và PUT vẫn 200', async () => {
+  await resetUnread();
+  const long = 'L'.repeat(65), ok = 'O'.repeat(64);
+  assert.equal((await put(uState([uTx(long, 'BAN'), uTx(ok, 'BAN')]), { 'X-Base-Updated': await baseOf() })).status, 200);
+  assert.deepEqual((await getUnread()).BAN, [ok]);
+});

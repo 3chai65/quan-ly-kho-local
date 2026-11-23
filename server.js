@@ -108,6 +108,13 @@ function migrate() {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS unread (
+      kind TEXT NOT NULL CHECK (kind IN ('BAN', 'NHAP')),
+      key TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (kind, key)
+    );
   `);
 }
 migrate();
@@ -361,7 +368,12 @@ function randomId() {
 }
 
 /* Gọi trong transaction của writeState. */
-function writeStateRows(state, now) {
+/* Mục "chưa đọc" của Lịch sử: một đơn (order_id, nếu không có thì id giao dịch) cùng loại BAN/NHAP = 1 mục. */
+const UNREAD_KEY_SQL = "COALESCE(NULLIF(order_id, ''), id)";
+const UNREAD_KEY_MAX = 64, UNREAD_BATCH_MAX = 500;
+function writeStateRows(state, now, force) {
+  // Khóa (loại, đơn) đã có TRƯỚC khi xóa: sửa đơn cũ (thêm/xóa dòng, id dòng mới) không thành "mới".
+  const prevKeys = new Set(db.prepare('SELECT DISTINCT type, ' + UNREAD_KEY_SQL + ' AS k FROM transactions').all().map(r => r.type + '|' + r.k));
   // Giữ created_at gốc của bản ghi đã tồn tại (writeState xóa sạch rồi ghi lại).
   const prevProductCreated = new Map(
     db.prepare('SELECT id, created_at FROM products').all().map(r => [r.id, r.created_at])
@@ -386,6 +398,21 @@ function writeStateRows(state, now) {
       t.retail ? 1 : 0, t.rx ? 1 : 0, t.grams, t.thang, t.unitPrice, t.ts, prevTxCreated.get(t.id) || now);
   }
 
+  if (!force) {
+    const fresh = new Map();
+    for (const t of state.transactions) {
+      const k = t.orderId || t.id, kk = t.type + '|' + k;
+      if (!prevKeys.has(kk) && k.length <= UNREAD_KEY_MAX) fresh.set(kk, [t.type, k]);
+    }
+    if (fresh.size <= UNREAD_BATCH_MAX) {
+      const iu = db.prepare('INSERT OR IGNORE INTO unread (kind, key, created_at) VALUES (?, ?, ?)');
+      for (const [kind, k] of fresh.values()) iu.run(kind, k, now);
+    }
+  }
+  for (const kind of ['BAN', 'NHAP']) {
+    db.prepare('DELETE FROM unread WHERE kind = ? AND key NOT IN (SELECT ' + UNREAD_KEY_SQL + " FROM transactions WHERE type = ?)").run(kind, kind);
+  }
+
   const ir = db.prepare('INSERT INTO prescriptions (id, name, total_vnd, thang, updated_at) VALUES (?, ?, ?, ?, ?)');
   const ii = db.prepare('INSERT INTO prescription_items (prescription_id, product_id, grams) VALUES (?, ?, ?)');
   for (const r of state.prescriptions) {
@@ -402,10 +429,10 @@ function getLastOp() {
   const id = g('last_op_id'), at = g('last_op_updated_at');
   return id && at ? { id: id.value, updatedAt: Number(at.value) } : null;
 }
-function writeState(state, opId) {
+function writeState(state, opId, force) {
   const now = Date.now();
   db.transaction(() => {
-    writeStateRows(state, now);
+    writeStateRows(state, now, !!force);
     const up = db.prepare('INSERT INTO app_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
     if (opId) { up.run('last_op_id', opId); up.run('last_op_updated_at', String(now)); }
     else db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
@@ -534,6 +561,42 @@ app.get('/api/state', (req, res) => {
   }
 });
 
+/* Chưa đọc của Lịch sử bán/nhập: chỉ đọc/xóa bảng unread, không chạm source_updated_at (không gây 409/428). */
+app.get('/api/unread', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const data = { BAN: [], NHAP: [] };
+    for (const r of db.prepare('SELECT kind, key FROM unread ORDER BY created_at, key').all()) data[r.kind].push(r.key);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('/api/unread GET', err);
+    res.status(500).json({ success: false, error: 'Không đọc được chưa đọc' });
+  }
+});
+app.post('/api/unread/read', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!auth.sameOrigin(req)) return res.status(403).type('text/plain').send('Forbidden'); // cùng kiểm nguồn như các POST trong auth.js
+  let b;
+  try { b = JSON.parse(typeof req.body === 'string' ? req.body : ''); } catch (e) { b = null; }
+  const isKind = v => v === 'BAN' || v === 'NHAP';
+  const ok = b && typeof b === 'object' && !Array.isArray(b) && (
+    (isKind(b.all) && b.keys === undefined) ||
+    (isKind(b.kind) && b.all === undefined && Array.isArray(b.keys) && b.keys.length <= UNREAD_BATCH_MAX &&
+      b.keys.every(k => typeof k === 'string' && k.length >= 1 && k.length <= UNREAD_KEY_MAX)));
+  if (!ok) return res.status(400).json({ success: false, error: 'Yêu cầu không hợp lệ' });
+  try {
+    if (b.all) db.prepare('DELETE FROM unread WHERE kind = ?').run(b.all);
+    else {
+      const del = db.prepare('DELETE FROM unread WHERE kind = ? AND key = ?');
+      db.transaction(() => { for (const k of b.keys) del.run(b.kind, k); })();
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('/api/unread POST', err);
+    res.status(500).json({ success: false, error: 'Không ghi được' });
+  }
+});
+
 // 2.15.16: một dòng log khi PUT bị từ chối. Chỉ giờ, mã, lý do cố định; không ghi dữ liệu/tên/số tiền/token.
 function warnReject(code, reason) {
   console.warn(new Date().toISOString() + ' PUT /api/state từ chối ' + code + ': ' + reason);
@@ -587,7 +650,7 @@ app.put('/api/state', (req, res) => {
       console.warn(new Date().toISOString() + ' PUT /api/state X-Force bị chặn: không chụp được bản trước ghi đè');
       return res.status(500).json({ success: false, error: 'Không chụp được bản sao lưu trước khi ghi đè; chưa ghi gì' });
     }
-    const updatedAt = writeState(checked.state, opId);
+    const updatedAt = writeState(checked.state, opId, force);
     const reply = { success: true, updatedAt };
     if (checked.warnings.length) reply.warnings = checked.warnings;
     if (checked.stockDrift.length) reply.stockDrift = checked.stockDrift;

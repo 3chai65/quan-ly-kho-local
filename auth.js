@@ -510,5 +510,5 @@ export function createAuth({ Database, dataDir, env = process.env, log = console
     try { adb.close(); } catch (e) { /* đã đóng */ }
   }
 
-  return { gate, mount, announce, close, hasOwner, file, cookieName };
+  return { gate, mount, announce, close, hasOwner, file, cookieName, sameOrigin };
 }

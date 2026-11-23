@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.9] - 2026-11-23
+
+### Thêm
+- Chưa đọc của Lịch sử bán/nhập: bảng `unread` (server giữ, khóa = mã đơn hoặc id giao dịch, đơn nhiều dòng = 1 mục; sửa đơn cũ không đánh dấu lại; PUT `X-Force` và >500 khóa mới không đánh dấu), `GET /api/unread`, `POST /api/unread/read` (có kiểm nguồn); số đỏ trên tab Lịch sử bán/nhập, chấm đỏ ở dòng, nút "Đọc hết". Lấy mỗi 15 giây, khi quay lại tab/focus và sau PUT thành công (nền, lỗi không đổi kết quả PUT). `auth.js` export thêm `sameOrigin` (không đổi logic).
+- Server/auth test chạy qua shim `node:sqlite` (better-sqlite3 không nạp được trên Windows), chờ CI Docker. Chưa thử iPhone/Tauri thật.
+
 ## [2.38.8] - 2026-11-23
 
 ### Sửa

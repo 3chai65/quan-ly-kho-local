@@ -583,7 +583,10 @@ html:not(.desktop) #brandBtn{font-size:0;flex:none;justify-content:center;width:
 .syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}
 .syncm[data-st=err] .syncm__d{background:#FF5F57}
 html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;margin:0;padding:2px 4px 3px}
-html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0}
+html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0;position:relative}
+.tab__bd{position:absolute;top:1px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#FF5F57;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center;pointer-events:none}
+html.desktop .tab__bd{top:50%;right:8px;margin-top:-8px}
+.udot{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#FF5F57;vertical-align:middle}
 html:not(.desktop) .top .tabs .tab:not(.is-active){border-color:transparent;background:none;box-shadow:none}
 html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}
 html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px;color:var(--text)}
@@ -1308,6 +1311,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Nhập tên" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm tên vị thuốc trong lịch sử nhập">
             <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
+          <button class="btn btn--sm" id="impReadAll" type="button" data-action="unread-all" data-kind="NHAP" hidden>Đọc hết</button>
           <span class="hint card__bar-count" id="impCount"></span>
         </div>
         <div class="tw">
@@ -1342,6 +1346,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
           </div>
           <input class="inp inp--sm card__bar-search" id="expSearch" type="text" autocomplete="off" placeholder="Nhập tên" maxlength="200" aria-label="Tìm theo tên vị thuốc">
+          <button class="btn btn--sm" id="expReadAll" type="button" data-action="unread-all" data-kind="BAN" hidden>Đọc hết</button>
           <span class="hint card__bar-count" id="expCount"></span>
         </div>
         <div class="tw">
@@ -3603,6 +3608,100 @@ function timeVN(ts){
   if (!isFinite(d.getTime())) return '';
   return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
 }
+/* ================= CHƯA ĐỌC (Lịch sử bán/nhập) ================= */
+/* Máy chủ giữ danh sách (bảng unread, khóa = mã đơn hoặc id giao dịch); client chỉ hiển thị và báo "đã đọc". Lỗi mạng: giữ số cũ, việc đã đọc xếp hàng thử lại ở nhịp sau, không toast. */
+var unread = { BAN: [], NHAP: [] }, unreadQ = [], unreadFly = [], unreadBusy = false; /* unreadFly: việc đã rút khỏi hàng đợi nhưng POST chưa xong; GET về bản cũ vẫn phải loại các khóa này */
+function unreadK(kind){ return (kind === 'imp' || kind === 'NHAP') ? 'NHAP' : 'BAN'; }
+function isUnread(kind, key){ return unread[unreadK(kind)].indexOf(String(key)) >= 0; }
+function udot(kind, key){
+  if (!isUnread(kind, key)) return null;
+  var d = el('span', 'udot');
+  d.setAttribute('role', 'img'); d.setAttribute('aria-label', 'Chưa đọc');
+  return d;
+}
+function unreadBadgeText(n){ return n > 4 ? '5+' : String(n); }
+function renderUnread(){
+  [['expBox', 'BAN', 'Lịch sử bán hàng', 'exp'], ['impBox', 'NHAP', 'Lịch sử nhập hàng', 'imp']].forEach(function(p){
+    var n = unread[p[1]].length, tab = $('.tab[data-tab="' + p[0] + '"]');
+    if (tab) {
+      var bd = $('.tab__bd', tab);
+      if (!bd && n) { bd = el('span', 'tab__bd'); bd.setAttribute('aria-hidden', 'true'); tab.appendChild(bd); }
+      if (bd) { bd.hidden = !n; bd.textContent = unreadBadgeText(n); }
+      tab.setAttribute('aria-label', n ? p[2] + ', ' + n + ' chưa đọc' : p[2]);
+    }
+    var b = $('#' + p[3] + 'ReadAll');
+    if (b) b.hidden = !n;
+  });
+}
+function postUnread(job){
+  return apiFetch('/api/unread/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(job) })
+    .then(function(r){ return !!(r && r.status && r.status < 500); }, function(){ return false; });
+}
+function flushUnread(){
+  var jobs = unreadQ;
+  unreadQ = [];
+  unreadFly = unreadFly.concat(jobs);
+  return jobs.reduce(function(p, j){
+    return p.then(function(){ return postUnread(j).then(function(ok){
+      unreadFly.splice(unreadFly.indexOf(j), 1);
+      if (!ok) unreadQ.push(j);
+    }); });
+  }, Promise.resolve());
+}
+function markRead(kind, key){
+  var K = unreadK(kind), k = String(key), i = unread[K].indexOf(k);
+  if (i < 0) return;
+  unread[K].splice(i, 1);
+  var body = $('#' + (K === 'NHAP' ? 'imp' : 'exp') + 'Body');
+  if (body && body.querySelectorAll) [].forEach.call(body.querySelectorAll('tr[data-ukey]'), function(tr){
+    var d = tr.getAttribute('data-ukey') === k ? tr.querySelector('.udot') : null;
+    if (d && d.parentNode) d.parentNode.removeChild(d);
+  });
+  renderUnread();
+  unreadQ.push({ kind: K, keys: [k] });
+  flushUnread();
+}
+function unreadAll(kind){
+  var K = unreadK(kind);
+  if (!unread[K].length) return;
+  unread[K] = [];
+  unreadQ.push({ all: K });
+  renderUnread();
+  renderHistory(K === 'NHAP' ? 'imp' : 'exp');
+  flushUnread();
+}
+function refreshUnread(){
+  if (unreadBusy || authLost || doc.hidden) return Promise.resolve(false);
+  unreadBusy = true;
+  return flushUnread().then(function(){ return apiFetch('/api/unread'); }).then(function(r){
+    return r && r.status === 200 ? r.json() : null;
+  }).then(function(d){
+    unreadBusy = false;
+    var u = d && d.success && d.data;
+    if (!u) return false;
+    var next = { BAN: [], NHAP: [] };
+    ['BAN', 'NHAP'].forEach(function(K){
+      var pend = [];
+      unreadQ.concat(unreadFly).forEach(function(j){ if (j.all === K) pend = null; else if (pend && j.kind === K) pend = pend.concat(j.keys); });
+      (Array.isArray(u[K]) ? u[K] : []).forEach(function(k){ if (pend && pend.indexOf(k) < 0) next[K].push(String(k)); });
+    });
+    var changed = next.BAN.join('|') !== unread.BAN.join('|') || next.NHAP.join('|') !== unread.NHAP.join('|');
+    unread = next;
+    renderUnread();
+    if (changed) { renderHistory('exp'); renderHistory('imp'); }
+    return true;
+  }).catch(function(){ unreadBusy = false; return false; });
+}
+function initUnread(){
+  [['expBody', 'exp'], ['impBody', 'imp']].forEach(function(p){
+    var b = $('#' + p[0]);
+    if (b && b.addEventListener) b.addEventListener('click', function(e){
+      var tr = e.target && e.target.closest ? e.target.closest('tr[data-ukey]') : null;
+      if (tr) markRead(p[1], tr.getAttribute('data-ukey'));
+    });
+  });
+  refreshUnread();
+}
 function appendOrderRow(tbody, r, isImp){
   var tr = el('tr');
   tr.className = 'is-row';
@@ -3616,6 +3715,9 @@ function appendOrderRow(tbody, r, isImp){
     ? ('Xem chi tiết ' + r.oname)
     : ('Xem chi tiết ' + r.oname + ' ngày ' + dateVN(r.date));
   nameBtn.setAttribute('aria-label', ariaOrder);
+  var ud = udot(isImp ? 'imp' : 'exp', r.oid);
+  if (ud) tn.appendChild(ud);
+  tr.setAttribute('data-ukey', String(r.oid));
   tn.appendChild(nameBtn);
   tn.appendChild(el('span', 'muted small', ' · ' + r.n + ' vị'));
   tr.appendChild(tn);
@@ -3896,7 +3998,12 @@ function renderHistory(kind){
     tr.className = 'is-row';
     tr.appendChild(el('td', 'muted small', dateVN(t.date) + (r.hasTime ? ' ' + timeVN(r.ts) : '')));
     var name = r.name;
-    tr.appendChild(el('td', 'b', name === null ? 'Đã xóa' : name));
+    var tdn = el('td', 'b', name === null ? 'Đã xóa' : name);
+    var ukey = String(t.oid || t.id);
+    var ud2 = udot(kind, ukey);
+    if (ud2) tdn.insertBefore(ud2, tdn.firstChild);
+    tr.setAttribute('data-ukey', ukey);
+    tr.appendChild(tdn);
     var cQty = el('td', 'num', fmtQty(t.qty));
     cQty.setAttribute('data-label', 'SL');
     if (!isImp && !t.rx) {
@@ -5113,6 +5220,7 @@ function pushState(manual, force){
       saveLocal();
       renderSyncBadge();
       noteStockWarnings(d && d.stockDrift);
+      try { refreshUnread(); } catch (e) {} /* nền, không await, lỗi nào cũng không đổi kết quả PUT */
       if (manual) toast('Đã lưu dữ liệu');
     } else if (status === 401) {
       /* Thiết bị chưa được duyệt hoặc đã bị thu hồi: giữ nguyên nháp, không thử lại, không cho bỏ nháp. */
@@ -5211,11 +5319,12 @@ function autoRefresh(){
 }
 function startAutoRefresh(){
   setInterval(autoRefresh, 15000);                      // định kỳ 15s
+  setInterval(refreshUnread, 15000);                    // chưa đọc của Lịch sử, nhịp riêng (không chung snapshot)
   setInterval(refreshAutoDates, 60000);                 // làm mới ngày qua nửa đêm
   doc.addEventListener('visibilitychange', function(){  // quay lại tab
-    if (!doc.hidden) { refreshAutoDates(); autoRefresh(); }
+    if (!doc.hidden) { refreshAutoDates(); autoRefresh(); refreshUnread(); }
   });
-  window.addEventListener('focus', function(){ refreshAutoDates(); autoRefresh(); }); // cửa sổ được focus
+  window.addEventListener('focus', function(){ refreshAutoDates(); autoRefresh(); refreshUnread(); }); // cửa sổ được focus
 }
 
 /* ================= SAO LƯU / KHÔI PHỤC ================= */
@@ -5569,6 +5678,7 @@ function handleAction(btn){
     case 'save-tx': saveTxEdit(); break;
     case 'save-edit': saveEdit(); break;
     case 'sync-discard': discardUnsynced(); break;
+    case 'unread-all': unreadAll(btn.getAttribute('data-kind')); break;
     case 'reload-app': reloadAppClick(); break;
     case 'brand-devices': brandDevicesClick(); break;
     case 'bak-view': bakView(btn.getAttribute('data-view')); break;
@@ -6123,6 +6233,7 @@ function init(){
   } else if (window.__NEED_FETCH__ || !remote) {
     pullState(false);
   }
+  initUnread();
   startAutoRefresh();
 
   var firstUse = function(e){

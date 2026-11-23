@@ -107,6 +107,7 @@ globalThis.__test = {
   bindDateInput: (typeof bindDateInput === 'function' ? bindDateInput : null), bindMonthInput: (typeof bindMonthInput === 'function' ? bindMonthInput : null), userPickedDate: (typeof userPickedDate === 'function' ? userPickedDate : null),
   refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), autoDateInput: (typeof autoDateInput === 'function' ? autoDateInput : null), 
   getLastAuto: function(id){ return lastAuto[id]; },
+  setUnread: function(u){ unread = u; }, getUnread: function(){ return unread; }, renderUnread: renderUnread, markRead: markRead, unreadAll: unreadAll, refreshUnread: refreshUnread,
   setLastAuto: function(id, v){ lastAuto[id] = v; },
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; },
@@ -4366,7 +4367,7 @@ const NEW_213 = ['nhap-add', 'brand-devices'];
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app', 'open-backup-dir', 'bak-refresh'];
-const NEW_226 = ['close-preset', 'inv-low', 'inv-out']; // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
+const NEW_226 = ['close-preset', 'inv-low', 'inv-out', 'unread-all']; // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -5896,7 +5897,7 @@ test('2.17.5 pendEntryH: chỉ có tfoot (dòng nhập trống) = 0; có dòng n
 /* 2.17.5: server từ chối thiếu moneyUnit, nên thân PUT của client phải luôn mang moneyUnit: 'dong'. */
 test('2.17.5 pushState: thân PUT có moneyUnit "dong"', async () => {
   let sentBody = null;
-  const fetchStub = async (url, opts) => { sentBody = opts && opts.body; return { json: async () => ({ success: true, updatedAt: 9 }) }; };
+  const fetchStub = async (url, opts) => { if (opts && opts.method === 'PUT') sentBody = opts.body; return { json: async () => ({ success: true, updatedAt: 9 }) }; };
   const client = loadClient({ fetch: fetchStub });
   client.setDb(client.sanitize({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 }));
   client.setBase(1);
@@ -8167,4 +8168,138 @@ test('H.2 cuộn: scroll-padding-top chừa thanh đầu (chỉ không-desktop);
   assert.ok(PAGE.includes('html:not(.desktop){scroll-padding-top:110px}'));
   assert.ok(!/classList\.(remove|toggle)\('desktop'/.test(PAGE) && (PAGE.match(/classList\.add\('desktop'\)/g) || []).length === 1, 'html.desktop chỉ được đặt một lần lúc nạp');
   assert.ok(PAGE.includes('.syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}') && PAGE.includes('.syncm[data-st=err] .syncm__d{background:#FF5F57}'));
+});
+
+/* ===== Chưa đọc của Lịch sử bán/nhập (số đỏ trên tab, chấm đỏ ở dòng, Đọc hết) ===== */
+function unreadRig(fetchImpl) {
+  const mkE = () => {
+    const e = makeEl(); e.attrs = {};
+    e.setAttribute = (k, v) => { e.attrs[k] = String(v); }; e.getAttribute = (k) => (k in e.attrs ? e.attrs[k] : null);
+    e.appendChild = (c) => { e.children.push(c); c.parentNode = e; return c; };
+    e.insertBefore = (c) => { e.children.unshift(c); c.parentNode = e; return c; };
+    e.removeChild = (c) => { e.children = e.children.filter(x => x !== c); };
+    const find = (n, cls) => { for (const ch of n.children) { if (ch.className === cls) return ch; const d = ch.children && find(ch, cls); if (d) return d; } return null; };
+    e.querySelector = (q) => (q === '.udot' || q === '.tab__bd' ? find(e, q.slice(1)) : null);
+    return e;
+  };
+  const els = { '#expBody': mkE(), '#expReadAll': mkE(), '#impReadAll': mkE(), '.tab[data-tab="expBox"]': mkE(), '.tab[data-tab="impBox"]': mkE() };
+  const body = els['#expBody'];
+  Object.defineProperty(body, 'textContent', { get() { return ''; }, set() { body.children = []; } });
+  body.querySelectorAll = () => body.children;
+  const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector: (s) => els[s] || null, querySelectorAll: () => [], createElement: () => mkE(), createElementNS: () => makeEl(),
+    createTextNode: (s) => ({ textContent: String(s) }), addEventListener() {}, removeEventListener() {} };
+  const calls = [];
+  const c = loadClient({ document: doc, Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {},
+    fetch: async (url, o) => { calls.push({ url, body: o && o.body ? JSON.parse(o.body) : null }); return fetchImpl(url, o); } });
+  c.setDb({ products: [{ id: 'p1', name: 'A', stock: 100, costPrice: 1000 }], updatedAt: 1, moneyUnit: 'dong', prescriptions: [],
+    transactions: [{ id: 'p0', date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 5000, oid: 'OD_0', oname: 'Bán lẻ' },
+      { id: 'S1', date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 4000 }] });
+  return { c, els, body, calls };
+}
+const okJson = (data) => async () => ({ status: 200, json: async () => ({ success: true, data }) });
+
+test('chưa đọc: số đỏ 1-4, từ 5 "5+", ẩn khi 0, aria-label có số; Đọc hết chỉ hiện khi còn chưa đọc của loại đó', () => {
+  const { c, els } = unreadRig(okJson({}));
+  const tab = els['.tab[data-tab="expBox"]'], bd = () => tab.children.find(x => x.className === 'tab__bd');
+  c.renderUnread(); assert.equal(bd(), undefined, '0: chưa tạo'); assert.equal(els['#expReadAll'].hidden, true);
+  assert.equal(tab.attrs['aria-label'], 'Lịch sử bán hàng');
+  for (const [n, want] of [[1, '1'], [4, '4'], [5, '5+'], [12, '5+']]) {
+    c.setUnread({ BAN: Array.from({ length: n }, (_, i) => 'k' + i), NHAP: [] }); c.renderUnread();
+    assert.equal(bd().textContent, want, 'n=' + n); assert.equal(bd().hidden, false); assert.match(tab.attrs['aria-label'], new RegExp(n + ' chưa đọc'));
+  }
+  assert.equal(els['#expReadAll'].hidden, false); assert.equal(els['#impReadAll'].hidden, true, 'nhập không có chưa đọc');
+  c.setUnread({ BAN: [], NHAP: [] }); c.renderUnread();
+  assert.equal(bd().hidden, true, 'về 0 thì ẩn'); assert.equal(els['#expReadAll'].hidden, true);
+});
+
+test('chưa đọc: dòng/nhóm chưa đọc có chấm; chạm xóa chấm, giảm số ngay, POST nền; lỗi mạng xếp hàng thử lại nhịp sau; Đọc hết gửi {all}', async () => {
+  let fail = true;
+  const { c, body, calls } = unreadRig(async (url) => {
+    if (url === '/api/unread/read') { if (fail) throw new Error('net'); return { status: 200, json: async () => ({ success: true }) }; }
+    return { status: 200, json: async () => ({ success: true, data: { BAN: ['OD_0', 'S1'], NHAP: [] } }) };
+  });
+  c.setUnread({ BAN: ['OD_0', 'S1'], NHAP: [] });
+  c.renderHistory('exp');
+  const cell = (i) => body.children[i].children[1];
+  const dots = () => body.children.filter(r => r.children[1].children.some(x => x.className === 'udot')).length;
+  assert.equal(dots(), 2, 'nhóm OD_0 và dòng lẻ S1 đều có chấm');
+  c.markRead('exp', 'OD_0');
+  assert.equal(JSON.stringify(c.getUnread().BAN), JSON.stringify(['S1']), 'giảm ngay (lạc quan)');
+  assert.equal(dots(), 1, 'chấm của dòng vừa chạm biến mất');
+  await new Promise(r => setImmediate(r));
+  assert.deepEqual(calls.filter(x => x.url === '/api/unread/read')[0].body, { kind: 'BAN', keys: ['OD_0'] });
+  assert.equal(JSON.stringify(c.getUnread().BAN), JSON.stringify(['S1']), 'POST lỗi: không hoàn lại, không ném');
+  fail = false; calls.length = 0;
+  await c.refreshUnread();
+  assert.deepEqual(calls.map(x => x.url), ['/api/unread/read', '/api/unread'], 'nhịp sau gửi lại rồi mới lấy danh sách');
+  c.unreadAll('exp'); await new Promise(r => setImmediate(r));
+  assert.deepEqual(calls.filter(x => x.url === '/api/unread/read').pop().body, { all: 'BAN' });
+  assert.equal(JSON.stringify(c.getUnread().BAN), JSON.stringify([])); assert.equal(dots(), 0);
+  void cell;
+});
+
+test('chưa đọc: lấy /api/unread; lỗi mạng giữ số cũ; việc đã đọc đang chờ không bị máy chủ báo lại', async () => {
+  let mode = 'ok';
+  const { c } = unreadRig(async (url) => {
+    if (mode === 'net') throw new Error('net');
+    if (url === '/api/unread/read') return { status: 500, json: async () => ({}) };
+    return { status: 200, json: async () => ({ success: true, data: { BAN: ['A', 'B'], NHAP: ['N'] } }) };
+  });
+  await c.refreshUnread();
+  assert.equal(JSON.stringify(c.getUnread()), JSON.stringify({ BAN: ['A', 'B'], NHAP: ['N'] }));
+  mode = 'net'; await c.refreshUnread();
+  assert.equal(JSON.stringify(c.getUnread()), JSON.stringify({ BAN: ['A', 'B'], NHAP: ['N'] }), 'lỗi mạng giữ số cũ');
+  mode = 'ok'; c.markRead('exp', 'A'); await new Promise(r => setImmediate(r));
+  await c.refreshUnread();
+  assert.equal(JSON.stringify(c.getUnread().BAN), JSON.stringify(['B']), 'A đã đọc nhưng POST 500 còn chờ: máy chủ báo lại A vẫn bị loại');
+  assert.ok(PAGE.includes('.tab__bd{') && PAGE.includes('#FF5F57;color:#fff') && PAGE.includes('html.desktop .tab__bd{') && PAGE.includes('data-action="unread-all" data-kind="BAN" hidden>Đọc hết'), 'CSS/nút tĩnh');
+});
+
+test('chưa đọc: GET đang bay + markRead (POST đang bay) → GET về bản cũ không làm chấm hiện lại', async () => {
+  let releaseGet, releasePost; const server = { BAN: ['A', 'B'], NHAP: [] };
+  const { c } = unreadRig(async (url) => {
+    if (url === '/api/unread/read') { await new Promise(r => { releasePost = r; }); server.BAN = server.BAN.filter(k => k !== 'A'); return { status: 200, json: async () => ({ success: true }) }; }
+    const snap = { BAN: server.BAN.slice(), NHAP: [] };
+    await new Promise(r => { releaseGet = r; });
+    return { status: 200, json: async () => ({ success: true, data: snap }) };
+  });
+  c.setUnread({ BAN: ['A', 'B'], NHAP: [] });
+  const p = c.refreshUnread();
+  await new Promise(r => setImmediate(r));
+  c.markRead('exp', 'A');
+  assert.equal(JSON.stringify(c.getUnread().BAN), '["B"]');
+  releaseGet(); await p;
+  assert.equal(JSON.stringify(c.getUnread().BAN), '["B"]', 'A không hiện lại khi POST còn bay');
+  releasePost();
+});
+
+test('pushState gọi refreshUnread sau PUT thành công; lỗi của nó không đổi kết quả; 409 thì không gọi', async () => {
+  const run = async (putRes, opts = {}) => {
+    const calls = [];
+    const doc = { readyState: 'loading', get hidden() { if (opts.throwSync) throw new Error('boom'); return false; }, activeElement: null,
+      documentElement: makeEl(), body: makeEl(), querySelector() { return null; }, querySelectorAll() { return []; },
+      createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
+    const client = loadClient({ document: doc, confirm: () => true, setTimeout(fn, ms) { return ms || 1; }, clearTimeout() {},
+      fetch: async (url, o = {}) => {
+        calls.push((o.method || 'GET') + ' ' + url);
+        if (o.method === 'PUT') return putRes;
+        if (url === '/api/unread') { if (opts.rejectGet) throw new Error('net'); return { status: 200, json: async () => ({ success: true, data: { BAN: [], NHAP: [] } }) }; }
+        return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 50, moneyUnit: 'dong' } }) };
+      } });
+    client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 }); client.setBase(1); client.setDirty(true);
+    const ok = await client.pushState(false, false);
+    await new Promise(r => setImmediate(r));
+    return { ok, calls, client };
+  };
+  const good = { status: 200, json: async () => ({ success: true, updatedAt: 9 }) };
+  let r = await run(good);
+  assert.equal(r.ok, true); assert.equal(r.client.isDirty(), false);
+  assert.deepEqual(r.calls.slice(0, 2), ['PUT /api/state', 'GET /api/unread'], 'PUT xong mới lấy chưa đọc');
+  r = await run(good, { rejectGet: true });
+  assert.equal(r.ok, true, 'fetch chưa đọc hỏng không đổi kết quả'); assert.equal(r.client.isDirty(), false); assert.equal(r.client.isSyncErrorShown(), false);
+  r = await run(good, { throwSync: true });
+  assert.equal(r.ok, true, 'refreshUnread ném đồng bộ cũng không đổi kết quả'); assert.equal(r.client.isSyncErrorShown(), false);
+  r = await run({ status: 409, json: async () => ({ success: false, conflict: true, updatedAt: 50 }) });
+  assert.ok(!r.calls.includes('GET /api/unread'), 'PUT 409 không gọi chưa đọc');
 });
