@@ -464,15 +464,10 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 .btn{min-height:44px}
 .btn--sm{min-height:38px}
 .inp{min-height:44px;font-size:16px}
-/* 2.15.3: chân tờ ghi (Tổng + Bán đơn) là thanh position:fixed ở đáy MÀN HÌNH (sticky chỉ dính khi đáy tờ ghi còn dưới màn hình). JS (initFootBars) đặt .foot-fixed trên #retailBox/#remedyBox
-   khi thẻ đang mở trên điện thoại, và .foot-off khi tờ ghi ra khỏi vùng nhìn hoặc đang gõ/bàn phím hiện. Chừa chỗ ở đáy thẻ bằng padding = chiều cao thanh (--foot-h). z-index thấp hơn .top (30), gợi ý (40), toast/hộp thoại. */
 #retailBox,#remedyBox{overflow:visible}
 #retailNote{overflow:visible}
-#retailBox.foot-fixed>.card__body,#remedyBox.foot-fixed>.card__body{padding-bottom:calc(var(--foot-h,72px) + 8px)}
-#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--glass-bar);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-top:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 -2px 10px rgba(15,23,42,.12);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
-#retailBox.foot-fixed.foot-off #retailNote .note__foot,#remedyBox.foot-fixed.foot-off #remedyNote .note__foot{display:none}
-#remedyBox.foot-fixed #remedyNote .note__foot{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 html{scroll-padding-bottom:230px}
+html:not(.desktop){scroll-padding-top:110px}
 /* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
 .kb-compact .note__list{overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,transparent 0,black 12px);mask-image:linear-gradient(to bottom,transparent 0,black 12px)}
 /* 2.15.10: khi nhập trên điện thoại JS khóa cuộn trang (body fixed, top âm); .kb-lock chặn neo cuộn/cuộn dội của iOS. */
@@ -573,6 +568,27 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 /* 2.15.13: mọi icon tab cùng một màu xanh lá (--tab-ico, = màu icon Bán lẻ); tab đang chọn (nền tím) đặt icon xanh trên chip --brand-soft để vẫn nổi bật. */
 .tab__ic{color:var(--tab-ico);border-radius:4px}
 .tab.is-active .tab__ic{background:var(--brand-soft);box-shadow:0 0 0 3px var(--brand-soft)}
+/* H.2: điện thoại (không html.desktop): thanh đầu cố định nền đặc; hàng 1 logo | Bán | Lợi nhuận | đồng bộ, hàng 2 tám tab chỉ icon (JS phoneTop chuyển nút có sẵn vào .top) */
+html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) .top .bar{min-height:0}
+html:not(.desktop) .brand-wrap{display:none}
+html:not(.desktop) .top__r{display:flex;align-items:stretch;gap:4px;padding:3px 4px 0}
+html:not(.desktop) .top .stats{display:contents}
+html:not(.desktop) .top .stats__c{flex:1 1 0;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--surface2)}
+html:not(.desktop) .top .stat__v{font-size:15px;white-space:nowrap;overflow-wrap:normal}
+html:not(.desktop) .top .stat__sub{white-space:nowrap}
+html:not(.desktop) .stat__in,html:not(.desktop) .top .stat__sub span+span{display:none}
+html:not(.desktop) #brandBtn{font-size:0;flex:none;justify-content:center;width:44px;min-height:44px}
+.syncm{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:48px;min-height:44px;padding:0;border:0;background:none;color:var(--text2);font:inherit;font-size:11px;font-variant-numeric:tabular-nums}
+.syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}
+.syncm[data-st=err] .syncm__d{background:#FF5F57}
+html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;margin:0;padding:2px 4px 3px}
+html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0;border-color:transparent;background:none;box-shadow:none}
+html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}
+html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px}
+html:not(.desktop) .top .tabs .tab.is-active{background:var(--brand);border-color:var(--brand)}
+html:not(.desktop) .top .tabs .tab.is-active .tab__ic{background:none;box-shadow:none;color:#fff}
+html.pt .top .tabs .tab.is-active .tab__ic{color:#0b1220}
 @media (min-width:641px){
 .tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;align-content:center;justify-items:center;padding:5px 4px}
 .tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
@@ -978,9 +994,6 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
     </div>
     <div class="bar__actions">
       <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
-      <button class="btn btn--sm" id="reloadBtn" type="button" data-action="reload-app" aria-label="Tải lại ứng dụng" title="Tải lại" hidden>
-        <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Tải lại
-      </button>
       <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
     </div>
   </div>
@@ -992,7 +1005,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
 
   <section class="stats" aria-label="Bán và lợi nhuận tháng">
     <div class="stats__c">
-      <p class="stat__k">Bán trong tháng</p>
+      <p class="stat__k">Bán <span class="stat__in">trong </span>tháng</p>
       <p class="stat__v" id="statExport">0</p>
       <p class="stat__sub"><span>Hôm nay <b id="statExportDay">0</b></span><span>Năm <b id="statExportYear">0</b></span></p>
     </div>
@@ -2238,13 +2251,17 @@ function renderSyncBadge(){
 }
 /* 2.25.0: dòng trạng thái ở thanh bên desktop (#syncLine): chấm xanh khi ổn, đỏ khi lỗi. Chỉ đọc cờ có sẵn. */
 function renderSyncLine(){
-  var el = $('#syncLine');
-  if (!el) return;
+  var el = $('#syncLine'), m = $('#syncLineM');
+  if (!el && !m) return;
   var stale = !!(dirty && dirtySince && Date.now() - dirtySince >= DIRTY_BADGE_MS);  /* cùng điều kiện huy hiệu */
   var bad = authLost || syncErrorShown || stale, d = new Date(lastSyncOk);
-  el.setAttribute('data-st', bad ? 'err' : 'ok');
-  el.textContent = authLost ? 'Chưa lưu được' : syncErrorShown ? (syncNet ? 'Mất kết nối — đang thử lại…' : 'Chưa lưu được') :
+  var txt = authLost ? 'Chưa lưu được' : syncErrorShown ? (syncNet ? 'Mất kết nối — đang thử lại…' : 'Chưa lưu được') :
     stale ? 'Chưa đồng bộ' : lastSyncOk ? 'Đã đồng bộ ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : 'Đang kết nối…';
+  if (el) { el.setAttribute('data-st', bad ? 'err' : 'ok'); el.textContent = txt; }
+  if (m) { /* H.2: dòng đồng bộ trên thanh đầu điện thoại: chấm + HH:MM */
+    m.setAttribute('data-st', bad ? 'err' : 'ok'); m.setAttribute('aria-label', txt); m.title = txt;
+    var t = $('.syncm__t', m); if (t) t.textContent = lastSyncOk ? pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : '--:--';
+  }
 }
 function scheduleSyncRetry(){
   if (syncRetryTimer || conflictOpen || syncRejected) return;
@@ -2284,8 +2301,23 @@ function isStandaloneMode(){
   } catch (e) { return false; }
 }
 function renderReloadBtn(){
-  var b = $('#reloadBtn');
-  if (b) b.hidden = isDesk() || !isStandaloneMode(); /* 2.28.0: desktop tải lại bằng logo */
+  var b = $('#syncLineM'); /* H.2: dòng đồng bộ trên đầu điện thoại bấm = Tải lại, chỉ khi chạy từ màn hình chính; desktop tải lại bằng logo */
+  if (!b) return;
+  if (!isDesk() && isStandaloneMode()) b.setAttribute('data-action', 'reload-app'); else b.removeAttribute('data-action');
+}
+/* H.2: điện thoại: chuyển logo/thẻ Bán+Lợi nhuận/8 tab vào .top (nút có sẵn, giữ listener), thêm dòng đồng bộ; desktop không đổi. */
+function phoneTop(){
+  if (isDesk()) return;
+  var top = $('.top'), btn = $('#brandBtn'), logo = $('#brandLogo'), st = $('.stats'), tabs = $('#tabs');
+  if (!top || !btn || !st || !tabs || !top.insertBefore || $('#syncLineM')) return;
+  var r = doc.createElement('div'), m = doc.createElement('button'), d = doc.createElement('i'), t = doc.createElement('span');
+  r.className = 'top__r'; m.id = 'syncLineM'; m.type = 'button'; m.className = 'syncm'; d.className = 'syncm__d'; t.className = 'syncm__t';
+  m.appendChild(d); m.appendChild(t);
+  if (logo) btn.insertBefore(logo, btn.firstChild);
+  btn.setAttribute('aria-label', 'Quản Lý Kho — Thiết bị');
+  r.appendChild(btn); r.appendChild(st); r.appendChild(m);
+  top.insertBefore(r, top.firstChild);
+  top.insertBefore(tabs, $('.top .bar'));
 }
 /* 2.27.0: phép kiểm nháp của Tải lại (cờ chưa gửi + đơn nháp trong bộ nhớ); không đăng xuất, không xóa cookie. 2.28.0: Thoát đã bỏ (Tauri đóng bằng nút hệ điều hành). */
 function draftOk(verb){
@@ -2520,7 +2552,6 @@ function refocusSearch(sel, key){
   if (!s) return;
   focusNS(s);
   closeSuggest(key);
-  updateFootBars();
   compactSync(true); /* 2.15.6/2.15.8: thêm dòng -> đo lại 2 dòng cuối, cuộn mượt xuống cuối (guồng); 2.15.9: không định vị lại trang */
 }
 function addRemedyToNote(){
@@ -3130,7 +3161,7 @@ function remedySavePresetClick(){
   var sel = $('#remedyPreset');
   var n = $('#remedyName');
   if (!(sel && sel.value) && n && !capWords(n.value)) {
-    /* 2.15.15: điện thoại: ô tên nằm trong thanh chân fixed, focus làm thanh bị ẩn (foot-off) nên không thấy gì; hỏi tên bằng hộp thoại. */
+    /* 2.15.15: điện thoại: ô tên ở chân tờ ghi bị bàn phím che; hỏi tên bằng hộp thoại. */
     if (isDesk() || (window.matchMedia && window.matchMedia('(max-width:640px)').matches)) { /* 2.26.0: desktop cũng hỏi tên bằng hộp thoại (không đặt ô tên ở thanh đầu/chân) */
       var asked = window.prompt(isDesk() ? 'Tên đơn mới' : 'Tên đơn', '');
       if (asked == null || !capWords(asked)) return;
@@ -5748,40 +5779,6 @@ function bindEvents(){
     });
   }
 }
-
-/* ================= THANH CHÂN TỜ GHI (điện thoại) ================= */
-/* Quyết định hiện thanh: chỉ điện thoại, thẻ đang mở, tờ ghi còn trong vùng nhìn (không cuộn đi hẳn), không đang gõ ô nhập/chọn và bàn phím không hiện. */
-function footBarShow(o){
-  return !!(o && o.mobile && o.open && (o.inFoot || (!o.editing && !o.keyboard && o.height > 0 && o.top < o.vh - 60 && o.bottom > 100)));
-}
-var footBarSched = false;
-function updateFootBars(){
-  var mobile = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
-  var vv = window.visualViewport;
-  var vh = window.innerHeight || 0;
-  var keyboard = !!(vv && vv.height && vv.height < vh - 120);
-  var ae = doc.activeElement;
-  [['retailBox', 'retailNote'], ['remedyBox', 'remedyNote']].forEach(function(p){
-    var box = $('#' + p[0]), note = $('#' + p[1]);
-    if (!box || !note) return;
-    var open = !!box.open;
-    var fixedOn = mobile && open;
-    if (!box.classList || !box.classList.toggle) return;
-    box.classList.toggle('foot-fixed', fixedOn);
-    if (!fixedOn) { box.classList.remove('foot-off'); return; }
-    var r = note.getBoundingClientRect ? note.getBoundingClientRect() : { height: 0, top: 0, bottom: 0 };
-    var editing = !!(ae && box.contains(ae) && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA'));
-    var show = footBarShow({ mobile: mobile, open: open, editing: editing, keyboard: keyboard, inFoot: !!(ae && ae.closest && ae.closest('.note__foot') && note.contains(ae)), height: r.height, top: r.top, bottom: r.bottom, vh: vh });
-    box.classList.toggle('foot-off', !show);
-    var foot = note.querySelector ? note.querySelector('.note__foot') : null;
-    if (show && foot && foot.offsetHeight) box.style.setProperty('--foot-h', foot.offsetHeight + 'px');
-  });
-}
-function scheduleFootBars(){
-  if (footBarSched) return;
-  footBarSched = true;
-  setTimeout(function(){ footBarSched = false; updateFootBars(); }, 30);
-}
 /* 2.15.6: chế độ gọn khi nhập trên điện thoại (2.15.8: 2 dòng cuối). Hàm thuần: tổng cao n dòng cuối; 0 nếu số dòng <= n (không cần gọn). */
 var COMPACT_ROWS = 2;
 function compactListHeight(heights, n){
@@ -5961,7 +5958,7 @@ function kbRelease(){
   setTimeout(function(){ if (!kbBoxOf(doc.activeElement)) kbUnlock('blur'); }, 400);
 }
 /* visualViewport đổi (bàn phím hiện/đổi, iOS pan): chỉ bù lại top theo vvTop; không cuộn. */
-function onVvChange(){ scheduleFootBars(); kbLockApply(); compactRefit(); kbEvRec('vv'); kbDbg(); }
+function onVvChange(){ kbLockApply(); compactRefit(); kbEvRec('vv'); kbDbg(); }
 /* 2.15.11: chạm vào ô nhập KHÁC trong thẻ đang khóa: chặn hành vi mặc định (iOS tự căn giữa ô vừa focus = pan visualViewport) rồi focus preventScroll.
    Nút Trước/Sau của thanh phụ iOS không chặn được; khi đó vẫn bù top đồng bộ trong sự kiện vv (không rAF, không transition). Ô đang focus: chạm như thường (đặt con trỏ). */
 var kbPS = false, kbEvs = [], kbEvAt = 0, kbVvPrev = 0, kbTouchAt = 0;
@@ -5991,11 +5988,10 @@ function kbEvRec(src){
 function kbOnResize(){
   if (kbLockBox && (!kbMobile() || (window.innerWidth || 0) !== kbLockW)) kbUnlock('resize');
 }
+/* nay chỉ lo bàn phím (kbLock/compact); tên cũ giữ vì nhiều test dùng */
 function initFootBars(){
   if (typeof window.addEventListener === 'function') {
-    window.addEventListener('scroll', scheduleFootBars, { passive: true });
     window.addEventListener('scroll', kbTrackY, { passive: true });
-    window.addEventListener('resize', scheduleFootBars);
     window.addEventListener('resize', kbOnResize);
     window.addEventListener('orientationchange', function(){ kbUnlock('xoay'); });
     window.addEventListener('pagehide', function(){ kbUnlock('pagehide'); });
@@ -6008,31 +6004,18 @@ function initFootBars(){
     window.visualViewport.addEventListener('resize', onVvChange);
     window.visualViewport.addEventListener('scroll', onVvChange);
   }
-  try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || '') || localStorage.getItem('kbdebug') === '1'; } catch (e) {}
-  /* 2.17.8: PWA không có thanh địa chỉ: chạm 5 lần logo trong 3 giây để bật/tắt kbdebug (cờ localStorage). */
-  var logo = $('#brandLogo'), logoN = 0, logoT = 0;
-  if (logo) logo.addEventListener('click', function(){
-    var n = Date.now(); if (!logoN || n - logoT > 3000) { logoN = 0; logoT = n; }
-    if (++logoN < 5) return;
-    logoN = 0;
-    try { if (localStorage.getItem('kbdebug') === '1') localStorage.removeItem('kbdebug'); else localStorage.setItem('kbdebug', '1'); window.location.reload(); } catch (e) {}
-  });
+  try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
   if (kbDebug) {
     kbDbg('mo-trang');
     doc.addEventListener('focusin', function(){ kbEvRec(kbTouchAt && Date.now() - kbTouchAt < 800 ? 'focusin' : 'next'); kbDbg(); });
     if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
   }
-  doc.addEventListener('focusin', function(){ scheduleFootBars(); compactSync(false); });
-  doc.addEventListener('focusout', function(){ scheduleFootBars(); kbRelease(); setTimeout(compactSync, 0); });
+  doc.addEventListener('focusin', function(){ compactSync(false); });
+  doc.addEventListener('focusout', function(){ kbRelease(); setTimeout(compactSync, 0); });
   ['retailBox', 'remedyBox'].forEach(function(id){
     var b = $('#' + id);
-    if (b && b.addEventListener) b.addEventListener('toggle', function(){ scheduleFootBars(); kbUnlock('dong-the'); });
-    var n = $(id === 'retailBox' ? '#retailNote' : '#remedyNote');
-    if (n && typeof window.ResizeObserver === 'function') new window.ResizeObserver(scheduleFootBars).observe(n);
+    if (b && b.addEventListener) b.addEventListener('toggle', function(){ kbUnlock('dong-the'); });
   });
-  var tabs = $('#tabs');
-  if (tabs) tabs.addEventListener('click', scheduleFootBars);
-  updateFootBars();
 }
 /* ================= KHỞI ĐỘNG ================= */
 /* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */
@@ -6127,6 +6110,7 @@ function init(){
   renderAll();
   if (isDesk()) renderNhapList();
   renderBackupInfo();
+  phoneTop();
   renderSyncBadge();
   renderReloadBtn();
   if (dropLegacy) toast('Đã bỏ thay đổi chưa gửi (nâng cấp dữ liệu)');

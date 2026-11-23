@@ -40,7 +40,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  footBarShow: (typeof footBarShow === 'function' ? footBarShow : null), kbLockTop: (typeof kbLockTop === 'function' ? kbLockTop : null), kbLock: (typeof kbLock === 'function' ? kbLock : null), kbUnlock: (typeof kbUnlock === 'function' ? kbUnlock : null), kbRelease: (typeof kbRelease === 'function' ? kbRelease : null), compactAvail: (typeof compactAvail === 'function' ? compactAvail : null), compactFitHeight: (typeof compactFitHeight === 'function' ? compactFitHeight : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), wholeWordMatch: (typeof wholeWordMatch === 'function' ? wholeWordMatch : null), sugWhole: (typeof sugWhole === 'function' ? sugWhole : null), sugListMaxHeight: (typeof sugListMaxHeight === 'function' ? sugListMaxHeight : null), sugReveal: (typeof sugReveal === 'function' ? sugReveal : null), matchProducts: (typeof matchProducts === 'function' ? matchProducts : null), focusNS: (typeof focusNS === 'function' ? focusNS : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), updateFootBars: (typeof updateFootBars === 'function' ? updateFootBars : null),
+  kbLockTop: (typeof kbLockTop === 'function' ? kbLockTop : null), kbLock: (typeof kbLock === 'function' ? kbLock : null), kbUnlock: (typeof kbUnlock === 'function' ? kbUnlock : null), kbRelease: (typeof kbRelease === 'function' ? kbRelease : null), compactAvail: (typeof compactAvail === 'function' ? compactAvail : null), compactFitHeight: (typeof compactFitHeight === 'function' ? compactFitHeight : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), wholeWordMatch: (typeof wholeWordMatch === 'function' ? wholeWordMatch : null), sugWhole: (typeof sugWhole === 'function' ? sugWhole : null), sugListMaxHeight: (typeof sugListMaxHeight === 'function' ? sugListMaxHeight : null), sugReveal: (typeof sugReveal === 'function' ? sugReveal : null), matchProducts: (typeof matchProducts === 'function' ? matchProducts : null), focusNS: (typeof focusNS === 'function' ? focusNS : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), 
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   pendEntryH: (typeof pendEntryH === 'function' ? pendEntryH : null), sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
@@ -120,7 +120,7 @@ globalThis.__test = {
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
-  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
+  isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), phoneTop: (typeof phoneTop === 'function' ? phoneTop : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
 };
@@ -4816,26 +4816,28 @@ test('2.14.0 gợi ý viết tắt "l": không còn chữ "lạng" trong gợi �
   assert.ok(typeof c.fmtQty === 'function' ? c.fmtQty(0.2) === '2 lạng' : /return fmtNum\(lang\) \+ ' lạng'/.test(PAGE), 'fmtQty vẫn ghi lạng');
 });
 
-test('2.15.0 nút Tải lại: chỉ hiện ở màn hình chính; có nháp/dirty thì hỏi trước, không thì tải lại ngay', () => {
+test('2.15.0 dòng đồng bộ #syncLineM bấm = Tải lại: chỉ gắn data-action ở màn hình chính; có nháp/dirty thì hỏi trước, không thì tải lại ngay', () => {
   const mk = (extra) => {
-    const btn = { hidden: true };
+    const btn = { setAttribute(k, v) { this[k] = v; }, removeAttribute(k) { delete this[k]; } };
     const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
-      querySelector(s) { return s === '#reloadBtn' ? btn : null; }, querySelectorAll() { return []; },
+      querySelector(s) { return s === '#syncLineM' ? btn : null; }, querySelectorAll() { return []; },
       createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {} };
     return { btn, doc, c: loadClient({ document: doc, ...extra }) };
   };
   /* trình duyệt thường: ẩn */
   let r = mk({ navigator: {}, matchMedia: () => ({ matches: false, addEventListener() {} }) });
   r.c.renderReloadBtn();
-  assert.equal(r.btn.hidden, true, 'trình duyệt thường phải ẩn');
+  assert.equal(r.btn['data-action'], undefined, 'trình duyệt thường chỉ là dòng trạng thái');
   /* iOS navigator.standalone */
   r = mk({ navigator: { standalone: true } });
   r.c.renderReloadBtn();
-  assert.equal(r.btn.hidden, false, 'navigator.standalone phải hiện');
+  assert.equal(r.btn['data-action'], 'reload-app', 'navigator.standalone phải bấm được');
+  r = mk({ navigator: { standalone: true } }); r.doc.documentElement.classList.contains = (k) => k === 'desktop'; r.c.renderReloadBtn();
+  assert.equal(r.btn['data-action'], undefined, 'desktop: không bấm tải lại ở dòng này');
   /* display-mode: standalone */
   r = mk({ navigator: {}, matchMedia: (q) => ({ matches: q.includes('display-mode: standalone'), addEventListener() {} }) });
   r.c.renderReloadBtn();
-  assert.equal(r.btn.hidden, false, 'display-mode standalone phải hiện');
+  assert.equal(r.btn['data-action'], 'reload-app', 'display-mode standalone phải bấm được');
   /* bấm: sạch → tải lại không hỏi */
   let reloads = 0, confirms = 0, answer = true;
   r = mk({ location: { href: 'x', reload() { reloads++; } }, confirm() { confirms++; return answer; } });
@@ -4857,10 +4859,8 @@ test('2.15.0 nút Tải lại: chỉ hiện ở màn hình chính; có nháp/dir
   r.c.reloadAppClick();
   assert.equal(confirms, 4); assert.equal(reloads, 2, 'đồng ý thì tải lại');
   /* CSS + markup */
-  assert.match(PAGE, /id="reloadBtn"[^>]*data-action="reload-app"[^>]*aria-label="Tải lại ứng dụng"[^>]*hidden/);
+  assert.ok(!PAGE.includes('reloadBtn'), 'H.2: đã bỏ nút #reloadBtn');
   assert.ok(PAGE.includes("case 'reload-app': reloadAppClick()"));
-  assert.ok(PAGE.includes('#retailBox.foot-fixed #retailNote .note__foot,#remedyBox.foot-fixed #remedyNote .note__foot{position:fixed;left:0;right:0;bottom:0;'), '2.15.3: thanh fixed ở đáy màn hình');
-  assert.ok(PAGE.includes('env(safe-area-inset-bottom'));
 });
 
 /* 2.15.0 giao diện thanh tiêu đề: ô tìm cùng hàng tiêu đề, chữ rút gọn, bỏ ô sắp xếp kho, ô năm trong tiêu đề Thống kê, chú giải "[ô màu] Nhập số tiền", chân Thuốc chén gọn. */
@@ -5059,21 +5059,6 @@ test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm 6/24px
   assert.match(PAGE, /\.card__bar-date \.datefield__ico\{right:6px;width:16px;height:16px\}/);
 });
 
-/* 2.15.3: thanh chân tờ ghi fixed ở đáy màn hình; ẩn khi gõ/bàn phím/cuộn đi; focus về ô tìm sau "+". */
-test('2.15.3 footBarShow: chỉ hiện khi điện thoại, thẻ mở, tờ ghi còn trong vùng nhìn, không gõ, không bàn phím', () => {
-  const base = { mobile: true, open: true, editing: false, keyboard: false, height: 300, top: 100, bottom: 400, vh: 852 };
-  assert.equal(app.footBarShow(base), true, 'tờ ghi ngắn vẫn hiện (thanh ở đáy màn hình)');
-  assert.equal(app.footBarShow({ ...base, top: -2000, bottom: -50 }), false, 'cuộn đi hẳn lên trên thì ẩn');
-  assert.equal(app.footBarShow({ ...base, top: 840, bottom: 1500 }), false, 'tờ ghi mới lấp ló ở đáy thì ẩn');
-  assert.equal(app.footBarShow({ ...base, mobile: false }), false, 'máy tính không đổi');
-  assert.equal(app.footBarShow({ ...base, open: false }), false);
-  assert.equal(app.footBarShow({ ...base, editing: true }), false, 'đang focus ô nhập thì ẩn');
-  assert.equal(app.footBarShow({ ...base, keyboard: true }), false, 'bàn phím hiện thì ẩn');
-  assert.equal(app.footBarShow({ ...base, height: 0 }), false);
-  assert.equal(app.footBarShow(null), false);
-  assert.equal(app.footBarShow({ ...base, editing: true, keyboard: true, inFoot: true }), true, 'ô nhập nằm trong chính thanh chân (Thang/Đơn giá) thì không ẩn, kẻo iOS đóng bàn phím');
-  assert.equal(app.footBarShow({ ...base, mobile: false, inFoot: true }), false);
-});
 
 test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗi (thiếu số) thì ở ô số', () => {
   for (const kind of ['remedy', 'retail']) {
@@ -5101,28 +5086,6 @@ test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗ
 test('2.15.3 nút "+" của dòng đang nhập có data-keep-focus (không làm ô số mất focus/bàn phím trước khi xử lý); CSS thanh fixed', () => {
   assert.ok(/data-action', isRetail \? 'note-add' : 'rnote-add'\);\s+b\.setAttribute\('data-keep-focus', ''\)/.test(PAGE), 'nút + Bán lẻ và Thuốc chén có data-keep-focus (2.37.0: một khối dùng chung)');
   assert.ok(!/note__foot,#remedyNote \.note__foot\{position:sticky/.test(PAGE), 'không còn sticky');
-  assert.ok(PAGE.includes('.foot-fixed.foot-off #retailNote .note__foot'), 'có quy tắc ẩn khi foot-off');
-  assert.match(PAGE, /foot-fixed>\.card__body[^}]*padding-bottom:calc\(var\(--foot-h,72px\) \+ 8px\)/);
-  assert.ok(PAGE.includes('bottom:0;z-index:20'), 'z-index thấp hơn .top, gợi ý');
-  assert.ok(PAGE.includes('bottom:0;z-index:20'), 'z-index thấp hơn .top, gợi ý');
-});
-
-test('2.15.3 updateFootBars: thẻ mở trên điện thoại gắn foot-fixed; focus ô nhập trong thẻ thì thêm foot-off; blur thì bỏ; máy tính không gắn', () => {
-  const mkBox = () => { const cl = new Set(); return { open: true, cl, classList: { toggle(n, on) { on ? cl.add(n) : cl.delete(n); }, remove(n) { cl.delete(n); }, add(n) { cl.add(n); } }, contains(x) { return x === this.input; }, style: { setProperty() {} }, input: null }; };
-  const box = mkBox(), note = { getBoundingClientRect: () => ({ height: 300, top: 100, bottom: 400 }), querySelector: () => ({ offsetHeight: 70 }) };
-  const els = { '#retailBox': box, '#retailNote': note };
-  const doc = limitDoc(els);
-  const input = { tagName: 'INPUT' }; box.input = input;
-  const c = loadClient({ document: doc, matchMedia: () => ({ matches: true }), innerHeight: 852 });
-  c.updateFootBars();
-  assert.ok(box.cl.has('foot-fixed') && !box.cl.has('foot-off'), 'hiện thanh khi chưa gõ');
-  doc.activeElement = input; c.updateFootBars();
-  assert.ok(box.cl.has('foot-off'), 'focus ô nhập thì ẩn thanh');
-  doc.activeElement = null; c.updateFootBars();
-  assert.ok(!box.cl.has('foot-off'), 'blur thì hiện lại');
-  const c2 = loadClient({ document: doc, matchMedia: () => ({ matches: false }), innerHeight: 852 });
-  c2.updateFootBars();
-  assert.ok(!box.cl.has('foot-fixed'), 'máy tính không gắn foot-fixed');
 });
 
 /* ===== 2.15.6 chế độ gọn khi nhập (điện thoại) ===== */
@@ -5374,7 +5337,7 @@ test('2.15.10 nguồn: không scrollBy/scrollIntoView; window.scrollTo chỉ tro
   assert.match(fnBody('kbUnlock'), /window\.scrollTo\(0, kbSavedY\)/);
   assert.ok(!/(^|[^.\w])scrollTo\(/.test(PAGE), 'không scrollTo trần');
   assert.ok(!/placeScrollDelta|kbSafeDelta|kbPadFixed|kbVisBottom|kbPlaceNow|kbOnFocus|kbUserStop|kbPlacedBox|kbSafeUsed|ENTRY_ROW_H|PLACE_GAP|KB_BAR|--kb-pad|kbMovedAt|kbSchedule|keepVisibleDelta|kbUserAt|searchScrollDelta|kbPadPx|keepPendingVisible/.test(PAGE), 'không còn mã định vị cũ');
-  assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ scheduleFootBars\(\); compactSync\(false\); \}\);/);
+  assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ compactSync\(false\); \}\);/);
   for (const n of ['commitRetailRow', 'commitRemedyRow', 'addRetailToNote', 'addRemedyToNote', 'refocusSearch', 'pickSuggest']) {
     assert.ok(!/\.focus\(\)/.test(fnBody(n)), n + ' không được gọi .focus() trần');
   }
@@ -5501,23 +5464,13 @@ test('2.17.8 standalone (matchMedia hoặc navigator.standalone): touchstart san
     assert.equal(k.st.focusArgs.length, sa ? 0 : 1);
   }
 });
-test('2.17.8 kbdebug đọc từ localStorage; chạm 5 lần logo trong 3 giây đảo cờ và tải lại', () => {
-  const store = new Map(), ls = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
-  const off = lockRig({ ls }); off.c.initFootBars(); assert.equal(off.html.children.length, 0, 'chưa có cờ: không gỡ lỗi');
-  const real = Date.now; let now = 1e12; Date.now = () => now;
-  try {
-    const k = lockRig({ ls }); k.c.initFootBars();
-    const click = k.logoL.click[0];
-    for (let i = 0; i < 4; i++) { click(); now += 500; }
-    assert.equal(store.get('kbdebug'), undefined); assert.equal(k.st.reloads || 0, 0, '4 chạm chưa đủ');
-    click(); assert.equal(store.get('kbdebug'), '1'); assert.equal(k.st.reloads, 1);
-    const on = lockRig({ ls }); on.c.initFootBars(); assert.ok(on.html.children.length > 0, 'cờ localStorage bật dòng gỡ lỗi');
-    const c2 = on.logoL.click[0];
-    for (let i = 0; i < 5; i++) { c2(); now += 4000; } assert.equal(store.get('kbdebug'), '1', 'chạm cách >3 giây không đủ 5');
-    for (let i = 0; i < 5; i++) { c2(); now += 100; } assert.equal(store.has('kbdebug'), false, 'đủ 5 chạm: xóa cờ'); assert.equal(on.st.reloads, 1);
-    const bad = { getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); }, removeItem() {} };
-    const b = lockRig({ ls: bad }); b.c.initFootBars(); for (let i = 0; i < 5; i++) b.logoL.click[0]();
-  } finally { Date.now = real; }
+test('H.2 kbdebug chỉ bật bằng ?kbdebug=1: cờ localStorage và chạm logo không còn tác dụng', () => {
+  const ls = { getItem: () => '1', setItem() {}, removeItem() {} };
+  const off = lockRig({ ls }); off.c.initFootBars();
+  assert.equal(off.html.children.length, 0, 'cờ localStorage không bật gỡ lỗi');
+  assert.ok(!off.logoL.click || off.logoL.click.length === 0, 'logo không có listener chạm 5 lần');
+  assert.ok(!/localStorage\.getItem\('kbdebug'\)|logoN/.test(PAGE));
+  assert.ok(lockRig({ search: '?kbdebug=1' }).c.initFootBars, 'khởi tạo với ?kbdebug=1 vẫn chạy');
 });
 
 /* ===== 2.15.9 gợi ý tên: gõ trọn một từ (mọi thiết bị), khung tối đa 3 mục ===== */
@@ -8148,4 +8101,46 @@ test('2.38.6 thẻ Bán/Lợi nhuận tháng desktop: nhãn 12, số 22, phụ 1
   assert.ok(m.includes('html.desktop .stats .stat__k{font-size:12px;') && m.includes('html.desktop .stats .stat__v{font-size:22px;') && m.includes('html.desktop .stats .stat__sub{font-size:13px;'));
   assert.ok(!/html\.desktop \.stat__[kv]\{/.test(m), 'mọi rule có tiền tố .stats');
   assert.ok(PAGE.includes('html.desktop{--sth:216px}') && PAGE.includes('html.desktop{--sth:76px}'));
+});
+
+test('H.1 chân tờ ghi nằm trong luồng ở điện thoại: không còn thanh fixed/JS đo thanh; .note__foot không position:fixed', () => {
+  assert.ok(!/foot-fixed|foot-off|footBarShow|updateFootBars|scheduleFootBars|--foot-h/.test(PAGE), 'không còn mã thanh chân fixed');
+  const css = PAGE.split('\n').filter(l => /\.note__foot/.test(l) && !/html\.desktop/.test(l));
+  assert.ok(css.length > 0 && !css.some(l => /position:\s*fixed/.test(l)), '.note__foot ngoài html.desktop không position:fixed');
+});
+
+test('H.2 thanh đầu điện thoại: nền đặc không backdrop-filter, hàng 1 thẻ Bán/Lợi nhuận + đồng bộ, hàng 2 tám tab chỉ icon ≥44px; nhãn "Bán tháng", ẩn "Năm"; desktop không đổi', () => {
+  assert.ok(PAGE.includes('html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}'), 'nền đặc');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;'), '8 tab 1 hàng');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;'), 'ô tab >=44px');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}'), 'tab chỉ icon');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab.is-active{background:var(--brand);') && PAGE.includes('.tab__ic{background:none;box-shadow:none;color:#fff}'), 'tab chọn nền brand, icon trắng');
+  assert.ok(PAGE.includes('html:not(.desktop) .stat__in,html:not(.desktop) .top .stat__sub span+span{display:none}'), 'ẩn "trong" và dòng Năm');
+  assert.ok(PAGE.includes('html:not(.desktop) #brandBtn{font-size:0;') && PAGE.includes('min-height:44px}'), 'logo là nút vào Thiết bị, >=44px');
+  assert.ok(PAGE.includes('<p class="stat__k">Bán <span class="stat__in">trong </span>tháng</p>'));
+  assert.ok(!/html.desktop[^{]*.(stat__in|syncm|top__r)/.test(PAGE), 'không đụng CSS desktop');
+});
+
+test('H.2 renderSyncLine cập nhật #syncLineM (chấm + HH:MM); phoneTop chuyển logo/thẻ số/tab vào .top; desktop không chuyển', () => {
+  const mkA = () => { const o = makeEl(); o.attrs = {}; o.setAttribute = (k, v) => { o.attrs[k] = v; }; return o; };
+  const m = mkA(), t = mkA(); m.querySelector = (q) => (q === '.syncm__t' ? t : null);
+  const c = loadClient({ document: limitDoc({ '#syncLineM': m }) });
+  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.renderSyncLine();
+  assert.equal(t.textContent, '09:05'); assert.equal(m.attrs['data-st'], 'ok'); assert.equal(m.attrs['aria-label'], 'Đã đồng bộ 09:05');
+  c.noteSyncFailure('x', true, true); assert.equal(m.attrs['data-st'], 'err'); assert.equal(t.textContent, '09:05');
+  const mv = []; const mkN = () => { const o = mkA(); o.insertBefore = (a, b) => { mv.push([a, b]); }; return o; };
+  const run = (desk) => { mv.length = 0; const top = mkN(), btn = mkN(), logo = mkA(), st = mkA(), tabs = mkA(), bar = mkA();
+    const d = limitDoc({ '.top': top, '#brandBtn': btn, '#brandLogo': logo, '.stats': st, '#tabs': tabs, '.top .bar': bar });
+    d.documentElement.classList.contains = (k) => desk && k === 'desktop';
+    loadClient({ document: d }).phoneTop(); return { top, btn, logo, st, tabs, bar }; };
+  let e = run(false);
+  assert.ok(mv.some(([a]) => a === e.logo), 'logo vào #brandBtn'); assert.ok(mv.some(([a, b]) => a === e.tabs && b === e.bar), 'tab vào .top trước .bar');
+  assert.equal(e.btn.attrs['aria-label'], 'Quản Lý Kho — Thiết bị');
+  run(true); assert.equal(mv.length, 0, 'desktop không chuyển gì');
+});
+
+test('H.2 cuộn: scroll-padding-top chừa thanh đầu (chỉ không-desktop); desktop quyết lúc nạp, không đổi khi resize; chấm đồng bộ dùng màu #syncLine', () => {
+  assert.ok(PAGE.includes('html:not(.desktop){scroll-padding-top:110px}'));
+  assert.ok(!/classList\.(remove|toggle)\('desktop'/.test(PAGE) && (PAGE.match(/classList\.add\('desktop'\)/g) || []).length === 1, 'html.desktop chỉ được đặt một lần lúc nạp');
+  assert.ok(PAGE.includes('.syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}') && PAGE.includes('.syncm[data-st=err] .syncm__d{background:#FF5F57}'));
 });

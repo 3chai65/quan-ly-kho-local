@@ -5,6 +5,18 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.7] - 2026-11-23
+
+### Sửa
+- Điện thoại: thanh đầu cố định nền đặc (logo | Bán tháng | Lợi nhuận tháng | chấm + giờ đồng bộ; hàng 2 là 8 tab chỉ icon); chân tờ ghi Bán lẻ/Thuốc chén nằm trong luồng, không còn thanh fixed. Desktop không đổi. `scroll-padding-top:110px` chừa thanh đầu; `scroll-padding-bottom:230px` giữ (cho bàn phím, thanh fixed cũ vốn ẩn khi gõ).
+- Logo là nút vào Thiết bị (chữ "Quản Lý Kho" ẩn); dòng đồng bộ bấm = Tải lại khi chạy từ màn hình chính.
+- `?kbdebug=1` là cách duy nhất bật gỡ lỗi bàn phím.
+
+### Đã xóa
+- Mã: `footBarShow`, `updateFootBars`, `scheduleFootBars`, CSS `foot-fixed`/`foot-off`/`--foot-h`, nút `#reloadBtn`, chạm 5 lần logo bật kbdebug (và cờ localStorage `kbdebug`).
+- Test: "2.15.3 footBarShow…", "2.15.3 updateFootBars…", "2.17.8 kbdebug đọc từ localStorage…" (thay bằng "H.2 kbdebug chỉ bật bằng ?kbdebug=1…"); bỏ các assert CSS thanh fixed trong ca "2.15.3 nút +…" và "2.15.0 …".
+- Chưa thử iPhone thật. Ở 320px mỗi tab ~40px (<44) chấp nhận.
+
 ## [2.38.6] - 2026-11-23
 
 ### Sửa
