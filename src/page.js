@@ -160,7 +160,7 @@ select.inp{cursor:pointer}
 .datefield__ico{width:18px;height:18px}
 .monthfield__ico{width:15px;height:15px;right:9px}
 .datefield__native,.monthfield__native{position:absolute;right:0;top:0;height:100%;opacity:0;border:0;padding:0;cursor:pointer}
-.datefield__native{width:42px}
+.datefield__native{width:100%}
 .monthfield__native{width:30px}
 /* 2.12.0: nút + thêm vào tờ ghi (cạnh Giá nhập), vùng bấm ≥ 44×44. */
 .nhap-add{width:44px;min-width:44px;min-height:44px;height:44px;padding:0}
@@ -583,12 +583,12 @@ html:not(.desktop) #brandBtn{font-size:0;flex:none;justify-content:center;width:
 .syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}
 .syncm[data-st=err] .syncm__d{background:#FF5F57}
 html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;margin:0;padding:2px 4px 3px}
-html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0;border-color:transparent;background:none;box-shadow:none}
+html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0}
+html:not(.desktop) .top .tabs .tab:not(.is-active){border-color:transparent;background:none;box-shadow:none}
 html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}
-html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px}
-html:not(.desktop) .top .tabs .tab.is-active{background:var(--brand);border-color:var(--brand)}
-html:not(.desktop) .top .tabs .tab.is-active .tab__ic{background:none;box-shadow:none;color:#fff}
-html.pt .top .tabs .tab.is-active .tab__ic{color:#0b1220}
+html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px;color:var(--text)}
+html:not(.desktop) .top .tabs .tab.is-active .tab__ic{background:none;box-shadow:none}
+html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}
 @media (min-width:641px){
 .tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;align-content:center;justify-items:center;padding:5px 4px}
 .tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
@@ -1041,7 +1041,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <div class="sug__list" id="retailList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="datefield card__bar-date">
-            <input class="inp" id="retailDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
+            <input class="inp" id="retailDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
             <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
             <input class="datefield__native" id="retailDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
           </div>
@@ -1105,7 +1105,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <div id="remedyOpen"><span id="remedyOpenName"></span><button class="btn btn--icon" type="button" id="remedyClose" data-action="close-preset" aria-label="Bỏ đơn đang mở" title="Bỏ đơn đang mở"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
           </div>
           <div class="datefield card__bar-date">
-            <input class="inp" id="remedyDate" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
+            <input class="inp" id="remedyDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
             <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
             <input class="datefield__native" id="remedyDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
           </div>
@@ -1831,6 +1831,8 @@ function userPickedDate(id, iso){
   setDateInput(id, iso);
   lastAuto[id] = (iso === todayISO()) ? iso : null;   // chọn hôm nay = vẫn theo hôm nay
 }
+/* I.3: chạm vào ô (ô ngày chữ chỉ đọc, ô lịch gốc trong suốt phủ cả ô) mở khung lịch; không có showPicker thì chạm gốc của trình duyệt tự mở. */
+function openPicker(nat){ try { if (nat.showPicker) nat.showPicker(); } catch (e) {} }
 function bindDateInput(id){
   var n = $('#' + id), nat = $('#' + id + 'Native');
   if (!n) return;
@@ -1846,7 +1848,7 @@ function bindDateInput(id){
   if (nat) {
     var syncNat = function(){ nat.value = parseDateVN(n.value) || todayISO(); };
     nat.addEventListener('focus', syncNat);
-    nat.addEventListener('click', syncNat);
+    nat.addEventListener('click', function(){ syncNat(); openPicker(nat); });
     nat.addEventListener('change', function(){ if (nat.value) { userPickedDate(id, nat.value); } });
   }
 }
@@ -1913,7 +1915,7 @@ function bindMonthInput(id, onChange){
   if (nat) {
     var syncNat = function(){ nat.value = parseMonthVN(n.value) || ''; };
     nat.addEventListener('focus', syncNat);
-    nat.addEventListener('click', syncNat);
+    nat.addEventListener('click', function(){ syncNat(); openPicker(nat); });
     nat.addEventListener('change', function(){
       if (nat.value) { setMonthInput(id, nat.value); onChange(); }
     });

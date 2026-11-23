@@ -104,7 +104,7 @@ globalThis.__test = {
   getStockWarnText: function(){ return stockWarnText; },
   todayISO: (typeof todayISO === 'function' ? todayISO : null), thisYear: (typeof thisYear === 'function' ? thisYear : null),
   getDateInput: (typeof getDateInput === 'function' ? getDateInput : null), setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
-  bindDateInput: (typeof bindDateInput === 'function' ? bindDateInput : null), userPickedDate: (typeof userPickedDate === 'function' ? userPickedDate : null),
+  bindDateInput: (typeof bindDateInput === 'function' ? bindDateInput : null), bindMonthInput: (typeof bindMonthInput === 'function' ? bindMonthInput : null), userPickedDate: (typeof userPickedDate === 'function' ? userPickedDate : null),
   refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), autoDateInput: (typeof autoDateInput === 'function' ? autoDateInput : null), 
   getLastAuto: function(id){ return lastAuto[id]; },
   setLastAuto: function(id, v){ lastAuto[id] = v; },
@@ -1796,6 +1796,29 @@ test('handler bộ chọn gốc: chọn ngày cũ bằng nat, sang ngày mới v
   FakeDate.setNow(2026, 10, 8, 12);
   client.refreshAutoDates();
   assert.equal(client.getDateInput('retailDate'), '2026-11-05');
+});
+
+test('I.3 ô ngày chỉ đọc, chạm ô (lịch gốc phủ cả ô) mở khung lịch bằng showPicker sau khi đồng bộ ngày; chọn từ lịch bật cờ tay; thiếu showPicker không lỗi', () => {
+  assert.match(PAGE, /id="retailDate" type="text" readonly/); assert.match(PAGE, /id="remedyDate" type="text" readonly/);
+  assert.ok(PAGE.includes('.datefield__native{width:100%}'), 'lịch gốc phủ cả ô');
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates(); client.bindDateInput('retailDate'); client.bindDateInput('remedyDate');
+  const nat = els['#retailDateNative']; let shown = 0, seen = '';
+  els['#retailDate'].value = '05/11/2026';
+  nat.showPicker = () => { shown++; seen = nat.value; };
+  nat.fire('click');
+  assert.equal(shown, 1, 'chạm gọi showPicker'); assert.equal(seen, '2026-11-05', 'đồng bộ ngày của ô trước khi mở');
+  nat.value = '2026-11-03'; nat.fire('change');
+  assert.equal(client.getLastAuto('retailDate'), null, 'chọn từ lịch = chọn tay');
+  FakeDate.setNow(2026, 10, 8, 12); client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-03', 'qua nửa đêm không tự về hôm nay');
+  els['#remedyDateNative'].showPicker = () => { throw new Error('NotAllowed'); };
+  els['#remedyDateNative'].fire('click');
+  assert.equal(els['#remedyDateNative'].value, '2026-11-08', 'showPicker lỗi: nuốt, vẫn đồng bộ ngày');
+  els['#expMonthNative'].showPicker = () => { shown++; };
+  client.bindMonthInput('expMonth', () => {}); els['#expMonthNative'].fire('click'); assert.equal(shown, 2, 'ô tháng cũng mở bằng showPicker');
 });
 
 test('handler bộ chọn gốc: chọn đúng hôm nay, sang ngày mới thì ô theo', () => {
@@ -8114,7 +8137,8 @@ test('H.2 thanh đầu điện thoại: nền đặc không backdrop-filter, hà
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;'), '8 tab 1 hàng');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;'), 'ô tab >=44px');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}'), 'tab chỉ icon');
-  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab.is-active{background:var(--brand);') && PAGE.includes('.tab__ic{background:none;box-shadow:none;color:#fff}'), 'tab chọn nền brand, icon trắng');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab:not(.is-active){border-color:transparent;background:none;box-shadow:none}') && PAGE.includes('html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px;color:var(--text)}'), 'tab thường phẳng, icon màu chữ như desktop');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab.is-active .tab__ic{background:none;box-shadow:none}') && PAGE.includes('html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}') && !/html:not(.desktop) .top .tabs .tab.is-active{/.test(PAGE), 'tab chọn: .pt dùng luật sel-* chung như desktop; không .pt (sáng) giữ nền --brand + icon trắng');
   assert.ok(PAGE.includes('html:not(.desktop) .stat__in,html:not(.desktop) .top .stat__sub span+span{display:none}'), 'ẩn "trong" và dòng Năm');
   assert.ok(PAGE.includes('html:not(.desktop) #brandBtn{font-size:0;') && PAGE.includes('min-height:44px}'), 'logo là nút vào Thiết bị, >=44px');
   assert.ok(PAGE.includes('<p class="stat__k">Bán <span class="stat__in">trong </span>tháng</p>'));

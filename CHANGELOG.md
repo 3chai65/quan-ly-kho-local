@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.8] - 2026-11-23
+
+### Sửa
+- Điện thoại: icon tab màu chữ (`--text`) như desktop; tab chọn ở giao diện tối (`html.pt`) dùng luật `--sel-*` chung như desktop (bỏ nền `--brand` đặc, bỏ chip); giao diện sáng (không `.pt`) giữ nền `--brand` + icon trắng. Desktop không đổi.
+- Chọn ngày bằng khung lịch: ô ngày Bán lẻ/Thuốc chén chỉ đọc (không bàn phím), ô lịch gốc trong suốt phủ cả ô, chạm bất kỳ đâu gọi `showPicker()` (nuốt lỗi); ô tháng Lịch sử bán cũng gọi `showPicker()` nhưng vẫn gõ được (để xóa lọc tháng). Chọn tay vẫn bật cờ "đã tự chọn" (luật 2.38.3).
+- Chưa thử iPhone/Tauri thật.
+
 ## [2.38.7] - 2026-11-23
 
 ### Sửa
