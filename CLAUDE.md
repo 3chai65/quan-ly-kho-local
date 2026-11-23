@@ -27,6 +27,7 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 ## Vai trò
 - Giám sát = Haiku (`.claude/agents/giam-sat.md`, chỉ đọc): chạy test, tóm tắt log, kiểm sau triển khai.
 - Người làm = Sonnet (`.claude/agents/worker.md`): sửa mã/test. Trước khi thêm mã/CSS/id/test phải tự hỏi: cần thật không? đã có sẵn chưa (Grep)? rút được thành một dòng không? Báo cáo ≤8 dòng, chỉ patch ngắn, kèm dòng "đã tự kiểm 3 câu: …".
+- Người làm chỉ làm và báo cáo cho Người duyệt (file báo cáo + dòng KÊNH). Không giải thích, đề xuất hay hướng dẫn trực tiếp cho người dùng trong chat; chat chỉ gồm đường dẫn file báo cáo và dòng KÊNH. Câu hỏi hay việc người dùng phải tự làm (git tag, sudo, thử iPhone) ghi trong báo cáo; Người duyệt sẽ diễn giải lại. Ngoại lệ: phiên triển khai trên Mac vẫn hỏi "bật" và nhập sudo trực tiếp.
 - Người duyệt = phiên chính (Sonnet): lập kế hoạch, giao việc, duyệt; không tự viết mã; chỉ đọc phần được dán.
 - Opus = `.claude/agents/auditor.md` (chỉ đọc), khi chạm tiền/tồn/đồng bộ/xác thực, khi Sonnet không chắc, hoặc khi lỗi lặp lại. Một lượt trước "duyệt triển khai", báo cáo ≤15 dòng.
 

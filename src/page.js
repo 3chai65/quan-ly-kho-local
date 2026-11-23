@@ -119,14 +119,13 @@ border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
 .stat__sub b{color:var(--text2);font-weight:700;font-variant-numeric:tabular-nums}
 .stat__sub span+span::before{content:"· "}
 /* 2.38.0: desktop — thẻ Bán/Lợi nhuận tháng nằm trong thanh bên, dưới logo, trên tab (ngoài khối desktop vì trần 20736 B) */
-html.desktop .stats{grid-area:1/1/3/2;align-self:start;grid-template-columns:minmax(0,1fr);margin:52px 10px 0;z-index:1}
+html.desktop{--sth:145px}
+html.desktop .stats{grid-area:1/1/3/2;align-self:start;grid-template-columns:minmax(0,1fr);grid-template-rows:1fr 1fr;height:var(--sth);margin:52px 10px 0;z-index:1}
 html.desktop .stats__c+.stats__c{border-left:0;border-top:1px solid var(--border2)}
 html.desktop .stat__sub span{display:block}
 html.desktop .stat__sub span+span::before{content:none}
-/* 2.38.2: desktop — danh sách tab cuộn khi thấp (không đè chân thanh bên; 301 = 203+10+80+8 chừa, Tauri 325); .note của Bán lẻ/Thuốc chén/Nhập hàng dùng cùng blur với thẻ khác */
-html.desktop .tabs{max-height:calc(100vh - 301px);overflow-y:auto;scrollbar-width:thin}
-html.desktop.tauri .tabs{max-height:calc(100vh - 325px)}
-html.desktop :is(#retailNote,#remedyPresetBox,#nhapListBox){-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+/* 2.38.3: .note trong main (Bán lẻ/Thuốc chén/Nhập hàng) cùng blur với thẻ khác; hộp thoại ngoài main không đổi. Cửa sổ thấp: khối @media (max-height:640px) đặt sau khối desktop */
+html.desktop .main .note{-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
 @media (max-width:600px){
 .stats__c{padding:6px 10px}
 .stat__sub span{display:block}
@@ -630,7 +629,7 @@ html.desktop .top .wrap{padding:0 10px}
 html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}
 html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0;padding-top:10px}
 html.desktop .main{display:contents}
-html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:203px 10px 0;align-self:start}
+html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:calc(58px + var(--sth)) 10px 0;align-self:start}
 html.desktop .tab{position:relative;display:block;min-height:30px;padding:6px 10px 6px 34px;border-radius:999px;border:1px solid;color:var(--text);font-size:12.5px;font-weight:700;line-height:16px;text-align:left}
 html.desktop .tab__ic{position:absolute;left:10px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--text);stroke-width:1.5}
 html.desktop .tab__l1::after{content:" "}
@@ -821,6 +820,16 @@ html.desktop .sbs[data-st=err]::before{background:#FF5F57}
 html.desktop .brand__yin{cursor:pointer}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+/* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
+@media (max-height:640px){
+html.desktop{--sth:76px}
+html.desktop .stats{margin-top:44px}
+html.desktop .tabs{margin-top:calc(50px + var(--sth));gap:3px;max-height:calc(100vh - 235px);overflow-y:auto;scrollbar-width:thin}
+html.desktop .stat__sub{display:none}
+html.desktop .stats__c{padding-top:2px;padding-bottom:2px}
+html.desktop .tab{min-height:26px;padding-top:4px;padding-bottom:4px}
+html.desktop .sbf{gap:4px;margin-bottom:6px}
 }
 /* 2.20.13 điện thoại (html.pt: màn cảm ứng, hoặc ?pt=1; ?pt=0 tắt): CHỈ lớp nền/thẻ dùng chung token html[data-bg] của desktop; không đổi cỡ/bố cục. 2.23.0: phẳng, không kính */
 html.pt[data-bg]{--bg:#0A1433;--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text);--sh:none;--r:20px}
@@ -1816,6 +1825,7 @@ function autoDateInput(id){
   setDateInput(id, t);
   lastAuto[id] = t;
 }
+function resetDateToday(id){ var t = todayISO(); setDateInput(id, t); lastAuto[id] = t; }   // sau khi bán đơn: bỏ ngày người dùng đã chọn, theo hôm nay
 function refreshAutoDates(){
   autoDateInput('retailDate');
   autoDateInput('remedyDate');
@@ -3222,7 +3232,7 @@ function saveRetail(){
     if (oid) { tx.oid = oid; tx.oname = oname; }
     db.transactions.push(tx);
   });
-  resetRetail();
+  resetRetail(); resetDateToday('retailDate');
   commit('Đã lưu đơn bán lẻ');
 }
 function saveRemedy(){
@@ -3286,7 +3296,7 @@ function saveRemedy(){
     tx.oid = oid; tx.oname = oname;
     db.transactions.push(tx);
   });
-  resetRemedy();
+  resetRemedy(); resetDateToday('remedyDate');
   commit('Đã bán đơn thuốc chén');
 }
 
@@ -6017,6 +6027,7 @@ function initTabs(){
     if (bx0) boxes.push(bx0);
   }
   var activate = function(id){
+    refreshAutoDates();
     for (var j = 0; j < boxes.length; j++) {
       if (boxes[j].id !== id && boxes[j].open) boxes[j].open = false;
     }

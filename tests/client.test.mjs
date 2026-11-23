@@ -1707,6 +1707,23 @@ test('ngày tự động: người dùng chọn D sau nửa đêm và D-2 trư�
   assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
 });
 
+test('ngày tự động: ngày người dùng chọn chỉ giữ tới khi bán đơn, sau đó theo hôm nay', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  client.initDates();
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  client.userPickedDate('retailDate', '2026-11-05');
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 2000 }]);
+  client.saveRetail();
+  assert.equal(client.getDb().transactions.at(-1).date, '2026-11-05');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  FakeDate.setNow(2026, 10, 8, 12);
+  client.refreshAutoDates();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
+});
+
 test('ngày tự động: ô đang focus không bị đổi', () => {
   const FakeDate = fakeClock(2026, 10, 7, 12);
   const { doc, els } = dateDoc();
@@ -1822,6 +1839,20 @@ test('ô đang mở bộ chọn gốc (Native) không bị đổi', () => {
   client.refreshAutoDates();
   assert.equal(client.getDateInput('retailDate'), '2026-11-07');
   assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+});
+
+test('2.38.3 mở tab (activate) gọi refreshAutoDates: sang ngày mới, bấm tab thì ô ngày tờ = ngày mới', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { els } = dateDoc();
+  const env = makeTabEnv(null);
+  env.doc.querySelector = s => (s === '#tabs' ? env.nav : els[s] || null);
+  const client = loadClient({ document: env.doc, localStorage: env.LS, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
+  client.initDates();
+  client.initTabs();
+  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  FakeDate.setNow(2026, 10, 8, 12);
+  env.clickTab('retailBox');
+  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
 });
 
 test('giá nhập gần nhất: hai lần nhập 120 và 135 hiện (135)', () => {
@@ -6310,7 +6341,9 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
   assert.ok(block.includes('box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'), 'lề: trên 10, ngang/dưới 16 (2.31.0)');
   assert.ok(block.includes('html.desktop #tb{height:24px}') && block.includes('html.desktop #tb button{width:36px}'));
-  assert.ok(block.includes('margin:203px 10px 0') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
+  assert.ok(block.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:145px}') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
+  const low = PAGE.slice(PAGE.indexOf('@media (max-height:640px){'));
+  assert.ok(low.slice(0, low.indexOf('\n}\n')).includes('--sth:76px') && low.includes('html.desktop .stat__sub{display:none}'), '2.38.3: cửa sổ thấp thu thẻ thống kê');
 });
 
 test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn), ô năm kính, cột Nhập đổi màu bằng biến CSS', () => {
@@ -7673,7 +7706,7 @@ test('2.30.5 desktop chỉ hai tông chữ (--text, --muted) + đỏ: không xan
 /* ===== 2.31.0 thu gọn khung desktop theo app Mac ===== */
 test('2.31.0 thanh bên 160: nút tab cao tối thiểu 30 (nhãn dài xuống 2 dòng, không cắt …), chữ 12,5 đậm, icon 18 cách chữ 6, đệm ngang 10; bỏ hàng Nền, nút bảng màu cùng dòng đồng bộ', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop{--sw:160px;') && b.includes('margin:203px 10px 0'), 'thanh bên rộng 160, đệm trong 10');
+  assert.ok(b.includes('html.desktop{--sw:160px;') && b.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:145px}'), 'thanh bên rộng 160, đệm trong 10');
   const tab = /html\.desktop \.tab\{([^}]*)\}/.exec(b)[1];
   assert.ok(tab.includes('min-height:30px') && tab.includes('padding:6px 10px 6px 34px') && tab.includes('font-size:12.5px;font-weight:700') && tab.includes('display:block') && !/white-space:nowrap|text-overflow|overflow:hidden|height:\d+px;min-height/.test(tab), 'không height cố định, không nowrap/ellipsis (34 = đệm 10 + icon 18 + cách 6)');
   assert.ok(b.includes('html.desktop .tab__ic{position:absolute;left:10px;') && b.includes('width:18px;height:18px'));

@@ -20,6 +20,7 @@
 - Kính: từ 2.23.0 mặc định giao diện phẳng mờ, công tắc "Hiệu ứng kính" tắt; `?glass=0` tắt hết. Giữ 4 `backdrop-filter` có chủ ý (FPS iPhone 14 Pro không khác biệt đáng kể).
 - Khi lưu bị server từ chối (400/428), client hiện "Chưa lưu được: <lý do>" một lần và giữ nguyên tờ đơn.
 - Ô nhập nằm trong `.note__foot` (fixed): không được ẩn thanh khi chính ô đó đang focus (2.38.1).
+- App Mac/Tauri mở liên tục nhiều ngày: mọi giá trị "hôm nay" phải tính lại khi mở tab/focus, không chỉ lúc tải trang (2.38.3).
 - Gợi ý đơn vị: "l" = lạng (chỉ trong gợi ý). Luật tìm kiếm trọn chữ dùng chung cho gợi ý tên, Kho tồn và Lịch sử.
 
 ## Tauri / PWA

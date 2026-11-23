@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.3] - 2026-11-23
+
+### Sửa
+- Desktop: thẻ thống kê trong thanh bên cao cố định (`--sth`); cửa sổ thấp (<= 640px) thu gọn để đủ 8 tab + chân không cuộn (cuộn chỉ khi < 480px).
+- Desktop: `.note` trong main (cả Thuốc chén trái) cùng `backdrop-filter`, thay danh sách 3 id của 2.38.2 (thiếu `#remedyNote`).
+- Ngày mặc định/đặt lại về hôm nay (autoDate/resetDateToday). Chưa thử Tauri/Mac thật.
+
 ## [2.38.2] - 2026-11-23
 
 ### Sửa
