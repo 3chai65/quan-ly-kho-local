@@ -580,7 +580,7 @@ html:not(.desktop) .top .stats{display:contents}
 html:not(.desktop) .top .stats__c{flex:1 1 0;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--surface2)}
 html:not(.desktop) .top .stat__v{font-size:15px;white-space:nowrap;overflow-wrap:normal}
 html:not(.desktop) .top .stat__sub{white-space:nowrap}
-html:not(.desktop) .stat__in,html:not(.desktop) .top .stat__sub span+span{display:none}
+html:not(.desktop) .top .stat__sub span+span{display:none}
 html:not(.desktop) #brandBtn{font-size:0;flex:none;justify-content:center;width:44px;min-height:44px}
 .syncm{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:48px;min-height:44px;padding:0;border:0;background:none;color:var(--text2);font:inherit;font-size:11px;font-variant-numeric:tabular-nums}
 .syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}
@@ -1011,7 +1011,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
 
   <section class="stats" aria-label="Bán và lợi nhuận tháng">
     <div class="stats__c">
-      <p class="stat__k">Bán <span class="stat__in">trong </span>tháng</p>
+      <p class="stat__k">Bán trong tháng</p>
       <p class="stat__v" id="statExport">0</p>
       <p class="stat__sub"><span>Hôm nay <b id="statExportDay">0</b></span><span>Năm <b id="statExportYear">0</b></span></p>
     </div>

@@ -8140,9 +8140,9 @@ test('H.2 thanh đầu điện thoại: nền đặc không backdrop-filter, hà
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}'), 'tab chỉ icon');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab:not(.is-active){border-color:transparent;background:none;box-shadow:none}') && PAGE.includes('html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px;color:var(--text)}'), 'tab thường phẳng, icon màu chữ như desktop');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab.is-active .tab__ic{background:none;box-shadow:none}') && PAGE.includes('html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}') && !/html:not(.desktop) .top .tabs .tab.is-active{/.test(PAGE), 'tab chọn: .pt dùng luật sel-* chung như desktop; không .pt (sáng) giữ nền --brand + icon trắng');
-  assert.ok(PAGE.includes('html:not(.desktop) .stat__in,html:not(.desktop) .top .stat__sub span+span{display:none}'), 'ẩn "trong" và dòng Năm');
+  assert.ok(PAGE.includes('html:not(.desktop) .top .stat__sub span+span{display:none}') && !PAGE.includes('stat__in'), 'ẩn dòng Năm; nhãn "Bán trong tháng" không bị ẩn chữ nào');
   assert.ok(PAGE.includes('html:not(.desktop) #brandBtn{font-size:0;') && PAGE.includes('min-height:44px}'), 'logo là nút vào Thiết bị, >=44px');
-  assert.ok(PAGE.includes('<p class="stat__k">Bán <span class="stat__in">trong </span>tháng</p>'));
+  assert.ok(PAGE.includes('<p class="stat__k">Bán trong tháng</p>'));
   assert.ok(!/html.desktop[^{]*.(stat__in|syncm|top__r)/.test(PAGE), 'không đụng CSS desktop');
 });
 
