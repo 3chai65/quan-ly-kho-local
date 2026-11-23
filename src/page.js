@@ -123,6 +123,10 @@ html.desktop .stats{grid-area:1/1/3/2;align-self:start;grid-template-columns:min
 html.desktop .stats__c+.stats__c{border-left:0;border-top:1px solid var(--border2)}
 html.desktop .stat__sub span{display:block}
 html.desktop .stat__sub span+span::before{content:none}
+/* 2.38.2: desktop — danh sách tab cuộn khi thấp (không đè chân thanh bên; 301 = 203+10+80+8 chừa, Tauri 325); .note của Bán lẻ/Thuốc chén/Nhập hàng dùng cùng blur với thẻ khác */
+html.desktop .tabs{max-height:calc(100vh - 301px);overflow-y:auto;scrollbar-width:thin}
+html.desktop.tauri .tabs{max-height:calc(100vh - 325px)}
+html.desktop :is(#retailNote,#remedyPresetBox,#nhapListBox){-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
 @media (max-width:600px){
 .stats__c{padding:6px 10px}
 .stat__sub span{display:block}

@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.2] - 2026-11-23
+
+### Sửa
+- Desktop: danh sách tab cuộn khi cửa sổ thấp, chân thanh bên không bị đè (thanh cuộn mảnh, chừa 8px).
+- Desktop: Bán lẻ/Thuốc chén/Nhập hàng dùng cùng `backdrop-filter` với Kho tồn khi bật kính (desktop thêm 3 phần tử `backdrop-filter`, chỉ `html.desktop`; điện thoại vẫn 4 như đã chốt 16/11). Chưa thử Tauri thật.
+
 ## [2.38.1] - 2026-11-23
 
 ### Sửa
