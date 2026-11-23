@@ -8,7 +8,7 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 ## [2.38.1] - 2026-11-23
 
 ### Sửa
-- Điện thoại: ô nhập nằm trong chính thanh chân tờ ghi (Thang, Đơn giá) không còn làm `footBarShow` ẩn thanh (iOS đóng bàn phím khi thanh biến mất). Chưa thử iPhone thật.
+- Điện thoại: ô nhập nằm trong chính thanh chân tờ ghi (Thang, Đơn giá) không còn làm `footBarShow` ẩn thanh (iOS đóng bàn phím khi thanh biến mất). Đã thử iPhone thật 23/11.
 
 ## [2.38.0] - 2026-11-21
 
