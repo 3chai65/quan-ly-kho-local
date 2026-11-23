@@ -6341,7 +6341,7 @@ test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll t
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
   assert.ok(block.includes('box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'), 'lề: trên 10, ngang/dưới 16 (2.31.0)');
   assert.ok(block.includes('html.desktop #tb{height:24px}') && block.includes('html.desktop #tb button{width:36px}'));
-  assert.ok(block.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:184px}') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
+  assert.ok(block.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:216px}') && block.includes('grid-area:1/1/3/2') && block.includes('padding-top:10px}'));
   const low = PAGE.slice(PAGE.indexOf('@media (max-height:640px){'));
   assert.ok(low.slice(0, low.indexOf('\n}\n')).includes('--sth:76px') && low.includes('html.desktop .stat__sub{display:none}'), '2.38.3: cửa sổ thấp thu thẻ thống kê');
 });
@@ -7739,7 +7739,7 @@ test('2.30.5 desktop chỉ hai tông chữ (--text, --muted) + đỏ: không xan
 /* ===== 2.31.0 thu gọn khung desktop theo app Mac ===== */
 test('2.31.0 thanh bên 180: nút tab cao tối thiểu 30 (nhãn dài xuống 2 dòng, không cắt …), chữ 12,5 đậm, icon 18 cách chữ 6, đệm ngang 10; bỏ hàng Nền, nút bảng màu cùng dòng đồng bộ', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop{--sw:180px;') && b.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:184px}'), 'thanh bên rộng 180, đệm trong 10');
+  assert.ok(b.includes('html.desktop{--sw:180px;') && b.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:216px}'), 'thanh bên rộng 180, đệm trong 10');
   const tab = /html\.desktop \.tab\{([^}]*)\}/.exec(b)[1];
   assert.ok(tab.includes('min-height:30px') && tab.includes('padding:6px 10px 6px 34px') && tab.includes('font-size:12.5px;font-weight:700') && tab.includes('display:block') && !/white-space:nowrap|text-overflow|overflow:hidden|height:\d+px;min-height/.test(tab), 'không height cố định, không nowrap/ellipsis (34 = đệm 10 + icon 18 + cách 6)');
   assert.ok(b.includes('html.desktop .tab__ic{position:absolute;left:10px;') && b.includes('width:18px;height:18px'));
@@ -8139,4 +8139,13 @@ test('2.37.2 xung đột: chọn OK nhưng GET lỗi mạng thì dirty còn và 
   timers.filter(t => t.ms === 4000).forEach(t => t.fn()); /* gồm timer thử lại; huy hiệu dirty không gửi gì */
   for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
   assert.equal(puts, 2, 'timer thử lại đã gửi lại PUT');
+});
+
+test('2.38.6 thẻ Bán/Lợi nhuận tháng desktop: nhãn 12, số 22, phụ 13, --sth 216, chỉ khi cao >640, tiền tố .stats; chế độ gọn giữ nguyên', () => {
+  const i = PAGE.indexOf('@media (min-height:641px){\nhtml.desktop .stats .stats__c');
+  assert.ok(i > 0);
+  const m = PAGE.slice(i, PAGE.indexOf('\n}\n', i));
+  assert.ok(m.includes('html.desktop .stats .stat__k{font-size:12px;') && m.includes('html.desktop .stats .stat__v{font-size:22px;') && m.includes('html.desktop .stats .stat__sub{font-size:13px;'));
+  assert.ok(!/html\.desktop \.stat__[kv]\{/.test(m), 'mọi rule có tiền tố .stats');
+  assert.ok(PAGE.includes('html.desktop{--sth:216px}') && PAGE.includes('html.desktop{--sth:76px}'));
 });

@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.6] - 2026-11-23
+
+### Sửa
+- Desktop: thẻ Bán/Lợi nhuận tháng chữ lớn, thoáng hơn (nhãn 12px, số 22px, dòng phụ 13px, `--sth` 184→216). Nhãn 12px (không 13px) vì ô chỉ rộng ~138px, "BÁN TRONG THÁNG" 13px sát tràn. Chế độ gọn (`max-height:640px`) giữ nguyên.
+- Điện thoại không đổi. Chưa thử Tauri thật.
+
 ## [2.38.5] - 2026-11-23
 
 ### Sửa
