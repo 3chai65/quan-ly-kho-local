@@ -5716,7 +5716,7 @@ function bindEvents(){
 /* ================= THANH CHÂN TỜ GHI (điện thoại) ================= */
 /* Quyết định hiện thanh: chỉ điện thoại, thẻ đang mở, tờ ghi còn trong vùng nhìn (không cuộn đi hẳn), không đang gõ ô nhập/chọn và bàn phím không hiện. */
 function footBarShow(o){
-  return !!(o && o.mobile && o.open && !o.editing && !o.keyboard && o.height > 0 && o.top < o.vh - 60 && o.bottom > 100);
+  return !!(o && o.mobile && o.open && (o.inFoot || (!o.editing && !o.keyboard && o.height > 0 && o.top < o.vh - 60 && o.bottom > 100)));
 }
 var footBarSched = false;
 function updateFootBars(){
@@ -5735,7 +5735,7 @@ function updateFootBars(){
     if (!fixedOn) { box.classList.remove('foot-off'); return; }
     var r = note.getBoundingClientRect ? note.getBoundingClientRect() : { height: 0, top: 0, bottom: 0 };
     var editing = !!(ae && box.contains(ae) && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA'));
-    var show = footBarShow({ mobile: mobile, open: open, editing: editing, keyboard: keyboard, height: r.height, top: r.top, bottom: r.bottom, vh: vh });
+    var show = footBarShow({ mobile: mobile, open: open, editing: editing, keyboard: keyboard, inFoot: !!(ae && ae.closest && ae.closest('.note__foot') && note.contains(ae)), height: r.height, top: r.top, bottom: r.bottom, vh: vh });
     box.classList.toggle('foot-off', !show);
     var foot = note.querySelector ? note.querySelector('.note__foot') : null;
     if (show && foot && foot.offsetHeight) box.style.setProperty('--foot-h', foot.offsetHeight + 'px');

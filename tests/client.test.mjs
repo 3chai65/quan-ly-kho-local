@@ -5040,6 +5040,8 @@ test('2.15.3 footBarShow: chỉ hiện khi điện thoại, thẻ mở, tờ ghi
   assert.equal(app.footBarShow({ ...base, keyboard: true }), false, 'bàn phím hiện thì ẩn');
   assert.equal(app.footBarShow({ ...base, height: 0 }), false);
   assert.equal(app.footBarShow(null), false);
+  assert.equal(app.footBarShow({ ...base, editing: true, keyboard: true, inFoot: true }), true, 'ô nhập nằm trong chính thanh chân (Thang/Đơn giá) thì không ẩn, kẻo iOS đóng bàn phím');
+  assert.equal(app.footBarShow({ ...base, mobile: false, inFoot: true }), false);
 });
 
 test('2.15.3 sau "+" focus quay về ô tìm (Thuốc chén và Bán lẻ); lỗi (thiếu số) thì ở ô số', () => {
