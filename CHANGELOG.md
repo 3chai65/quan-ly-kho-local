@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.10] - 2026-11-23
+
+### Sửa
+- Điện thoại: nút "Đọc hết" (Lịch sử bán/nhập) chuyển xuống cuối dòng thông tin, canh phải, chữ nhỏ dạng liên kết, vùng chạm 44px; không còn chen vào hàng tiêu đề (ô mm/yyyy không bị đẩy xuống). Chỉ `html:not(.desktop)`, desktop không đổi. Chưa thử iPhone thật.
+
 ## [2.38.9] - 2026-11-23
 
 ### Thêm

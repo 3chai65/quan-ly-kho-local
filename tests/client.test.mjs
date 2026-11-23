@@ -8303,3 +8303,13 @@ test('pushState gọi refreshUnread sau PUT thành công; lỗi của nó không
   r = await run({ status: 409, json: async () => ({ success: false, conflict: true, updatedAt: 50 }) });
   assert.ok(!r.calls.includes('GET /api/unread'), 'PUT 409 không gọi chưa đọc');
 });
+
+test('2.38.10 "Đọc hết" điện thoại: sau dòng thông tin, canh phải, chạm >=44px, chỉ html:not(.desktop) trong khối <=600px; không đổi hàng tiêu đề', () => {
+  const rule = 'html:not(.desktop) .card__bar>.btn[data-action=unread-all]{order:5;margin-left:auto;min-height:44px;';
+  const i = PAGE.indexOf(rule); assert.ok(i > 0, 'có luật điện thoại');
+  const open = PAGE.lastIndexOf('@media', i), close = PAGE.indexOf('\n}\n', i);
+  assert.match(PAGE.slice(open, open + 30), /@media \(max-width:600px\)/, 'nằm trong khối điện thoại');
+  const ord = +/\.card__bar-count\{order:(\d+);margin-left:0\}/.exec(PAGE.slice(open, close))[1];
+  assert.ok(5 > ord, 'nút order sau .card__bar-count');
+  assert.ok(!/html\.desktop[^{]*unread-all/.test(PAGE), 'không đụng desktop');
+});
