@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.4] - 2026-11-23
+
+### Thêm
+- Nút HD/FHD (1280x720 / 1920x1080, `LogicalSize`, kẹp 16:9 theo màn hình) ở chân thanh bên, chỉ trong Tauri. Cửa sổ khóa kéo cạnh: bỏ phóng to, mở khóa, đặt cỡ, luôn khóa lại; mọi lỗi (thiếu quyền, API không có) bị nuốt êm.
+- Chưa thử Tauri thật.
+
 ## [2.38.3] - 2026-11-23
 
 ### Sửa

@@ -6223,7 +6223,7 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
 
 test('2.34.0 Thống kê desktop: bỏ hẳn 4 ô số (không data-s4/thk__n/.stats4), tồn kho nằm ở chip; renderStats vẫn khớp số điện thoại', () => {
   assert.ok(!PAGE.includes('stats4') && !/\.s4\b|class="s4/.test(PAGE), 'đã xóa .stats4/.s4');
-  assert.ok(PAGE.includes('.thk{display:none}') && !PAGE.includes('szpick'));
+  assert.ok(PAGE.includes('.thk{display:none}'));
   assert.ok(!/data-s4|tkExp|tkProfit|tkImp|tkStock|thk__n|thk__g/.test(PAGE), 'không còn ô số / khóa tk*');
   const FakeDate = fakeClock(2026, 10, 7, 12);
   const { doc, els } = dateDoc();
@@ -6390,13 +6390,33 @@ test('2.20.2 khung phủ kín viewport: thẻ lấp đầy chiều cao (cả 3 d
   assert.ok(PAGE.includes("['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); });"));
 });
 
-test('2.31.0 không còn HD/FHD: không viên cỡ cửa sổ, không mã đổi cỡ, không dựng gì dưới logo (Tauri hay không)', () => {
-  for (const tauri of [true, false]) {
-    const r = runHead({ iw: 920, ih: 578, tauri });
-    assert.equal(r.bar.children.length, 1, 'chỉ còn khối logo, không viên cỡ (tauri=' + tauri + ')');
-  }
-  assert.ok(!/szpick|'HD'|'FHD'|Cỡ cửa sổ|setSize|unmaximize|PhysicalSize/.test(PAGE), 'không còn mã/markup/CSS HD-FHD trong trang');
-  assert.ok(!/HD 1280|1920/.test(fs.existsSync('G:/quan-ly-kho-tauri/src-tauri/src/main.rs') ? fs.readFileSync('G:/quan-ly-kho-tauri/src-tauri/src/main.rs', 'utf8') : ''), 'app Tauri không còn khóa 16:9/HD/FHD (bỏ qua nếu không có repo app)');
+test('2.38.4 viên HD/FHD chân thanh bên: chỉ dựng khi có __TAURI__; bấm unmaximize rồi setSize LogicalSize 1280x720/1920x1080, kẹp 16:9 theo screen.avail*', async () => {
+  const find = r => r.body.children[0].children.find(c => c.className === 'szpick');
+  const g = find(runHead({}));
+  assert.deepEqual(g.children.map(b => b.textContent), ['HD', 'FHD']);
+  assert.equal(find(runHead({ tauri: false })), undefined, 'ngoài Tauri: không dựng');
+  const calls = [];
+  class LS { constructor(w, h) { this.w = w; this.h = h; } }
+  const mk = () => ({ window: { LogicalSize: LS, getCurrentWindow: () => ({ unmaximize: async () => { calls.push('un'); }, setResizable: async v => { calls.push('rs' + v); }, setSize: async s => { calls.push(['set', s.w, s.h]); } }) } });
+  let r = runHead({ sw: 3840, sh: 2160 }); r.ctx.window.__TAURI__ = mk();
+  find(r).children[1].onclick(); await new Promise(x => setTimeout(x, 5));
+  find(r).children[0].onclick(); await new Promise(x => setTimeout(x, 5));
+  assert.deepEqual(calls, ['un', 'rstrue', ['set', 1920, 1080], 'rsfalse', 'un', 'rstrue', ['set', 1280, 720], 'rsfalse']);
+  calls.length = 0;
+  r = runHead({ sw: 1600, sh: 860 }); r.ctx.window.__TAURI__ = mk();
+  find(r).children[1].onclick(); await new Promise(x => setTimeout(x, 5));
+  assert.deepEqual(calls, ['un', 'rstrue', ['set', 1529, 860], 'rsfalse'], 'FHD lớn hơn màn hình: kẹp 16:9');
+  calls.length = 0;
+  r = runHead({ sw: 0, sh: 0 }); r.ctx.window.__TAURI__ = mk();
+  find(r).children[1].onclick(); await new Promise(x => setTimeout(x, 5));
+  assert.deepEqual(calls, ['un', 'rstrue', ['set', 1920, 1080], 'rsfalse'], 'avail = 0: bỏ kẹp');
+  calls.length = 0;
+  r = runHead({ sw: 3840, sh: 2160 }); r.ctx.window.__TAURI__ = mk();
+  r.ctx.window.__TAURI__.window.getCurrentWindow = () => ({ unmaximize: async () => {}, setResizable: async v => { calls.push('rs' + v); }, setSize: async () => { throw new Error('x'); } });
+  assert.doesNotThrow(() => find(r).children[0].onclick()); await new Promise(x => setTimeout(x, 5));
+  assert.deepEqual(calls, ['rstrue', 'rsfalse'], 'setSize ném lỗi: nuốt êm, vẫn khóa lại');
+  const cap = 'G:/quan-ly-kho-tauri/src-tauri/capabilities/remote.json';
+  if (fs.existsSync(cap)) { const j = fs.readFileSync(cap, 'utf8'); assert.ok(j.includes('core:window:allow-set-size') && j.includes('core:window:allow-unmaximize') && j.includes('core:window:allow-set-resizable')); }
 });
 
 test('2.20.0 titlebar.js (app Tauri) luôn chèn trong Tauri, không cần html.desktop; có 2 nút (bỏ qua nếu không có repo app)', t => {
@@ -7101,7 +7121,7 @@ test('2.28.0 thanh bên: chân chỉ còn Nền + dòng đồng bộ + công t�
   const mk = () => ({ children: [], style: {}, setAttribute(k, v) { this[k] = v; }, getAttribute(k) { return this[k]; }, appendChild(c) { this.children.push(c); return c; } });
   const els = { brandBtn: mk(), brandLogo: mk() };
   const out = runHead({ tauri: true, els }), box = out.body.children[0];
-  assert.deepEqual(box.children.map(x => x.className), ['sbr', 'glsw'], 'chân: hàng (đồng bộ + nút bảng màu), công tắc kính');
+  assert.deepEqual(box.children.map(x => x.className), ['sbr', 'glsw', 'szpick'], 'chân: hàng (đồng bộ + nút bảng màu), công tắc kính, 2.38.4 viên HD/FHD (Tauri)');
   assert.deepEqual(box.children[0].children.map(x => x.className), ['sbs', 'sbp', 'bgdots'], '2.31.0: dòng đồng bộ, nút bảng màu ở phải, bảng 7 chấm');
   assert.ok(box.children[0].children.some(x => x.id === 'syncLine'));
   assert.ok(!box.children.some(x => x.className === 'bgdots'), '2.31.0: không còn hàng 7 chấm/chữ Nền ở chân');

@@ -814,6 +814,8 @@ html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:colum
 html.desktop .sbr{position:relative;display:flex;align-items:center;gap:6px}
 html.desktop .sbp{width:28px;height:28px;padding:3px;border:0;background:none;color:var(--text);cursor:pointer}
 html.desktop .sbp .ico{width:22px;height:22px}
+html.desktop .szpick{display:flex;gap:6px}
+html.desktop .szpick button{flex:1;min-height:26px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.10);color:var(--text);font:600 12px/1 inherit;cursor:pointer}
 html.desktop .sbs{flex:1;min-width:0;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
 html.desktop .sbs[data-st=err]::before{background:#FF5F57}
@@ -825,7 +827,7 @@ html.desktop .brand__yin{cursor:pointer}
 @media (max-height:640px){
 html.desktop{--sth:76px}
 html.desktop .stats{margin-top:44px}
-html.desktop .tabs{margin-top:calc(50px + var(--sth));gap:3px;max-height:calc(100vh - 235px);overflow-y:auto;scrollbar-width:thin}
+html.desktop .tabs{margin-top:calc(50px + var(--sth));gap:3px;max-height:calc(100vh - 265px);overflow-y:auto;scrollbar-width:thin}
 html.desktop .stat__sub{display:none}
 html.desktop .stats__c{padding-top:2px;padding-bottom:2px}
 html.desktop .tab{min-height:26px;padding-top:4px;padding-bottom:4px}
@@ -876,7 +878,20 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       var sr = document.createElement('div'), pb = document.createElement('button'); sr.className = 'sbr'; pb.type = 'button'; pb.className = 'sbp'; pb.title = 'Màu nền'; pb.setAttribute('aria-label', 'Màu nền'); pb.setAttribute('aria-expanded', 'false'); pb.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg>';
       pb.onclick = function(e){ e.stopPropagation(); pb.setAttribute('aria-expanded', w.classList.toggle('is-open') ? 'true' : 'false'); };
       document.addEventListener('click', function(){ w.classList.remove('is-open'); pb.setAttribute('aria-expanded', 'false'); });
-      [sy, pb, w].forEach(function(n){ sr.appendChild(n); }); [sr, gl].forEach(function(n){ sbf.appendChild(n); }); document.body.appendChild(sbf);
+      [sy, pb, w].forEach(function(n){ sr.appendChild(n); }); [sr, gl].forEach(function(n){ sbf.appendChild(n); });
+      /* 2.38.4: viên HD/FHD chân thanh bên (như 2.20.1, bỏ ở 2.31.0); cỡ LOGIC gồm thanh tiêu đề, kẹp 16:9 theo screen.avail* (CSS px, không nhân dpr); chỉ có trong Tauri */
+      if (window.__TAURI__) { var sz = document.createElement('div'); sz.className = 'szpick'; sz.setAttribute('role', 'group'); sz.setAttribute('aria-label', 'Cỡ cửa sổ');
+        [['HD', 1280, 720], ['FHD', 1920, 1080]].forEach(function(p){
+          var b = document.createElement('button'); b.type = 'button'; b.textContent = p[0]; b.title = p[0] + ' ' + p[1] + '×' + p[2];
+          b.onclick = function(){ var T = window.__TAURI__, W = T && T.window; if (!W) return; var cw = p[1], ch = p[2], aw = screen.availWidth, ah = screen.availHeight;
+            if (aw > 0 && ah > 0 && (cw > aw || ch > ah)) { ch = Math.min(ah, Math.floor(aw * 9 / 16)); cw = Math.round(ch * 16 / 9); }
+            var win; /* cửa sổ khóa kéo cạnh (resizable:false): mở khóa, đặt cỡ, luôn khóa lại; mọi lỗi nuốt êm */
+            Promise.resolve().then(function(){ win = W.getCurrentWindow(); return win.unmaximize(); }).then(function(){ return win.setResizable(true); })
+              .then(function(){ return win.setSize(new (W.LogicalSize || (T.dpi && T.dpi.LogicalSize))(cw, ch)); }).catch(function(){})
+              .then(function(){ return win.setResizable(false); }).catch(function(){}); };
+          sz.appendChild(b); });
+        sbf.appendChild(sz); }
+      document.body.appendChild(sbf);
       ['brandBtn', 'brandLogo'].forEach(function(i){ var n = document.getElementById(i); if (n) n.setAttribute('data-action', 'reload-app'), n.title = 'Tải lại'; });
       /* 2.28.0: tab Sao lưu khôi phục: viên Sao lưu | Thiết bị (bakView) + thẻ Thiết bị (chỉ dẫn tới trang /auth/devices, không viết lại giao diện) */
       var kb = document.getElementById('backupBox'), kbar = kb && kb.querySelector('.card__bar'), kbody = kb && kb.querySelector('.card__body');
