@@ -119,13 +119,13 @@ border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
 .stat__sub b{color:var(--text2);font-weight:700;font-variant-numeric:tabular-nums}
 .stat__sub span+span::before{content:"· "}
 /* 2.38.0: desktop — thẻ Bán/Lợi nhuận tháng nằm trong thanh bên, dưới logo, trên tab (ngoài khối desktop vì trần 20736 B) */
-html.desktop{--sth:145px}
+html.desktop{--sth:184px}
+html.desktop .stats__c{padding:12px 14px}
+html.desktop .stat__sub{margin-top:3px}
 html.desktop .stats{grid-area:1/1/3/2;align-self:start;grid-template-columns:minmax(0,1fr);grid-template-rows:1fr 1fr;height:var(--sth);margin:52px 10px 0;z-index:1}
 html.desktop .stats__c+.stats__c{border-left:0;border-top:1px solid var(--border2)}
 html.desktop .stat__sub span{display:block}
 html.desktop .stat__sub span+span::before{content:none}
-/* 2.38.3: .note trong main (Bán lẻ/Thuốc chén/Nhập hàng) cùng blur với thẻ khác; hộp thoại ngoài main không đổi. Cửa sổ thấp: khối @media (max-height:640px) đặt sau khối desktop */
-html.desktop .main .note{-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
 @media (max-width:600px){
 .stats__c{padding:6px 10px}
 .stat__sub span{display:block}
@@ -620,7 +620,7 @@ html.glass{--glass:rgba(246,242,239,.90);--glass-bar:rgba(246,242,239,.95);--gla
 @media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
 /* 2.23.0 chế độ desktop */
 html.desktop,html.desktop body{background:transparent}
-html.desktop{--sw:160px;--g:16px;overflow:hidden}
+html.desktop{--sw:180px;--g:16px;overflow:hidden}
 html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--g);width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}
 html.desktop.tauri body{padding-top:34px}
 html.desktop body::after{content:"";grid-area:1/1/3/2;border:1px solid rgba(255,255,255,.10);border-radius:24px;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);z-index:-1}
@@ -639,12 +639,11 @@ html.desktop #tb{height:24px}
 html.desktop #tb span{line-height:24px}
 html.desktop #tb button{width:36px}
 html.desktop .main details.card{grid-area:1/2/3/3;min-height:0;min-width:0;margin:0;overflow:hidden}
-html.desktop .main details:is(#retailBox,#remedyBox,#nhapBox,#backupBox){border-color:transparent;background:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.desktop .main details#backupBox{border-color:transparent;background:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop .card:not(.dlg__card){border-radius:20px;border:1px solid rgba(255,255,255,.10);background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--k3d)}
 html.desktop .card__body{padding:0}
 html.desktop .dlg__card .card__body{padding:0 16px 16px}
 html.desktop .card__bar{position:static;background:none;padding:12px 16px;border-bottom:0}
-html.desktop :is(#retailBox,#remedyBox,#nhapBox) .card__bar{padding:0 0 12px}
 html.desktop .card__bar .inp{height:32px;min-height:32px;padding-top:3px;padding-bottom:3px}
 html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}
 html:is(.desktop,.pt) :is(.tab,.card__bar .inp,.note .inp),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:var(--k3d);transition:background-color .12s,border-color .12s}
@@ -688,6 +687,8 @@ html:is(.desktop,.pt) .dlg__card{background:var(--bt);border:1px solid rgba(255,
 html:is(.desktop,.pt) .card table:not(.ord){background:none}
 html.desktop .note{margin:0;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:var(--glass)}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
+html.desktop :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.desktop #remedyBox #remedyPresetBox{border-left:1px solid rgba(255,255,255,.10)}
 html.desktop .note__head{height:32px;align-items:center;padding:0 14px;background:none;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid var(--border)}
 html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid var(--border)}
 html.desktop .note tfoot td{border-top:1px solid var(--border);border-bottom:0}

@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.5] - 2026-11-23
+
+### Sửa
+- Desktop: Bán lẻ/Thuốc chén/Nhập hàng cùng cấu trúc Kho tồn (card là khung, tiêu đề nằm trong khung, `.note` phẳng; Thuốc chén 1 khung có vạch ngăn).
+- Thanh bên `--sw` 160→180 để "Sao lưu khôi phục" vừa 1 dòng; thẻ thống kê `--sth` 145→184 thoáng hơn (chế độ gọn giữ nguyên).
+- Điện thoại không đổi (so 320/375px: 30 phần tử × 17 thuộc tính, 0 lệch). Chưa thử Tauri thật.
+
 ## [2.38.4] - 2026-11-23
 
 ### Thêm
