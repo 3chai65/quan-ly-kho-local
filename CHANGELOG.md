@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.13] - 2026-11-24
+
+### Sửa
+- Điện thoại: chuẩn cao 44 của 2.38.12 đo trên Chrome, iPhone thật vẽ "Đơn mới" ~39 → đặt cứng `--ctl-h:40px` (đệm dọc 7) cho CẢ "Đơn mới", mọi ô nhập/ngày/tháng và mọi nút trong tờ ghi (đo 375/390: 24 ô/nút đều cao 40). Nút có viền mỏng cùng kiểu ô (`var(--border)`), nền trong suốt, chữ + icon `--text`; Xóa đơn chữ đỏ. Chữ ô nhập giữ 16px. Desktop không đổi. Chưa thử iPhone thật.
+
 ## [2.38.12] - 2026-11-24
 
 ### Sửa

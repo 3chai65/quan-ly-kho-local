@@ -3369,7 +3369,7 @@ test('2.12.1 căn nút + điện thoại: table.ord đặt nút ở 2/4, align-s
   const ro = at('table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}');
   assert.ok(base < ro, 'quy tắc nút phải sau quy tắc gốc');
   assert.equal(PAGE.lastIndexOf('@media', ro), PAGE.lastIndexOf('@media (max-width:600px)', ro), 'table.ord phải trong @media (max-width:600px)');
-  assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(5\) \.btn\{width:44px;min-width:44px;height:44px;min-height:44px/, 'nút phải vuông 44px');
+  assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(5\) \.btn\{width:44px;min-width:44px;height:var\(--ctl-h,44px\);min-height:var\(--ctl-h,44px\)/, 'nút + cao theo --ctl-h');
   assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(2\)\{grid-area:1\/2\/2\/5;/, 'tên hàng 1 phải rộng hết hàng (1/2/2/5)');
 });
 
@@ -4644,7 +4644,7 @@ test('2.14.0 M7 Thuốc chén điện thoại: gram chiếm 2/2–3/4, nút + �
   const gen = css.indexOf('table.ord tr.is-row>td:nth-child(4){grid-area:2/3}');
   const g = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}');
   const b = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}');
-  const btn = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}');
+  const btn = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}');
   assert.ok(g >= 0, 'thiếu quy tắc gram 2/2–3/4');
   assert.ok(b >= 0, 'thiếu quy tắc nút + 2/4 căn đáy');
   assert.ok(btn >= 0, 'thiếu quy tắc nút + 44×44');
@@ -4656,7 +4656,7 @@ test('2.14.0 M8 nút + dòng đang nhập: máy tính 36×36 (nhap-add và .note
   const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
   const dNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}');
   const dIcon = css.indexOf('.note__pending tr.is-row .btn--icon{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}');
-  const mNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px}');
+  const mNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);width:44px;min-width:44px}');
   const m7 = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}');
   assert.ok(dNhap >= 0, 'thiếu nhap-add 36px máy tính');
   assert.ok(dIcon >= 0, 'thiếu .btn--icon 36px máy tính trong dòng đang nhập');
@@ -8187,15 +8187,15 @@ test('2.38.10 "Đọc hết" điện thoại: sau dòng thông tin, canh phải,
   assert.ok(!/html\.desktop[^{]*unread-all/.test(PAGE), 'không đụng desktop');
 });
 
-test('2.38.12 điện thoại: một bộ biến --ctl-* theo ô "Đơn mới" (cao 44, bo 10, đệm dọc 9, ô nhập >=16px, chữ 14); nút kiểu tab, Xóa đơn đỏ; desktop không bị chạm', () => {
+test('2.38.12 điện thoại: một bộ biến --ctl-* theo ô "Đơn mới" (cao 40, bo 10, đệm dọc 7, ô nhập >=16px, chữ 14); nút kiểu tab, Xóa đơn đỏ; desktop không bị chạm', () => {
   const a = PAGE.indexOf('/* 2.38.12 (điện thoại)'); assert.ok(a > 0, 'có khối');
   const blk = PAGE.slice(a, PAGE.indexOf('\n/* 2.38.3: cửa sổ thấp', a));
-  assert.match(blk, /html:not\(\.desktop\)\{--ctl-h:44px;--ctl-r:10px;--ctl-py:9px;--ctl-fs:16px;--ctl-tx:14px\}/);
+  assert.match(blk, /html:not\(\.desktop\)\{--ctl-h:40px;--ctl-r:10px;--ctl-py:7px;--ctl-fs:16px;--ctl-tx:14px\}/);
   assert.ok(parseInt(blk.match(/--ctl-fs:(\d+)px/)[1], 10) >= 16, 'ô nhập iOS >= 16px');
-  assert.ok(parseInt(blk.match(/--ctl-h:(\d+)px/)[1], 10) >= 44, 'vùng chạm >= 44px');
-  assert.match(blk, /\.btn:not\(\.pager__num\)\{min-height:var\(--ctl-h\);border-radius:var\(--ctl-r\);font-size:var\(--ctl-tx\);color:var\(--ctl-c,var\(--text\)\);border-color:transparent;background:none;box-shadow:none\}/);
+  assert.ok(parseInt(blk.match(/--ctl-h:(\d+)px/)[1], 10) === 40, 'cao đúng 40 (người dùng chấp nhận <44)');
+  assert.match(blk, /\.btn:not\(\.pager__num\)\{height:var\(--ctl-h\);min-height:var\(--ctl-h\);border-radius:var\(--ctl-r\);font-size:var\(--ctl-tx\);color:var\(--ctl-c,var\(--text\)\);border-color:var\(--border\);background:none;box-shadow:none\}/);
   assert.match(blk, /\.btn--danger\{--ctl-c:var\(--red-text\)\}/);
-  assert.match(blk, /:is\(input,select\)\.inp\{padding-top:var\(--ctl-py\);padding-bottom:var\(--ctl-py\);border-radius:var\(--ctl-r\)\}/);
+  assert.match(blk, /:is\(input,select\)\.inp\{height:var\(--ctl-h\);padding-top:var\(--ctl-py\);padding-bottom:var\(--ctl-py\);border-radius:var\(--ctl-r\)\}/);
   assert.ok(!/#[0-9a-f]{3,6}|rgba?\(/i.test(blk.replace(/^\/\*[\s\S]*?\*\/\n/, '')), 'không màu mới');
   assert.ok(!deskBlock().includes('--ctl-') && !/html\.desktop[^{]*--ctl-/.test(PAGE), 'khối desktop không dùng --ctl-');
   assert.ok(a > PAGE.indexOf('html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark)'), 'đứng sau luật màu nút của .pt để thắng thứ tự');

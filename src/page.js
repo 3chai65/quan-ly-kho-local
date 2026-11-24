@@ -494,16 +494,16 @@ table.ord tr.is-row>td:nth-child(3){grid-area:2/2}
 table.ord tr.is-row>td:nth-child(4){grid-area:2/3}
 table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}
 /* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
-table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
+table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}
 /* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập chỉ 4 ô (STT, tên, gram, +): gram chiếm 2 cột 1fr (2/2–3/4), nút + ở cột 46px cuối (2/4), đáy căn theo hàng, 44×44. Đặt SAU quy tắc chung table.ord. */
 /* 2.15.18: dòng nhập thẳng cột với dòng đã ghi: cột STT rộng 26 + đệm 5 + khoảng 10 = tên bắt đầu ở 41px (như td 36px + đệm 5), STT căn giữa như .c-num. */
 #retailNote .note__pending tr.is-row,#remedyNote .note__pending tr.is-row{grid-template-columns:26px minmax(0,1fr) minmax(0,1fr) 46px;padding:6px 5px}
 #retailNote .note__pending tr.is-row>td:nth-child(1),#remedyNote .note__pending tr.is-row>td:nth-child(1){text-align:center}
 #remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
 #remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
-#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0}
+#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}
 /* 2.14.0 (giai đoạn 4, M8): điện thoại – nút + dòng đang nhập giữ 44×44 (ghi đè quy tắc máy tính 36px ở trên). */
-#nhapListBox .note__pending .nhap-add{height:44px;min-height:44px;width:44px;min-width:44px}
+#nhapListBox .note__pending .nhap-add{height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);width:44px;min-width:44px}
 table.ord tr.is-row>td.c-qty::before,table.ord tr.is-row>td.c-money::before,
 table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,
 table.inv tr.is-row>td:nth-child(4)::before,
@@ -848,10 +848,10 @@ html.desktop .brand__yin{cursor:pointer}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
-/* 2.38.12 (điện thoại): MỘT bộ cỡ chung theo ô "Đơn mới" (#remedyPreset): cao 44, bo 10, đệm dọc 9, chữ ô nhập 16 (dưới 16 iOS tự phóng to), chữ nút/dòng tờ ghi 14 = danh sách Kho tồn. Nút kiểu tab điện thoại: nền/viền trong suốt, chữ + icon var(--text); Xóa đơn chữ đỏ; không màu mới. */
-html:not(.desktop){--ctl-h:44px;--ctl-r:10px;--ctl-py:9px;--ctl-fs:16px;--ctl-tx:14px}
-html:not(.desktop) :is(input,select).inp{padding-top:var(--ctl-py);padding-bottom:var(--ctl-py);border-radius:var(--ctl-r)}
-html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx);color:var(--ctl-c,var(--text));border-color:transparent;background:none;box-shadow:none}
+/* 2.38.12 (điện thoại): MỘT bộ cỡ chung theo ô "Đơn mới" (#remedyPreset): cao 40 (chỉ iPhone thật đo được: "Đơn mới" ~39), bo 10, đệm dọc 7, chữ ô nhập 16 (dưới 16 iOS tự phóng to), chữ nút/dòng tờ ghi 14 = danh sách Kho tồn. Nút kiểu tab điện thoại: nền/viền trong suốt, chữ + icon var(--text); Xóa đơn chữ đỏ; không màu mới. */
+html:not(.desktop){--ctl-h:40px;--ctl-r:10px;--ctl-py:7px;--ctl-fs:16px;--ctl-tx:14px}
+html:not(.desktop) :is(input,select).inp{height:var(--ctl-h);padding-top:var(--ctl-py);padding-bottom:var(--ctl-py);border-radius:var(--ctl-r)}
+html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){height:var(--ctl-h);min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx);color:var(--ctl-c,var(--text));border-color:var(--border);background:none;box-shadow:none}
 html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn--danger{--ctl-c:var(--red-text)}
 html:not(.desktop) :is(.note__lbl,.note__eq,#remedyTotal,.note__tot b){font-size:var(--ctl-tx)}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
