@@ -679,12 +679,11 @@ html:is(.desktop,.pt) .btn--danger{background-color:var(--nb);border-color:var(-
 html:is(.desktop,.pt) .pager__num[aria-current]{color:#fff;font-weight:600;border-color:transparent;background-color:rgba(255,255,255,.22)}
 html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}
 html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:24px;height:24px}
-html.desktop :is(.pager,#remedyNote .note__row--btns){gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:none}
+html.desktop .pager{gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:none}
 html.desktop .pager{display:inline-flex}
-html.desktop #remedyNote .note__row--btns .btn{min-height:26px}
-html.desktop :is(.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
-html.desktop :is(.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
-html.desktop :is(.pager,#remedyNote .note__row--btns) :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:none}
+html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
+html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
+html.desktop .pager :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:none}
 html:is(.desktop,.pt)[data-bg=navy],html:is(.desktop,.pt) .bgd[data-bg=navy]{--bt:linear-gradient(135deg,#0A1433,#12265C);--muted:rgba(255,255,255,.58);--red-text:#FF7676}
 html:is(.desktop,.pt)[data-bg=prism],html:is(.desktop,.pt) .bgd[data-bg=prism]{--bt:linear-gradient(135deg,#291457,#0D4D73);--muted:rgba(255,255,255,.72);--red-text:#FFB9B9}
 html:is(.desktop,.pt)[data-bg=cyan],html:is(.desktop,.pt) .bgd[data-bg=cyan]{--bt:linear-gradient(135deg,#052E3D,#08667A);--muted:rgba(255,255,255,.87);--red-text:#FFE0E0}
@@ -701,7 +700,8 @@ html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparen
 html:is(.desktop,.pt)[data-bg] .dlg__card .note{background:rgba(255,255,255,.04)}
 html:is(.desktop,.pt)[data-bg] .inp{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}
 html:is(.desktop,.pt)[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);box-shadow:none}
-html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}
+html.desktop[data-bg] tbody tr:hover{background:none}
+html.desktop[data-bg] tbody tr:hover :is(td,th){color:var(--text)}
 html:is(.desktop,.pt) select option,html:is(.desktop,.pt) select optgroup{background:var(--surface);color:var(--text)}
 html:is(.desktop,.pt) .toast{background:rgba(20,28,60,.92);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 html:is(.desktop,.pt) .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}
@@ -923,6 +923,7 @@ html.desktop :is(input,select,textarea,.btn):disabled{opacity:.5}
 html.desktop .stats{background:none;box-shadow:none}
 html.desktop .stats__c+.stats__c{border-color:var(--border)}
 html.desktop .bak-sec{background:none;border-color:var(--border)}
+html.desktop .pager .btn[aria-current]{color:var(--sel-fg);border-color:var(--sel-bd);background-color:var(--sel-bg)}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
 html.desktop{--sth:76px}

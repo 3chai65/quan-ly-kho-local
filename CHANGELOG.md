@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.23] - 2026-11-24
+
+### Thay đổi
+- Desktop: hover dòng bảng không nền, chỉ chữ sáng hơn; số trang đang chọn giữ nền `--sel-*`; Thuốc chén tách Xóa đơn | Lưu đơn | Bán đơn thành 3 nút rời viền mỏng (Xóa chữ đỏ). Điện thoại không đổi.
+
 ## [2.38.22] - 2026-11-24
 
 - Desktop/Tauri: tối giản như điện thoại — nền trong suốt, chỉ viền `var(--border)` (thẻ, khung thanh bên, thẻ Bán/Lợi nhuận, tab, tờ ghi, ô nhập, nút, nút chính/Đơn mới, thanh phân trang, chip, bak-sec); focus viền `--sel-bd`, vô hiệu mờ 50%, hover chỉ đổi viền; tab chọn và trang hiện tại giữ `--sel-*`.

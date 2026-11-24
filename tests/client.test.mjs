@@ -6197,7 +6197,7 @@ test('2.20.1 tab Thống kê: ẩn hai khối nhập/tồn bằng CSS (DOM còn)
 test('2.20.1 mọi trạng thái (thường/hover/focus/mở) cùng họ kính trắng trong, không be/đục: tiêu đề thẻ, ô năm, ô nhập, hàng bảng, nút viên', () => {
   const block = deskBlock();
   assert.ok(block.includes('html.desktop[data-bg] .inp{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}') && block.includes('html.desktop[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35)'), 'ô nhập .10/.14, focus viền .35 không xanh');
-  assert.ok(block.includes('html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}'));
+  assert.ok(block.includes('html.desktop[data-bg] tbody tr:hover{background:none}'));
   assert.ok(block.includes('html.desktop .tab:hover{border-color:var(--sel-bd)}') && block.includes('transition:background-color .12s,border-color .12s'), '2.38.22: hover chỉ đổi viền, 120ms');
   assert.ok(!/var\(--surface2\)|#f6f2ef|#e9e2de/.test(block), 'không màu be trong khối desktop');
   assert.ok(PAGE.includes('.main>details.card[open]>summary.card__head:hover,.main>.grid2>details.card[open]>summary.card__head:hover{background:var(--surface)}'));
@@ -6371,9 +6371,9 @@ test('2.20.6 desktop: ô số ngắn 80px cao 28 căn phải trong cột; ô tê
 test('2.20.7 desktop: viên kính chung (HD/FHD, phân trang, Lưu đơn+Bán đơn), kính mỏng hơn, icon tab một màu nét đều', () => {
   const block = deskBlock();
   // viên chung: một khối bo tròn hoàn toàn, viền 1px --kb, nút con phẳng, nút chọn dùng bóng mỏng --k3t
-  const pill = /html\.desktop :is\(\.pager,#remedyNote \.note__row--btns\)\{([^}]*)\}/.exec(block);
+  const pill = /html\.desktop \.pager\{([^}]*)\}/.exec(block);
   assert.ok(pill && /border:1px solid;border-color:var\(--kb\)/.test(pill[1]) && pill[1].includes('border-radius:999px') && pill[1].includes('box-shadow:none'), 'viên chung 1px, bo 999px');
-  assert.ok(block.includes('html.desktop :is(.pager .btn,#remedyNote .note__row--btns .btn):not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}'), 'nút trong viên phẳng');
+  assert.ok(block.includes('html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}'), 'nút trong viên phẳng');
   assert.ok(block.includes('[aria-current],.btn--primary){box-shadow:none}'));
   // mỏng hơn: bóng đáy nhỏ hơn bản 2.20.2 (0 14px 30px -> 0 8px 18px), viền tối .16, bóng viên <= 1px
   // icon tab: một màu trung tính, nét 1,75 cho cả 8, mục chọn theo màu chữ chọn
@@ -8271,7 +8271,7 @@ test('2.38.21 Q: điện thoại chỉ viền (var(--border)), không nền mờ
   assert.ok(PAGE.includes('padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:none}'), 'thẻ Bán/Lợi nhuận');
   assert.ok(PAGE.includes('html:not(.desktop) :is(input,select,textarea).inp:focus{border-color:var(--sel-bd)}'));
   assert.ok(PAGE.includes('html:not(.desktop) :is(input,select,textarea,.btn):disabled{opacity:.5}'));
-  assert.ok(PAGE.includes('html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}') && !PAGE.includes('html:is(.desktop,.pt)[data-bg] tbody tr:hover'), 'hover dòng không áp cho .pt');
+  assert.ok(PAGE.includes('html.desktop[data-bg] tbody tr:hover{background:none}') && !PAGE.includes('html:is(.desktop,.pt)[data-bg] tbody tr:hover'), 'hover dòng không áp cho .pt');
   assert.ok(PAGE.includes('>td :is(.inp,.qty-host){display:block}') && PAGE.includes('>td>.btn{display:flex}'), 'ô cao đủ trong ô bảng');
   assert.ok(PAGE.includes('html:not(.desktop) .top{background:var(--surface)'), '.top giữ nền đặc');
   assert.ok(!/border:1px solid var\(--text\);color/.test(PAGE.slice(PAGE.indexOf('/* 2.38.15:'), PAGE.indexOf('/* 2.38.16 (điện thoại)'))), 'ô/nút không còn viền trắng đặc');
@@ -8297,4 +8297,14 @@ test('2.38.22 R.1 desktop tối giản: nền trong suốt, chỉ viền var(--b
   assert.ok(d.includes('html.desktop .szpick button{flex:1;min-height:26px;border-radius:999px;border:1px solid var(--border);background:none;'));
   assert.ok(!/html\.desktop \.(tab|btn:not[^{]*):hover\{[^}]*background/.test(d), 'hover tab/nút không còn nền');
   assert.ok(PAGE.includes('html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark){color:#fff;font-weight:600;border-color:transparent;background-color:rgba(64,128,242,.5)}'), 'luật dùng chung với điện thoại giữ nguyên (bị đè ở desktop)');
+});
+
+test('2.38.23 R.1b desktop: hover dòng bảng không nền, chỉ chữ sáng; số trang chọn giữ nền --sel-*; Thuốc chén 3 nút rời (không còn viên chung)', () => {
+  const d = deskBlock();
+  assert.ok(PAGE.includes('html.desktop[data-bg] tbody tr:hover{background:none}'), 'hover dòng không nền');
+  assert.ok(PAGE.includes('html.desktop[data-bg] tbody tr:hover :is(td,th){color:var(--text)}'), 'hover dòng: chữ sáng hơn, không màu mới');
+  assert.ok(PAGE.includes('html.desktop .pager .btn[aria-current]{color:var(--sel-fg);border-color:var(--sel-bd);background-color:var(--sel-bg)}'), 'số trang chọn như tab chọn');
+  assert.ok(!/note__row--btns\)/.test(d) && !d.includes('#remedyNote .note__row--btns .btn{min-height:26px}'), 'Thuốc chén không còn trong viên chung');
+  assert.ok(!/html\.desktop[^{]*#remedyNote \.note__row--btns[^{]*\{[^}]*border-radius:999px/.test(PAGE), 'không còn viên 999px quanh 3 nút');
+  assert.ok(PAGE.includes('html.desktop #remedyNote .note__row--btns .btn{padding:3px 8px}'), 'nút rời còn đệm');
 });
