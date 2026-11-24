@@ -915,6 +915,8 @@ html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) .sug__list{left
 html:not(.desktop) :is(#retailBody,#remedyBody) tr[data-pid]>td:nth-child(2){cursor:pointer}
 html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row)>td :is(.inp,.qty-host){display:block}
 html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row)>td>.btn{display:flex}
+html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child(n){padding-bottom:3px} /* 2.38.29: vạch chân dòng nhập cách đáy ô 3px (trước: chạm đáy 4 ô). STT lệch lên 1,5px nên bù padding-top 3px */
+html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child(1){padding-top:3px}
 html:not(.desktop) #nhapPendingBody :is(#nhapPendName,.nhap-hint){display:none}
 /* 2.38.22 (desktop): tối giản như điện thoại — nền trong suốt, chỉ viền var(--border); focus viền --sel-bd, vô hiệu mờ 50%; tab chọn/trang hiện tại giữ --sel-*. Đặt ngoài khối desktop (trần 20736 B). */
 html.desktop[data-bg]{--nb:transparent;--kb:var(--border)}

@@ -8350,3 +8350,10 @@ test('2.38.28 V: Thuốc chén điện thoại — ô tên (#remedySearch trong 
   assert.ok(PAGE.includes('html:not(.desktop) #remedyBody tr.is-empty>td:nth-child(4){grid-column:4;padding:0;justify-self:end}'), 'cột + của dòng nhập');
   assert.ok(!deskBlock().includes('entryMount') && !deskBlock().includes('#remedyBody tr.is-empty'), 'khối desktop không đụng');
 });
+
+test('2.38.29 V: điện thoại — vạch chân dòng nhập (Bán lẻ + Thuốc chén, dòng trống và dòng đã chọn vị) cách đáy ô 3px: td padding-bottom 3px (đặc hiệu hơn luật cột + riêng), STT bù padding-top 3px; chỉ điện thoại', () => {
+  const sel = 'html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child';
+  assert.ok(PAGE.includes(sel + '(n){padding-bottom:3px}'), 'đệm dưới mọi ô của dòng nhập');
+  assert.ok(PAGE.includes(sel + '(1){padding-top:3px}'), 'STT căn giữa theo ô');
+  assert.ok(!deskBlock().includes(sel), 'khối desktop không đụng');
+});

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.29] - 2026-11-24
+
+### Sửa
+- Điện thoại: vạch chân dòng nhập Thuốc chén (và Bán lẻ, cùng hình) chạm đáy các ô — mọi ô của dòng nhập (trống và đã chọn vị) nay có đệm dưới 3px nên vạch cách đáy ô 3px; STT bù đệm trên để vẫn căn giữa. Desktop không đổi.
+
 ## [2.38.28] - 2026-11-24
 
 ### Đổi
