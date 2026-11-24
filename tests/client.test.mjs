@@ -72,7 +72,7 @@ globalThis.__test = {
   setBase: function(v){ cloudBase = dec(v); },
   getBase: function(){ return cloudBase; },
   saveLocal: (typeof saveLocal === 'function' ? saveLocal : null), readDirty: (typeof readDirty === 'function' ? readDirty : null), readBase: (typeof readBase === 'function' ? readBase : null),
-  computeStats: (typeof computeStats === 'function' ? computeStats : null), allocateRemedyByCost: (typeof allocateRemedyByCost === 'function' ? allocateRemedyByCost : null),
+  computeStats: (typeof computeStats === 'function' ? computeStats : null), allocateRemedyProfitEvenly: (typeof allocateRemedyProfitEvenly === 'function' ? allocateRemedyProfitEvenly : null),
   balanceRemedyMoney: (typeof balanceRemedyMoney === 'function' ? balanceRemedyMoney : null), kToDong: (typeof kToDong === 'function' ? kToDong : null),
   applyRemedyBalance: (typeof applyRemedyBalance === 'function' ? applyRemedyBalance : null), scaledRemedyCost: (typeof scaledRemedyCost === 'function' ? scaledRemedyCost : null), remedyLineCost: (typeof remedyLineCost === 'function' ? remedyLineCost : null),
   backupBeforeRestore: (typeof backupBeforeRestore === 'function' ? backupBeforeRestore : null), downloadBackup: (typeof downloadBackup === 'function' ? downloadBackup : null),
@@ -227,10 +227,9 @@ test('sanitize loại bản ghi trùng id/tên để không làm hỏng batch gh
   assert.equal(out.products.length, 1);
   assert.equal(out.products[0].id, 'p1');
   assert.equal(out.transactions.length, 1);
-  /* Tên đơn trong DB phân biệt hoa/thường: "Đơn A" và "đơn a" đều được giữ. */
-  assert.equal(out.prescriptions.length, 2);
+  /* 2.38.32: tên đơn so bằng cùng khóa chuẩn hóa với tên vị thuốc ("Đơn A" = "đơn a"): chỉ giữ đơn đầu. */
+  assert.equal(out.prescriptions.length, 1);
   assert.equal(out.prescriptions[0].items.length, 1);
-  assert.ok(out.prescriptions.some(r => r.name === 'đơn a'));
 });
 
 test('parseBackup chỉ nhận file đủ 3 bảng và số liệu hợp lệ', () => {
@@ -312,15 +311,15 @@ test('reconcileList tính đúng chênh lệch và phát hiện tồn lịch s�
   assert.equal(list.find(r => r.id === 'p2'), undefined);
 });
 
-test('allocateRemedyByCost: vốn cộng lãi chia đều, dòng cuối nhận phần dư', () => {
-  const sale = app.allocateRemedyByCost(200, [{ cost: 1 }, { cost: 3 }, { cost: 6 }]);
+test('allocateRemedyProfitEvenly: vốn cộng lãi chia đều, dòng cuối nhận phần dư', () => {
+  const sale = app.allocateRemedyProfitEvenly(200, [{ cost: 1 }, { cost: 3 }, { cost: 6 }]);
   assert.deepEqual(sale, [64, 66, 70]);
   assert.equal(sale.reduce((a, b) => a + b, 0), 200);
 
-  assert.deepEqual(app.allocateRemedyByCost(100, [{ cost: 40 }]), [100]);
-  assert.deepEqual(app.allocateRemedyByCost(10, [{ cost: 4 }, { cost: 6 }]), [4, 6]);
-  assert.deepEqual(app.allocateRemedyByCost(10, [{ cost: 0 }, { cost: 0 }, { cost: 0 }]), [3, 3, 4]);
-  assert.deepEqual(app.allocateRemedyByCost(42.6, [{ cost: 10 }, { cost: 20 }]), [16, 27]);
+  assert.deepEqual(app.allocateRemedyProfitEvenly(100, [{ cost: 40 }]), [100]);
+  assert.deepEqual(app.allocateRemedyProfitEvenly(10, [{ cost: 4 }, { cost: 6 }]), [4, 6]);
+  assert.deepEqual(app.allocateRemedyProfitEvenly(10, [{ cost: 0 }, { cost: 0 }, { cost: 0 }]), [3, 3, 4]);
+  assert.deepEqual(app.allocateRemedyProfitEvenly(42.6, [{ cost: 10 }, { cost: 20 }]), [16, 27]);
 });
 
 test('balanceRemedyMoney giữ vốn từng vị theo đồng, chỉ chia phần lãi', () => {
@@ -8407,4 +8406,53 @@ test('2.38.31 X (16): historyData dựng Map vị thuốc 1 lần; tên hiển t
   assert.match(PAGE, /function txName\(t, pm\)/);
   const hd = PAGE.slice(PAGE.indexOf('function historyData('), PAGE.indexOf('function historyData(') + 3000);
   assert.ok(hd.includes('var pm = productMap();') && !/txName\(t\)/.test(hd), 'historyData chỉ dùng txName(t, pm)');
+});
+
+test('2.38.32 X (13)(14): chia lãi đều chỉ còn một đường — balanceRemedyMoney/applyRemedyBalance/allocateRemedyProfitEvenly cho tiền y hệt công thức gốc trên 600 ca ngẫu nhiên', () => {
+  assert.ok(!PAGE.includes('allocateRemedyByCost'), 'tên cũ đã đổi');
+  let seed = 12345; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  // công thức gốc (độc lập): lãi = grand - tổng vốn; mỗi dòng nhận floor(lãi/n), dòng cuối nhận phần dư
+  const ref = (grand, costs) => { const n = costs.length, tc = costs.reduce((a, c) => a + c, 0), lai = grand - tc, base = Math.floor(lai / n); let al = 0; return costs.map((c, i) => { const sh = i === n - 1 ? lai - al : base; al += sh; return c + sh; }); };
+  for (let t = 0; t < 600; t++) {
+    const n = 1 + Math.floor(rnd() * 12);
+    const costs = Array.from({ length: n }, () => Math.round(rnd() * 5e5));
+    const tc = costs.reduce((a, c) => a + c, 0);
+    const grand = Math.round(tc * (0.5 + rnd()) + rnd() * 1000);
+    const want = ref(grand, costs);
+    assert.deepEqual(app.allocateRemedyProfitEvenly(grand, costs.map(c => ({ cost: c }))), want);
+    const bal = app.balanceRemedyMoney(grand, costs.map(c => ({ exactCost: c })));
+    if (grand < tc) { assert.equal(bal, null); } else {
+      assert.deepEqual(bal.map(b => b.total), want); assert.deepEqual(bal.map(b => b.cost), costs);
+      assert.equal(bal.reduce((a, b) => a + b.total, 0), grand);
+      // applyRemedyBalance: cùng kết quả, giữ vốn lưu của từng dòng
+      app.setDb({ products: costs.map((c, i) => ({ id: 'P' + i, name: 'V' + i, stock: 5, costPrice: 1 })), transactions: [], prescriptions: [], updatedAt: 0 });
+      const lines = costs.map((c, i) => ({ id: 'L' + i, productId: 'P' + i, qty: 0.5 + i, cost: c, total: c, price: 1 }));
+      assert.equal(app.applyRemedyBalance(lines, grand), true);
+      assert.deepEqual(lines.map(l => l.total), want); assert.deepEqual(lines.map(l => l.cost), costs);
+    }
+    if (grand < tc) { const lines = costs.map((c, i) => ({ id: 'L' + i, productId: 'P' + i, qty: 1, cost: c, total: c, price: c })); const before = JSON.stringify(lines); assert.equal(app.applyRemedyBalance(lines, grand), false); assert.equal(JSON.stringify(lines), before, 'false thì không đổi gì'); }
+  }
+});
+
+test('2.38.32 X (4): tên đơn thuốc chống trùng bằng cùng khóa chuẩn hóa với tên vị thuốc (hoa/thường, khoảng trắng, NFC)', () => {
+  const rx = (id, name) => ({ id, name, items: [{ productId: 'A', grams: 5 }], total: 10, thang: 1 });
+  const drops = [];
+  const out = app.sanitize({ moneyUnit: 'dong', products: [{ id: 'A', name: 'A', stock: 1, costPrice: 1 }], transactions: [], updatedAt: 1,
+    prescriptions: [rx('R1', 'Bát Vị'), rx('R2', '  bát   vị '), rx('R3', 'B'+String.fromCharCode(97,0x301)+'t Vi'+String.fromCharCode(0x323)), rx('R4', 'Bát Vị 2')] }, drops);
+  assert.deepEqual([...out.prescriptions.map(r => r.id)], ['R1', 'R4']);
+  assert.equal(drops.filter(d => d.startsWith('Đơn thuốc trùng')).length, 2);
+  // vị thuốc: cùng khóa, không đổi hành vi
+  const p = app.sanitize({ moneyUnit: 'dong', products: [{ id: 'A', name: 'Cam Thảo', stock: 1, costPrice: 1 }, { id: 'B', name: ' cam  thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 }, []);
+  assert.deepEqual([...p.products.map(x => x.id)], ['A']);
+  assert.match(PAGE, /function nameKey\(s\)/); assert.ok(!PAGE.includes("var rnameKey = rname;"));
+});
+
+test('2.38.32 X (13)(14): biên — khách trả đúng bằng vốn thì lãi 0; thiếu 1 đồng thì balanceRemedyMoney trả null và applyRemedyBalance trả false', () => {
+  const costs = [1000, 2000, 3001], tc = 6001;
+  assert.deepEqual([...app.balanceRemedyMoney(tc, costs.map(c => ({ exactCost: c }))).map(b => b.total)], costs);
+  assert.equal(app.balanceRemedyMoney(tc - 1, costs.map(c => ({ exactCost: c }))), null);
+  app.setDb({ products: costs.map((c, i) => ({ id: 'P' + i, name: 'V' + i, stock: 5, costPrice: 1 })), transactions: [], prescriptions: [], updatedAt: 0 });
+  const lines = costs.map((c, i) => ({ id: 'L' + i, productId: 'P' + i, qty: 1, cost: c, total: c, price: c }));
+  assert.equal(app.applyRemedyBalance(lines, tc - 1), false);
+  assert.equal(app.applyRemedyBalance(lines, tc), true);
 });

@@ -23,7 +23,7 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 `tests/client.test.mjs` (chạy trên máy); `tests/server.test.mjs`, `tests/auth*.test.mjs` (Node 22, CI Docker); `npm run lint`. Chạy trên Windows/CI, không chạy trên hub. Sau mỗi lần push, kiểm tab Actions.
 
 ## Vùng nhạy cảm — sửa xong phải chạy test + phá thử (mutation) chứng minh test bắt được lỗi
-`sanitize`, `validateState`, `allocateRemedyByCost`, `pushState`/`pullState`, `checkLimits`, `auth.js`.
+`sanitize`, `validateState`, `allocateRemedyProfitEvenly`, `pushState`/`pullState`, `checkLimits`, `auth.js`.
 
 ## Vai trò
 - Giám sát = Haiku (`.claude/agents/giam-sat.md`, chỉ đọc): chạy test, tóm tắt log, kiểm sau triển khai.

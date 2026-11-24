@@ -231,6 +231,11 @@ function isRealDate(value) {
   return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
 }
 
+/* Khóa so tên (vị thuốc và đơn thuốc dùng chung; cùng luật với nameKey ở src/page.js): NFC, gọn khoảng trắng, không phân biệt hoa/thường. */
+function normNameKey(name) {
+  return String(name).normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 function validateState(d) {
   const errors = [];
   const warnings = [];
@@ -261,7 +266,7 @@ function validateState(d) {
     if (!isNonNegNumber(p.stock, QTY_MAX)) fail(label + ' "' + name + '": tồn kho phải từ 0 đến ' + QTY_MAX);
     if (!isNonNegNumber(p.costPrice, MONEY_MAX)) fail(label + ' "' + name + '": giá nhập phải từ 0 đến ' + MONEY_MAX);
     const id = String(p.id || randomId());
-    const nameKey = name.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+    const nameKey = normNameKey(name);
     if (productIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
     if (productNames.has(nameKey)) { fail(label + ': trùng tên sản phẩm "' + name + '"'); return; }
     productIds.add(id);
@@ -316,9 +321,9 @@ function validateState(d) {
     if (!Array.isArray(r.items) || !r.items.length) { fail(label + ' "' + name + '": chưa có vị thuốc'); return; }
     const id = String(r.id || randomId());
     if (rxIds.has(id)) { fail(label + ' "' + name + '": trùng id ' + id); return; }
-    if (rxNames.has(name)) { fail(label + ': trùng tên đơn thuốc "' + name + '"'); return; }
+    if (rxNames.has(normNameKey(name))) { fail(label + ': trùng tên đơn thuốc "' + name + '"'); return; }
     rxIds.add(id);
-    rxNames.add(name);
+    rxNames.add(normNameKey(name));
     const itemIds = new Set();
     const items = [];
     r.items.forEach((item, j) => {

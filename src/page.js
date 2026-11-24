@@ -2017,6 +2017,8 @@ function normSearch(s){
   return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
 }
+/* Khóa so tên (vị thuốc và đơn thuốc dùng chung): NFC, gọn khoảng trắng, không phân biệt hoa/thường. Cùng luật với server.js. */
+function nameKey(s){ return String(s).normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase(); }
 function sortByName(a, b){ return a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }); }
 function findProduct(id){
   for (var i = 0; i < db.products.length; i++) if (String(db.products[i].id) === String(id)) return db.products[i];
@@ -2164,13 +2166,13 @@ function sanitize(d, drops){
         if (drops) drops.push('Vị thuốc không hợp lệ: ' + name);
         return;
       }
-      var nameKey = name.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
-      if (seenPid[id] || seenPname[nameKey]) {
+      var pKey = nameKey(name);
+      if (seenPid[id] || seenPname[pKey]) {
         if (drops) drops.push('Vị thuốc trùng: ' + name);
         return;
       }
       seenPid[id] = true;
-      seenPname[nameKey] = true;
+      seenPname[pKey] = true;
       o.products.push({
         id: id,
         name: name,
@@ -2248,7 +2250,7 @@ function sanitize(d, drops){
         if (drops) drops.push('Đơn thuốc không hợp lệ: ' + rname);
         return;
       }
-      var rnameKey = rname;
+      var rnameKey = nameKey(rname);
       if (seenRid[rid] || seenRname[rnameKey]) {
         if (drops) drops.push('Đơn thuốc trùng: ' + rname);
         return;
@@ -3001,14 +3003,14 @@ function balanceRemedyMoney(grand, lines){
   var totalCost = 0;
   costs.forEach(function(c){ totalCost += c; });
   if (g0 < totalCost) return null;
-  var totals = allocateRemedyByCost(g0, costs.map(function(c){ return { cost: c }; }));
+  var totals = allocateRemedyProfitEvenly(g0, costs.map(function(c){ return { cost: c }; }));
   return costs.map(function(c, i){ return { cost: c, total: totals[i] }; });
 }
 /* Hàm thuần cho đơn thuốc chén. grand là số khách trả (số nguyên).
    lines[].cost là vốn từng vị, đã là số nguyên.
    Thành tiền vị = vốn + phần lãi chia đều theo số vị.
    Dòng cuối nhận phần dư để tổng các dòng đúng bằng grand. */
-function allocateRemedyByCost(grand, lines){
+function allocateRemedyProfitEvenly(grand, lines){
   var list = lines || [];
   var n = list.length;
   if (!n) return [];
@@ -4958,15 +4960,12 @@ function scaledRemedyCost(t, prevQty, prevCost){
   var prod = findProduct(t.productId);
   return money(nq * (prod ? num(prod.costPrice) : 0));
 }
-/* Chia lại tiền khách trả cho các dòng cùng đơn. Giữ nguyên vốn đã lưu của từng dòng,
+/* Chia lại tiền khách trả cho các dòng cùng đơn: dùng chung balanceRemedyMoney (một chỗ duy nhất chia lãi đều). Giữ nguyên vốn đã lưu của từng dòng,
    chỉ chia lại phần lãi đều. Trả false (không đổi gì) khi giá bán thấp hơn tổng vốn. */
 function applyRemedyBalance(lines, grand){
-  var costs = lines.map(function(t){ return remedyLineCost(t); });
-  var totalCost = 0;
-  costs.forEach(function(c){ totalCost += c; });
-  var g0 = money(grand);
-  if (g0 < totalCost) return false;
-  var totals = allocateRemedyByCost(g0, costs.map(function(c){ return { cost: c }; }));
+  var bal = balanceRemedyMoney(grand, lines.map(function(t){ return { exactCost: remedyLineCost(t) }; }));
+  if (!bal) return false;
+  var costs = bal.map(function(b){ return b.cost; }), totals = bal.map(function(b){ return b.total; });
   var unitPrice = 0;
   lines.forEach(function(t){ if (num(t.unitPrice) > 0) unitPrice = money(t.unitPrice); });
   lines.forEach(function(t, i){

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.32] - 2026-11-24
+
+### Thay đổi
+- Xử lý review 2.38.30 (đợt X.2, chạm tiền/dữ liệu): tên đơn thuốc chống trùng bằng cùng khóa chuẩn hóa với tên vị thuốc (`nameKey` ở client, `normNameKey` ở server: NFC, gọn khoảng trắng, không phân biệt hoa/thường) — "Đơn A" và "đơn a" nay là trùng (trước đây cả hai được giữ); chia lãi đều chỉ còn một đường (`applyRemedyBalance` gọi `balanceRemedyMoney`); đổi tên `allocateRemedyByCost` → `allocateRemedyProfitEvenly`. Số tiền không đổi (test 600 ca ngẫu nhiên so với công thức gốc). Chưa làm (điều kiện không thỏa): server nghe `127.0.0.1` (cổng 8787 từ LAN: kết nối mở rồi bị reset, xem báo cáo).
+
 ## [2.38.31] - 2026-11-24
 
 ### Thay đổi

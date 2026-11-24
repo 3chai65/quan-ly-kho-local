@@ -14,7 +14,7 @@
 - Chưa đo FPS khi có hơn 164 sản phẩm hoặc khi bật Chế độ nguồn điện thấp.
 
 ## Lỗ hổng kiểm trần đã biết
-`saveRetail` không kiểm `cost`; xóa/giảm đơn bán có thể làm tồn vượt trần; sửa gram đơn thuốc chén có thể làm đơn giá vượt trần; `applyRemedyBalance`/`allocateRemedyByCost` chưa kiểm trần đơn giá khi kg rất nhỏ.
+`saveRetail` không kiểm `cost`; xóa/giảm đơn bán có thể làm tồn vượt trần; sửa gram đơn thuốc chén có thể làm đơn giá vượt trần; `applyRemedyBalance`/`allocateRemedyProfitEvenly` chưa kiểm trần đơn giá khi kg rất nhỏ.
 
 ## Giao diện
 - Xem thử: sinh trang tĩnh từ `src/page.js` (placeholder như `server.js`, dữ liệu mẫu tự bịa), mở bằng `.claude/launch.json` (cổng 8899), đo bằng `getBoundingClientRect` ở 320/375/800/1300px.

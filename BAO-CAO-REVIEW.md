@@ -53,7 +53,7 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 | Mã | Nguồn | Lỗi báo | Bằng chứng / tái hiện | Lý do không xử lý | Xét lại khi |
 |---|---|---|---|---|---|
 | W2 | báo cáo 2.17.1 | Nhãn "Giá bán" nhưng ô lưu thành tiền cả dòng | Nhãn: `page.js:662,676,2169,2173,2291`; ô hiển thị `fmtMoney(it.amount)` `:2308`; `price = amount / kg`, `total = amount` `:2665-2666`; lịch sử ghi "Thành tiền" `:912,946,2993,3279` | Quyết định của người dùng 14/11: chỉ là lỗi câu chữ, bỏ qua | Có nhập nhầm giá/kg thành thành tiền gây sai dữ liệu |
-| E4 | ngoài 14/11 (mục 4) | `allocateRemedyByCost` khi tổng khách trả < tổng vốn | Tái hiện: 999 chia vốn [300,300,400] ra [299,299,401] | Hàm đúng như mô tả nhưng cả hai nơi gọi đã chặn trước: `balanceRemedyMoney` (`page.js` ~2396-2403, `if (g0 < totalCost) return null`) và `applyRemedyBalance` (~4058-4064, `if (g0 < totalCost) return false`) | Thêm nơi gọi thứ ba |
+| E4 | ngoài 14/11 (mục 4) | `allocateRemedyProfitEvenly` khi tổng khách trả < tổng vốn | Tái hiện: 999 chia vốn [300,300,400] ra [299,299,401] | Hàm đúng như mô tả nhưng cả hai nơi gọi đã chặn trước: `balanceRemedyMoney` (`page.js` ~2396-2403, `if (g0 < totalCost) return null`) và `applyRemedyBalance` (từ 2.38.32 chặn qua `balanceRemedyMoney`, trả `false` khi `g0 < totalCost`) | Thêm nơi gọi thứ ba |
 | E6 | ngoài 14/11 (mục 6) | `txIndex` cache có thể cũ | `renderAll` luôn gọi `indexTx`; chỉ dùng cho bản ghi thiếu `ts` | Chưa có đường nào bỏ qua `renderAll` | Thêm đường sửa giao dịch bỏ qua `renderAll` |
 | E7 | ngoài 14/11 (mục 7) | Đơn bán lẻ 1 vị không có `oid` | CHANGELOG | Chủ ý: hiển thị như dòng giao dịch thường | — |
 | E8a | ngoài 14/11 (mục 8) | `snapshotBeforeForce` trùng tên file cùng mili-giây | `server.js` | `VACUUM INTO` chạy lâu hơn 1 ms nên không trùng | Thấy trùng tên file thật |
@@ -82,7 +82,7 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 | W3b | Auditor W1+W3 | (a) Tải lại tab giữa lúc gửi thì mất `opId`, 409 giả vẫn có thể xảy ra; (b) phản hồi cho PUT trùng op không kèm `warnings`/`stockDrift` của phản hồi gốc; (c) PUT trùng op trả 200 kể cả khi thiếu `X-Base-Updated` | `server.js` nhánh op trùng ~dòng 562-565 | (b), (c) vô hại theo Auditor |
 | G17 | CLAUDE.md | Sao lưu tự động có thể đè lên thông báo đang hiện | — | |
 | — | CLAUDE.md | `saveRetail` không kiểm `cost`; xóa/giảm đơn bán làm tồn vượt trần; sửa gram đơn thuốc chén làm đơn giá vượt trần: server có thể từ chối số liệu ngoài thực tế | — | |
-| — | CLAUDE.md | `applyRemedyBalance`/`allocateRemedyByCost` chưa kiểm trần đơn giá khi kg rất nhỏ | — | |
+| — | CLAUDE.md | `applyRemedyBalance`/`allocateRemedyProfitEvenly` chưa kiểm trần đơn giá khi kg rất nhỏ | — | |
 | — | CLAUDE.md | Không xóa tờ đơn khi lưu thất bại ("Chưa lưu được") | — | Đổi luồng đồng bộ, rủi ro hơn; chờ gặp lỗi thật |
 | — | CLAUDE.md | Gợi ý đơn vị trong ô số lượng dùng "l" cho lạng | — | Chỉ ở gợi ý |
 | — | CLAUDE.md | Vòng kiểm trong `saveNhap` (~4019); ca test A1 chưa kiểm `fetch` được gọi | — | Hoãn từ 2.15.21 |

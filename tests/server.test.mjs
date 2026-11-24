@@ -457,6 +457,17 @@ test('server.js: trùng tên/id bị 400 thay vì âm thầm bỏ dòng, dữ li
   }), hdr);
   assert.equal(dupRx.status, 400);
 
+  // 2.38.32: tên đơn thuốc so theo cùng khóa chuẩn hóa với tên vị thuốc (hoa/thường, khoảng trắng, NFC)
+  const dupRxNorm = await put(emptyState({
+    products: [{ id: 'D1', name: 'A', stock: 1, costPrice: 1 }],
+    prescriptions: [
+      { id: 'R1', name: 'Bát Vị', items: [{ productId: 'D1', grams: 5 }], total: 10, thang: 1 },
+      { id: 'R2', name: '  bát   vị ', items: [{ productId: 'D1', grams: 5 }], total: 10, thang: 1 }
+    ]
+  }), hdr);
+  assert.equal(dupRxNorm.status, 400);
+  assert.ok(dupRxNorm.body.details.some(m => m.includes('trùng tên đơn thuốc')));
+
   const data = await getState();
   assert.deepEqual(data.products.map(p => p.id), ['D0'], 'bị từ chối thì dữ liệu cũ phải còn nguyên');
 });
