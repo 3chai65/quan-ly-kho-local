@@ -895,8 +895,8 @@ html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.i
 html:not(.desktop) #nhapListBox .nhap-pend__tot{display:none}
 html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoot tr{grid-template-columns:var(--cols)}
 html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoot td{padding:4px 5px}
-/* 2.38.17 (điện thoại): N.3 chạm ô số trong tờ ghi → html.kb-num thêm đệm dưới ~50vh để iOS cuộn tài liệu (không dịch khung nhìn làm .top khuất dưới tai thỏ); gợi ý đơn vị nhãn (kg) không đè viền ô ở bố cục 1 hàng. */
-html:not(.desktop).kb-num body{padding-bottom:50vh}
+/* 2.38.17 (điện thoại): gợi ý đơn vị dạng nhãn trên ô SL ẩn (không đè viền ô ở bố cục 1 hàng). 2.38.19: .top bám visualViewport khi bàn phím mở (--vv-top do JS đặt). */
+html:not(.desktop) .top{transform:translateY(var(--vv-top,0px))}
 html:not(.desktop) td .qty-hint.qty-hint--label{display:none}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
@@ -6049,15 +6049,11 @@ function compactSync(force){
 var KB_TOP_GAP = 8; /* khoảng đệm (px) compactAvail chừa quanh vùng nhìn khi bàn phím mở */
 function kbMobile(){ return !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches); }
 function kbVvTop(){ var vv = window.visualViewport; return vv ? (vv.offsetTop || 0) : 0; }
-/* 2.38.17 N.3: ô số (SL/giá/thang/giá nhập) ngoài hộp thoại, điện thoại. */
-function kbNumField(e){ return !!(e && e.tagName === 'INPUT' && e.type === 'number' && !(e.closest && e.closest('dialog')) && kbMobile()); }
-function kbNumSync(){ var r = doc.documentElement; if (r && r.classList) r.classList.toggle('kb-num', kbNumField(doc.activeElement)); }
 /* Sau lưu thành công (điện thoại): đóng bàn phím và về đầu trang để thấy thanh đầu + tờ ghi mới. */
 function afterSaveDone(){
   if (!kbMobile()) return;
   var a = doc.activeElement;
   if (a && a !== doc.body && a.blur) a.blur();
-  kbNumSync();
   if (window.scrollTo) window.scrollTo(0, 0);
 }
 var kbDebug = false, kbReason = 'init';
@@ -6072,10 +6068,21 @@ function kbDbg(why){
   var rb = $('#retailBox'), mb = $('#remedyBox');
   var cp = !!((rb && rb.classList && rb.classList.contains('kb-compact')) || (mb && mb.classList && mb.classList.contains('kb-compact')));
   d.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
-  d.textContent = 'vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' | ' + kbReason + '\n' + kbEvs.join('  ');
+  d.textContent = 'vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' vv-top ' + kbVvPin + ' y ' + Math.round(window.pageYOffset || 0) + ' | ' + kbReason + '\n' + kbEvs.join('  ');
 }
 /* visualViewport đổi (bàn phím hiện/đổi, iOS pan): đo lại danh sách gọn. */
-function onVvChange(){ compactRefit(); kbEvRec('vv'); kbDbg(); }
+/* 2.38.19: khi bàn phím mở (vvH < ih − 120) iOS dịch khung nhìn offsetTop px trong layout viewport; .top sticky bám layout nên trượt khỏi màn hình → dịch .top đúng offsetTop. Hàm thuần: px (0 khi bàn phím đóng). */
+function vvTopPx(vvH, ih, offsetTop){
+  if (!(vvH > 0) || !(ih > 0) || !(vvH < ih - 120) || !(offsetTop > 0)) return 0;
+  return Math.round(offsetTop);
+}
+var kbVvPin = 0;
+function kbVvApply(){
+  var vv = window.visualViewport, r = doc.documentElement;
+  kbVvPin = kbMobile() && vv ? vvTopPx(vv.height, window.innerHeight, vv.offsetTop) : 0;
+  if (r && r.style && r.style.setProperty) r.style.setProperty('--vv-top', kbVvPin + 'px');
+}
+function onVvChange(){ kbVvApply(); compactRefit(); kbEvRec('vv'); kbDbg(); }
 var kbEvs = [], kbEvAt = 0, kbVvPrev = 0, kbTouchAt = 0;
 function kbTouch(){ kbEvRec('pointerdown'); kbDbg(); }
 /* Gỡ lỗi (?kbdebug=1): ghi 3 sự kiện vv/chạm/focus gần nhất để biết iOS pan do đâu. */
@@ -6114,8 +6121,8 @@ function initFootBars(){
     window.visualViewport.addEventListener('scroll', onVvChange);
   }
   try { if (/[?&]kbdebug=1/.test((window.location && window.location.search) || '')) kbDebugOn('mo-trang'); } catch (e) {}
-  doc.addEventListener('focusin', function(){ compactSync(false); kbNumSync(); });
-  doc.addEventListener('focusout', function(){ setTimeout(compactSync, 0); setTimeout(kbNumSync, 0); });
+  doc.addEventListener('focusin', function(){ compactSync(false); });
+  doc.addEventListener('focusout', function(){ setTimeout(compactSync, 0); });
 }
 /* ================= KHỞI ĐỘNG ================= */
 /* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */

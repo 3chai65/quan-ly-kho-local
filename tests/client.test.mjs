@@ -116,7 +116,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), logoTapsHit: (typeof logoTapsHit === 'function' ? logoTapsHit : null), brandTap: (typeof brandTap === 'function' ? brandTap : null), calcRemedyTyping: (typeof calcRemedyTyping === 'function' ? calcRemedyTyping : null), kbDebugOn: (typeof kbDebugOn === 'function' ? kbDebugOn : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), vvTopPx: (typeof vvTopPx === 'function' ? vvTopPx : null), logoTapsHit: (typeof logoTapsHit === 'function' ? logoTapsHit : null), brandTap: (typeof brandTap === 'function' ? brandTap : null), calcRemedyTyping: (typeof calcRemedyTyping === 'function' ? calcRemedyTyping : null), kbDebugOn: (typeof kbDebugOn === 'function' ? kbDebugOn : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -5226,7 +5226,7 @@ test('2.38.11 nguồn: không scrollBy/scrollIntoView; window.scrollTo chỉ tro
   assert.ok(!/(^|[^.\w])scrollTo\(/.test(PAGE), 'không scrollTo trần');
   assert.ok(!/kb-lock|kbLock|kbUnlock|kbSavedY|kbLastY|kbRelease|kbTrackY/.test(PAGE), 'không còn khóa cuộn trang (ẩn .top, body fixed)');
   assert.ok(!/placeScrollDelta|kbSafeDelta|kbPadFixed|kbVisBottom|kbPlaceNow|kbOnFocus|kbUserStop|kbPlacedBox|kbSafeUsed|ENTRY_ROW_H|PLACE_GAP|KB_BAR|--kb-pad|kbMovedAt|kbSchedule|keepVisibleDelta|kbUserAt|searchScrollDelta|kbPadPx|keepPendingVisible/.test(PAGE), 'không còn mã định vị cũ');
-  assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ compactSync\(false\); kbNumSync\(\); \}\);/);
+  assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ compactSync\(false\); \}\);/);
   for (const n of ['commitRetailRow', 'commitRemedyRow', 'addRetailToNote', 'addRemedyToNote', 'refocusSearch', 'pickSuggest']) {
     assert.ok(!/\.focus\(\)/.test(fnBody(n)), n + ' không được gọi .focus() trần');
   }
@@ -5282,7 +5282,7 @@ test('2.15.10 ?kbdebug=1: dòng gỡ lỗi gắn vào <html>, có vvH/vvTop/ih/c
   k.c.initFootBars();
   assert.equal(made.length, 1); assert.equal(k.html.children[0], made[0], 'trong <html>');
   assert.equal(k.body.children.length, 0);
-  assert.match(made[0].textContent, /vvH 695 vvTop 0 ih 695 compact 0 \| mo-trang/);
+  assert.match(made[0].textContent, /vvH 695 vvTop 0 ih 695 compact 0 vv-top 0 y \d+ \| mo-trang/);
   k.lock(); k.vvL.resize.forEach(fn => fn());
   assert.match(made[0].textContent, /compact 1/);
   assert.match(made[0].style.cssText, /position:fixed/);
@@ -8239,16 +8239,20 @@ test('2.38.16 N.1/N.2 tờ ghi: tiêu đề "Tờ ghi" + nhãn cột trên hàng
   assert.ok(!deskBlock().includes('2.38.16'));
 });
 
-test('2.38.17 N.3 nguồn: html.kb-num theo ô số đang focus (không trong hộp thoại, chỉ điện thoại), đệm 50vh ngoài khối desktop, bỏ khi blur và trong afterSaveDone', () => {
-  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
-  const f = fnBody('kbNumField');
-  for (const k of ["e.tagName === 'INPUT'", "e.type === 'number'", "closest('dialog')", 'kbMobile()']) assert.ok(f.includes(k), k);
-  assert.ok(fnBody('kbNumSync').includes("toggle('kb-num', kbNumField(doc.activeElement))"));
-  assert.match(fnBody('afterSaveDone'), /a\.blur\(\);\s*kbNumSync\(\);/);
-  assert.ok(PAGE.includes("doc.addEventListener('focusin', function(){ compactSync(false); kbNumSync(); });"));
-  assert.ok(PAGE.includes("setTimeout(kbNumSync, 0)"), 'bỏ class khi blur');
-  assert.ok(PAGE.includes('html:not(.desktop).kb-num body{padding-bottom:50vh}'));
-  assert.ok(!deskBlock().includes('kb-num') && !deskBlock().includes('2.38.17'));
-  assert.ok(PAGE.includes('html:not(.desktop) td .qty-hint.qty-hint--label{display:none}'), 'chữ đơn vị nhãn không đè viền ô (điện thoại)');
-  assert.ok(!/kb-lock/.test(PAGE.slice(PAGE.indexOf('2.38.17 (điện thoại)'), PAGE.indexOf('2.38.17 (điện thoại)') + 600)));
+test('2.38.19 N.3c vvTopPx: bàn phím mở (vvH < ih−120) → offsetTop làm tròn; đóng/không dịch → 0; .top dịch theo --vv-top (ngoài khối desktop); không còn kb-num', () => {
+  assert.equal(app.vvTopPx(389, 716, 141), 141);
+  assert.equal(app.vvTopPx(389, 716, 140.6), 141, 'làm tròn');
+  assert.equal(app.vvTopPx(596, 716, 141), 0, 'vvH = ih−120: chưa coi là bàn phím');
+  assert.equal(app.vvTopPx(595, 716, 50), 50, 'ngay dưới ngưỡng');
+  assert.equal(app.vvTopPx(716, 716, 30), 0, 'bàn phím đóng, rubber-band');
+  assert.equal(app.vvTopPx(389, 716, 0), 0);
+  assert.equal(app.vvTopPx(389, 716, -20), 0, 'âm');
+  assert.equal(app.vvTopPx(0, 716, 141), 0); assert.equal(app.vvTopPx(389, 0, 141), 0);
+  assert.ok(PAGE.includes('html:not(.desktop) .top{transform:translateY(var(--vv-top,0px))}'));
+  assert.ok(!deskBlock().includes('--vv-top'));
+  const i = PAGE.indexOf('function onVvChange('); assert.match(PAGE.slice(i, i + 120), /kbVvApply\(\); compactRefit\(\)/);
+  assert.ok(PAGE.includes("' vv-top ' + kbVvPin + ' y '"), 'kbdebug ghi --vv-top và y');
+  assert.ok(!/kbNum|kb-num/.test(PAGE), 'kb-num đã gỡ (0 tham chiếu)');
+  assert.ok(PAGE.includes('kbMobile() && vv ? vvTopPx(vv.height, window.innerHeight, vv.offsetTop) : 0'), 'chỉ điện thoại');
+  assert.ok(PAGE.includes('html:not(.desktop) td .qty-hint.qty-hint--label{display:none}'));
 });

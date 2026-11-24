@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.19] - 2026-11-24
+
+- Điện thoại: bàn phím mở thì `.top` dịch theo `--vv-top` = visualViewport.offsetTop (chỉ khi vvH < ih−120) để thanh đầu không trượt khỏi màn hình khi iOS dịch khung nhìn; gỡ `kb-num` + đệm 50vh (log iPhone cho thấy không ngăn được); kbdebug ghi thêm vv-top và y. Chưa thử iPhone thật.
+
 ## [2.38.18] - 2026-11-24
 
 - Điện thoại: gõ số trong ô SL/giá không còn dựng lại tờ ghi (Bán lẻ, Thuốc chén) — nghi nguyên nhân iOS cuộn trang lúc gõ; lối vào Thiết bị chuyển từ logo sang viên "Sao lưu | Thiết bị" trong tab Sao lưu khôi phục; chạm logo 5 lần (≤ 2 s) bật gỡ lỗi bàn phím (ghi thêm sự kiện input + cuộn y). Chưa thử iPhone thật.
