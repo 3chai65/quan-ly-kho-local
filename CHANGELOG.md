@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.33] - 2026-11-24
+
+### Sửa lỗi
+- Lịch sử bán/nhập trên điện thoại: tên đơn dài ("… · 9 vị") không còn vỡ 3 dòng. Chấm chưa đọc + tên + "· N vị" nằm cùng 1 dòng (ô `td.his-ord` dạng flex); tên cắt "…" ở 1 dòng, "· N vị" luôn hiện đủ; dòng giao dịch lẻ (không có nút tên) cắt "…" cả ô. Đo 375/390 với tên dài: cao 22px, "· N vị" trong ô. Desktop không đổi.
+
 ## [2.38.32] - 2026-11-24
 
 ### Thay đổi

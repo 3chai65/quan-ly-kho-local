@@ -8456,3 +8456,15 @@ test('2.38.32 X (13)(14): biên — khách trả đúng bằng vốn thì lãi 0
   assert.equal(app.applyRemedyBalance(lines, tc - 1), false);
   assert.equal(app.applyRemedyBalance(lines, tc), true);
 });
+
+test('2.38.33: Lịch sử bán/nhập điện thoại — chấm + tên + "· N vị" cùng 1 dòng (flex, tên cắt …, "· N vị" không co), dòng lẻ cắt … cả ô; desktop không đổi', () => {
+  assert.match(PAGE, /var tn = el\('td', 'b his-ord'\);/);
+  assert.ok(PAGE.includes(`el('span', 'muted small', ' · ' + r.n + ' vị')`), 'chữ "· N vị" giữ nguyên (desktop không đổi)');
+  assert.ok(PAGE.includes('html:not(.desktop) table.his td.his-ord{display:flex;align-items:center;white-space:nowrap}'));
+  assert.ok(PAGE.includes('html:not(.desktop) table.his td.his-ord .linkbtn{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}'));
+  assert.ok(PAGE.includes('html:not(.desktop) table.his td.his-ord :is(.udot,.muted){flex:none}'), 'chấm và "· N vị" không co');
+  assert.ok(PAGE.includes('html:not(.desktop) table.his tr.is-row>td:nth-child(2):not(.his-ord){overflow:hidden;white-space:nowrap;text-overflow:ellipsis}'));
+  // mọi luật his-ord chỉ dưới html:not(.desktop)
+  for (const m of PAGE.matchAll(/^[^\n{]*his-ord[^\n{]*\{/gm)) if (!m[0].includes('<td') && !m[0].includes('el(')) assert.ok(m[0].startsWith('html:not(.desktop) '), m[0]);
+  assert.ok(!deskBlock().includes('his-ord'));
+});

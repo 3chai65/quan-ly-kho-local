@@ -915,6 +915,12 @@ html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody
 html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child(n){padding-bottom:3px} /* 2.38.29: vạch chân dòng nhập cách đáy ô 3px (trước: chạm đáy 4 ô). STT lệch lên 1,5px nên bù padding-top 3px */
 html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child(1){padding-top:3px}
 html:not(.desktop) #nhapPendingBody :is(#nhapPendName,.nhap-hint){display:none}
+/* 2.38.33: Lịch sử bán/nhập điện thoại — chấm chưa đọc + tên + "· N vị" cùng 1 dòng; tên dài cắt "…", "· N vị" luôn đủ. Dòng giao dịch lẻ (không có nút tên): cả ô cắt "…". Desktop không đổi. */
+html:not(.desktop) table.his tr.is-row>td:nth-child(2):not(.his-ord){overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html:not(.desktop) table.his td.his-ord{display:flex;align-items:center;white-space:nowrap}
+html:not(.desktop) table.his td.his-ord .linkbtn{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html:not(.desktop) table.his td.his-ord :is(.udot,.muted){flex:none}
+html:not(.desktop) table.his td.his-ord .muted{margin-left:4px}
 /* 2.38.22 (desktop): tối giản như điện thoại — nền trong suốt, chỉ viền var(--border); focus viền --sel-bd, vô hiệu mờ 50%; tab chọn/trang hiện tại giữ --sel-*. Đặt ngoài khối desktop (trần 20736 B). */
 html.desktop[data-bg]{--nb:transparent;--kb:var(--border)}
 html.desktop .tab,html.desktop #invBox .inv-chip:not(.on){--nb:transparent;--kb:var(--border)}
@@ -3822,7 +3828,7 @@ function appendOrderRow(tbody, r, isImp){
   var tr = el('tr');
   tr.className = 'is-row';
   tr.appendChild(el('td', 'muted small', dateVN(r.date) + (r.hasTime ? ' ' + timeVN(r.ts) : '')));
-  var tn = el('td', 'b');
+  var tn = el('td', 'b his-ord');
   var nameBtn = el('button', 'linkbtn', r.oname);
   nameBtn.type = 'button';
   nameBtn.setAttribute('data-action', 'order-view');
