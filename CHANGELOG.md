@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.14] - 2026-11-24
+
+### Sửa
+- Điện thoại: tờ ghi (Bán lẻ, Thuốc chén, Nhập hàng) phẳng: `.note` bỏ nền, viền (gồm gạch đỏ trái 3px), bo, bóng, blur như desktop; chỉ khung tab (card) có nền. Phân vùng bằng đường kẻ `--border` 1px (đường Tổng 2px → 1px, đường chân `--border2` → `--border`). Ô nhập/nút giữ nền. Kho tồn/Lịch sử không có lớp thừa. Desktop trùng 100% (650 phần tử × 16 thuộc tính). Chưa thử iPhone thật.
+
 ## [2.38.13] - 2026-11-24
 
 ### Sửa

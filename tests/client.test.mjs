@@ -8201,3 +8201,12 @@ test('2.38.12 điện thoại: một bộ biến --ctl-* theo ô "Đơn mới" (
   assert.ok(a > PAGE.indexOf('html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark)'), 'đứng sau luật màu nút của .pt để thắng thứ tự');
   assert.match(PAGE, /\.btn\{min-height:var\(--ctl-h,44px\)\}/); assert.match(PAGE, /\.inp\{min-height:var\(--ctl-h,44px\);font-size:var\(--ctl-fs,16px\)\}/);
 });
+
+test('2.38.14 điện thoại: tờ ghi phẳng — .note của 3 tab bỏ nền/viền/bo/bóng/blur (chỉ card có nền), đường kẻ mảnh --border 1px; desktop không bị chạm', () => {
+  const a = PAGE.indexOf('/* 2.38.14: tờ ghi phẳng'); assert.ok(a > 0, 'có khối');
+  assert.match(PAGE.slice(a), /^[^\n]*\nhtml:not\(\.desktop\) :is\(#retailBox,#remedyBox,#nhapBox\) \.note\{border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none\}/);
+  assert.ok(a > PAGE.indexOf('/* 2.38.12 (điện thoại)'), 'sau khối --ctl-*');
+  assert.ok(!deskBlock().includes('2.38.14'), 'không nằm trong khối desktop');
+  assert.ok(!/\.note\{[^}]*border-top:2px/.test(PAGE) && !/\.note tfoot td\{[^}]*2px solid/.test(PAGE) && !/\.note__pending tfoot td\{[^}]*2px solid/.test(PAGE), 'đường kẻ Tổng 1px, không 2px');
+  assert.ok(!/\.note__foot\{[^}]*border-top:1px solid var\(--border2\)/.test(PAGE), 'đường kẻ chân dùng --border');
+});

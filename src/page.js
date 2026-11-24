@@ -235,7 +235,7 @@ letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bot
 .note .note__pending tr.is-row>td{height:auto;vertical-align:bottom}
 .note .note__pending tr.is-row>td .inp{display:block}
 .note tbody tr:hover{background:transparent}
-.note tfoot td{height:40px;border-top:2px solid var(--border);border-bottom:0;font-weight:800}
+.note tfoot td{height:40px;border-top:1px solid var(--border);border-bottom:0;font-weight:800}
 .note .foot{margin:0;padding:8px 12px}
 .note .r{text-align:right}
 .chart{display:block;width:100%;height:300px;cursor:pointer}
@@ -304,7 +304,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 #retailNote col.cg-act{width:52px}
 #retailNote .note__pending thead{display:none}
 #retailNote .note__pending{margin:0}
-.note__foot{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border2)}
+.note__foot{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border)}
 .note__tot{font-size:14px;color:var(--text2)}
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (chỉ hiển thị; không đổi giá trị). */
 .qty-host{position:relative;display:block}
@@ -331,7 +331,7 @@ td.c-qty{position:relative}
 #remedyNote .note__pending thead{display:none}
 #remedyNote .note__pending{margin:0}
 .note__pending tr.is-empty{display:none}
-#remedyNote .note__foot{display:block;padding:8px 10px;border-top:1px solid var(--border2)}
+#remedyNote .note__foot{display:block;padding:8px 10px;border-top:1px solid var(--border)}
 .note__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end}
 .note__row+.note__row{margin-top:8px}
 .note__row:first-child{justify-content:flex-start}
@@ -608,7 +608,7 @@ html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}
 /* Hàng Tổng nằm trong bảng dòng nhập (table.ord là block trên điện thoại): dựng lại lưới cùng độ rộng cột với bảng tờ ghi để số tổng thẳng cột tiền. */
 .note__pending tfoot{display:block}
 .note__pending tfoot tr{display:grid}
-.note__pending tfoot td{display:block;padding:4px 5px;border-top:2px solid var(--border)}
+.note__pending tfoot td{display:block;padding:4px 5px;border-top:1px solid var(--border)}
 #retailNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 84px 52px}
 #nhapListBox .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 64px 84px 52px}
 #remedyNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 52px}
@@ -854,6 +854,8 @@ html:not(.desktop) :is(input,select).inp{height:var(--ctl-h);padding-top:var(--c
 html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){height:var(--ctl-h);min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx);color:var(--ctl-c,var(--text));border-color:var(--border);background:none;box-shadow:none}
 html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn--danger{--ctl-c:var(--red-text)}
 html:not(.desktop) :is(.note__lbl,.note__eq,#remedyTotal,.note__tot b){font-size:var(--ctl-tx)}
+/* 2.38.14: tờ ghi phẳng: chỉ khung tab (card) có nền; .note bỏ nền/viền/bo/bóng (như desktop F.1), phân vùng bằng đường kẻ mảnh --border. */
+html:not(.desktop) :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
 html.desktop{--sth:76px}
