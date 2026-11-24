@@ -8325,3 +8325,13 @@ test('2.38.26 U: Thống kê desktop — .chart-scroll giãn hết thân thẻ (
   const blk = PAGE.slice(i, i + 520);
   assert.ok(blk.includes('new window.ResizeObserver') && blk.includes('if (w === chLw && h === chLh) return;') && blk.includes('if (isDesk() && cb && cb.open) renderChart();'), 'chặn vẽ lặp + chỉ desktop');
 });
+
+test('2.38.27 V0: điện thoại — gợi ý Thuốc chén phải neo vào ô tìm (.note__search position:relative): từ 2.38.11 không còn khối chứa nên .sug__list top:calc(100%+2px) rơi theo cửa sổ (y=846 ở màn 844), gõ không thấy gợi ý', () => {
+  const rule = 'html:not(.desktop) #remedyNote .note__search{position:relative}';
+  assert.ok(PAGE.includes(rule), 'luật neo');
+  // .sug{position:static} (<=600px) đứng trước, luật neo (đặc hiệu hơn) thắng
+  assert.ok(PAGE.includes('@media (max-width:600px){.sug{position:static}'), 'luật static gốc còn đó');
+  assert.ok(!/html\.desktop #remedyNote \.note__search\{position:relative/.test(PAGE), 'không đụng desktop');
+  // mọi ô tìm có .sug__list phải có tổ tiên định vị: remedy dùng luật neo, Bán lẻ/Nhập hàng neo vào .card__bar (position:relative) hoặc dòng nhập
+  assert.ok(PAGE.includes('.card__bar{position:relative}'), 'Bán lẻ neo ở thanh đầu');
+});

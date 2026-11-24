@@ -905,6 +905,7 @@ html:not(.desktop) #retailBody tr.is-empty>td:nth-child(2){grid-column:2}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(3){grid-column:3}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(4){grid-column:4}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(5){grid-column:5;padding:0;justify-self:end}
+html:not(.desktop) #remedyNote .note__search{position:relative} /* 2.38.27: gợi ý Thuốc chén neo vào ô tìm (từ 2.38.11 không còn khối chứa nào nên danh sách rơi ra ngoài màn hình) */
 html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}
 html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug>.inp{width:100%;min-width:0;padding-left:6px;padding-right:6px}
 html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}

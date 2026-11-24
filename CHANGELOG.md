@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.27] - 2026-11-24
+
+### Sửa
+- Điện thoại: Thuốc chén gõ "Nhập tên" không ra gợi ý — từ 2.38.11 (bỏ kb-lock) danh sách gợi ý không còn khối chứa định vị nên rơi ngoài màn hình; ô tìm `#remedyNote .note__search` nay `position:relative`. Desktop không đổi.
+
 ## [2.38.26] - 2026-11-24
 
 ### Sửa
