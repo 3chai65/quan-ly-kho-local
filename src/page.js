@@ -756,6 +756,7 @@ html.desktop #chartTip .chart-tip__m{min-width:56px}
 html.desktop #chartTip .chart-chip{gap:6px;padding:3px 10px;line-height:18px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px}
 html.desktop #chartTip .chart-chip__sw{width:9px;height:9px;flex-basis:9px;border-radius:50%}
 html.desktop #chartTip .chart-chip__k{min-width:0;font-weight:400;color:var(--muted)}
+html.desktop .chart-scroll{flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop .chart{flex:1;min-height:0;height:auto}
 html.desktop .main details:not(#backupBox)[open]{display:flex;flex-direction:column}
 html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
@@ -5953,6 +5954,14 @@ function bindEvents(){
     clearTimeout(rt);
     rt = setTimeout(function(){ if (cb && cb.open) renderChart(); }, 160);
   });
+  /* 2.38.26 desktop: khung biểu đồ đổi cỡ (tab mở, cửa sổ Tauri đổi) thì vẽ lại; chỉ khi rộng/cao thật sự đổi nên không vẽ lặp. */
+  var chHost = $('.chart-scroll'), chLw = 0, chLh = 0;
+  if (chHost && typeof window.ResizeObserver === 'function') new window.ResizeObserver(function(){
+    var w = chHost.clientWidth, h = chHost.clientHeight;
+    if (w === chLw && h === chLh) return;
+    chLw = w; chLh = h;
+    if (isDesk() && cb && cb.open) renderChart();
+  }).observe(chHost);
 
   var dlg = $('#editDlg');
   if (dlg) dlg.addEventListener('click', function(e){ if (e.target === dlg) closeEdit(); });

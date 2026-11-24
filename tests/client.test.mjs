@@ -8314,3 +8314,14 @@ test('2.38.25 S: Kho tồn/Lịch sử nhập/bán desktop — bảng không hei
   assert.ok(PAGE.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'dòng cao 26px');
   assert.ok(PAGE.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}'));
 });
+
+test('2.38.26 U: Thống kê desktop — .chart-scroll giãn hết thân thẻ (flex:1, cột) để canvas flex:1 lấp kín; ResizeObserver vẽ lại khi cỡ khung đổi, chặn vẽ lặp, chỉ desktop', () => {
+  const d = deskBlock();
+  assert.ok(d.includes('html.desktop .chart-scroll{flex:1;min-height:0;display:flex;flex-direction:column}'), 'khung chứa canvas giãn');
+  assert.ok(d.includes('html.desktop .chart{flex:1;min-height:0;height:auto}'));
+  assert.ok(!/^\.chart-scroll\{[^}]*flex/m.test(PAGE), 'điện thoại: không đổi luật chung');
+  const i = PAGE.indexOf("var chHost = $('.chart-scroll')");
+  assert.ok(i > 0, 'có ResizeObserver cho khung biểu đồ');
+  const blk = PAGE.slice(i, i + 520);
+  assert.ok(blk.includes('new window.ResizeObserver') && blk.includes('if (w === chLw && h === chLh) return;') && blk.includes('if (isDesk() && cb && cb.open) renderChart();'), 'chặn vẽ lặp + chỉ desktop');
+});

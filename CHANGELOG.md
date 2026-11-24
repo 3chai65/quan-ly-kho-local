@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.26] - 2026-11-24
+
+### Sửa
+- Desktop: Thống kê — biểu đồ lấp kín khung (khung chứa canvas `.chart-scroll` giãn hết thân thẻ, trước đó chừa ~88px ở HD); thêm ResizeObserver vẽ lại khi cỡ khung đổi (chặn vẽ lặp, chỉ desktop). Điện thoại không đổi.
+
 ## [2.38.25] - 2026-11-24
 
 ### Sửa
