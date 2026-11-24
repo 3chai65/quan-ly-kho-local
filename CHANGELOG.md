@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.15] - 2026-11-24
+
+### Sửa
+- Điện thoại, giao diện tối giản (theo `yeu-cau-giao-dien.md`): thanh đầu cố định có đúng 1 nét phân cách `1px solid var(--text)` (không bóng); bỏ khung card (viền, nền, bo, bóng) quanh nội dung các tab; mọi ô nhập/select/ngày và nút trong suốt, viền 1px `var(--text)` (trắng #f8fafc, dùng biến sẵn có, không thêm màu), chữ `--text`, không bóng/blur; placeholder `rgba(255,255,255,.5)`; tab chọn chỉ viền, không nền. Giữ: chữ đỏ Xóa đơn, nền của chip/trang đang chọn, viền xanh khi ô đang gõ. Desktop trùng 100% (724 phần tử × 16 thuộc tính). Chưa thử iPhone thật.
+
 ## [2.38.14] - 2026-11-24
 
 ### Sửa

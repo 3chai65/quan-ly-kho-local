@@ -8006,7 +8006,7 @@ test('H.1 chân tờ ghi nằm trong luồng ở điện thoại: không còn th
 });
 
 test('H.2 thanh đầu điện thoại: nền đặc không backdrop-filter, hàng 1 thẻ Bán/Lợi nhuận + đồng bộ, hàng 2 tám tab chỉ icon ≥44px; nhãn "Bán tháng", ẩn "Năm"; desktop không đổi', () => {
-  assert.ok(PAGE.includes('html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}'), 'nền đặc');
+  assert.ok(PAGE.includes('html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border-bottom:1px solid var(--text)}'), 'nền đặc');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;'), '8 tab 1 hàng');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;'), 'ô tab >=44px');
   assert.ok(PAGE.includes('html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}'), 'tab chỉ icon');
@@ -8189,12 +8189,12 @@ test('2.38.10 "Đọc hết" điện thoại: sau dòng thông tin, canh phải,
 
 test('2.38.12 điện thoại: một bộ biến --ctl-* theo ô "Đơn mới" (cao 40, bo 10, đệm dọc 7, ô nhập >=16px, chữ 14); nút kiểu tab, Xóa đơn đỏ; desktop không bị chạm', () => {
   const a = PAGE.indexOf('/* 2.38.12 (điện thoại)'); assert.ok(a > 0, 'có khối');
-  const blk = PAGE.slice(a, PAGE.indexOf('\n/* 2.38.3: cửa sổ thấp', a));
+  const blk = PAGE.slice(a, PAGE.indexOf('\n/* 2.38.14:', a));
   assert.match(blk, /html:not\(\.desktop\)\{--ctl-h:40px;--ctl-r:10px;--ctl-py:7px;--ctl-fs:16px;--ctl-tx:14px\}/);
   assert.ok(parseInt(blk.match(/--ctl-fs:(\d+)px/)[1], 10) >= 16, 'ô nhập iOS >= 16px');
   assert.ok(parseInt(blk.match(/--ctl-h:(\d+)px/)[1], 10) === 40, 'cao đúng 40 (người dùng chấp nhận <44)');
-  assert.match(blk, /\.btn:not\(\.pager__num\)\{height:var\(--ctl-h\);min-height:var\(--ctl-h\);border-radius:var\(--ctl-r\);font-size:var\(--ctl-tx\);color:var\(--ctl-c,var\(--text\)\);border-color:var\(--border\);background:none;box-shadow:none\}/);
-  assert.match(blk, /\.btn--danger\{--ctl-c:var\(--red-text\)\}/);
+  assert.match(blk, /\.btn:not\(\.pager__num\)\{height:var\(--ctl-h\);min-height:var\(--ctl-h\);border-radius:var\(--ctl-r\);font-size:var\(--ctl-tx\)\}/);
+  assert.ok(PAGE.includes('html:not(.desktop) .btn--danger{--ctl-c:var(--red-text)}'), 'Xóa đơn chữ đỏ');
   assert.match(blk, /:is\(input,select\)\.inp\{height:var\(--ctl-h\);padding-top:var\(--ctl-py\);padding-bottom:var\(--ctl-py\);border-radius:var\(--ctl-r\)\}/);
   assert.ok(!/#[0-9a-f]{3,6}|rgba?\(/i.test(blk.replace(/^\/\*[\s\S]*?\*\/\n/, '')), 'không màu mới');
   assert.ok(!deskBlock().includes('--ctl-') && !/html\.desktop[^{]*--ctl-/.test(PAGE), 'khối desktop không dùng --ctl-');
@@ -8209,4 +8209,18 @@ test('2.38.14 điện thoại: tờ ghi phẳng — .note của 3 tab bỏ nền
   assert.ok(!deskBlock().includes('2.38.14'), 'không nằm trong khối desktop');
   assert.ok(!/\.note\{[^}]*border-top:2px/.test(PAGE) && !/\.note tfoot td\{[^}]*2px solid/.test(PAGE) && !/\.note__pending tfoot td\{[^}]*2px solid/.test(PAGE), 'đường kẻ Tổng 1px, không 2px');
   assert.ok(!/\.note__foot\{[^}]*border-top:1px solid var\(--border2\)/.test(PAGE), 'đường kẻ chân dùng --border');
+});
+
+test('2.38.15 điện thoại tối giản: 1 nét phân cách dưới thanh đầu, bỏ khung card, ô/nút trong suốt viền 1px --text, placeholder trắng mờ, tab chọn chỉ viền; không màu cứng mới; desktop không bị chạm', () => {
+  const a = PAGE.indexOf('/* 2.38.15:'); assert.ok(a > 0, 'có khối');
+  const blk = PAGE.slice(a, PAGE.indexOf('/* 2.38.3: cửa sổ thấp', a));
+  assert.ok(a > PAGE.indexOf('/* 2.38.14: tờ ghi phẳng'), 'sau khối tờ ghi phẳng (thắng thứ tự)');
+  assert.ok(PAGE.includes('box-shadow:none;border-bottom:1px solid var(--text)}'), '.top: một nét phân cách, không bóng');
+  assert.ok(blk.includes('html:not(.desktop) .card:not(.dlg__card){border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'bỏ khung card');
+  assert.ok(blk.includes('html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--text);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'ô nhập');
+  assert.ok(blk.includes('html:not(.desktop) .inp::placeholder{color:rgba(255,255,255,.5);opacity:1}'), 'placeholder');
+  assert.ok(blk.includes('html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--text);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'nút');
+  assert.ok(blk.includes('.tab.is-active{background:none;border-color:var(--text);box-shadow:none}'), 'tab chọn chỉ viền');
+  assert.ok(!/#fff|#000/.test(blk), 'không màu cứng');
+  assert.ok(!deskBlock().includes('2.38.15'), 'ngoài khối desktop');
 });

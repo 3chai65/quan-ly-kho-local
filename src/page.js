@@ -568,7 +568,7 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 .tab__ic{color:var(--tab-ico);border-radius:4px}
 .tab.is-active .tab__ic{background:var(--brand-soft);box-shadow:0 0 0 3px var(--brand-soft)}
 /* H.2: điện thoại (không html.desktop): thanh đầu cố định nền đặc; hàng 1 logo | Bán | Lợi nhuận | đồng bộ, hàng 2 tám tab chỉ icon (JS phoneTop chuyển nút có sẵn vào .top) */
-html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border-bottom:1px solid var(--text)}
 html:not(.desktop) .top .bar{min-height:0}
 html:not(.desktop) .brand-wrap{display:none}
 html:not(.desktop) .top__r{display:flex;align-items:stretch;gap:4px;padding:3px 4px 0}
@@ -851,11 +851,18 @@ html.desktop .brand__yin{cursor:pointer}
 /* 2.38.12 (điện thoại): MỘT bộ cỡ chung theo ô "Đơn mới" (#remedyPreset): cao 40 (chỉ iPhone thật đo được: "Đơn mới" ~39), bo 10, đệm dọc 7, chữ ô nhập 16 (dưới 16 iOS tự phóng to), chữ nút/dòng tờ ghi 14 = danh sách Kho tồn. Nút kiểu tab điện thoại: nền/viền trong suốt, chữ + icon var(--text); Xóa đơn chữ đỏ; không màu mới. */
 html:not(.desktop){--ctl-h:40px;--ctl-r:10px;--ctl-py:7px;--ctl-fs:16px;--ctl-tx:14px}
 html:not(.desktop) :is(input,select).inp{height:var(--ctl-h);padding-top:var(--ctl-py);padding-bottom:var(--ctl-py);border-radius:var(--ctl-r)}
-html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){height:var(--ctl-h);min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx);color:var(--ctl-c,var(--text));border-color:var(--border);background:none;box-shadow:none}
-html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn--danger{--ctl-c:var(--red-text)}
+html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){height:var(--ctl-h);min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx)}
 html:not(.desktop) :is(.note__lbl,.note__eq,#remedyTotal,.note__tot b){font-size:var(--ctl-tx)}
 /* 2.38.14: tờ ghi phẳng: chỉ khung tab (card) có nền; .note bỏ nền/viền/bo/bóng (như desktop F.1), phân vùng bằng đường kẻ mảnh --border. */
 html:not(.desktop) :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+/* 2.38.15: giao diện tối giản (điện thoại): thanh đầu cố định + đúng 1 nét trắng phân cách; bỏ khung card quanh nội dung tab; mọi ô/nút trong suốt, viền 1px + chữ var(--text) (trắng #f8fafc, không thêm màu), không bóng/blur; placeholder trắng mờ; tab chọn chỉ viền trắng. :not([hidden]) nâng độ ưu tiên hơn luật kính .pt; Xóa đơn giữ chữ đỏ; chip/trang đang chọn giữ nền. */
+html:not(.desktop) .card:not(.dlg__card){border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--text);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) :is(input,select,textarea).inp:focus{border-color:var(--brand)}
+html:not(.desktop) .inp::placeholder{color:rgba(255,255,255,.5);opacity:1}
+html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--text);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) .btn--danger{--ctl-c:var(--red-text)}
+html:not(.desktop) .top .tabs .tab.is-active{background:none;border-color:var(--text);box-shadow:none}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
 html.desktop{--sth:76px}
