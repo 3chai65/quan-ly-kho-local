@@ -8188,9 +8188,9 @@ test('2.38.15 điện thoại tối giản: 1 nét phân cách dưới thanh đ�
   assert.ok(a > PAGE.indexOf('/* 2.38.14: tờ ghi phẳng'), 'sau khối tờ ghi phẳng (thắng thứ tự)');
   assert.ok(PAGE.includes('box-shadow:none;border-bottom:1px solid var(--text)}'), '.top: một nét phân cách, không bóng');
   assert.ok(blk.includes('html:not(.desktop) .card:not(.dlg__card){border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'bỏ khung card');
-  assert.ok(blk.includes('html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--text);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'ô nhập');
+  assert.ok(blk.includes('html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--border);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'ô nhập');
   assert.ok(blk.includes('html:not(.desktop) .inp::placeholder{color:rgba(255,255,255,.5);opacity:1}'), 'placeholder');
-  assert.ok(blk.includes('html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--text);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'nút');
+  assert.ok(blk.includes('html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--border);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}'), 'nút');
   assert.ok(blk.includes('.tab.is-active{background:none;border-color:var(--text);box-shadow:none}'), 'tab chọn chỉ viền');
   assert.ok(!/#fff|#000/.test(blk), 'không màu cứng');
   assert.ok(!deskBlock().includes('2.38.15'), 'ngoài khối desktop');
@@ -8275,4 +8275,18 @@ test('2.38.20 P: Bán lẻ/Nhập hàng điện thoại — ô tên (.sug) vào 
   const a = PAGE.indexOf('/* 2.38.20 (điện thoại)'); const blk = PAGE.slice(a, PAGE.indexOf('/* 2.38.3: cửa sổ thấp', a));
   for (const k of ['html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display:none}', 'html:not(.desktop) .note{overflow:visible}', 'html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}', 'html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}', '#retailBody tr.is-empty{display:grid;grid-template-columns:var(--cols);']) assert.ok(blk.includes(k), k);
   assert.ok(!deskBlock().includes('2.38.20') && !deskBlock().includes('entryMount'));
+});
+
+test('2.38.21 Q: điện thoại chỉ viền (var(--border)), không nền mờ: thẻ Bán/Lợi nhuận trong suốt; focus viền --sel-bd; vô hiệu opacity .5; hover dòng chỉ desktop; ô dòng nhập display:block (vạch chân dưới đáy ô)', () => {
+  assert.ok(PAGE.includes('padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:none}'), 'thẻ Bán/Lợi nhuận');
+  assert.ok(PAGE.includes('html:not(.desktop) :is(input,select,textarea).inp:focus{border-color:var(--sel-bd)}'));
+  assert.ok(PAGE.includes('html:not(.desktop) :is(input,select,textarea,.btn):disabled{opacity:.5}'));
+  assert.ok(PAGE.includes('html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}') && !PAGE.includes('html:is(.desktop,.pt)[data-bg] tbody tr:hover'), 'hover dòng không áp cho .pt');
+  assert.ok(PAGE.includes('>td :is(.inp,.qty-host){display:block}') && PAGE.includes('>td>.btn{display:flex}'), 'ô cao đủ trong ô bảng');
+  assert.ok(PAGE.includes('html:not(.desktop) .top{background:var(--surface)'), '.top giữ nền đặc');
+  assert.ok(!/border:1px solid var\(--text\);color/.test(PAGE.slice(PAGE.indexOf('/* 2.38.15:'), PAGE.indexOf('/* 2.38.16 (điện thoại)'))), 'ô/nút không còn viền trắng đặc');
+});
+
+test('2.38.21 P: dòng nhập trống — ô td height:auto (luật .note td{height:34px} làm ô 40px tràn khỏi vạch chân)', () => {
+  assert.ok(PAGE.includes('html:not(.desktop) #retailBody tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}'));
 });

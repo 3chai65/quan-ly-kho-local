@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.21] - 2026-11-24
+
+- Điện thoại: dòng nhập trống — ô td `height:auto` + stretch nên vạch chân nằm dưới đáy 4 ô (trước: ô 40px tràn khỏi td 34px); Q: chỉ còn viền `var(--border)`, bỏ nền thẻ Bán/Lợi nhuận, bỏ nền hover dòng (.pt); focus viền `--sel-bd`, vô hiệu mờ 50%; `.top` giữ nền đặc. Desktop không đổi. Chưa thử iPhone thật.
+
 ## [2.38.20] - 2026-11-24
 
 - Điện thoại (Bán lẻ, Nhập hàng): ô "Nhập tên" nằm trong dòng nhập (STT | tên | SL | giá | +), gợi ý rộng hết tờ ghi; chọn vị → chữ tên, con trỏ sang SL; chạm tên để chọn lại; sau "+" con trỏ về ô tên. Nút Bán đơn / Lưu nhập hàng lên hàng đầu thẻ; dòng gợi ý giá nhập ẩn. Desktop không đổi; Thuốc chén chưa đổi. Chưa thử iPhone thật.

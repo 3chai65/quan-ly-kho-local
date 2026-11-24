@@ -573,7 +573,7 @@ html:not(.desktop) .top .bar{min-height:0}
 html:not(.desktop) .brand-wrap{display:none}
 html:not(.desktop) .top__r{display:flex;align-items:stretch;gap:4px;padding:3px 4px 0}
 html:not(.desktop) .top .stats{display:contents}
-html:not(.desktop) .top .stats__c{flex:1 1 0;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--surface2)}
+html:not(.desktop) .top .stats__c{flex:1 1 0;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:none}
 html:not(.desktop) .top .stat__v{font-size:15px;white-space:nowrap;overflow-wrap:normal}
 html:not(.desktop) .top .stat__sub{white-space:nowrap}
 html:not(.desktop) .top .stat__sub span+span{display:none}
@@ -704,7 +704,7 @@ html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparen
 html:is(.desktop,.pt)[data-bg] .dlg__card .note{background:rgba(255,255,255,.04)}
 html:is(.desktop,.pt)[data-bg] .inp{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}
 html:is(.desktop,.pt)[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);box-shadow:none}
-html:is(.desktop,.pt)[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}
+html.desktop[data-bg] tbody tr:hover{background:rgba(255,255,255,.07)}
 html:is(.desktop,.pt) select option,html:is(.desktop,.pt) select optgroup{background:var(--surface);color:var(--text)}
 html:is(.desktop,.pt) .toast{background:rgba(20,28,60,.92);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 html:is(.desktop,.pt) .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}
@@ -857,10 +857,11 @@ html:not(.desktop) :is(.note__lbl,.note__eq,#remedyTotal,.note__tot b){font-size
 html:not(.desktop) :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 /* 2.38.15: giao diện tối giản (điện thoại): thanh đầu cố định + đúng 1 nét trắng phân cách; bỏ khung card quanh nội dung tab; mọi ô/nút trong suốt, viền 1px + chữ var(--text) (trắng #f8fafc, không thêm màu), không bóng/blur; placeholder trắng mờ; tab chọn chỉ viền trắng. :not([hidden]) nâng độ ưu tiên hơn luật kính .pt; Xóa đơn giữ chữ đỏ; chip/trang đang chọn giữ nền. */
 html:not(.desktop) .card:not(.dlg__card){border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--text);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-html:not(.desktop) :is(input,select,textarea).inp:focus{border-color:var(--brand)}
+html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--border);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) :is(input,select,textarea).inp:focus{border-color:var(--sel-bd)}
+html:not(.desktop) :is(input,select,textarea,.btn):disabled{opacity:.5}
 html:not(.desktop) .inp::placeholder{color:rgba(255,255,255,.5);opacity:1}
-html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--text);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--border);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html:not(.desktop) .btn--danger{--ctl-c:var(--red-text)}
 html:not(.desktop) .top .tabs .tab.is-active{background:none;border-color:var(--text);box-shadow:none}
 /* 2.38.16 (điện thoại): tờ ghi cột thẳng hàng. Tiêu đề "TỜ GHI" + nhãn cột (SL, Giá) cùng lưới --cols với dòng đã ghi (bảng, colgroup) và dòng đang nhập (1 hàng: STT | tên | SL | giá | +). Tên dài cắt "…". "Trang x / y" chỉ hiện khi > 1 trang. Desktop: nhãn cột ẩn, tiêu đề đủ chữ. */
@@ -905,8 +906,8 @@ html:not(.desktop) #retailBox .card__bar>.btn{margin-left:0}
 html:not(.desktop) .note{overflow:visible}
 html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row){position:relative}
 html:not(.desktop) #retailBody tr.is-empty{display:grid;grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
-html:not(.desktop) #retailBody tr.is-empty>td{grid-row:1;padding:0 5px}
-html:not(.desktop) #retailBody tr.is-empty>td:nth-child(1){grid-column:1;padding:0;text-align:center}
+html:not(.desktop) #retailBody tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(1){grid-column:1;padding:0;display:flex;align-items:center;justify-content:center}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(2){grid-column:2}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(3){grid-column:3}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(4){grid-column:4}
@@ -915,6 +916,8 @@ html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}
 html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug>.inp{width:100%;min-width:0;padding-left:6px;padding-right:6px}
 html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}
 html:not(.desktop) #retailBody tr[data-pid]>td:nth-child(2){cursor:pointer}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row)>td :is(.inp,.qty-host){display:block}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row)>td>.btn{display:flex}
 html:not(.desktop) #nhapPendingBody :is(#nhapPendName,.nhap-hint){display:none}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
