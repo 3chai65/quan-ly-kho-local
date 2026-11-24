@@ -945,7 +945,21 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       var gl = document.createElement('button'); gl.type = 'button'; gl.className = 'glsw'; gl.setAttribute('role', 'switch'); gl.textContent = 'Hiệu ứng kính'; /* 2.23.0 */
       gl.setAttribute('aria-checked', R.classList.contains('glass') ? 'true' : 'false');
       gl.onclick = function(){ var on = !R.classList.contains('glass'); R.classList.toggle('glass', on); gl.setAttribute('aria-checked', on ? 'true' : 'false'); try { localStorage.setItem('kho_glass_v2', on ? '1' : '0'); } catch (e) {} };
-      if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w), bb.appendChild(gl); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
+      /* 2.38.18: viên Sao lưu | Thiết bị dựng cho cả điện thoại (lối vào Thiết bị chuyển từ logo vào đây) */
+      var bakSeg = function(){
+      var kb = document.getElementById('backupBox'), kbar = kb && kb.querySelector('.card__bar'), kbody = kb && kb.querySelector('.card__body');
+      if (kbar && kbody) {
+        var sg = document.createElement('div'), ds = document.createElement('section');
+        sg.className = 'pager bakseg'; sg.setAttribute('role', 'group'); sg.setAttribute('aria-label', 'Phần hiển thị');
+        [['bak', 'Sao lưu'], ['dev', 'Thiết bị']].forEach(function(p){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn--sm'; b.textContent = p[1]; b.setAttribute('data-action', 'bak-view'); b.setAttribute('data-view', p[0]); if (p[0] === 'bak') b.setAttribute('aria-current', 'true'); sg.appendChild(b); });
+        var dm = document.createElement('p'), dv = document.createElement('button');
+        dm.className = 'hint'; dm.id = 'devMsg'; dm.setAttribute('role', 'status');
+        dv.type = 'button'; dv.className = 'btn mt-10'; dv.id = 'devOpen'; dv.hidden = true; dv.textContent = 'Mở quản lý thiết bị'; dv.setAttribute('data-action', 'open-devices');
+        ds.className = 'bak-sec'; ds.id = 'devSec'; ds.hidden = true; ds.appendChild(dm); ds.appendChild(dv);
+        kbody.appendChild(ds); kbar.appendChild(sg);
+      }
+      };
+      if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w), bb.appendChild(gl); bakSeg(); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
       /* 2.25.0: chân thanh bên = nền, dòng đồng bộ (#syncLine, chữ do renderSyncLine), công tắc kính. 2.28.0: bỏ nút Tải lại/Thoát; bấm logo hoặc chữ "Quản Lý Kho" = Tải lại (reloadAppClick, có hỏi nháp). */
       var sbf = document.createElement('div'), sy = document.createElement('div');
       sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…';
@@ -969,17 +983,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
       document.body.appendChild(sbf);
       ['brandBtn', 'brandLogo'].forEach(function(i){ var n = document.getElementById(i); if (n) n.setAttribute('data-action', 'reload-app'), n.title = 'Tải lại'; });
       /* 2.28.0: tab Sao lưu khôi phục: viên Sao lưu | Thiết bị (bakView) + thẻ Thiết bị (chỉ dẫn tới trang /auth/devices, không viết lại giao diện) */
-      var kb = document.getElementById('backupBox'), kbar = kb && kb.querySelector('.card__bar'), kbody = kb && kb.querySelector('.card__body');
-      if (kbar && kbody) {
-        var sg = document.createElement('div'), ds = document.createElement('section');
-        sg.className = 'pager bakseg'; sg.setAttribute('role', 'group'); sg.setAttribute('aria-label', 'Phần hiển thị');
-        [['bak', 'Sao lưu'], ['dev', 'Thiết bị']].forEach(function(p){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn--sm'; b.textContent = p[1]; b.setAttribute('data-action', 'bak-view'); b.setAttribute('data-view', p[0]); if (p[0] === 'bak') b.setAttribute('aria-current', 'true'); sg.appendChild(b); });
-        var dm = document.createElement('p'), dv = document.createElement('button');
-        dm.className = 'hint'; dm.id = 'devMsg'; dm.setAttribute('role', 'status');
-        dv.type = 'button'; dv.className = 'btn mt-10'; dv.id = 'devOpen'; dv.hidden = true; dv.textContent = 'Mở quản lý thiết bị'; dv.setAttribute('data-action', 'open-devices');
-        ds.className = 'bak-sec'; ds.id = 'devSec'; ds.hidden = true; ds.appendChild(dm); ds.appendChild(dv);
-        kbody.appendChild(ds); kbar.appendChild(sg);
-      }
+      bakSeg();
       var th = document.querySelector('.thk'), ct = document.getElementById('chartTip'); if (th && ct) th.appendChild(ct); /* 2.25.0: dòng tháng + chip Nhập/Bán nằm dưới hàng 4 số */
       var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false; /* 2.20.11; 2.22.0: ngoài Tauri ẩn cả dòng thư mục */
       ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
@@ -1042,7 +1046,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
   <div class="wrap bar">
     <div class="brand-wrap">
       <span class="brand__yin" id="brandLogo" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg></span>
-      <button class="brand" type="button" id="brandBtn" data-action="brand-devices" aria-describedby="brandNote">Quản Lý Kho</button>
+      <button class="brand" type="button" id="brandBtn" data-action="brand-tap" aria-describedby="brandNote">Quản Lý Kho</button>
     </div>
     <div class="bar__actions">
       <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
@@ -2370,7 +2374,7 @@ function phoneTop(){
   r.className = 'top__r'; m.id = 'syncLineM'; m.type = 'button'; m.className = 'syncm'; d.className = 'syncm__d'; t.className = 'syncm__t';
   m.appendChild(d); m.appendChild(t);
   if (logo) btn.insertBefore(logo, btn.firstChild);
-  btn.setAttribute('aria-label', 'Quản Lý Kho — Thiết bị');
+  btn.setAttribute('aria-label', 'Quản Lý Kho');
   r.appendChild(btn); r.appendChild(st); r.appendChild(m);
   top.insertBefore(r, top.firstChild);
   top.insertBefore(tabs, $('.top .bar'));
@@ -2472,27 +2476,10 @@ function dlgErrorBox(dlg){
 function clearDlgErr(dlg){ var box = dlg.querySelector('.dlg__err'); if (box && box.parentNode) box.parentNode.removeChild(box); }
 
 /* N4 (2.13.0): bấm "Quản Lý Kho": chỉ thiết bị chủ (fetch /auth/devices = 200) mới vào Thiết bị; còn lại rung icon và báo chỉ-đọc. Không đổi server. */
-var brandBusy = false;
-function denyDevices(){
-  var yin = $('#brandLogo');
-  if (yin) { yin.classList.remove('is-shake'); void yin.offsetWidth; yin.classList.add('is-shake'); }
-  var note = $('#brandNote');
-  if (note) note.textContent = 'Chỉ thiết bị chủ quản lý được thiết bị.';
-  toast('Chỉ thiết bị chủ quản lý được thiết bị.', 'error'); /* 2.27.0 */
-}
 function devicesOwner(){
   return Promise.resolve().then(function(){
     return fetch('/auth/devices', { credentials: 'same-origin', redirect: 'manual', headers: { Accept: 'text/html' } });
   }).then(function(r){ return !!(r && r.status === 200); }, function(){ return false; });
-}
-/* 2.28.0: desktop không còn dùng brand-devices (bấm logo = Tải lại); chỉ điện thoại còn vào Thiết bị bằng chữ "Quản Lý Kho". */
-function brandDevicesClick(){
-  if (brandBusy) return Promise.resolve();
-  brandBusy = true;
-  return devicesOwner().then(function(ok){
-    if (ok) location.href = '/auth/devices';
-    else denyDevices();
-  }).then(function(){ brandBusy = false; });
 }
 /* 2.28.0 desktop: viên Sao lưu | Thiết bị trong tab Sao lưu khôi phục; Thiết bị: chủ → nút mở /auth/devices; thiết bị khác → lời báo. */
 var devSeq = 0;
@@ -2975,10 +2962,13 @@ function allocateRemedyByCost(grand, lines){
   });
 }
 function calcRemedy(){
-  var grand = remedyGrand();
-  var tot = $('#remedyTotal');
-  if (tot) tot.textContent = fmtMoney(grand);
+  calcRemedyTyping();
   renderRemedyNote();
+}
+/* 2.38.18: khi gõ chỉ cập nhật tổng tại chỗ, không dựng lại tờ ghi. */
+function calcRemedyTyping(){
+  var tot = $('#remedyTotal');
+  if (tot) tot.textContent = fmtMoney(remedyGrand());
 }
 
 /* ================= ĐƠN THUỐC CÓ SẴN ================= */
@@ -5733,7 +5723,7 @@ function handleAction(btn){
     case 'sync-discard': discardUnsynced(); break;
     case 'unread-all': unreadAll(btn.getAttribute('data-kind')); break;
     case 'reload-app': reloadAppClick(); break;
-    case 'brand-devices': brandDevicesClick(); break;
+    case 'brand-tap': brandTap(); break;
     case 'bak-view': bakView(btn.getAttribute('data-view')); break;
     case 'open-devices': location.href = '/auth/devices'; break;
     case 'close-edit': closeEdit(); break;
@@ -5813,7 +5803,7 @@ function bindEvents(){
 
   var body = $('#retailBody');
   if (body) body.addEventListener('input', function(e){
-    if (e.target.classList.contains('retail-money') || e.target.classList.contains('retail-qty')) renderNote();
+    /* 2.38.18: gõ số KHÔNG dựng lại tờ ghi (nội dung tờ ghi không phụ thuộc ô đang gõ; dựng lại làm iOS cuộn trang khi gõ). */
   });
   var nbody = $('#retailNoteBody');
   if (nbody) nbody.addEventListener('keydown', function(e){
@@ -5827,7 +5817,7 @@ function bindEvents(){
   });
   var rbody = $('#remedyBody');
   if (rbody) rbody.addEventListener('input', function(e){
-    if (e.target.classList.contains('remedy-qty')) calcRemedy();
+    if (e.target.classList.contains('remedy-qty')) calcRemedyTyping();
   });
   function goSearch(sel){
     var s = $(sel);
@@ -5850,14 +5840,14 @@ function bindEvents(){
   rowEnter(rbody, addRemedyToNote);
   var rup = $('#remedyUnitPrice');
   if (rup) {
-    rup.addEventListener('input', calcRemedy);
+    rup.addEventListener('input', calcRemedyTyping);
     rup.addEventListener('keydown', function(e){
       if (e.key === 'Enter') { e.preventDefault(); goSearch('#remedySearch'); }
     });
   }
   var rth = $('#remedyThang');
   if (rth) {
-    rth.addEventListener('input', calcRemedy);
+    rth.addEventListener('input', calcRemedyTyping);
     rth.addEventListener('change', function(){ rth.value = String(remedyThang()); calcRemedy(); });
     rth.addEventListener('keydown', function(e){
       if (e.key === 'Enter') { e.preventDefault(); goSearch('#remedySearch'); }
@@ -6094,23 +6084,36 @@ function kbEvRec(src){
   var now = Date.now(), t = Math.round(kbVvTop());
   if (src === 'pointerdown') kbTouchAt = now;
   if (src === 'vv' && t === kbVvPrev) return;
-  kbEvs.push('vvTop ' + kbVvPrev + '→' + t + ' (+' + (kbEvAt ? now - kbEvAt : 0) + 'ms, ' + src + ')');
+  kbEvs.push('vvTop ' + kbVvPrev + '→' + t + ' (+' + (kbEvAt ? now - kbEvAt : 0) + 'ms, ' + src + (src === 'input' ? ', y ' + Math.round(window.pageYOffset || 0) : '') + ')');
   if (kbEvs.length > 3) kbEvs.shift();
   kbVvPrev = t; kbEvAt = now;
 }
 /* nay chỉ lo chế độ gọn khi nhập + gỡ lỗi; tên cũ giữ vì nhiều test dùng */
+/* Bật gỡ lỗi bàn phím (?kbdebug=1 hoặc chạm logo 5 lần ≤ 2 s; chỉ trong phiên, không lưu). Ghi thêm sự kiện input (kèm cuộn y) để biết trang nhảy lúc gõ. */
+function kbDebugOn(why){
+  if (kbDebug) return;
+  kbDebug = true;
+  doc.addEventListener('touchstart', kbTouch, { passive: true, capture: true });
+  kbDbg(why);
+  doc.addEventListener('focusin', function(){ kbEvRec(kbTouchAt && Date.now() - kbTouchAt < 800 ? 'focusin' : 'next'); kbDbg(); });
+  doc.addEventListener('input', function(){ kbEvRec('input'); kbDbg(); }, true);
+  if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
+}
+/* Chạm logo: dãy thời điểm chạm → true khi đủ 5 lần trong 2 s (rồi xoá dãy). Hàm thuần. */
+function logoTapsHit(taps, now){
+  taps.push(now);
+  while (taps.length && now - taps[0] > 2000) taps.shift();
+  if (taps.length >= 5) { taps.length = 0; return true; }
+  return false;
+}
+var logoTaps = [];
+function brandTap(){ if (logoTapsHit(logoTaps, Date.now())) kbDebugOn('5-cham-logo'); }
 function initFootBars(){
   if (window.visualViewport && window.visualViewport.addEventListener) {
     window.visualViewport.addEventListener('resize', onVvChange);
     window.visualViewport.addEventListener('scroll', onVvChange);
   }
-  try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
-  if (kbDebug) {
-    doc.addEventListener('touchstart', kbTouch, { passive: true, capture: true });
-    kbDbg('mo-trang');
-    doc.addEventListener('focusin', function(){ kbEvRec(kbTouchAt && Date.now() - kbTouchAt < 800 ? 'focusin' : 'next'); kbDbg(); });
-    if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
-  }
+  try { if (/[?&]kbdebug=1/.test((window.location && window.location.search) || '')) kbDebugOn('mo-trang'); } catch (e) {}
   doc.addEventListener('focusin', function(){ compactSync(false); kbNumSync(); });
   doc.addEventListener('focusout', function(){ setTimeout(compactSync, 0); setTimeout(kbNumSync, 0); });
 }

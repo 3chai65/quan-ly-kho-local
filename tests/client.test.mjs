@@ -116,7 +116,7 @@ globalThis.__test = {
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), brandDevicesClick: (typeof brandDevicesClick === 'function' ? brandDevicesClick : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), logoTapsHit: (typeof logoTapsHit === 'function' ? logoTapsHit : null), brandTap: (typeof brandTap === 'function' ? brandTap : null), calcRemedyTyping: (typeof calcRemedyTyping === 'function' ? calcRemedyTyping : null), kbDebugOn: (typeof kbDebugOn === 'function' ? kbDebugOn : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -4000,13 +4000,13 @@ test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu t
 });
 
 /* 2.13.0 (N4): header – icon âm dương là nút đổi giao diện; "Quản Lý Kho" là nút vào Thiết bị (chỉ thiết bị chủ). */
-test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-devices; icon âm dương là span trang trí (2.17.0: không còn menu sáng/tối)', () => {
+test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand là button brand-tap; icon âm dương là span trang trí (2.17.0: không còn menu sáng/tối)', () => {
   const head = PAGE.match(/<header class="top">[\s\S]*?<\/header>/)[0];
   assert.doesNotMatch(head, /href="\/auth\/devices"/, 'còn liên kết /auth/devices trong header');
   assert.doesNotMatch(head, /<a class="brand"/, 'brand vẫn là thẻ a');
   assert.doesNotMatch(head, />\s*Thiết bị\s*</, 'còn nút chữ Thiết bị');
   assert.doesNotMatch(head, /Hệ thống/, 'còn chữ Hệ thống trong header');
-  assert.match(head, /<button class="brand" type="button" id="brandBtn" data-action="brand-devices"[^>]*>Quản Lý Kho<\/button>/);
+  assert.match(head, /<button class="brand" type="button" id="brandBtn" data-action="brand-tap"[^>]*>Quản Lý Kho<\/button>/);
   assert.match(head, /<span class="brand__yin" id="brandLogo" aria-hidden="true">/);
   assert.doesNotMatch(head, /data-theme-set|theme-menu/, '2.17.0: chỉ một theme sáng, không còn menu giao diện');
 });
@@ -4016,49 +4016,6 @@ test('2.13.0 N4 CSS: keyframes rung và nhánh prefers-reduced-motion cho icon; 
   assert.match(PAGE, /\.brand__yin\.is-shake\{animation:yinShake/);
   assert.match(PAGE, /@media \(prefers-reduced-motion:reduce\)\{\.brand__yin\.is-shake\{animation:none/);
   assert.match(PAGE, /\.brand\{[^}]*background:none;border:0;padding:0/);
-});
-
-test('2.13.0 N4 brandDevicesClick: fetch 200 → vào /auth/devices; 403, lỗi mạng → không đi, rung icon và báo chỉ-đọc; chặn bấm lặp', async () => {
-  const yinClasses = new Set();
-  const yin = { classList: { add: c => yinClasses.add(c), remove: c => yinClasses.delete(c), contains: c => yinClasses.has(c) }, offsetWidth: 0 };
-  const note = { textContent: '' };
-  const els = { '#brandLogo': yin, '#brandNote': note, '#toast': makeEl(), '#toastMsg': makeEl() };
-  const mkDoc = () => ({
-    readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
-    querySelector(s) { return els[s] || null; }, querySelectorAll() { return []; },
-    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, addEventListener() {}, removeEventListener() {}
-  });
-  const run = async (status, throws) => {
-    const loc = { href: 'https://example.test/' };
-    const calls = [];
-    const fetchStub = async (url, opts) => { calls.push([url, opts]); if (throws) throw new Error('mạng'); return { status }; };
-    const c = loadClient({ document: mkDoc(), location: loc, fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
-    await c.brandDevicesClick();
-    return { loc, calls, c };
-  };
-  yinClasses.clear(); note.textContent = '';
-  const ok = await run(200, false);
-  assert.equal(ok.loc.href, '/auth/devices', 'thiết bị chủ phải vào /auth/devices');
-  assert.equal(ok.calls[0][0], '/auth/devices');
-  assert.equal(ok.calls[0][1].redirect, 'manual');
-  assert.equal(ok.calls[0][1].credentials, 'same-origin');
-
-  for (const [status, throws] of [[403, false], [401, false], [0, true]]) {
-    yinClasses.clear(); note.textContent = '';
-    const r = await run(status, throws);
-    assert.equal(r.loc.href, 'https://example.test/', 'thành viên không được điều hướng (status ' + status + ')');
-    assert.ok(yinClasses.has('is-shake'), 'icon phải rung (status ' + status + ')');
-    assert.equal(note.textContent, 'Chỉ thiết bị chủ quản lý được thiết bị.');
-  }
-
-  yinClasses.clear();
-  const loc2 = { href: 'https://example.test/' };
-  let n = 0;
-  const slow = () => new Promise(res => setTimeout(() => res({ status: 403 }), 0));
-  const c2 = loadClient({ document: mkDoc(), location: loc2, fetch: async () => { n++; return slow(); }, setTimeout() { return 0; }, clearTimeout() {} });
-  const p1 = c2.brandDevicesClick(), p2 = c2.brandDevicesClick();
-  await Promise.all([p1, p2]);
-  assert.equal(n, 1, 'bấm lặp trong lúc kiểm không được gửi thêm yêu cầu');
 });
 
 /* 2.13.0 (N2): thông báo phải thấy được: lỗi 5 giây + assertive; trong hộp thoại đang mở thì có khung lỗi; phone: toast ở đầu màn hình. */
@@ -4362,7 +4319,7 @@ test('2.11.0 thứ tự CSS: quy tắc điện thoại đứng SAU quy tắc g�
 
 /* Danh sách data-action của 1023b40 (2.9.2), chốt sẵn vì image Docker không có git. */
 /* 2.12.0 thêm nhap-add; 2.13.0 thêm brand-devices (không tính khi so với danh sách 1023b40). */
-const NEW_213 = ['nhap-add', 'brand-devices'];
+const NEW_213 = ['nhap-add', 'brand-tap'];
 /* 2.14.0 thêm preset-newname; 2.15.5 bỏ lại. */
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
@@ -5360,13 +5317,34 @@ test('2.15.11 không bật kbdebug: vv không tạo DOM hay ghi sự kiện, kh�
   k.vv.offsetTop = 50; k.vvL.scroll.forEach(fn => fn());
   assert.equal(k.html.children.length, 0);
 });
-test('H.2 kbdebug chỉ bật bằng ?kbdebug=1: cờ localStorage và chạm logo không còn tác dụng', () => {
+test('2.38.18 kbdebug chỉ bật bằng ?kbdebug=1 hoặc chạm logo 5 lần ≤ 2 s (trong phiên); localStorage không có tác dụng; chạm 1 lần không làm gì', () => {
   const ls = { getItem: () => '1', setItem() {}, removeItem() {} };
   const off = lockRig({ ls }); off.c.initFootBars();
   assert.equal(off.html.children.length, 0, 'cờ localStorage không bật gỡ lỗi');
-  assert.ok(!off.logoL.click || off.logoL.click.length === 0, 'logo không có listener chạm 5 lần');
-  assert.ok(!/localStorage\.getItem\('kbdebug'\)|logoN/.test(PAGE));
+  assert.ok(!/localStorage\.getItem\('kbdebug'\)/.test(PAGE));
   assert.ok(lockRig({ search: '?kbdebug=1' }).c.initFootBars, 'khởi tạo với ?kbdebug=1 vẫn chạy');
+  const hit = (ts) => { const taps = []; let r = false; for (const t of ts) r = app.logoTapsHit(taps, t); return r; };
+  assert.equal(hit([0]), false, '1 lần: không làm gì');
+  assert.equal(hit([0, 100, 200, 300]), false, '4 lần');
+  assert.equal(hit([0, 100, 200, 300, 400]), true, '5 lần');
+  assert.equal(hit([0, 500, 1000, 1500, 2000]), true, 'đúng 2000ms');
+  assert.equal(hit([0, 500, 1000, 1500, 2001]), false, 'quá 2 s');
+  assert.equal(hit([0, 1000, 2000, 3000, 4000]), false, 'rải đều');
+  const taps = [0, 1, 2, 3].map(x => x); assert.equal(app.logoTapsHit(taps, 4), true); assert.equal(taps.length, 0, 'dãy xóa sau khi bật');
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  assert.match(fnBody('brandTap'), /logoTapsHit\(logoTaps, Date\.now\(\)\)\) kbDebugOn\(/);
+  assert.ok(!/localStorage[^;]*kbdebug/i.test(fnBody('kbDebugOn')), 'không lưu');
+  assert.ok(fnBody('kbDebugOn').includes("doc.addEventListener('input'"), 'ghi sự kiện input');
+  assert.ok(!PAGE.includes('brandDevicesClick') && !PAGE.includes("location.href = '/auth/devices'; })") , 'logo không còn vào Thiết bị');
+});
+test('2.38.18 N.3b: gõ số không dựng lại tờ ghi (Bán lẻ, Thuốc chén); Thiết bị dựng cả điện thoại', () => {
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  const i0 = PAGE.indexOf("body.addEventListener('input', function(e){"); const seg = PAGE.slice(i0, i0 + 400);
+  assert.ok(!/renderNote\(\)/.test(seg), 'input Bán lẻ không renderNote');
+  assert.ok(!/renderRemedyNote/.test(fnBody('calcRemedyTyping')));
+  assert.equal([...PAGE.matchAll(/addEventListener\('input', calcRemedyTyping\)/g)].length, 2);
+  assert.ok(PAGE.includes("if (e.target.classList.contains('remedy-qty')) calcRemedyTyping();"));
+  assert.ok(PAGE.includes('bb.appendChild(gl); bakSeg(); return;'), 'điện thoại dựng viên Sao lưu | Thiết bị');
 });
 
 /* ===== 2.15.9 gợi ý tên: gõ trọn một từ (mọi thiết bị), khung tối đa 3 mục ===== */
@@ -6992,7 +6970,7 @@ test('2.28.0 thanh bên: chân chỉ còn Nền + dòng đồng bộ + công t�
   assert.ok(!PAGE.includes("'exit-app'") && !PAGE.includes('exitAppClick') && !PAGE.includes("textContent = 'Thoát'"), 'không còn Thoát/exit-app');
   const els2 = { brandBtn: mk(), brandLogo: mk() };
   assert.equal(runHead({ desktop: false, els: els2 }).body.children.length, 0, 'iPhone/pt: không dựng chân thanh bên');
-  assert.equal(els2.brandBtn['data-action'], undefined, 'điện thoại giữ brand-devices');
+  assert.equal(els2.brandBtn['data-action'], undefined, 'điện thoại giữ brand-tap');
   assert.ok(deskBlock().includes('html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}') && deskBlock().includes('html.desktop .brand__yin{cursor:pointer}'), 'brand cao >= 28, con trỏ tay');
 });
 
@@ -7366,14 +7344,6 @@ test('2.28.0 Tải lại: hỏi đúng chữ khi có nháp, không hỏi khi s�
   const sb0 = PAGE.indexOf('var sbf = document.createElement'); assert.ok(sb0 > 0);
   assert.doesNotMatch(PAGE.slice(sb0, sb0 + 1200), /logout|đăng xuất|cookie/i, 'thanh bên không có đường đăng xuất/xóa cookie');
 });
-test('2.27.0 brand: không phải chủ thì toast "Chỉ thiết bị chủ quản lý được thiết bị."', async () => {
-  const msg = makeEl();
-  const doc = trackDoc({ '#toast': makeEl(), '#toastMsg': msg });
-  const c = loadClient({ document: doc, fetch: () => Promise.resolve({ status: 403 }), setTimeout() { return 0; }, clearTimeout() {} });
-  await c.brandDevicesClick();
-  assert.equal(msg.textContent, 'Chỉ thiết bị chủ quản lý được thiết bị.');
-});
-
 /* ---------- 2.29.0: Bán lẻ + Nhập hàng desktop giống app Mac (dòng đang gõ = dòng n+1, ô phẳng, Enter đổi ô) ---------- */
 function deskKit29(desk, els) {
   els['#toast'] = els['#toast'] || makeEl(); els['#toastMsg'] = els['#toastMsg'] || makeEl();
@@ -8032,7 +8002,7 @@ test('H.2 renderSyncLine cập nhật #syncLineM (chấm + HH:MM); phoneTop chuy
     loadClient({ document: d }).phoneTop(); return { top, btn, logo, st, tabs, bar }; };
   let e = run(false);
   assert.ok(mv.some(([a]) => a === e.logo), 'logo vào #brandBtn'); assert.ok(mv.some(([a, b]) => a === e.tabs && b === e.bar), 'tab vào .top trước .bar');
-  assert.equal(e.btn.attrs['aria-label'], 'Quản Lý Kho — Thiết bị');
+  assert.equal(e.btn.attrs['aria-label'], 'Quản Lý Kho');
   run(true); assert.equal(mv.length, 0, 'desktop không chuyển gì');
 });
 

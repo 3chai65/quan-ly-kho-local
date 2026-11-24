@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.18] - 2026-11-24
+
+- Điện thoại: gõ số trong ô SL/giá không còn dựng lại tờ ghi (Bán lẻ, Thuốc chén) — nghi nguyên nhân iOS cuộn trang lúc gõ; lối vào Thiết bị chuyển từ logo sang viên "Sao lưu | Thiết bị" trong tab Sao lưu khôi phục; chạm logo 5 lần (≤ 2 s) bật gỡ lỗi bàn phím (ghi thêm sự kiện input + cuộn y). Chưa thử iPhone thật.
+
 ## [2.38.17] - 2026-11-24
 
 - Điện thoại: chạm ô số (SL/giá/thang/giá nhập) → `html.kb-num` thêm đệm dưới 50vh để iOS cuộn tài liệu thay vì dịch khung nhìn (thanh đầu không khuất dưới tai thỏ); bỏ khi blur và sau lưu. Chữ đơn vị dạng nhãn trên ô SL ẩn (không đè viền ô). Chưa thử iPhone thật.
