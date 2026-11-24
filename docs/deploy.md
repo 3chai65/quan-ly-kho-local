@@ -6,6 +6,8 @@ Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt l�
 ## Quy tắc dòng kênh triển khai
 Trước khi ghi dòng, đọc kênh lấy dòng triển khai gần nhất Mac đã đánh [x] (bản hub đang chạy) làm `v<cũ>`; không ghi khoảng rộng "phòng hờ". Dòng liệt kê ĐỦ mọi hash trong `v<cũ>..v<mới>` (`git log --oneline`), không chỉ mốc cuối. Thêm commit sau khi đã ghi dòng thì sửa lại CHÍNH dòng đó, không thêm dòng "cập nhật mốc" riêng.
 
+Mẫu dòng: `Triển khai v<mới> = <hash>; khoảng v<hub>..v<mới> = <n> commit: <hash…>; ĐIỀU KIỆN: thẻ v<mới> đã có trên origin (người dùng chỉ gắn sau CI xanh); chờ "bật".` Không ghi "chờ CI" kiểu khiến Mac phải hỏi lại.
+
 ## Các bước
 - Windows (người dùng tự chạy): `git tag vX.Y.Z <hash>`, `git push origin-local local-sqlite:main`, `git push origin-local vX.Y.Z`.
 - Mac (Người làm chạy, người dùng nhập `sudo`), trong `~/kho/quan-ly-kho-local`:
