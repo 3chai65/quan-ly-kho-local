@@ -7568,7 +7568,7 @@ test('2.31.0 thanh bên 180: nút tab cao tối thiểu 30 (nhãn dài xuống 2
 
 test('2.31.0 Kho tồn / Lịch sử nhập / Lịch sử bán desktop: 10 dòng chia đều hết chiều cao thẻ (>= 26, dòng trống có vạch kẻ), phân trang ghim đáy, không cuộn, tiêu đề cột chữ thường màu phụ', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && b.includes('html.desktop table:is(.inv,.his){height:100%}'), 'bảng cao hết phần còn lại, thẻ flex cột');
+  assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && !b.includes('html.desktop table:is(.inv,.his){height:100%}'), '2.38.24: bảng không kéo giãn, dòng đầu sát tiêu đề');
   assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'dòng tối thiểu 26');
   const th = /html\.desktop table:is\(\.inv,\.his\) th\{([^}]*)\}/.exec(b)[1];
   assert.ok(th.includes('text-transform:none') && th.includes('font-size:13px') && th.includes('color:var(--muted)') && !/uppercase/.test(th), 'tiêu đề chữ thường, cỡ thân, màu phụ');
@@ -8307,4 +8307,10 @@ test('2.38.23 R.1b desktop: hover dòng bảng không nền, chỉ chữ sáng; 
   assert.ok(!/note__row--btns\)/.test(d) && !d.includes('#remedyNote .note__row--btns .btn{min-height:26px}'), 'Thuốc chén không còn trong viên chung');
   assert.ok(!/html\.desktop[^{]*#remedyNote \.note__row--btns[^{]*\{[^}]*border-radius:999px/.test(PAGE), 'không còn viên 999px quanh 3 nút');
   assert.ok(PAGE.includes('html.desktop #remedyNote .note__row--btns .btn{padding:3px 8px}'), 'nút rời còn đệm');
+});
+
+test('2.38.24 S: Kho tồn/Lịch sử nhập/bán desktop — bảng không height:100% (10 dòng không bị kéo giãn theo cửa sổ, dòng đầu sát tiêu đề); ô vẫn cao 26px', () => {
+  assert.ok(!/html\.desktop table:is\(\.inv,\.his\)\{[^}]*height:\s*100%/.test(PAGE), 'không kéo giãn bảng');
+  assert.ok(PAGE.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'dòng cao 26px');
+  assert.ok(PAGE.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}'));
 });

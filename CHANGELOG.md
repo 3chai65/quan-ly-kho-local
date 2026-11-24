@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.24] - 2026-11-24
+
+### Sửa
+- Desktop: Kho tồn, Lịch sử nhập, Lịch sử bán — bỏ `height:100%` của bảng (10 dòng bị kéo giãn theo chiều cao cửa sổ nên dòng đầu cách tiêu đề cột ~3 hàng); dòng giữ 26px, sát tiêu đề. Điện thoại không đổi.
+
 ## [2.38.23] - 2026-11-24
 
 ### Thay đổi
