@@ -5269,7 +5269,7 @@ test('2.38.11 nguồn: không scrollBy/scrollIntoView; window.scrollTo chỉ tro
   assert.ok(!/(^|[^.\w])scrollTo\(/.test(PAGE), 'không scrollTo trần');
   assert.ok(!/kb-lock|kbLock|kbUnlock|kbSavedY|kbLastY|kbRelease|kbTrackY/.test(PAGE), 'không còn khóa cuộn trang (ẩn .top, body fixed)');
   assert.ok(!/placeScrollDelta|kbSafeDelta|kbPadFixed|kbVisBottom|kbPlaceNow|kbOnFocus|kbUserStop|kbPlacedBox|kbSafeUsed|ENTRY_ROW_H|PLACE_GAP|KB_BAR|--kb-pad|kbMovedAt|kbSchedule|keepVisibleDelta|kbUserAt|searchScrollDelta|kbPadPx|keepPendingVisible/.test(PAGE), 'không còn mã định vị cũ');
-  assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ compactSync\(false\); \}\);/);
+  assert.match(PAGE, /doc\.addEventListener\('focusin', function\(\)\{ compactSync\(false\); kbNumSync\(\); \}\);/);
   for (const n of ['commitRetailRow', 'commitRemedyRow', 'addRetailToNote', 'addRemedyToNote', 'refocusSearch', 'pickSuggest']) {
     assert.ok(!/\.focus\(\)/.test(fnBody(n)), n + ' không được gọi .focus() trần');
   }
@@ -8267,4 +8267,18 @@ test('2.38.16 N.1/N.2 tờ ghi: tiêu đề "Tờ ghi" + nhãn cột trên hàng
   assert.ok(blk.includes('td:nth-child(2){grid-column:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'tên dài cắt …');
   assert.ok(a > PAGE.indexOf('/* 2.38.15:'), 'sau khối tối giản');
   assert.ok(!deskBlock().includes('2.38.16'));
+});
+
+test('2.38.17 N.3 nguồn: html.kb-num theo ô số đang focus (không trong hộp thoại, chỉ điện thoại), đệm 50vh ngoài khối desktop, bỏ khi blur và trong afterSaveDone', () => {
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  const f = fnBody('kbNumField');
+  for (const k of ["e.tagName === 'INPUT'", "e.type === 'number'", "closest('dialog')", 'kbMobile()']) assert.ok(f.includes(k), k);
+  assert.ok(fnBody('kbNumSync').includes("toggle('kb-num', kbNumField(doc.activeElement))"));
+  assert.match(fnBody('afterSaveDone'), /a\.blur\(\);\s*kbNumSync\(\);/);
+  assert.ok(PAGE.includes("doc.addEventListener('focusin', function(){ compactSync(false); kbNumSync(); });"));
+  assert.ok(PAGE.includes("setTimeout(kbNumSync, 0)"), 'bỏ class khi blur');
+  assert.ok(PAGE.includes('html:not(.desktop).kb-num body{padding-bottom:50vh}'));
+  assert.ok(!deskBlock().includes('kb-num') && !deskBlock().includes('2.38.17'));
+  assert.ok(PAGE.includes('html:not(.desktop) td .qty-hint.qty-hint--label{display:none}'), 'chữ đơn vị nhãn không đè viền ô (điện thoại)');
+  assert.ok(!/kb-lock/.test(PAGE.slice(PAGE.indexOf('2.38.17 (điện thoại)'), PAGE.indexOf('2.38.17 (điện thoại)') + 600)));
 });
