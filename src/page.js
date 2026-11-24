@@ -897,21 +897,24 @@ html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display
 html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.btn{order:3;flex:none;margin-left:auto}
 html:not(.desktop) #retailBox .card__bar>.btn{margin-left:0}
 html:not(.desktop) .note{overflow:visible}
-html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row){position:relative}
-html:not(.desktop) #retailBody tr.is-empty{display:grid;grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
-html:not(.desktop) #retailBody tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}
-html:not(.desktop) #retailBody tr.is-empty>td:nth-child(1){grid-column:1;padding:0;display:flex;align-items:center;justify-content:center}
-html:not(.desktop) #retailBody tr.is-empty>td:nth-child(2){grid-column:2}
-html:not(.desktop) #retailBody tr.is-empty>td:nth-child(3){grid-column:3}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row){position:relative}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty{display:grid;grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td:nth-child(1){grid-column:1;padding:0;display:flex;align-items:center;justify-content:center}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td:nth-child(2){grid-column:2}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td:nth-child(3){grid-column:3}
+html:not(.desktop) #remedyBody tr.is-empty>td:nth-child(4){grid-column:4;padding:0;justify-self:end}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(4){grid-column:4}
 html:not(.desktop) #retailBody tr.is-empty>td:nth-child(5){grid-column:5;padding:0;justify-self:end}
+html:not(.desktop) #remedyNote>.note__search{display:none} /* 2.38.28: ô tên chuyển vào dòng nhập (entryMount); đang cất thì ẩn */
 html:not(.desktop) #remedyNote .note__search{position:relative} /* 2.38.27: gợi ý Thuốc chén neo vào ô tìm (từ 2.38.11 không còn khối chứa nào nên danh sách rơi ra ngoài màn hình) */
-html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}
-html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug>.inp{width:100%;min-width:0;padding-left:6px;padding-right:6px}
-html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}
-html:not(.desktop) #retailBody tr[data-pid]>td:nth-child(2){cursor:pointer}
-html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row)>td :is(.inp,.qty-host){display:block}
-html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row)>td>.btn{display:flex}
+html:not(.desktop) #remedyBody .note__search{padding:0;border:0}
+html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) td>.sug{position:static}
+html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) td>.sug>.inp{width:100%;min-width:0;padding-left:6px;padding-right:6px}
+html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr[data-pid]>td:nth-child(2){cursor:pointer}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row)>td :is(.inp,.qty-host){display:block}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row)>td>.btn{display:flex}
 html:not(.desktop) #nhapPendingBody :is(#nhapPendName,.nhap-hint){display:none}
 /* 2.38.22 (desktop): tối giản như điện thoại — nền trong suốt, chỉ viền var(--border); focus viền --sel-bd, vô hiệu mờ 50%; tab chọn/trang hiện tại giữ --sel-*. Đặt ngoài khối desktop (trần 20736 B). */
 html.desktop[data-bg]{--nb:transparent;--kb:var(--border)}
@@ -2544,16 +2547,22 @@ function renumber(tbody, base){
   });
 }
 /* 2.38.20 (điện thoại, Bán lẻ): ô tên (#retailSearch, trong .sug) nằm trong ô tên của dòng nhập trống; khi dòng bị xóa/thay thì cất lại thanh đầu thẻ (ẩn) để không bị hủy theo dòng. */
-function entrySug(){ var s = $('#retailSearch'); return s ? s.parentNode : null; }
-function entryPark(){ var b = entrySug(), bar = $('#retailBox .card__bar'); if (b && bar && b.parentNode !== bar) bar.appendChild(b); }
-function entryMount(){
+function entrySug(k){ var s = $(k === 'remedy' ? '#remedySearch' : '#retailSearch'); return s ? s.parentNode : null; }
+/* 2.38.28: Thuốc chén (k = 'remedy') dùng cùng cơ chế: cất lại trong #remedyNote (ẩn trên điện thoại) trước .note__list. */
+function entryPark(k){
+  var b = entrySug(k);
+  if (k === 'remedy') { if (isDesk()) return; var n = $('#remedyNote'), l = $('#remedyNoteList'); if (b && n && l && b.parentNode !== n) n.insertBefore(b, l); return; } /* desktop: ô tên ở thanh đầu thẻ, không cất */
+  var bar = $('#retailBox .card__bar'); if (b && bar && b.parentNode !== bar) bar.appendChild(b);
+}
+function entryMount(k){
   if (isDesk()) return;
-  var b = entrySug(), tr = $('#retailBody tr[data-empty="1"]'), td = tr && tr.children[1];
+  var b = entrySug(k), tr = $((k === 'remedy' ? '#remedyBody' : '#retailBody') + ' tr[data-empty="1"]'), td = tr && tr.children[1];
   if (b && td && b.parentNode !== td) { td.textContent = ''; td.appendChild(b); }
 }
 function clearEmpty(tb){
   if (!tb) return;
   if (tb.id === 'retailBody') entryPark();
+  else if (tb.id === 'remedyBody') entryPark('remedy');
   var old = tb.querySelector('tr[data-empty="1"]');
   if (old) old.remove();
 }
@@ -2569,7 +2578,7 @@ function orderEmpty(tb, cols, text){
   tr.setAttribute('data-empty', '1');
   tr.className = 'is-empty';
   var td = el('td', 'empty-cell muted small', text);
-  if ((tb.id === 'remedyBody' || tb.id === 'retailBody') && (isDesk() || tb.id === 'retailBody')) { /* 2.26.1/2.29.0 desktop: dòng đang gõ trống vẫn đủ ô: "+", chữ mờ, ô Gram/SL (+ ô Tiền ở Bán lẻ) và nút + vô hiệu (chỉ để thấy chỗ) */
+  if ((tb.id === 'remedyBody' || tb.id === 'retailBody')) { /* 2.26.1/2.29.0 desktop: dòng đang gõ trống vẫn đủ ô: "+", chữ mờ, ô Gram/SL (+ ô Tiền ở Bán lẻ) và nút + vô hiệu (chỉ để thấy chỗ) */
     var rt = tb.id === 'retailBody', qd = el('input', 'inp inp--sm inp--num'), bd = el('button', 'btn btn--icon btn--primary');
     qd.disabled = bd.disabled = true; qd.placeholder = rt ? 'SL' : 'Gram'; qd.setAttribute('aria-label', rt ? 'Số lượng (kg)' : 'Số lượng (gram)'); bd.setAttribute('aria-label', 'Thêm vào tờ ghi'); bd.appendChild(svg('plus'));
     tr.appendChild(el('td', 'c-num muted')); tr.appendChild(td);
@@ -2578,7 +2587,7 @@ function orderEmpty(tb, cols, text){
     if (rt) { var tm = el('td', 'c-money'), md = el('input', 'inp inp--sm inp--num'); md.disabled = true; md.placeholder = isDesk() ? 'Tiền (nghìn)' : 'Giá'; md.setAttribute('aria-label', 'Giá bán'); tm.appendChild(md); tr.appendChild(tm); }
     tr.appendChild(tdl);
     tb.appendChild(tr);
-    entryMount();
+    entryMount(rt ? 'retail' : 'remedy');
     return;
   }
   td.colSpan = cols;
@@ -2624,6 +2633,7 @@ function commitRemedyRow(){
   }
   remedyItems.push({ productId: row.getAttribute('data-pid'), grams: dec(g) });
   remedyNotePage = 1e9;
+  entryPark('remedy');
   tb.textContent = '';
   orderEmpty(tb, 4, '');
   refreshAllQtyHints();
@@ -2668,6 +2678,8 @@ function renderRemedyNote(){
   /* 2.14.0: STT dòng đang nhập = số dòng tờ ghi + 1 (tuyệt đối). */
   var pendingRb = $('#remedyBody');
   if (pendingRb) renumber(pendingRb, remedyItems.length);
+  var enr = !isDesk() && $('#remedyBody tr[data-empty="1"] .c-num');
+  if (enr) enr.textContent = String(remedyItems.length + 1);
   /* 2.26.0 desktop: dòng đang gõ (#remedyBody, cùng bảng) là dòng thứ n+1: đủ 10 dòng thì sang trang mới; sau nó mới tới dòng trống (#remedyFill). */
   var pp = pendPaging('#remedyBody', '#remedyFill', remedyItems.length, remedyNotePage, 4), fill = pp.fill, pages = pp.pages, pendHere = pp.here;
   remedyNotePage = pp.page;
@@ -2791,6 +2803,7 @@ function resetRetail(){
 function resetRemedy(){
   var tb = $('#remedyBody');
   if (!tb) return;
+  entryPark('remedy');
   tb.textContent = '';
   orderEmpty(tb, 4, '');
   remedyItems = [];
@@ -3198,6 +3211,7 @@ function loadPreset(id){
   var r = findPreset(id);
   var tb = $('#remedyBody');
   if (!r || !tb) return;
+  entryPark('remedy');
   tb.textContent = '';
   remedyItems = [];
   var missing = 0;
@@ -3226,6 +3240,7 @@ function onPresetChange(){
   if (id) { loadPreset(id); return; }
   var tb = $('#remedyBody');
   if (tb) {
+    entryPark('remedy');
     tb.textContent = '';
     orderEmpty(tb, 4, '');
   }
@@ -5871,6 +5886,12 @@ function bindEvents(){
     else if (e.key === 'Escape' && remedyEditIdx >= 0) { remedyEditIdx = -1; renderRemedyNote(); }
   });
   var rbody = $('#remedyBody');
+  if (rbody) rbody.addEventListener('click', function(e){ /* 2.38.28 điện thoại: chạm tên vị đã chọn → bỏ dòng, về ô nhập tên */
+    var td = e.target.closest && e.target.closest('td'), tr = td && td.parentNode;
+    if (isDesk() || !tr || !tr.getAttribute('data-pid') || td !== tr.children[1]) return;
+    tr.remove(); orderEmpty(rbody, 4, ''); renderRemedyNote();
+    var s = $('#remedySearch'); if (s) focusNS(s);
+  });
   if (rbody) rbody.addEventListener('input', function(e){
     if (e.target.classList.contains('remedy-qty')) calcRemedyTyping();
   });

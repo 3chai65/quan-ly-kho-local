@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.28] - 2026-11-24
+
+### Đổi
+- Điện thoại: Thuốc chén theo bố cục Bán lẻ — ô tên (`#remedySearch`) nằm trong dòng nhập `STT | [Nhập tên] | [gram] | [+]`, gợi ý rộng hết tờ ghi, chọn vị → con trỏ sang ô gram, "+" → dòng mới + con trỏ về ô tên, chạm tên đã chọn → chọn lại; dùng chung `entryMount`/`entryPark` với Bán lẻ. Desktop không đổi.
+
+### Rà
+- Mọi danh sách gợi ý điện thoại (Bán lẻ, Nhập hàng, Kho tồn, Lịch sử nhập) đo y: đều neo đúng; Lịch sử bán không có danh sách gợi ý.
+
 ## [2.38.27] - 2026-11-24
 
 ### Sửa

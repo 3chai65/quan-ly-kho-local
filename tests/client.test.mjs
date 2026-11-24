@@ -7217,7 +7217,7 @@ test('2.26.1 dòng đang gõ trống ở desktop có đủ 4 ô: "+", chữ mờ
   assert.equal(inp.disabled, true); assert.equal(inp.placeholder, 'Gram');
   assert.equal(btn.disabled, true); assert.equal(btn.attrs['data-action'], undefined, 'nút vô hiệu không có data-action');
   const m = mk(false);
-  assert.equal(m.children.length, 1); assert.equal(m.children[0].colSpan, 4);
+  assert.equal(m.children.length, 4, '2.38.28: điện thoại Thuốc chén cũng đủ 4 ô (ô tên vào dòng nhập)');
 });
 
 function drKit(extra) {
@@ -8252,10 +8252,10 @@ test('2.38.20 P: Bán lẻ/Nhập hàng điện thoại — ô tên (.sug) vào 
   const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
   assert.match(fnBody('entryMount'), /if \(isDesk\(\)\) return;[\s\S]*tr\[data-empty="1"\][\s\S]*td\.appendChild\(b\)/);
   assert.match(fnBody('entryPark'), /bar\.appendChild\(b\)/);
-  assert.match(fnBody('clearEmpty'), /if \(tb\.id === 'retailBody'\) entryPark\(\);/);
+  assert.match(fnBody('clearEmpty'), /if \(tb\.id === 'retailBody'\) entryPark\(\);\s*else if \(tb\.id === 'remedyBody'\) entryPark\('remedy'\);/);
   assert.match(fnBody('resetRetail'), /entryPark\(\);\s*tb\.textContent = '';/);
-  assert.match(fnBody('orderEmpty'), /tb\.appendChild\(tr\);\s*entryMount\(\);\s*return;/);
-  assert.ok(PAGE.includes("(isDesk() || tb.id === 'retailBody')"), 'dòng nhập trống 5 ô cả điện thoại (chỉ Bán lẻ)');
+  assert.match(fnBody('orderEmpty'), /tb\.appendChild\(tr\);\s*entryMount\(rt \? 'retail' : 'remedy'\);\s*return;/);
+  assert.ok(!PAGE.includes("(isDesk() || tb.id === 'retailBody')"), '2.38.28: dòng nhập trống đủ ô cả điện thoại (Bán lẻ + Thuốc chén)');
   const pe = fnBody('phoneEntry');
   assert.ok(pe.startsWith('function phoneEntry(){\n  if (isDesk()) return;') || pe.includes('if (isDesk()) return;'));
   for (const k of ["'#retailBox', '.btn--green'", "'#nhapBox', 'button[type=\"submit\"]'", 'bar.appendChild(b)', 'td.insertBefore(ns.parentNode']) assert.ok(pe.includes(k), k);
@@ -8263,7 +8263,7 @@ test('2.38.20 P: Bán lẻ/Nhập hàng điện thoại — ô tên (.sug) vào 
   const i = PAGE.indexOf("body.addEventListener('click', function(e){ /* 2.38.20"); const seg = PAGE.slice(i, i + 420);
   assert.ok(/isDesk\(\) \|\| !tr \|\| !tr\.getAttribute\('data-pid'\) \|\| td !== tr\.children\[1\]\) return;/.test(seg) && /tr\.remove\(\); orderEmpty\(body, 5, ''\);/.test(seg) && /focusNS\(s\)/.test(seg));
   const a = PAGE.indexOf('/* 2.38.20 (điện thoại)'); const blk = PAGE.slice(a, PAGE.indexOf('/* 2.38.3: cửa sổ thấp', a));
-  for (const k of ['html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display:none}', 'html:not(.desktop) .note{overflow:visible}', 'html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}', 'html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}', '#retailBody tr.is-empty{display:grid;grid-template-columns:var(--cols);']) assert.ok(blk.includes(k), k);
+  for (const k of ['html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display:none}', 'html:not(.desktop) .note{overflow:visible}', 'html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) td>.sug{position:static}', 'html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}', ':is(#retailBody,#remedyBody) tr.is-empty{display:grid;grid-template-columns:var(--cols);']) assert.ok(blk.includes(k), k);
   assert.ok(!deskBlock().includes('2.38.20') && !deskBlock().includes('entryMount'));
 });
 
@@ -8278,7 +8278,7 @@ test('2.38.21 Q: điện thoại chỉ viền (var(--border)), không nền mờ
 });
 
 test('2.38.21 P: dòng nhập trống — ô td height:auto (luật .note td{height:34px} làm ô 40px tràn khỏi vạch chân)', () => {
-  assert.ok(PAGE.includes('html:not(.desktop) #retailBody tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}'));
+  assert.ok(PAGE.includes('html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}'));
 });
 
 test('2.38.22 R.1 desktop tối giản: nền trong suốt, chỉ viền var(--border); focus --sel-bd; vô hiệu .5; nút chính/Đơn mới không nền xanh; hover chỉ đổi viền; phần dùng chung với điện thoại không bị đụng', () => {
@@ -8334,4 +8334,19 @@ test('2.38.27 V0: điện thoại — gợi ý Thuốc chén phải neo vào ô 
   assert.ok(!/html\.desktop #remedyNote \.note__search\{position:relative/.test(PAGE), 'không đụng desktop');
   // mọi ô tìm có .sug__list phải có tổ tiên định vị: remedy dùng luật neo, Bán lẻ/Nhập hàng neo vào .card__bar (position:relative) hoặc dòng nhập
   assert.ok(PAGE.includes('.card__bar{position:relative}'), 'Bán lẻ neo ở thanh đầu');
+});
+
+test('2.38.28 V: Thuốc chén điện thoại — ô tên (#remedySearch trong .sug) vào dòng nhập trống, cất lại trước khi xóa dòng, chạm tên đã chọn → về ô tên, STT dòng nhập = n+1; Bán lẻ dùng chung cơ chế; desktop không đổi', () => {
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  const ep = fnBody('entryPark'), em = fnBody('entryMount');
+  assert.ok(ep.includes("if (k === 'remedy') { if (isDesk()) return;") && ep.includes('n.insertBefore(b, l)') && ep.includes('bar.appendChild(b)'), 'cất lại đúng chỗ theo từng tờ');
+  assert.ok(em.includes("if (isDesk()) return;") && em.includes("'#remedyBody'") && em.includes('td.appendChild(b)'), 'gắn vào ô tên dòng nhập, chỉ điện thoại');
+  for (const f of ['commitRemedyRow', 'resetRemedy', 'loadPreset', 'onPresetChange']) assert.ok(/entryPark\('remedy'\);\s*tb\.textContent = '';/.test(fnBody(f)), f + ' cất ô tên trước khi xóa dòng nhập');
+  assert.ok(fnBody('renderRemedyNote').includes("$('#remedyBody tr[data-empty=\"1\"] .c-num')") && fnBody('renderRemedyNote').includes('String(remedyItems.length + 1)'), 'STT dòng nhập');
+  const i = PAGE.indexOf("rbody.addEventListener('click', function(e){ /* 2.38.28"); const seg = PAGE.slice(i, i + 460);
+  assert.ok(/isDesk\(\) \|\| !tr \|\| !tr\.getAttribute\('data-pid'\) \|\| td !== tr\.children\[1\]\) return;/.test(seg) && /tr\.remove\(\); orderEmpty\(rbody, 4, ''\); renderRemedyNote\(\);/.test(seg) && /focusNS\(s\)/.test(seg), 'chạm tên → chọn lại');
+  assert.ok(PAGE.includes('html:not(.desktop) #remedyNote>.note__search{display:none}'), 'ô tên đang cất thì ẩn');
+  assert.ok(PAGE.includes('html:not(.desktop) #remedyBody .note__search{padding:0;border:0}'), 'ô tên trong dòng nhập không mang đệm/viền của khung tìm cũ');
+  assert.ok(PAGE.includes('html:not(.desktop) #remedyBody tr.is-empty>td:nth-child(4){grid-column:4;padding:0;justify-self:end}'), 'cột + của dòng nhập');
+  assert.ok(!deskBlock().includes('entryMount') && !deskBlock().includes('#remedyBody tr.is-empty'), 'khối desktop không đụng');
 });
