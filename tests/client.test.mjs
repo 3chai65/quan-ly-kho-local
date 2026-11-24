@@ -7569,7 +7569,7 @@ test('2.31.0 thanh bên 180: nút tab cao tối thiểu 30 (nhãn dài xuống 2
 test('2.31.0 Kho tồn / Lịch sử nhập / Lịch sử bán desktop: 10 dòng chia đều hết chiều cao thẻ (>= 26, dòng trống có vạch kẻ), phân trang ghim đáy, không cuộn, tiêu đề cột chữ thường màu phụ', () => {
   const b = deskBlock();
   assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && !b.includes('html.desktop table:is(.inv,.his){height:100%}'), '2.38.24: bảng không kéo giãn, dòng đầu sát tiêu đề');
-  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'dòng tối thiểu 26');
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'dòng tối thiểu 26');
   const th = /html\.desktop table:is\(\.inv,\.his\) th\{([^}]*)\}/.exec(b)[1];
   assert.ok(th.includes('text-transform:none') && th.includes('font-size:13px') && th.includes('color:var(--muted)') && !/uppercase/.test(th), 'tiêu đề chữ thường, cỡ thân, màu phụ');
   assert.ok(/\.note th\{[^}]*letter-spacing:\.06em/.test(b) && /th\{text-align:left;font-size:11px;letter-spacing:\.05em;text-transform:uppercase/.test(PAGE), 'tờ ghi giữ IN HOA');
@@ -7614,7 +7614,7 @@ test('2.31.0b cỡ chữ desktop không nhỏ hơn app Mac (px CSS = pt Mac): to
 /* ===== 2.31.1 sửa nhỏ desktop ===== */
 test('2.31.1 dòng danh sách Kho tồn / Lịch sử nhập / Lịch sử bán: mọi ô nowrap 1 dòng, cột tên chiếm phần còn lại và cắt "…" (không cỡ chữ nhỏ hơn), Lịch sử bán: ô tìm co để dòng đếm cùng hàng tiêu đề', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'mọi ô nowrap');
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'mọi ô nowrap');
   assert.ok(b.includes('html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}'), 'tên/đơn gộp chiếm phần còn lại, cắt "…"');
   assert.ok(b.includes('html.desktop #expBox .card__bar-search{flex-basis:80px}'), 'Lịch sử bán: dòng "n giao dịch · bán gần nhất" cùng hàng tiêu đề');
   assert.ok(!/\.his td:first-child\{[^}]*white-space:normal/.test(b) && !/table:is\(\.inv,\.his\) td\{[^}]*font-size/.test(b), 'không thu nhỏ chữ, không cho xuống dòng lại');
@@ -8309,8 +8309,8 @@ test('2.38.23 R.1b desktop: hover dòng bảng không nền, chỉ chữ sáng; 
   assert.ok(PAGE.includes('html.desktop #remedyNote .note__row--btns .btn{padding:3px 8px}'), 'nút rời còn đệm');
 });
 
-test('2.38.24 S: Kho tồn/Lịch sử nhập/bán desktop — bảng không height:100% (10 dòng không bị kéo giãn theo cửa sổ, dòng đầu sát tiêu đề); ô vẫn cao 26px', () => {
+test('2.38.25 S: Kho tồn/Lịch sử nhập/bán desktop — bảng không height:100%, dòng cố định 50px (không giãn theo cửa sổ)', () => {
   assert.ok(!/html\.desktop table:is\(\.inv,\.his\)\{[^}]*height:\s*100%/.test(PAGE), 'không kéo giãn bảng');
-  assert.ok(PAGE.includes('html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}'), 'dòng cao 26px');
+  assert.ok(PAGE.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'dòng cao 26px');
   assert.ok(PAGE.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}'));
 });

@@ -761,7 +761,7 @@ html.desktop .main details:not(#backupBox)[open]{display:flex;flex-direction:col
 html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
 html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}
-html.desktop table:is(.inv,.his) td{height:26px;padding:1px 8px;white-space:nowrap}
+html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}
 html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}
 html.desktop #expBox .card__bar-search{flex-basis:80px}
 html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
