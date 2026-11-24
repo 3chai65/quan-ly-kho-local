@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.31] - 2026-11-24
+
+### Thay đổi
+- Xử lý review 2.38.30 (đợt X.1): `checkLimits` báo đúng nghĩa (không phải số → "không hợp lệ"; thang < 1 → "phải lớn hơn hoặc bằng 1") và nhánh tiền dùng `isNumLike`; kiểm cỡ file khôi phục theo byte UTF-8 (cùng ngưỡng 4 MB của server) thay vì độ dài chuỗi; xóa CSS/biến chết (`.card__bar-lbl`, rung icon `is-shake`, `--chart-hi`, `--sel-hv`); `historyData` dựng Map vị thuốc một lần (`productMap`); `pushState` serialize db một lần; CI: lint client và `npm ci` chặn CI khi lỗi (`lint-client` thoát mã 1 khi có cảnh báo). Mục bỏ qua có lý do: `BAO-CAO-REVIEW.md`.
+
 ## [2.38.30] - 2026-11-24
 
 ### Thay đổi

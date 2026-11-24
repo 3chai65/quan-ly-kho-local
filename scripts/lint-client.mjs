@@ -1,5 +1,5 @@
 /**
- * Lint phần JS client nhúng trong PAGE. Không chặn phát hành: chỉ in số cảnh báo.
+ * Lint phần JS client nhúng trong PAGE. Có cảnh báo thì thoát mã 1 (chặn CI từ 2.38.31).
  * Chạy: node scripts/lint-client.mjs
  */
 import { Linter } from 'eslint';
@@ -35,4 +35,4 @@ const messages = linter.verify(code, {
 });
 console.log('Cảnh báo lint client: ' + messages.length);
 for (const m of messages.slice(0, 20)) console.log(`  ${m.line}:${m.column} ${m.ruleId} ${m.message}`);
-process.exit(0);
+process.exit(messages.length ? 1 : 0);

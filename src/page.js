@@ -59,9 +59,6 @@ a{color:var(--brand-text)}
 .brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
 .brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text)}
 .brand__yin .ico{width:24px;height:24px}
-.brand__yin.is-shake{animation:yinShake .4s ease-in-out}
-@keyframes yinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-@media (prefers-reduced-motion:reduce){.brand__yin.is-shake{animation:none;box-shadow:0 0 0 2px var(--red-text)}}
 .bar__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
 border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber-text);
@@ -407,7 +404,7 @@ html:not(.desktop) .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touc
 @media (max-width:600px){
 .card__bar-month{order:2}
 .card__bar-btn{order:2}
-.card__bar-lbl,.inv-chip__l{display:none}
+.inv-chip__l{display:none}
 #invBox .inv-chip{order:2;min-height:38px;padding:0 9px;gap:4px}
 #invBox .inv-chip .ico{display:inline-block}
 .inv-chip__n{font-size:11px}
@@ -693,7 +690,7 @@ html:is(.desktop,.pt)[data-bg=emerald],html:is(.desktop,.pt) .bgd[data-bg=emeral
 html:is(.desktop,.pt)[data-bg=gold],html:is(.desktop,.pt) .bgd[data-bg=gold]{--bt:linear-gradient(135deg,#381F05,#6B420A);--muted:rgba(255,255,255,.73);--red-text:#FFBFBF}
 html:is(.desktop,.pt)[data-bg=rose],html:is(.desktop,.pt) .bgd[data-bg=rose]{--bt:linear-gradient(135deg,#3D0D1F,#701A3D);--muted:rgba(255,255,255,.64);--red-text:#FF9A9A}
 html:is(.desktop,.pt)[data-bg=graphite],html:is(.desktop,.pt) .bgd[data-bg=graphite]{--bt:linear-gradient(135deg,#141417,#2E2E33);--muted:rgba(255,255,255,.58);--red-text:#FF8484}
-html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f8fafc;--text2:rgba(255,255,255,.85);--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#FF7373;--surface:#141c3c;--surface2:#1b264f;--border:rgba(255,255,255,.14);--border2:rgba(255,255,255,.07);--vien:rgba(255,255,255,.14);--glass:rgba(255,255,255,.07);--pnl:rgba(255,255,255,.07);--chart-hi:rgba(255,255,255,.08);--ring:0 0 0 2px rgba(255,255,255,.35);--kb:rgba(255,255,255,.10);--chart-imp:#44DAFE;--chart-exp:#FFA33D;--nb:rgba(255,255,255,.07);--hv:rgba(255,255,255,.13);--sel-bg:rgba(255,255,255,.14);--sel-hv:rgba(255,255,255,.2);--sel-bd:rgba(255,255,255,.32);--sel-fg:#f8fafc}
+html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f8fafc;--text2:rgba(255,255,255,.85);--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#FF7373;--surface:#141c3c;--surface2:#1b264f;--border:rgba(255,255,255,.14);--border2:rgba(255,255,255,.07);--vien:rgba(255,255,255,.14);--glass:rgba(255,255,255,.07);--pnl:rgba(255,255,255,.07);--ring:0 0 0 2px rgba(255,255,255,.35);--kb:rgba(255,255,255,.10);--chart-imp:#44DAFE;--chart-exp:#FFA33D;--nb:rgba(255,255,255,.07);--hv:rgba(255,255,255,.13);--sel-bg:rgba(255,255,255,.14);--sel-bd:rgba(255,255,255,.32);--sel-fg:#f8fafc}
 html.desktop[data-bg]{--text2:var(--text);--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text)}
 html.desktop .linkbtn{text-decoration-color:rgba(255,255,255,.3)}
 html.desktop .linkbtn:hover{color:var(--text)}
@@ -1694,17 +1691,21 @@ function inRange(v, min, max){ if (!isNumLike(v)) return false; var n = Number(v
     var neg = isFinite(n) && n < 0;
     switch (kind) {
       case 'q':
+        if (!isNumLike(v)) return 'Số lượng không hợp lệ';
         if (neg) return 'Số lượng không được âm';
         return inRange(v, 0, QTY_MAX) ? null : 'Số lượng vượt giới hạn (' + QTY_MAX + ')';
       case 'grams':
+        if (!isNumLike(v)) return 'Gram không hợp lệ';
         if (neg) return 'Gram không được âm';
         return inRange(v, 0, GRAMS_MAX) ? null : 'Gram vượt giới hạn (' + GRAMS_MAX + ')';
       case 'thang':
+        if (!isNumLike(v)) return 'Số thang không hợp lệ';
         if (neg) return 'Số thang không được âm';
+        if (n < 1) return 'Số thang phải lớn hơn hoặc bằng 1';
         return inRange(v, 1, THANG_MAX) ? null : 'Số thang vượt giới hạn (' + THANG_MAX + ')';
       case 'money':
         /* v là ĐỒNG (đã qua kToDong); MONEY_MAX là đồng; chỉ thông báo đổi sang nghìn đồng để hiển thị. */
-        if (!isFinite(n)) return 'Số tiền không hợp lệ';
+        if (!isNumLike(v)) return 'Số tiền không hợp lệ';
         if (n < 0) return 'Tiền không được âm';
         return n <= MONEY_MAX ? null : 'Tiền vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng)';
       case 'name': return String(v || '').length <= NAME_MAX ? null : 'Tên vượt giới hạn (' + NAME_MAX + ' ký tự)';
@@ -3706,8 +3707,14 @@ function renderInventory(){
 }
 
 /* ================= LỊCH SỬ ================= */
-function txName(t){
-  var p = findProduct(t.productId);
+/* Map id→vị thuốc dựng một lần cho cả lượt (historyData); findProduct tuyến tính chỉ còn dùng cho tra lẻ. Trùng id: giữ vị đầu tiên, y như findProduct. */
+function productMap(){
+  var m = new Map();
+  for (var i = 0; i < db.products.length; i++) { var k = String(db.products[i].id); if (!m.has(k)) m.set(k, db.products[i]); }
+  return m;
+}
+function txName(t, pm){
+  var p = pm ? pm.get(String(t.productId)) : findProduct(t.productId);
   return p ? p.name : null;
 }
 function timeVN(ts){
@@ -3996,6 +4003,7 @@ function dateVN(iso){
 function historyData(kind, month, q){
   var isImp = kind === 'imp';
   indexTx();
+  var pm = productMap();
   var nq = normSearch(q || '');
   var list = db.transactions.filter(function(t){
     if (t.type !== (isImp ? 'NHAP' : 'BAN')) return false;
@@ -4016,7 +4024,7 @@ function historyData(kind, month, q){
         single: true, tx: t,
         date: String(t.date || ''),
         ts: txStamp(t), hasTime: txHasTime(t),
-        name: txName(t), qty: num(t.qty), total: num(t.total), price: num(t.price)
+        name: txName(t, pm), qty: num(t.qty), total: num(t.total), price: num(t.price)
       });
       return;
     }
@@ -4050,7 +4058,7 @@ function historyData(kind, month, q){
     rows = rows.filter(function(r){
       if (r.group) {
         if (wholeWordMatch(r.name || '', nq)) return true;
-        return r.items.some(function(t){ var nm = txName(t); return nm && wholeWordMatch(nm, nq); });
+        return r.items.some(function(t){ var nm = txName(t, pm); return nm && wholeWordMatch(nm, nq); });
       }
       return r.name && wholeWordMatch(r.name, nq);
     });
@@ -5284,14 +5292,17 @@ function pushState(manual, force){
   renderSyncBadge();
   var sent = num(db.updatedAt);
   /* opId theo nội dung (bỏ updatedAt, vì touch() đổi mỗi lần): thử lại cùng snapshot giữ nguyên. */
-  var opSig = JSON.stringify(Object.assign({}, db, { updatedAt: 0 }));
+  /* Serialize db đúng 1 lần: phần "core" (không có updatedAt) vừa là opSig vừa là thân PUT sau khi nối updatedAt. */
+  var rest = Object.assign({}, db); delete rest.updatedAt;
+  var opSig = JSON.stringify(rest);
+  var body = db.updatedAt === undefined ? opSig : opSig.slice(0, -1) + (opSig.length > 2 ? ',' : '') + '"updatedAt":' + JSON.stringify(db.updatedAt) + '}';
   if (opSig !== pendingOpSig) { pendingOpSig = opSig; pendingOpId = uid('OP'); }
   var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase), 'X-Op-Id': pendingOpId };
   if (force) headers['X-Force'] = '1';
   return apiFetch('/api/state', {
     method: 'PUT',
     headers: headers,
-    body: JSON.stringify(db)
+    body: body
   }).then(function(r){
     if (!r) return { status: 0, d: null };
     return r.json().then(function(d){
@@ -5663,6 +5674,8 @@ function parseBackup(text){
   out._moneyNote = moneyRestoreNote(scale, afterCost == null ? null : sample, afterCost);
   return out;
 }
+/* Số BYTE UTF-8 (cùng đơn vị với MAX_BODY của server; .length đếm đơn vị UTF-16 nên đếm thiếu tiếng Việt có dấu). Không dùng Blob vì Blob là đường tải file. */
+function utf8Bytes(s){ return s.replace(/[�-�][�-�]/g, '____').replace(/[ࠀ-￿]/g, '___').replace(/[-߿]/g, '__').length; }
 function restoreFromFile(file){
   if (!file) return;
   if (authLost || refreshing) { toast(authLost ? 'Thiết bị chưa được duyệt: chưa thể khôi phục' : 'Đang đồng bộ, thử lại sau giây lát', 'error'); return; }
@@ -5674,7 +5687,7 @@ function restoreFromFile(file){
       backupParseError = 'File sao lưu không phải JSON hợp lệ';
     }
     if (!bak) { toast(backupParseError || 'File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
-    if (JSON.stringify(bak).length > 4 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
+    if (utf8Bytes(JSON.stringify(bak)) > 4 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
     var drops = bak._drops || [];
     var moneyNote = bak._moneyNote || '';
     delete bak._drops;

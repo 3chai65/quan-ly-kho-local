@@ -66,8 +66,6 @@ jobs:
 
       - name: Cài dependency cho eslint (bỏ build native)
         run: npm ci --ignore-scripts
-        continue-on-error: true
 
-      - name: Lint client (chỉ cảnh báo)
+      - name: Lint client (chặn CI khi có cảnh báo)
         run: npm run lint:client
-        continue-on-error: true

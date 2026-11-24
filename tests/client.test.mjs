@@ -3992,7 +3992,7 @@ test('2.14.0 Kho/Nhập/Bán: thanh card__bar có tên mục, ô tìm/lọc, s�
 });
 
 test('2.14.0 Kho/Nhập/Bán điện thoại: nút Đối chiếu chỉ biểu tượng; ô tìm lịch sử nhập xuống hàng 2 cả hàng; số liệu Lịch sử nhập ở hàng 1 cùng tên', () => {
-  assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.card__bar-lbl,\.inv-chip__l\{display:none\}/);
+  assert.match(PAGE, /@media \(max-width:600px\)\{[\s\S]*?\.inv-chip__l\{display:none\}/);
   assert.match(PAGE, /\.card__bar-search\.is-inline,\.card__bar>\.inp\.card__bar-search\{order:1;flex:1 1 80px;min-width:0\}/, 'ô tìm cùng hàng tiêu đề (2.15.0)');
   assert.match(PAGE, /\.card__bar-count\{order:4;margin-left:0\}/, 'số liệu xuống hàng cuối nếu hết chỗ');
   
@@ -4011,10 +4011,8 @@ test('2.13.0 N4 header: không còn liên kết Thiết bị/Hệ thống; brand
   assert.doesNotMatch(head, /data-theme-set|theme-menu/, '2.17.0: chỉ một theme sáng, không còn menu giao diện');
 });
 
-test('2.13.0 N4 CSS: keyframes rung và nhánh prefers-reduced-motion cho icon; tiêu đề là nút không viền', () => {
-  assert.match(PAGE, /@keyframes yinShake\{/);
-  assert.match(PAGE, /\.brand__yin\.is-shake\{animation:yinShake/);
-  assert.match(PAGE, /@media \(prefers-reduced-motion:reduce\)\{\.brand__yin\.is-shake\{animation:none/);
+test('2.13.0 N4 CSS: tiêu đề là nút không viền; 2.38.31 đã xóa CSS chết (rung icon, .card__bar-lbl, --chart-hi, --sel-hv)', () => {
+  assert.doesNotMatch(PAGE, /yinShake|is-shake|card__bar-lbl|--chart-hi|--sel-hv/, 'CSS/biến chết (0 tham chiếu tĩnh và động) đã xóa');
   assert.match(PAGE, /\.brand\{[^}]*background:none;border:0;padding:0/);
 });
 
@@ -6213,12 +6211,6 @@ test('2.23.0 viên phẳng mờ: nút/ô số/tab cùng token, bóng đổ chỉ
   assert.ok(block.includes('html.desktop .card:not(.dlg__card){border-radius:20px;border:1px solid var(--border);background:none;box-shadow:none}'), 'thẻ bo 20, viền --border, nền trong suốt');
 });
 
-test('2.20.2 biểu đồ: bỏ dải nền tháng hiện tại ở desktop bằng biến --chart-hi (trong suốt); ngoài desktop giữ màu cũ', () => {
-  const block = deskBlock();
-  assert.ok(block.includes('--chart-hi:rgba(255,255,255,.08)'));
-  assert.ok(!PAGE.slice(0, PAGE.indexOf('/* 2.23.0 chế độ desktop')).includes('--chart-hi'), 'không đặt --chart-hi ngoài desktop');
-});
-
 test('2.20.2 khung phủ kín viewport: thẻ lấp đầy chiều cao (cả 3 danh sách), Sao lưu co theo nội dung; vùng kéo cửa sổ quanh logo', () => {
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
@@ -8368,4 +8360,51 @@ test('2.38.30 W: mỗi ranh giới một vạch liền — vạch ngăn dòng n�
   assert.ok(!/table.(ord|inv|his) tr.is-row[^{]*{[^}]*border-bottom/.test(PAGE), 'dòng điện thoại không có vạch chân');
   assert.ok(!/is-empty td{[^}]*border-bottom/.test(PAGE) && !PAGE.includes('padding:8px 16px;border-top:0}'));
   assert.ok(!PAGE.includes('.note__pending tfoot td{display:block;padding:4px 5px;border-top'));
+});
+
+test('2.38.31 X (5)(8): checkLimits báo đúng nghĩa — không phải số → "không hợp lệ", dưới min → "phải lớn hơn…", money dùng isNumLike', () => {
+  const { checkLimits } = loadClient().__test || loadClient();
+  const c = checkLimits;
+  for (const k of ['q', 'grams', 'thang', 'money']) for (const bad of ['abc', '', ' ', null, undefined, NaN, Infinity, '0x10', true, []]) assert.match(c(k, bad), /không hợp lệ/, k + ' ' + String(bad));
+  assert.match(c('thang', 0), /phải lớn hơn hoặc bằng 1/); assert.match(c('thang', 0.5), /phải lớn hơn hoặc bằng 1/);
+  assert.match(c('thang', -1), /không được âm/); assert.match(c('q', -1), /không được âm/); assert.match(c('money', -1), /không được âm/);
+  assert.match(c('q', 1e12), /vượt giới hạn/); assert.match(c('money', 1e13), /vượt giới hạn/);
+  assert.equal(c('thang', 1), null); assert.equal(c('q', '2.5'), null); assert.equal(c('money', 1e12), null); assert.equal(c('money', '150000'), null); assert.equal(c('grams', 0), null);
+});
+
+test('2.38.31 X (2): khôi phục kiểm cỡ theo BYTE UTF-8 (tiếng Việt có dấu), cùng ngưỡng 4 MB của server', () => {
+  const run = (text) => { let asked = 0; class FR { readAsText() { this.result = text; this.onload(); } } const c = loadClient({ FileReader: FR, confirm: () => { asked++; return false; } }); c.restoreFromFile({ size: 1 }); return asked; };
+  const mk = (n, pad) => JSON.stringify({ products: Array.from({ length: n }, (_, i) => ({ id: 'P' + i, name: 'Vị ' + i + ' ' + pad, stock: 1, costPrice: 1000 })), transactions: [], prescriptions: [], moneyUnit: 'dong' });
+  // 'ệ' = 1 đơn vị UTF-16 nhưng 3 byte: chuỗi < 4 MB ký tự mà > 4 MB byte phải bị từ chối
+  const dense = mk(12000, 'ệ'.repeat(100));
+  assert.ok(dense.length < 4 * 1024 * 1024 && Buffer.byteLength(dense) > 4 * 1024 * 1024, 'dữ kiện: ký tự < 4 MB < byte');
+  assert.equal(run(dense), 0, 'quá 4 MB byte: từ chối trước xác nhận');
+  const ok = mk(12000, 'ệ'.repeat(40));
+  assert.ok(Buffer.byteLength(ok) < 4 * 1024 * 1024);
+  assert.equal(run(ok), 1, 'dưới 4 MB byte: qua tới xác nhận');
+});
+
+test('2.38.31 X (17): pushState serialize db 1 lần — thân PUT parse ra đúng db (kèm updatedAt, tên tiếng Việt), opId đổi theo nội dung', async () => {
+  const bodies = [], ops = [];
+  const fetchStub = async (url, opts = {}) => {
+    if ((opts.method || 'GET') === 'PUT') { bodies.push(opts.body); ops.push(opts.headers['X-Op-Id']); return { status: 200, json: async () => ({ success: true, updatedAt: 500 }) }; }
+    return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' } }) };
+  };
+  const client = loadClient({ fetch: fetchStub, setTimeout(fn, ms) { return ms || 1; }, clearTimeout() {} });
+  const mk = (n) => ({ products: [{ id: 'P1', name: 'Bạch thược ' + n, stock: 2, costPrice: 1000 }], transactions: [], prescriptions: [{ id: 'R', name: 'Bát vị', items: [], total: 1, thang: 1, updatedAt: 7 }], updatedAt: 1, moneyUnit: 'dong' });
+  client.setDb(mk(1)); client.setBase(1);
+  await client.pushState(false, false);
+  const sent = JSON.parse(bodies[0]);
+  assert.equal(sent.products[0].name, 'Bạch thược 1'); assert.equal(sent.prescriptions[0].updatedAt, 7, 'updatedAt lồng không bị đụng');
+  assert.equal(typeof sent.updatedAt, 'number'); assert.ok(sent.updatedAt >= 1);
+  assert.deepEqual(Object.keys(sent).sort(), ['moneyUnit', 'prescriptions', 'products', 'transactions', 'updatedAt']);
+  client.setDb(mk(2)); await client.pushState(false, false);
+  assert.notEqual(ops[1], ops[0], 'nội dung đổi → opId mới');
+});
+
+test('2.38.31 X (16): historyData dựng Map vị thuốc 1 lần; tên hiển thị y như findProduct (kể cả id trùng: giữ vị đầu, id lạ: null)', () => {
+  assert.match(PAGE, /function productMap\(\)/);
+  assert.match(PAGE, /function txName\(t, pm\)/);
+  const hd = PAGE.slice(PAGE.indexOf('function historyData('), PAGE.indexOf('function historyData(') + 3000);
+  assert.ok(hd.includes('var pm = productMap();') && !/txName\(t\)/.test(hd), 'historyData chỉ dùng txName(t, pm)');
 });

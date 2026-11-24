@@ -44,6 +44,7 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 | A7 | Auditor 2.17.4 | `thang: true` vẫn qua ở `server.js` | `server.js` | 2.17.5 `263bd02`: dùng `isNumLike` | |
 | A8 | Auditor 2.17.4 | Thiếu test thân PUT của client có `moneyUnit: 'dong'` | `tests/client.test.mjs` | 2.17.5 `880e699`: thêm test | |
 | — | Auditor W1+W3 (14/11) | Ca test W3 "đổi sau khi thành công" vẫn xanh khi xóa `pendingOpSig = ''` | `page.js` ~4399 | `206be66`: sửa ca test; thêm test `noteSave`, `commitRetailRow` (0,0004), `saveTxEdit` | Phá thử từng sửa đều làm test rớt |
+| R1–R17 (X.1) | review 2.38.30 | Mục 2, 5, 8, 11, 16, 17 + CI lint | `checkLimits` báo đúng nghĩa và dùng `isNumLike`; kiểm cỡ khôi phục theo byte; xóa CSS/biến chết; `productMap` cho `historyData`; `pushState` serialize 1 lần; CI lint client chặn | 2.38.31 | Test + phá thử (CHANGELOG) |
 
 ---
 
@@ -63,6 +64,13 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 | R3 | ngoài 12/11 (BUG-06…12) | Playwright; CSP/HSTS thêm; bỏ `err.message`; tải backup; bàn phím; IP trong `Caddyfile`; confirm/đơn vị biểu đồ | — | Chưa gây sai dữ liệu; app chạy trong LAN, một người dùng | App ra ngoài LAN hoặc nhiều người dùng. Tải backup: xem W6 mục 3 |
 | — | CLAUDE.md | Không có điều chỉnh tồn kho vật lý | — | Giới hạn thiết kế; đối soát qua `reconcileList` | — |
 | — | CLAUDE.md | `O(T×P)` khi tìm sản phẩm; poll 15 giây | — | Chưa đáng kể ở ~720 giao dịch | > 10k giao dịch |
+| R6 | review 2.38.30 (mục 6) | Hàm nhận chuỗi rỗng | Mọi caller truyền giá trị đã qua `kToDong`/`money`, không bao giờ rỗng | Không có đường vào thật | Có caller mới truyền thẳng giá trị ô nhập |
+| R7 | review 2.38.30 (mục 7) | Ô nhập nhận chữ | Ô là `type=number` | Ô là `type=number` nên không nhập chữ; `checkLimits` vẫn chặn phía sau | Đổi ô sang `type=text` |
+| R9 | review 2.38.30 (mục 9) | Sai số số thực | Người duyệt xác nhận không có sai số (tiền là đồng nguyên) | Không có sai số | Có tái hiện mới |
+| R10 | review 2.38.30 (mục 10) | Giới hạn năm 2059 | Mốc năm 2059 | Còn xa, không ảnh hưởng vận hành hiện tại | Gần năm 2050 |
+| R12 | review 2.38.30 (mục 12) | Gộp style inline | Chỉ gộp style trong mã | Churn lớn, không đổi hành vi | Có việc giao diện lớn chạm cùng vùng style |
+| R15,R18,R20–R23 | review 2.38.30 | Các mục còn lại | Đã có biện pháp hoặc thiết kế đúng (xem CHANGELOG) | Không có lỗi | Có tái hiện mới |
+| R3,R24 | review 2.38.30 | Dọn `migrateMoneyToDong` / `truoc-lam-tron-*.json` | Có chú thích `XÓA SAU 06/12/2026` | Xử lý cùng lúc khi xóa `migrateMoneyToDong` | 06/12/2026 và chủ đồng ý |
 
 ---
 
