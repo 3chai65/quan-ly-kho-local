@@ -23,6 +23,7 @@
 - Ô nhập nằm trong `.note__foot` (fixed): không được ẩn thanh khi chính ô đó đang focus (2.38.1).
 - App Mac/Tauri mở liên tục nhiều ngày: mọi giá trị "hôm nay" phải tính lại khi mở tab/focus, không chỉ lúc tải trang (2.38.3).
 - Gợi ý đơn vị: "l" = lạng (chỉ trong gợi ý). Luật tìm kiếm trọn chữ dùng chung cho gợi ý tên, Kho tồn và Lịch sử.
+- Quy tắc thường trực: mỗi bản có đổi giao diện desktop được triển khai thì chụp lại 8 ảnh mẫu desktop HD (1280x720) vào `kho-kenh/anh-mau-desktop/` (ghi đè), commit + push kênh, thêm 1 dòng kênh "Ảnh mẫu cập nhật theo v<x>". Lần gần nhất: v2.38.30.
 
 ## Tauri / PWA
 - exe nằm ở `C:\Users\Yellows\AppData\Local\QuanLyKho\`; giao diện tải từ hub (hub lùi bản thì giao diện lùi theo). Tắt bằng nút X, không dùng `Stop-Process -Force` (mất cookie thiết bị).
