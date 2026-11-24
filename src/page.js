@@ -430,7 +430,7 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 #remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
 /* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
 /* 2.17.2: Xóa đơn | Lưu/Sửa đơn | Bán đơn đúng một hàng (mọi cỡ màn hình). */
-#remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:44px;padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
+#remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:var(--ctl-h,44px);padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
 #remedyNote .note__row--btns .btn .ico{display:none}
 #remedyNote .note__row--btns #remedySaveLabel{overflow:hidden;min-width:0}
 #remedyNote .note__row--btns{margin-top:3px}
@@ -464,9 +464,9 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 .brand{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
 .card__body{padding:13px}
-.btn{min-height:44px}
+.btn{min-height:var(--ctl-h,44px)}
 .btn--sm{min-height:38px}
-.inp{min-height:44px;font-size:16px}
+.inp{min-height:var(--ctl-h,44px);font-size:var(--ctl-fs,16px)}
 #retailBox,#remedyBox{overflow:visible}
 #retailNote{overflow:visible}
 html{scroll-padding-bottom:230px}
@@ -848,6 +848,12 @@ html.desktop .brand__yin{cursor:pointer}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
+/* 2.38.12 (điện thoại): MỘT bộ cỡ chung theo ô "Đơn mới" (#remedyPreset): cao 44, bo 10, đệm dọc 9, chữ ô nhập 16 (dưới 16 iOS tự phóng to), chữ nút/dòng tờ ghi 14 = danh sách Kho tồn. Nút kiểu tab điện thoại: nền/viền trong suốt, chữ + icon var(--text); Xóa đơn chữ đỏ; không màu mới. */
+html:not(.desktop){--ctl-h:44px;--ctl-r:10px;--ctl-py:9px;--ctl-fs:16px;--ctl-tx:14px}
+html:not(.desktop) :is(input,select).inp{padding-top:var(--ctl-py);padding-bottom:var(--ctl-py);border-radius:var(--ctl-r)}
+html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx);color:var(--ctl-c,var(--text));border-color:transparent;background:none;box-shadow:none}
+html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn--danger{--ctl-c:var(--red-text)}
+html:not(.desktop) :is(.note__lbl,.note__eq,#remedyTotal,.note__tot b){font-size:var(--ctl-tx)}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
 html.desktop{--sth:76px}

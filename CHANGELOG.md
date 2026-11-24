@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.12] - 2026-11-24
+
+### Sửa
+- Điện thoại: một bộ biến `--ctl-h/--ctl-r/--ctl-py/--ctl-fs/--ctl-tx` (44/10/9/16/14) theo ô "Đơn mới": mọi ô nhập cùng bo 10 + đệm dọc 9 (trước: ô SL/giá/thang/tìm Lịch sử bo 8, đệm 6); nút Lưu đơn/Sửa đơn/Bán đơn/Lưu nhập hàng/+/Xóa đơn kiểu nút tab (nền, viền trong suốt, chữ + icon `var(--text)`; Xóa đơn đỏ), chữ 14 như Kho tồn; "thang ×", "=", thành tiền, "Giá nhập" 13/15/16 → 14. Ô nhập giữ 16px (iOS). Desktop không đổi (so 650 phần tử × 14 thuộc tính, 8 tab, 1366px: 0 khác biệt). Chưa thử iPhone thật.
+
 ## [2.38.11] - 2026-11-24
 
 ### Sửa
