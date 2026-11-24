@@ -3477,9 +3477,9 @@ test('2.14.0 (1) bỏ chú thích/chữ đơn vị tĩnh; các id dữ liệu v�
 /* 2.14.0 (2): hàng bảng gọn (td 5/8 px, th 6/8 px; hàng điện thoại 6/2 px); quy tắc điện thoại đặt SAU quy tắc gốc. */
 test('2.14.0 (2) hàng bảng gọn và quy tắc hàng điện thoại đặt sau quy tắc gốc', () => {
   const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
-  const base = at('td{padding:5px 8px;border-bottom:1px solid var(--border2)');
+  const base = at('td{padding:5px 8px;vertical-align:middle}');
   assert.ok(at('font-weight:700;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}') < base + 1000, 'th gọn');
-  const phone = at('padding:6px 2px;border-bottom:1px solid var(--border2)}');
+  const phone = at('padding:6px 2px}');
   assert.ok(base < phone, 'hàng điện thoại phải đứng sau td gốc');
   assert.doesNotMatch(PAGE, /padding:11px 2px;border-bottom:1px solid var\(--border2\)\}/);
   assert.doesNotMatch(PAGE, /td\{padding:8px 10px;/);
@@ -6043,7 +6043,7 @@ test('2.20.0 vòng 3 kính liquid glass: thẻ số (2.20.0 đơn sắc), bo 22p
   assert.ok(!block.split(String.fromCharCode(10)).some(l => l.includes('.stats') && l.includes('backdrop-filter')));
   // bố cục khung cố định: thanh bên (tabs) + hàng thẻ số + vùng nội dung cuộn trong, không thêm DOM
   assert.ok(block.includes('width:100%;height:100vh;margin:0') && block.includes('html.desktop .main{display:contents}') && block.includes('html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column') && block.includes('html.desktop .main details.card{grid-area:1/2/3/3') && block.includes('overflow:hidden'));
-  assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid'));
+  assert.ok(block.includes('html.desktop .note td{height:25px;padding:1px 10px;font-size:13px}'));
 });
 
 test('2.34.0 Thống kê desktop: bỏ hẳn 4 ô số (không data-s4/thk__n/.stats4), tồn kho nằm ở chip; renderStats vẫn khớp số điện thoại', () => {
@@ -6347,7 +6347,7 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   assert.ok(block.includes('col.cg-act{width:34px}') && block.includes('.c-act,.c-del){text-align:left;padding:0 10px 0 2px}'));
   // (2) đường kẻ: mọi đường ngang 1px solid var(--border); không còn 2px/dashed trong khối desktop
   assert.ok(!/border-(top|bottom):(?:[2-9]px|1px dashed)/.test(block));
-  assert.ok(block.includes('html.desktop .note tfoot td{border-top:1px solid var(--border);border-bottom:0}') && block.includes('html.desktop .note__pending tfoot td{border-top:0}'));
+  assert.ok(!block.includes('.note tfoot td') && !block.includes('.note__pending tfoot td{border-top:0}'), '2.38.30: vạch trên Tổng nằm ở tr, không đè trong khối desktop');
   // (3) tờ ghi là kính (trắng .2 + vệt sáng + --kb + --k3d), bảng trong suốt
   assert.ok(/html\.desktop \.note\{margin:0;border:1px solid var\(--border\);border-radius:18px;background:none\}/.test(block));
   // (4) nút chính (green/primary/dark/trang hiện tại) cùng một kiểu kính nhuộm xanh lá, mọi .btn/ô nhập dùng --kb/--spec/--k3d
@@ -8356,4 +8356,16 @@ test('2.38.29 V: điện thoại — vạch chân dòng nhập (Bán lẻ + Thu�
   assert.ok(PAGE.includes(sel + '(n){padding-bottom:3px}'), 'đệm dưới mọi ô của dòng nhập');
   assert.ok(PAGE.includes(sel + '(1){padding-top:3px}'), 'STT căn giữa theo ô');
   assert.ok(!deskBlock().includes(sel), 'khối desktop không đụng');
+});
+
+test('2.38.30 W: mỗi ranh giới một vạch liền — vạch ngăn dòng nằm trên tr+tr, không có border-bottom trên td/dòng, vạch trên Tổng ở tr, không còn vạch đứt dashed', () => {
+  assert.ok(PAGE.includes('tbody tr+tr{border-top:1px solid var(--border2)}'));
+  assert.ok(PAGE.includes('td{padding:5px 8px;vertical-align:middle}') && !PAGE.includes('tbody tr:last-child td{border-bottom:0}'));
+  assert.ok(PAGE.includes('.note tfoot tr{border-top:1px solid var(--border)}') && PAGE.includes('.note tfoot td{height:40px;font-weight:800}'));
+  assert.ok(PAGE.includes('.bak-row+.bak-row{border-top:1px solid var(--border)}'));
+  assert.ok(!/.note td{[^}]*border-bottom/.test(PAGE) && !/html.desktop .note td{[^}]*border-bottom/.test(PAGE), 'td của tờ ghi không có vạch chân');
+  assert.ok(!PAGE.includes('border-bottom:1px dashed') && !PAGE.includes('1px dashed var(--border)'), 'không còn vạch đứt');
+  assert.ok(!/table.(ord|inv|his) tr.is-row[^{]*{[^}]*border-bottom/.test(PAGE), 'dòng điện thoại không có vạch chân');
+  assert.ok(!/is-empty td{[^}]*border-bottom/.test(PAGE) && !PAGE.includes('padding:8px 16px;border-top:0}'));
+  assert.ok(!PAGE.includes('.note__pending tfoot td{display:block;padding:4px 5px;border-top'));
 });

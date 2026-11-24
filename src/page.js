@@ -170,8 +170,9 @@ select.inp{cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
 font-weight:700;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:5px 8px;border-bottom:1px solid var(--border2);vertical-align:middle}
-tbody tr:last-child td{border-bottom:0}
+td{padding:5px 8px;vertical-align:middle}
+/* 2.38.30 (W): mỗi ranh giới đúng 1 vạch liền — ngăn dòng = vạch TRÊN dòng sau, đặt trên tr (không trên td: ô lưới có khe làm vạch đứt); dòng cuối không có vạch chân, khu bên dưới (Tổng, chân, phân trang) tự có vạch trên. */
+tbody tr+tr{border-top:1px solid var(--border2)}
 tbody tr:hover{background:var(--surface2)}
 .num{font-variant-numeric:tabular-nums}
 .c-num{width:46px;text-align:center}
@@ -230,12 +231,12 @@ border-left:3px solid var(--red)}
 letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bottom:1px solid var(--border)}
 .note table{background:transparent}
 .note th{background:transparent}
-.note td{height:34px;padding:4px 10px;border-bottom:1px dashed var(--border)}
-/* 2.14.0 (giai đoạn 4, M6): hàng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) cao theo nội dung, không ép 34px; ô nhập block để đáy thẳng với nút +. Đặt SAU .note td (độ cụ thể cao hơn). Dòng đã thêm không đổi. */
+.note td{height:34px;padding:4px 10px}/* 2.14.0 (giai đoạn 4, M6): hàng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) cao theo nội dung, không ép 34px; ô nhập block để đáy thẳng với nút +. Đặt SAU .note td (độ cụ thể cao hơn). Dòng đã thêm không đổi. */
 .note .note__pending tr.is-row>td{height:auto;vertical-align:bottom}
 .note .note__pending tr.is-row>td .inp{display:block}
 .note tbody tr:hover{background:transparent}
-.note tfoot td{height:40px;border-top:1px solid var(--border);border-bottom:0;font-weight:800}
+.note tfoot td{height:40px;font-weight:800}
+.note tfoot tr{border-top:1px solid var(--border)}
 .note .foot{margin:0;padding:8px 12px}
 .note .r{text-align:right}
 .chart{display:block;width:100%;height:300px;cursor:pointer}
@@ -322,7 +323,7 @@ td.c-qty{position:relative}
 .card__bar-preset{flex:1 1 180px;min-width:0}
 #remedyPresetBox,#remedyFindBox{display:none}
 #remedyNote{overflow:visible}
-#remedyNote .note__search{padding:8px 10px;border-bottom:1px dashed var(--border)}
+#remedyNote .note__search{padding:8px 10px}
 #remedyNote .note__search .inp{width:100%}
 #remedyNote table{table-layout:fixed;width:100%}
 #remedyNote col.cg-num{width:36px}
@@ -486,7 +487,7 @@ table.ord tbody,table.inv tbody,table.his tbody{display:block}
 table.ord tr,table.inv tr,table.his tr{display:block}
 table.ord td,table.inv td,table.his td{display:block;width:auto;padding:0;border:0}
 table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid;gap:7px 10px;align-items:center;
-padding:6px 2px;border-bottom:1px solid var(--border2)}
+padding:6px 2px}
 table.ord tr.is-row{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 46px}
 table.ord tr.is-row>td:nth-child(1){grid-area:1/1;text-align:left}
 table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/5;min-width:0;overflow-wrap:anywhere}
@@ -532,7 +533,7 @@ table.his tr.is-row>td:nth-child(3)::before,table.his tr.is-row>td:nth-child(4):
 table.his tr.is-row>td.c-act .btn--icon{width:34px;min-width:34px;height:34px;min-height:34px;padding:0;position:relative}
 table.his tr.is-row>td.c-act .btn--icon::after{content:"";position:absolute;inset:-3px}
 table.ord tr.is-empty td,table.inv tr.is-empty td,table.his tr.is-empty td{display:block;padding:18px 4px;
-text-align:center;border-bottom:1px solid var(--border2)}
+text-align:center}
 table.ord .inp{width:100%}
 table.inv .c-del,table.his .c-act{width:auto}
 .note .c-act{width:76px}
@@ -608,7 +609,7 @@ html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}
 /* Hàng Tổng nằm trong bảng dòng nhập (table.ord là block trên điện thoại): dựng lại lưới cùng độ rộng cột với bảng tờ ghi để số tổng thẳng cột tiền. */
 .note__pending tfoot{display:block}
 .note__pending tfoot tr{display:grid}
-.note__pending tfoot td{display:block;padding:4px 5px;border-top:1px solid var(--border)}
+.note__pending tfoot td{display:block;padding:4px 5px}
 #retailNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 84px 52px}
 #nhapListBox .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 64px 84px 52px}
 #remedyNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 52px}
@@ -631,7 +632,8 @@ html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}
 .bak-dir[hidden]{display:none}
 .bak-dir__p{flex:1;min-width:0;word-break:break-all}
 .bak-restore{color:var(--red-text)}
-.bak-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;align-items:center;padding:2px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.3}
+.bak-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;align-items:center;padding:2px 0;font-size:13px;line-height:1.3}
+.bak-row+.bak-row{border-top:1px solid var(--border)}
 .bak-row__name{font-weight:700;word-break:break-all}
 .bak-row__size,.bak-row__time{text-align:right;color:var(--muted);white-space:nowrap}
 .bak-busy{opacity:.5}
@@ -711,10 +713,8 @@ html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
 html.desktop :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html.desktop #remedyBox #remedyPresetBox{border-left:1px solid rgba(255,255,255,.10)}
 html.desktop .note__head{height:32px;align-items:center;padding:0 14px;background:none;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid var(--border)}
-html.desktop .note td{height:25px;padding:1px 10px;font-size:13px;border-bottom:1px solid var(--border)}
-html.desktop .note tfoot td{border-top:1px solid var(--border);border-bottom:0}
+html.desktop .note td{height:25px;padding:1px 10px;font-size:13px}
 html.desktop .note .c-act .inline-row{justify-content:flex-start}
-html.desktop .note__pending tfoot td{border-top:0}
 html.desktop .note th{height:28px;padding:0 10px;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.06em;border-bottom:1px solid var(--border)}
 html.desktop .btn{min-height:30px;padding:3px 14px;font-size:13px}
 html.desktop .btn--icon{min-width:32px;padding:3px}
@@ -766,7 +766,7 @@ html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowr
 html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}
 html.desktop #expBox .card__bar-search{flex-basis:80px}
 html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
-html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px;border-top:0}
+html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#retailNote,#remedyNote) .note__list{flex:1;min-height:0}
 html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}

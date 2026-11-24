@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.30] - 2026-11-24
+
+### Thay đổi
+- Giao diện (điện thoại + desktop): mỗi ranh giới đúng một vạch liền. Vạch ngăn dòng chuyển từ đáy td sang đỉnh tr (`tbody tr+tr`), nên dòng cuối (kể cả dòng nhập) không còn vạch chân sát vạch của dòng Tổng/chân tờ ghi/phân trang; hết vạch đứt do ô lưới có khe (Bán lẻ, Thuốc chén). Bỏ vạch gạch đứt `.note__search`, vạch chân hàng trống, `border-top:0` đè của phân trang và Tổng; Sao lưu: dòng cuối không có vạch chân.
+
 ## [2.38.29] - 2026-11-24
 
 ### Sửa
