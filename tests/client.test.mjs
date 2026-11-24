@@ -7394,7 +7394,8 @@ test('2.29.0 Bán lẻ desktop: dòng gõ trống đủ 5 ô, ô tiền chữ m�
   const p2 = makeEl(); p2.id = 'retailBody';
   const m = deskKit29(false, { '#retailBody': p2 });
   m.c.orderEmpty(p2, 5, '');
-  assert.equal(p2.children[0].children.length, 1, 'điện thoại: một ô trống như cũ');
+  assert.equal(p2.children[0].children.length, 5, 'điện thoại (2.38.20): dòng nhập trống đủ 5 ô, ô tên chứa ô nhập tên');
+  assert.equal(p2.children[0].children[2].children[0].placeholder, 'SL'); assert.equal(p2.children[0].children[3].children[0].placeholder, 'Giá');
   assert.ok(PAGE.includes("mi.placeholder = isDesk() ? 'Tiền (nghìn)' : '0'"));
 });
 
@@ -8255,4 +8256,23 @@ test('2.38.19 N.3c vvTopPx: bàn phím mở (vvH < ih−120) → offsetTop làm 
   assert.ok(!/kbNum|kb-num/.test(PAGE), 'kb-num đã gỡ (0 tham chiếu)');
   assert.ok(PAGE.includes('kbMobile() && vv ? vvTopPx(vv.height, window.innerHeight, vv.offsetTop) : 0'), 'chỉ điện thoại');
   assert.ok(PAGE.includes('html:not(.desktop) td .qty-hint.qty-hint--label{display:none}'));
+});
+
+test('2.38.20 P: Bán lẻ/Nhập hàng điện thoại — ô tên (.sug) vào dòng nhập, cất lại khi dòng bị thay, chạm tên đã chọn → về ô tên, nút lưu lên hàng đầu; desktop không đổi', () => {
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  assert.match(fnBody('entryMount'), /if \(isDesk\(\)\) return;[\s\S]*tr\[data-empty="1"\][\s\S]*td\.appendChild\(b\)/);
+  assert.match(fnBody('entryPark'), /bar\.appendChild\(b\)/);
+  assert.match(fnBody('clearEmpty'), /if \(tb\.id === 'retailBody'\) entryPark\(\);/);
+  assert.match(fnBody('resetRetail'), /entryPark\(\);\s*tb\.textContent = '';/);
+  assert.match(fnBody('orderEmpty'), /tb\.appendChild\(tr\);\s*entryMount\(\);\s*return;/);
+  assert.ok(PAGE.includes("(isDesk() || tb.id === 'retailBody')"), 'dòng nhập trống 5 ô cả điện thoại (chỉ Bán lẻ)');
+  const pe = fnBody('phoneEntry');
+  assert.ok(pe.startsWith('function phoneEntry(){\n  if (isDesk()) return;') || pe.includes('if (isDesk()) return;'));
+  for (const k of ["'#retailBox', '.btn--green'", "'#nhapBox', 'button[type=\"submit\"]'", 'bar.appendChild(b)', 'td.insertBefore(ns.parentNode']) assert.ok(pe.includes(k), k);
+  assert.ok(PAGE.includes('  phoneTop();\n  phoneEntry();') || PAGE.includes('  phoneTop();\r\n  phoneEntry();'));
+  const i = PAGE.indexOf("body.addEventListener('click', function(e){ /* 2.38.20"); const seg = PAGE.slice(i, i + 420);
+  assert.ok(/isDesk\(\) \|\| !tr \|\| !tr\.getAttribute\('data-pid'\) \|\| td !== tr\.children\[1\]\) return;/.test(seg) && /tr\.remove\(\); orderEmpty\(body, 5, ''\);/.test(seg) && /focusNS\(s\)/.test(seg));
+  const a = PAGE.indexOf('/* 2.38.20 (điện thoại)'); const blk = PAGE.slice(a, PAGE.indexOf('/* 2.38.3: cửa sổ thấp', a));
+  for (const k of ['html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display:none}', 'html:not(.desktop) .note{overflow:visible}', 'html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}', 'html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}', '#retailBody tr.is-empty{display:grid;grid-template-columns:var(--cols);']) assert.ok(blk.includes(k), k);
+  assert.ok(!deskBlock().includes('2.38.20') && !deskBlock().includes('entryMount'));
 });

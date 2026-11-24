@@ -898,6 +898,24 @@ html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoo
 /* 2.38.17 (điện thoại): gợi ý đơn vị dạng nhãn trên ô SL ẩn (không đè viền ô ở bố cục 1 hàng). 2.38.19: .top bám visualViewport khi bàn phím mở (--vv-top do JS đặt). */
 html:not(.desktop) .top{transform:translateY(var(--vv-top,0px))}
 html:not(.desktop) td .qty-hint.qty-hint--label{display:none}
+/* 2.38.20 (điện thoại): Bán lẻ/Nhập hàng — ô tên nằm trong dòng nhập (JS chuyển .sug vào ô tên; gợi ý rộng hết tờ ghi theo dòng), nút lưu lên hàng đầu thẻ; dòng gợi ý giá nhập ẩn (giá đã điền sẵn, gợi ý có giá tham khảo). */
+html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display:none}
+html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.btn{order:3;flex:none;margin-left:auto}
+html:not(.desktop) #retailBox .card__bar>.btn{margin-left:0}
+html:not(.desktop) .note{overflow:visible}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#nhapPendingBody tr.is-row){position:relative}
+html:not(.desktop) #retailBody tr.is-empty{display:grid;grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
+html:not(.desktop) #retailBody tr.is-empty>td{grid-row:1;padding:0 5px}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(1){grid-column:1;padding:0;text-align:center}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(2){grid-column:2}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(3){grid-column:3}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(4){grid-column:4}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(5){grid-column:5;padding:0;justify-self:end}
+html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug{position:static}
+html:not(.desktop) :is(#retailBody,#nhapPendingBody) td>.sug>.inp{width:100%;min-width:0;padding-left:6px;padding-right:6px}
+html:not(.desktop) :is(#retailBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}
+html:not(.desktop) #retailBody tr[data-pid]>td:nth-child(2){cursor:pointer}
+html:not(.desktop) #nhapPendingBody :is(#nhapPendName,.nhap-hint){display:none}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
 html.desktop{--sth:76px}
@@ -2379,6 +2397,19 @@ function phoneTop(){
   top.insertBefore(r, top.firstChild);
   top.insertBefore(tabs, $('.top .bar'));
 }
+/* 2.38.20 (điện thoại): nút lưu lên hàng đầu thẻ Bán lẻ/Nhập hàng; ô tên Nhập hàng vào ô tên của dòng nhập (Bán lẻ: entryMount). */
+function phoneEntry(){
+  if (isDesk()) return;
+  [['#retailBox', '.btn--green'], ['#nhapBox', 'button[type="submit"]']].forEach(function(c){
+    var bar = $(c[0] + ' .card__bar'), b = $(c[0] + ' .note__foot ' + c[1]);
+    if (!bar || !b) return;
+    var foot = b.parentNode;
+    bar.appendChild(b);
+    if (foot && !foot.children.length) foot.hidden = true;
+  });
+  var ns = $('#nhapSearch'), nb = $('#nhapPendingBody tr'), td = nb && nb.children[1];
+  if (ns && td && ns.parentNode.parentNode !== td) td.insertBefore(ns.parentNode, td.firstChild);
+}
 /* 2.27.0: phép kiểm nháp của Tải lại (cờ chưa gửi + đơn nháp trong bộ nhớ); không đăng xuất, không xóa cookie. 2.28.0: Thoát đã bỏ (Tauri đóng bằng nút hệ điều hành). */
 function draftOk(verb){
   var pending = dirty || (retailItems && retailItems.length) || (remedyItems && remedyItems.length) || (nhapList && nhapList.length);
@@ -2508,8 +2539,17 @@ function renumber(tbody, base){
     if (c) c.textContent = String(n);
   });
 }
+/* 2.38.20 (điện thoại, Bán lẻ): ô tên (#retailSearch, trong .sug) nằm trong ô tên của dòng nhập trống; khi dòng bị xóa/thay thì cất lại thanh đầu thẻ (ẩn) để không bị hủy theo dòng. */
+function entrySug(){ var s = $('#retailSearch'); return s ? s.parentNode : null; }
+function entryPark(){ var b = entrySug(), bar = $('#retailBox .card__bar'); if (b && bar && b.parentNode !== bar) bar.appendChild(b); }
+function entryMount(){
+  if (isDesk()) return;
+  var b = entrySug(), tr = $('#retailBody tr[data-empty="1"]'), td = tr && tr.children[1];
+  if (b && td && b.parentNode !== td) { td.textContent = ''; td.appendChild(b); }
+}
 function clearEmpty(tb){
   if (!tb) return;
+  if (tb.id === 'retailBody') entryPark();
   var old = tb.querySelector('tr[data-empty="1"]');
   if (old) old.remove();
 }
@@ -2525,15 +2565,16 @@ function orderEmpty(tb, cols, text){
   tr.setAttribute('data-empty', '1');
   tr.className = 'is-empty';
   var td = el('td', 'empty-cell muted small', text);
-  if ((tb.id === 'remedyBody' || tb.id === 'retailBody') && isDesk()) { /* 2.26.1/2.29.0 desktop: dòng đang gõ trống vẫn đủ ô: "+", chữ mờ, ô Gram/SL (+ ô Tiền ở Bán lẻ) và nút + vô hiệu (chỉ để thấy chỗ) */
+  if ((tb.id === 'remedyBody' || tb.id === 'retailBody') && (isDesk() || tb.id === 'retailBody')) { /* 2.26.1/2.29.0 desktop: dòng đang gõ trống vẫn đủ ô: "+", chữ mờ, ô Gram/SL (+ ô Tiền ở Bán lẻ) và nút + vô hiệu (chỉ để thấy chỗ) */
     var rt = tb.id === 'retailBody', qd = el('input', 'inp inp--sm inp--num'), bd = el('button', 'btn btn--icon btn--primary');
     qd.disabled = bd.disabled = true; qd.placeholder = rt ? 'SL' : 'Gram'; qd.setAttribute('aria-label', rt ? 'Số lượng (kg)' : 'Số lượng (gram)'); bd.setAttribute('aria-label', 'Thêm vào tờ ghi'); bd.appendChild(svg('plus'));
     tr.appendChild(el('td', 'c-num muted')); tr.appendChild(td);
     var tq = el('td', 'c-qty'), tdl = el('td', 'c-del');
     tq.appendChild(qd); tdl.appendChild(bd); tr.appendChild(tq);
-    if (rt) { var tm = el('td', 'c-money'), md = el('input', 'inp inp--sm inp--num'); md.disabled = true; md.placeholder = 'Tiền (nghìn)'; md.setAttribute('aria-label', 'Giá bán'); tm.appendChild(md); tr.appendChild(tm); }
+    if (rt) { var tm = el('td', 'c-money'), md = el('input', 'inp inp--sm inp--num'); md.disabled = true; md.placeholder = isDesk() ? 'Tiền (nghìn)' : 'Giá'; md.setAttribute('aria-label', 'Giá bán'); tm.appendChild(md); tr.appendChild(tm); }
     tr.appendChild(tdl);
     tb.appendChild(tr);
+    entryMount();
     return;
   }
   td.colSpan = cols;
@@ -2732,6 +2773,7 @@ function addOrderRow(kind, pid){
 function resetRetail(){
   var tb = $('#retailBody');
   if (!tb) return;
+  entryPark();
   tb.textContent = '';
   orderEmpty(tb, 5, '');
   retailItems = [];
@@ -2785,6 +2827,8 @@ function renderNote(){
   /* 2.14.0: STT dòng đang nhập = số dòng tờ ghi + 1 (tuyệt đối). */
   var pendingTb = $('#retailBody');
   if (pendingTb) renumber(pendingTb, retailItems.length);
+  var enc = !isDesk() && $('#retailBody tr[data-empty="1"] .c-num');
+  if (enc) enc.textContent = String(retailItems.length + 1);
   var impMap = latestImportMap();
   var pp = pendPaging('#retailBody', '#retailFill', retailItems.length, notePage, 5), fill = pp.fill, pages = pp.pages, pendHere = pp.here;
   notePage = pp.page;
@@ -4628,6 +4672,7 @@ function nhapNewProduct(name){
   if (hint) {
     hint.textContent = 'Vị thuốc mới — sẽ được tạo khi lưu.';
     hint.hidden = false;
+    if (!isDesk()) toast('Vị thuốc mới — sẽ được tạo khi lưu.');
   }
   closeSuggest('nhap');
   nhapShowPend();
@@ -5802,6 +5847,12 @@ function bindEvents(){
   });
 
   var body = $('#retailBody');
+  if (body) body.addEventListener('click', function(e){ /* 2.38.20 điện thoại: chạm tên vị đã chọn → bỏ dòng, về ô nhập tên */
+    var td = e.target.closest && e.target.closest('td'), tr = td && td.parentNode;
+    if (isDesk() || !tr || !tr.getAttribute('data-pid') || td !== tr.children[1]) return;
+    tr.remove(); orderEmpty(body, 5, ''); renderNote();
+    var s = $('#retailSearch'); if (s) focusNS(s);
+  });
   if (body) body.addEventListener('input', function(e){
     /* 2.38.18: gõ số KHÔNG dựng lại tờ ghi (nội dung tờ ghi không phụ thuộc ô đang gõ; dựng lại làm iOS cuộn trang khi gõ). */
   });
@@ -6262,6 +6313,7 @@ function init(){
   if (isDesk()) renderNhapList();
   renderBackupInfo();
   phoneTop();
+  phoneEntry();
   renderSyncBadge();
   renderReloadBtn();
   if (dropLegacy) toast('Đã bỏ thay đổi chưa gửi (nâng cấp dữ liệu)');

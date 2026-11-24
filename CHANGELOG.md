@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.20] - 2026-11-24
+
+- Điện thoại (Bán lẻ, Nhập hàng): ô "Nhập tên" nằm trong dòng nhập (STT | tên | SL | giá | +), gợi ý rộng hết tờ ghi; chọn vị → chữ tên, con trỏ sang SL; chạm tên để chọn lại; sau "+" con trỏ về ô tên. Nút Bán đơn / Lưu nhập hàng lên hàng đầu thẻ; dòng gợi ý giá nhập ẩn. Desktop không đổi; Thuốc chén chưa đổi. Chưa thử iPhone thật.
+
 ## [2.38.19] - 2026-11-24
 
 - Điện thoại: bàn phím mở thì `.top` dịch theo `--vv-top` = visualViewport.offsetTop (chỉ khi vvH < ih−120) để thanh đầu không trượt khỏi màn hình khi iOS dịch khung nhìn; gỡ `kb-num` + đệm 50vh (log iPhone cho thấy không ngăn được); kbdebug ghi thêm vv-top và y. Chưa thử iPhone thật.
