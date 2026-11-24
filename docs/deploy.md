@@ -3,6 +3,9 @@
 ## Điều kiện
 Chỉ triển khai khi có cả "duyệt triển khai" của Người duyệt lẫn "bật" của người dùng. Test chạy trên Windows/CI trước; Mac chỉ nhận mã đã xanh và đã gắn thẻ.
 
+## Quy tắc dòng kênh triển khai
+Mỗi dòng triển khai liệt kê ĐỦ mọi hash trong khoảng `v<cũ>..v<mới>` (`git log --oneline`), không chỉ mốc cuối. Thêm commit sau khi đã ghi dòng thì sửa lại CHÍNH dòng đó, không thêm dòng "cập nhật mốc" riêng.
+
 ## Các bước
 - Windows (người dùng tự chạy): `git tag vX.Y.Z <hash>`, `git push origin-local local-sqlite:main`, `git push origin-local vX.Y.Z`.
 - Mac (Người làm chạy, người dùng nhập `sudo`), trong `~/kho/quan-ly-kho-local`:
