@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.34] - 2026-11-24
+
+### Dọn mã (không đổi giao diện)
+- Xóa 65 dòng CSS chết (luật bị luật mới đè: cột `cg-*` cũ, lưới 2 hàng cũ của dòng nhập, `.note__pending{margin:0}`, `.tab__ic` nền, `.card__bar-search`, `.pager` trùng …) và 3 chú thích mồ côi; 5 test chỉ kiểm thứ tự các luật đã xóa bị bỏ, 7 test còn lại bỏ phần kiểm luật chết.
+- Kiểm: băm computed style + kích thước của mọi phần tử, 8 tab, điện thoại 360/375/390/414 + desktop HD, kể cả dòng đang nhập dở: 0 khác biệt trước/sau. Thêm lại 1 luật đã xóa → băm không đổi (luật chết thật); bỏ 1 luật còn sống → băm báo 74 khác biệt.
+
 ## [2.38.33] - 2026-11-24
 
 ### Sửa lỗi

@@ -137,7 +137,6 @@ html.desktop .stat__sub span+span::before{content:none}
 </style>
 <style>
 /* ---------- forms ---------- */
-.field{min-width:0}
 .lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .inp{width:100%;min-height:42px;padding:9px 12px;border-radius:var(--r-sm);border:1px solid var(--border);
 background:var(--surface);color:var(--text);font:inherit;font-size:14px}
@@ -151,7 +150,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 select.inp{cursor:pointer}
 .datefield,.monthfield{position:relative}
-.datefield .inp{padding-right:42px}
 .monthfield .inp{padding-right:32px}
 .datefield__ico,.monthfield__ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
 .datefield__ico{width:18px;height:18px}
@@ -159,8 +157,6 @@ select.inp{cursor:pointer}
 .datefield__native,.monthfield__native{position:absolute;right:0;top:0;height:100%;opacity:0;border:0;padding:0;cursor:pointer}
 .datefield__native{width:100%}
 .monthfield__native{width:30px}
-/* 2.12.0: nút + thêm vào tờ ghi (cạnh Giá nhập), vùng bấm ≥ 44×44. */
-.nhap-add{width:44px;min-width:44px;min-height:44px;height:44px;padding:0}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 /* ---------- table ---------- */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
@@ -180,7 +176,6 @@ tbody tr:hover{background:var(--surface2)}
 .c-money{width:130px}
 /* 2.14.0 (giai đoạn 4, M3a): nút … Kho tồn 32px (hàng máy tính ≈43px); điện thoại 34px, vùng bấm ≥40 (::after). */
 table.inv td.c-del .btn--icon,table.his td.c-act .btn--icon{width:32px;min-width:32px;height:32px;min-height:32px;padding:0}
-table.ord,table.inv,table.his{min-width:0}
 .muted{color:var(--muted)}
 .small{font-size:12px}
 .empty-cell{padding:22px 10px;text-align:center}
@@ -226,11 +221,8 @@ margin-top:14px;padding-top:13px;border-top:1px solid var(--border2)}
 border-left:3px solid var(--red)}
 .note__head{display:flex;justify-content:space-between;gap:10px;padding:7px 12px;font-size:11px;font-weight:700;
 letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bottom:1px solid var(--border)}
-.note table{background:transparent}
-.note th{background:transparent}
 .note td{height:34px;padding:4px 10px}/* 2.14.0 (giai đoạn 4, M6): hàng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) cao theo nội dung, không ép 34px; ô nhập block để đáy thẳng với nút +. Đặt SAU .note td (độ cụ thể cao hơn). Dòng đã thêm không đổi. */
 .note .note__pending tr.is-row>td{height:auto;vertical-align:bottom}
-.note .note__pending tr.is-row>td .inp{display:block}
 .note tbody tr:hover{background:transparent}
 .note tfoot td{height:40px;font-weight:800}
 .note tfoot tr{border-top:1px solid var(--border)}
@@ -296,12 +288,7 @@ max-height:calc(100dvh - 24px);overflow:auto}
 .card__bar-date{flex:0 0 150px;min-width:0}
 .card__bar-date .inp{padding-right:34px}
 #retailNote table{table-layout:fixed;width:100%}
-#retailNote col.cg-num{width:36px}
-#retailNote col.cg-qty{width:104px}
-#retailNote col.cg-money{width:110px}
-#retailNote col.cg-act{width:52px}
 #retailNote .note__pending thead{display:none}
-#retailNote .note__pending{margin:0}
 .note__foot{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border)}
 .note__tot{font-size:14px;color:var(--text2)}
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (chỉ hiển thị; không đổi giá trị). */
@@ -319,15 +306,9 @@ td.c-qty{position:relative}
 #remedyBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
 .card__bar-preset{flex:1 1 180px;min-width:0}
 #remedyPresetBox,#remedyFindBox{display:none}
-#remedyNote{overflow:visible}
 #remedyNote .note__search{padding:8px 10px}
-#remedyNote .note__search .inp{width:100%}
 #remedyNote table{table-layout:fixed;width:100%}
-#remedyNote col.cg-num{width:36px}
-#remedyNote col.cg-qty{width:84px}
-#remedyNote col.cg-act{width:52px}
 #remedyNote .note__pending thead{display:none}
-#remedyNote .note__pending{margin:0}
 .note__pending tr.is-empty{display:none}
 #remedyNote .note__foot{display:block;padding:8px 10px;border-top:1px solid var(--border)}
 .note__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end}
@@ -338,26 +319,18 @@ td.c-qty{position:relative}
 /* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
 #nhapBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
 #nhapListBox table{table-layout:fixed;width:100%}
-#nhapListBox col.cg-num{width:36px}
-#nhapListBox col.cg-qty{width:84px}
-#nhapListBox col.cg-money{width:110px}
-#nhapListBox col.cg-act{width:52px}
 #nhapListBox .note__pending thead{display:none}
-#nhapListBox .note__pending{margin:0}
 .nhap-pend__name{font-weight:600;overflow-wrap:anywhere}
 .nhap-pend__name.is-muted{color:var(--muted);font-weight:400}
 .nhap-pend__tot{float:right;font-size:13px}
 .nhap-hint{font-size:11px;margin:4px 0 0;text-align:left}
 .nhap-foot__tot{display:none}
-#nhapListBox .note__pending tr.is-row>td{align-self:end}
 #nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}
 /* 2.14.0 (giai đoạn 4, M8): máy tính – nút + dòng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) 36×36 bằng ô inp--sm. Điện thoại ghi đè 44×44 ở khối ≤600px phía sau. */
-.note__pending tr.is-row .btn--icon{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
 #nhapListBox .note__foot{margin-top:8px}
 /* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
 #invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary,#backupBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
 .card__bar-month{flex:0 0 130px;min-width:0}
-.card__bar-search.is-inline{flex:1 1 220px}
 .card__bar-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
 .card__bar-btn{flex:0 0 auto}
 /* 2.32.0: Kho tồn – viên lọc Gần hết/Hết hàng (chữ ≥601px, icon + số đếm ≤600px), nút Đối chiếu chỉ icon + chấm số lệch. Bật/tắt qua --nb/--kb của luật nút kính. */
@@ -400,7 +373,6 @@ html:not(.desktop) .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touc
 #invBox .card__bar-count{margin-right:auto;font-size:13px}
 #invBox .card__bar-count::before{content:"· "}
 }
-.card__bar>.inp.card__bar-search{flex:1 1 220px;min-width:0}
 @media (max-width:600px){
 .card__bar-month{order:2}
 .card__bar-btn{order:2}
@@ -458,15 +430,12 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 }
 @media (max-width:640px){
 .wrap{padding:0 12px}
-.bar{min-height:56px}
-.brand{font-size:15px}
 #syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
 .card__body{padding:13px}
 .btn{min-height:var(--ctl-h,44px)}
 .btn--sm{min-height:38px}
 .inp{min-height:var(--ctl-h,44px);font-size:var(--ctl-fs,16px)}
 #retailBox,#remedyBox{overflow:visible}
-#retailNote{overflow:visible}
 html{scroll-padding-bottom:230px}
 html:not(.desktop){scroll-padding-top:110px}
 /* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
@@ -485,20 +454,10 @@ table.ord tr,table.inv tr,table.his tr{display:block}
 table.ord td,table.inv td,table.his td{display:block;width:auto;padding:0;border:0}
 table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid;gap:7px 10px;align-items:center;
 padding:6px 2px}
-table.ord tr.is-row{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 46px}
-table.ord tr.is-row>td:nth-child(1){grid-area:1/1;text-align:left}
 table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/5;min-width:0;overflow-wrap:anywhere}
-table.ord tr.is-row>td:nth-child(3){grid-area:2/2}
-table.ord tr.is-row>td:nth-child(4){grid-area:2/3}
-table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}
 /* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
 table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}
 /* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập chỉ 4 ô (STT, tên, gram, +): gram chiếm 2 cột 1fr (2/2–3/4), nút + ở cột 46px cuối (2/4), đáy căn theo hàng, 44×44. Đặt SAU quy tắc chung table.ord. */
-/* 2.15.18: dòng nhập thẳng cột với dòng đã ghi: cột STT rộng 26 + đệm 5 + khoảng 10 = tên bắt đầu ở 41px (như td 36px + đệm 5), STT căn giữa như .c-num. */
-#retailNote .note__pending tr.is-row,#remedyNote .note__pending tr.is-row{grid-template-columns:26px minmax(0,1fr) minmax(0,1fr) 46px;padding:6px 5px}
-#retailNote .note__pending tr.is-row>td:nth-child(1),#remedyNote .note__pending tr.is-row>td:nth-child(1){text-align:center}
-#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}
-#remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}
 #remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}
 /* 2.14.0 (giai đoạn 4, M8): điện thoại – nút + dòng đang nhập giữ 44×44 (ghi đè quy tắc máy tính 36px ở trên). */
 #nhapListBox .note__pending .nhap-add{height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);width:44px;min-width:44px}
@@ -531,7 +490,6 @@ table.his tr.is-row>td.c-act .btn--icon{width:34px;min-width:34px;height:34px;mi
 table.his tr.is-row>td.c-act .btn--icon::after{content:"";position:absolute;inset:-3px}
 table.ord tr.is-empty td,table.inv tr.is-empty td,table.his tr.is-empty td{display:block;padding:18px 4px;
 text-align:center}
-table.ord .inp{width:100%}
 table.inv .c-del,table.his .c-act{width:auto}
 .note .c-act{width:76px}
 .note td,.note th{padding-left:5px;padding-right:5px}
@@ -557,11 +515,9 @@ font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
 @media (max-width:600px){
-.tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 .tab{padding:4px 2px;font-size:12px}
 }
 /* 2.15.8 (máy tính >640px): biểu tượng cạnh nhãn hai hàng (cùng icon với tiêu đề thẻ); điện thoại giữ chữ hai dòng, ẩn icon. */
-.tab__ic{display:none}
 /* 2.15.13: mọi icon tab cùng một màu xanh lá (--tab-ico, = màu icon Bán lẻ); tab đang chọn (nền tím) đặt icon xanh trên chip --brand-soft để vẫn nổi bật. */
 .tab__ic{color:var(--tab-ico);border-radius:4px}
 .tab.is-active .tab__ic{background:var(--brand-soft);box-shadow:0 0 0 3px var(--brand-soft)}
@@ -595,30 +551,10 @@ html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}
 .tab__l1{grid-column:2;grid-row:1}
 .tab__l2{grid-column:2;grid-row:2}
 }
-/* 2.14.0 S1 (máy tính): cột SL của tờ ghi và dòng đang nhập rộng 152px → ô nhập 132px, vùng chữ ≥ 56px khi có gợi ý. Đặt SAU mọi quy tắc cg-qty ở trên. */
-@media (min-width:601px){
-#retailNote col.cg-qty,#remedyNote col.cg-qty,#nhapListBox col.cg-qty{width:152px;min-width:152px}
-}
 @media (max-width:600px){
-#retailNote col.cg-qty,#retailNote col.cg-money{width:84px}
-#nhapListBox col.cg-qty{width:64px}
-#nhapListBox col.cg-money{width:84px}
 /* Hàng Tổng nằm trong bảng dòng nhập (table.ord là block trên điện thoại): dựng lại lưới cùng độ rộng cột với bảng tờ ghi để số tổng thẳng cột tiền. */
 .note__pending tfoot{display:block}
 .note__pending tfoot tr{display:grid}
-.note__pending tfoot td{display:block;padding:4px 5px}
-#retailNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 84px 52px}
-#nhapListBox .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 64px 84px 52px}
-#remedyNote .note__pending tfoot tr{grid-template-columns:36px minmax(0,1fr) 84px 52px}
-}
-@media (max-width:400px){
-#retailNote col.cg-num,#nhapListBox col.cg-num{width:28px}
-#retailNote col.cg-qty{width:70px}
-#nhapListBox col.cg-qty{width:56px}
-#retailNote col.cg-money,#nhapListBox col.cg-money{width:72px}
-#retailNote col.cg-act,#nhapListBox col.cg-act{width:46px}
-#retailNote .note__pending tfoot tr{grid-template-columns:28px minmax(0,1fr) 70px 72px 46px}
-#nhapListBox .note__pending tfoot tr{grid-template-columns:28px minmax(0,1fr) 56px 72px 46px}
 }
 .bak-sec{margin-top:12px;padding:10px 12px;border:1px solid var(--kb,var(--border));border-radius:14px;background:var(--pnl,rgba(255,255,255,.2))}
 .bak-sec:first-child{margin-top:0}
@@ -679,7 +615,6 @@ html:is(.desktop,.pt) .pager__num[aria-current]{color:#fff;font-weight:600;borde
 html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}
 html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:24px;height:24px}
 html.desktop .pager{gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:none}
-html.desktop .pager{display:inline-flex}
 html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
 html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
 html.desktop .pager :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:none}
@@ -704,7 +639,6 @@ html.desktop[data-bg] tbody tr:hover :is(td,th){color:var(--text)}
 html:is(.desktop,.pt) select option,html:is(.desktop,.pt) select optgroup{background:var(--surface);color:var(--text)}
 html:is(.desktop,.pt) .toast{background:rgba(20,28,60,.92);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 html:is(.desktop,.pt) .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}
-html:is(.desktop,.pt) .card table:not(.ord){background:none}
 html.desktop .note{margin:0;border:1px solid var(--border);border-radius:18px;background:none}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
 html.desktop :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -718,7 +652,6 @@ html.desktop .btn--icon{min-width:32px;padding:3px}
 html.desktop .pager .btn{min-height:24px;min-width:24px;padding:1px 9px}
 html.desktop input.inp.inp--num{width:80px;max-width:100%;height:28px;min-height:28px;padding:2px 8px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
 html.desktop input.inp.inp--num::placeholder{font-weight:400}
-html.desktop td.c-money .inp--num{margin-left:auto}
 html.desktop .note .inp{height:28px;min-height:28px;padding-top:2px;padding-bottom:2px;font-size:13px}
 html.desktop .note td .btn--icon{min-height:22px;height:22px;width:22px;min-width:22px}
 html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
@@ -866,7 +799,6 @@ html:not(.desktop) .note__head>:is([id$=Pg],#nhapListCount){grid-area:1/2;justif
 html:not(.desktop) .note__head :is(.nh-q,.nh-m){display:block;text-align:right;padding:0 5px;white-space:nowrap}
 html:not(.desktop) .note__head .nh-q{grid-area:1/3}
 html:not(.desktop) .note__head .nh-m{grid-area:1/4}
-html:not(.desktop) :is(#retailNote .note__list,#remedyNote .note__list)>table,html:not(.desktop) #nhapListBox>table{table-layout:fixed;width:100%}
 html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-num{width:var(--cn)}
 html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:var(--cq)}
 html:not(.desktop) :is(#retailNote,#nhapListBox) col.cg-money{width:var(--cm)}

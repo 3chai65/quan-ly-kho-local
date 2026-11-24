@@ -3347,31 +3347,6 @@ test('2.10.1 nav tab: một nhãn duy nhất (không còn tab__full/tab__short);
   }
 });
 
-/* 2.10.1: quy tắc điện thoại phải đứng SAU quy tắc gốc cùng bộ chọn, nếu không quy tắc gốc ghi đè (cùng độ ưu tiên). */
-test('2.10.1 thứ tự CSS: quy tắc gốc .tabs/.tab/.tab__ic/.stat đứng TRƯỚC khối điện thoại cùng bộ chọn', () => {
-  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
-  // .tabs: gốc (8 cột) trước khối 600px (4 cột)
-  assert.ok(at('.tabs{display:grid') < at('repeat(4,minmax(0,1fr))'), '.tabs gốc phải đứng trước quy tắc 4 cột điện thoại');
-  // .tab: gốc (display:flex) trước khối 600px (11px)
-  assert.ok(at('.tab{display:flex') < at('.tab{padding:4px 2px;font-size:12px}'), '.tab gốc phải đứng trước quy tắc điện thoại');
-
-  // quy tắc điện thoại của tab phải nằm trong @media (max-width:600px)
-  const m = PAGE.lastIndexOf('@media (max-width:600px)', at('repeat(4,minmax(0,1fr))'));
-  assert.ok(m >= 0 && PAGE.indexOf('@media', m + 1) > at('repeat(4,minmax(0,1fr))'), 'repeat(4) phải nằm trong @media (max-width:600px)');
-});
-
-/* 2.12.1 (bản căn nút +): nút cột cuối điện thoại đứng hàng 2, align-self:end; không còn grid-area 1/4/3/5. */
-test('2.12.1 căn nút + điện thoại: table.ord đặt nút ở 2/4, align-self:end, trong @media (max-width:600px), sau quy tắc gốc', () => {
-  assert.doesNotMatch(PAGE, /table\.ord tr\.is-row>td:nth-child\(5\)\{grid-area:1\/4\/3\/5/, 'còn 1/4/3/5 ở table.ord');
-  const at = s => { const i = PAGE.indexOf(s); assert.ok(i >= 0, 'thiếu: ' + s); return i; };
-  const base = at('table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid');
-  const ro = at('table.ord tr.is-row>td:nth-child(5){grid-area:2/4;justify-self:end;align-self:end}');
-  assert.ok(base < ro, 'quy tắc nút phải sau quy tắc gốc');
-  assert.equal(PAGE.lastIndexOf('@media', ro), PAGE.lastIndexOf('@media (max-width:600px)', ro), 'table.ord phải trong @media (max-width:600px)');
-  assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(5\) \.btn\{width:44px;min-width:44px;height:var\(--ctl-h,44px\);min-height:var\(--ctl-h,44px\)/, 'nút + cao theo --ctl-h');
-  assert.match(PAGE, /table\.ord tr\.is-row>td:nth-child\(2\)\{grid-area:1\/2\/2\/5;/, 'tên hàng 1 phải rộng hết hàng (1/2/2/5)');
-});
-
 /* 2.12.1: điện thoại (≤600px) – ô Vị thuốc cả hàng; hàng dưới Số lượng | Giá nhập | nút +; đặt SAU quy tắc gốc và khối 640px. */
 test('2.14.0 Nhập hàng: ô tên nằm trong thanh card__bar; không còn class nhap-row (quy tắc CSS đã bỏ ở 2.15.7)', () => {
   assert.doesNotMatch(PAGE, /nhap-row/, 'không còn class nhap-row');
@@ -3657,7 +3632,6 @@ test('2.14.0 Bán lẻ: hai bảng (tờ ghi và dòng đang nhập) dùng chung
   const block = PAGE.slice(rb0, rb1);
   assert.equal(block.split('<colgroup>').length - 1, 2, 'phải có 2 colgroup trong thẻ Bán lẻ');
   assert.equal(block.split('class="cg-num"').length - 1, 2);
-  for (const k of ['cg-num', 'cg-qty', 'cg-money', 'cg-act']) assert.match(PAGE, new RegExp('#retailNote col\\.' + k + '\\{width:\\d+px\\}'), k);
 });
 
 /* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (lạng/kg/g) theo đúng fmtQty; chỉ hiển thị, không đổi giá trị. */
@@ -4589,33 +4563,6 @@ test('2.14.0 M6 hàng đang nhập: td của .note__pending tr.is-row có height
   const pend = css.indexOf('.note .note__pending tr.is-row>td{height:auto');
   assert.ok(base >= 0, 'thiếu .note td{height:34px}');
   assert.ok(pend > base, 'quy tắc height:auto của hàng đang nhập phải đứng sau .note td{height:34px}');
-  assert.match(css, /\.note .note__pending tr\.is-row>td \.inp\{display:block\}/, 'ô nhập trong hàng đang nhập là block');
-});
-
-/* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập 4 ô: gram 2/2–3/4, nút + 2/4 căn đáy, 44×44 (trong khối 600px, đặt sau quy tắc chung). */
-test('2.14.0 M7 Thuốc chén điện thoại: gram chiếm 2/2–3/4, nút + ở 2/4 căn đáy 44×44 (sau quy tắc chung table.ord)', () => {
-  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
-  const gen = css.indexOf('table.ord tr.is-row>td:nth-child(4){grid-area:2/3}');
-  const g = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}');
-  const b = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4){grid-area:2/4;justify-self:end;align-self:end}');
-  const btn = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}');
-  assert.ok(g >= 0, 'thiếu quy tắc gram 2/2–3/4');
-  assert.ok(b >= 0, 'thiếu quy tắc nút + 2/4 căn đáy');
-  assert.ok(btn >= 0, 'thiếu quy tắc nút + 44×44');
-  assert.ok(g > gen && b > gen && btn > gen, 'quy tắc Thuốc chén phải đứng sau quy tắc chung table.ord');
-});
-
-/* 2.14.0 (giai đoạn 4, M8): nút + dòng đang nhập máy tính 36px (bằng ô inp--sm); điện thoại 44px đặt SAU khối ≤600px. */
-test('2.14.0 M8 nút + dòng đang nhập: máy tính 36×36 (nhap-add và .note__pending .btn--icon) đứng TRƯỚC khối ≤600px; điện thoại 44×44 đứng SAU', () => {
-  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
-  const dNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}');
-  const dIcon = css.indexOf('.note__pending tr.is-row .btn--icon{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}');
-  const mNhap = css.indexOf('#nhapListBox .note__pending .nhap-add{height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);width:44px;min-width:44px}');
-  const m7 = css.indexOf('#remedyNote .note__pending tr.is-row>td:nth-child(3){grid-area:2/2/3/4}');
-  assert.ok(dNhap >= 0, 'thiếu nhap-add 36px máy tính');
-  assert.ok(dIcon >= 0, 'thiếu .btn--icon 36px máy tính trong dòng đang nhập');
-  assert.ok(mNhap >= 0, 'thiếu nhap-add 44px điện thoại');
-  assert.ok(mNhap > m7 && m7 > dIcon, 'quy tắc điện thoại 44px phải nằm trong khối ≤600px, đứng SAU quy tắc máy tính');
 });
 
 /* 2.14.0 S1: ô số không có padding-left cố định; gợi ý chỉ chiếm chỗ khi đang hiện và đủ chỗ; cột SL máy tính 152px (ô 132px) đặt sau mọi quy tắc cg-qty. */
@@ -4633,16 +4580,6 @@ test('2.14.0 S1 gợi ý không chiếm chỗ cố định: JS đặt .has-hint 
   const h = wrap.children[1];
   assert.equal(h.hidden, true, 'ô chưa hiển thị → gợi ý ẩn (đợi ResizeObserver)');
   assert.equal(input.style.paddingLeft, '', 'không có padding-left khi gợi ý ẩn');
-});
-
-test('2.14.0 S1 CSS: cột SL máy tính 152px (ô 132px) trong @media (min-width:601px), đặt SAU mọi quy tắc cg-qty', () => {
-  const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
-  const m = css.match(/@media \(min-width:601px\)\{\s*#retailNote col\.cg-qty,#remedyNote col\.cg-qty,#nhapListBox col\.cg-qty\{width:152px;min-width:152px\}/);
-  assert.ok(m, 'thiếu quy tắc cột SL 152px cho máy tính');
-  const at = css.indexOf(m[0]);
-  for (const base of ['#remedyNote col.cg-qty{width:84px}', '#nhapListBox col.cg-qty{width:84px}', '#retailNote col.cg-qty{width:104px}']) {
-    assert.ok(at > css.indexOf(base), 'quy tắc 152px phải đứng sau ' + base);
-  }
 });
 
 /* 2.14.0 N1: mã gán value rỗng cho ô số có gợi ý phải làm mới gợi ý (không còn "(12,5 kg)" trên ô trống). */
@@ -5202,8 +5139,6 @@ test('2.15.18 sau "+" / đang gõ tên (dòng nhập trống, cao 0): vv 357 v�
 });
 
 test('2.15.18 CSS: dòng nhập thẳng cột dòng ghi (cột STT 26 + đệm 5 + gap 10 = 41, STT giữa); khi gọn ẩn thead trong danh sách', () => {
-  assert.ok(PAGE.includes('#retailNote .note__pending tr.is-row,#remedyNote .note__pending tr.is-row{grid-template-columns:26px minmax(0,1fr) minmax(0,1fr) 46px;padding:6px 5px}'));
-  assert.ok(PAGE.includes('#remedyNote .note__pending tr.is-row>td:nth-child(1){text-align:center}'));
   assert.ok(/#remedyBox\.kb-compact #remedyNote:has\(#remedyBody tr\[data-pid\]\)>\.note__list>table>thead[^{]*\{display:none\}/.test(PAGE));
 });
 
@@ -5457,7 +5392,6 @@ test('2.15.8 tab máy tính có icon: 8 nút mỗi nút 1 svg aria-hidden trỏ 
   assert.equal((PAGE.match(/--tab-ico:#/g) || []).length, 1, '--tab-ico khai báo đúng 1 lần (2.17.0: một theme sáng)');
   assert.equal(PAGE.match(/--tab-ico:(#\w+)/)[1], PAGE.match(/:root\{[\s\S]*?--green-text:(#\w+)/)[1], 'sáng: --tab-ico = màu icon Bán lẻ');
   assert.match(PAGE, /\.tab\.is-active \.tab__ic\{background:var\(--brand-soft\);box-shadow:0 0 0 3px var\(--brand-soft\)\}/, 'tab đang chọn: icon xanh trên chip --brand-soft');
-  assert.match(PAGE, /\.tab__ic\{display:none\}[\s\S]*?@media \(min-width:641px\)\{[\s\S]*?\.tab__ic\{display:block/, 'icon ẩn mặc định (<=640px), chỉ hiện từ 641px');
 });
 
 test('2.15.19 pushState 5xx và lỗi mạng KHÔNG hiện toast "Chưa lưu được:" (chỉ huy hiệu); trả false, không phải "bị từ chối"', async () => {
@@ -6018,7 +5952,7 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   assert.ok(rules.length >= 7 && rules.every(l => l.startsWith('html.desktop') || l.startsWith('html.glass:is(.desktop,.pt)')), 'mọi quy tắc phải bắt đầu bằng html.desktop (hoặc html.glass)');
   assert.ok(Buffer.byteLength(block) <= 20736, 'CSS desktop ≤ 20 KB');
   assert.ok(!/feDisplacementMap/.test(PAGE));
-  assert.ok(block.includes('html.desktop .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}') && block.includes('html.desktop .card table:not(.ord){background:none}'), 'hộp thoại đục, bảng cùng độ trong với thẻ');
+  assert.ok(block.includes('html.desktop .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}'), 'hộp thoại đục, bảng cùng độ trong với thẻ');
   assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(#retailBox,#remedyBox,#nhapBox) .note') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.pager') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
   // 2.19.0: màu nhấn xanh lá (phân trang, nút chính, focus) và nút Bán đơn dính đáy khung
   assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}') && !block.includes('position:sticky'));
@@ -6333,8 +6267,8 @@ test('2.20.5 tờ ghi desktop: nút/ô nhỏ, cột gần nhau, đường kẻ m
   assert.ok(px(/html\.desktop \.note td \.btn--icon\{min-height:(\d+)px/) === 22 && px(/\.pend \.nhap-add\{display:inline-flex;width:(\d+)px/) === 22);
   assert.ok(px(/html\.desktop \.note \.inp\{height:(\d+)px/) === 28);
   // (5) cột: STT 40, tên 290, SL 110, giá 100, cột thao tác auto (hấp thụ phần còn lại, nút sát trái)
-  assert.equal(px(/col\.cg-num\{width:(\d+)px/), 38); assert.ok(block.includes('col.cg-name{width:auto}'));
-  assert.equal(px(/col\.cg-qty\{width:(\d+)px;min-width:120px/), 120); assert.equal(px(/col\.cg-money\{width:(\d+)px/), 110);
+  assert.equal(px(/col\.cg-num\{width:(\d+)px/), 38);
+  assert.equal(px(/col\.cg-qty\{width:(\d+)px;min-width:120px/), 120);
   assert.ok(block.includes('col.cg-act{width:34px}') && block.includes('.c-act,.c-del){text-align:left;padding:0 10px 0 2px}'));
   // (2) đường kẻ: mọi đường ngang 1px solid var(--border); không còn 2px/dashed trong khối desktop
   assert.ok(!/border-(top|bottom):(?:[2-9]px|1px dashed)/.test(block));
@@ -6351,7 +6285,7 @@ test('2.20.6 desktop: ô số ngắn 80px cao 28 căn phải trong cột; ô tê
   const block = deskBlock();
   const m = /html\.desktop input\.inp\.inp--num\{width:(\d+)px;max-width:100%;height:(\d+)px;min-height:\2px;padding:2px 8px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums\}/.exec(block);
   assert.ok(m && +m[1] === 80 && +m[2] === 28, 'mọi ô số 80x28');
-  assert.ok(block.includes('html.desktop td.c-money .inp--num{margin-left:auto}') && !block.includes('.chart-year__in'), '2.31.0: ô năm nằm trong summary ẩn, bỏ luật chết');
+  assert.ok(!block.includes('.chart-year__in'), '2.31.0: ô năm nằm trong summary ẩn, bỏ luật chết');
   // thanh đầu Thuốc chén: tiêu đề, ô nhập tên, chọn đơn, ngày; dời ở JS desktop, không đổi HTML gốc (điện thoại)
   assert.ok(/<span class="card__bar-title"[^>]*>[\s\S]{0,200}?Thuốc chén<\/span>\s*<select class="inp card__bar-preset" id="remedyPreset"/.test(PAGE), 'HTML gốc giữ nguyên thứ tự (iPhone)');
   assert.ok(PAGE.includes("rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'") && PAGE.includes('rb.insertBefore(bl, rp); rb.appendChild(br);') && /if \(rs && rb && rp\)/.test(PAGE));
