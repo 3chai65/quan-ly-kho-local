@@ -40,7 +40,7 @@ function loadClient(extra = {}) {
   if (end === -1) throw new Error('Không tìm thấy điểm kết thúc IIFE');
   js = js.slice(0, end) + `
 globalThis.__test = {
-  afterSaveDone: (typeof afterSaveDone === 'function' ? afterSaveDone : null), compactAvail: (typeof compactAvail === 'function' ? compactAvail : null), compactFitHeight: (typeof compactFitHeight === 'function' ? compactFitHeight : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), wholeWordMatch: (typeof wholeWordMatch === 'function' ? wholeWordMatch : null), sugWhole: (typeof sugWhole === 'function' ? sugWhole : null), sugListMaxHeight: (typeof sugListMaxHeight === 'function' ? sugListMaxHeight : null), sugReveal: (typeof sugReveal === 'function' ? sugReveal : null), matchProducts: (typeof matchProducts === 'function' ? matchProducts : null), focusNS: (typeof focusNS === 'function' ? focusNS : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), 
+  afterSaveDone: (typeof afterSaveDone === 'function' ? afterSaveDone : null), swipeDir: (typeof swipeDir === 'function' ? swipeDir : null), compactAvail: (typeof compactAvail === 'function' ? compactAvail : null), compactFitHeight: (typeof compactFitHeight === 'function' ? compactFitHeight : null), compactListHeight: (typeof compactListHeight === 'function' ? compactListHeight : null), compactWanted: (typeof compactWanted === 'function' ? compactWanted : null), compactSync: (typeof compactSync === 'function' ? compactSync : null), wholeWordMatch: (typeof wholeWordMatch === 'function' ? wholeWordMatch : null), sugWhole: (typeof sugWhole === 'function' ? sugWhole : null), sugListMaxHeight: (typeof sugListMaxHeight === 'function' ? sugListMaxHeight : null), sugReveal: (typeof sugReveal === 'function' ? sugReveal : null), matchProducts: (typeof matchProducts === 'function' ? matchProducts : null), focusNS: (typeof focusNS === 'function' ? focusNS : null), initFootBars: (typeof initFootBars === 'function' ? initFootBars : null), refocusSearch: (typeof refocusSearch === 'function' ? refocusSearch : null), onVvChange: (typeof onVvChange === 'function' ? onVvChange : null), addRetailToNote: (typeof addRetailToNote === 'function' ? addRetailToNote : null), 
   fmtQtyInt: (typeof fmtQtyInt === 'function' ? fmtQtyInt : null), fmtKgExact: (typeof fmtKgExact === 'function' ? fmtKgExact : null), kInput: (typeof kInput === 'function' ? kInput : null), fmtUnitPrice: (typeof fmtUnitPrice === 'function' ? fmtUnitPrice : null),
   fmtMoneyInt: (typeof fmtMoneyInt === 'function' ? fmtMoneyInt : null), fmtMoney: (typeof fmtMoney === 'function' ? fmtMoney : null), fmtNum: (typeof fmtNum === 'function' ? fmtNum : null), fmtQty: (typeof fmtQty === 'function' ? fmtQty : null), dec: (typeof dec === 'function' ? dec : null), num: (typeof num === 'function' ? num : null),
   pendEntryH: (typeof pendEntryH === 'function' ? pendEntryH : null), sanitize: (typeof sanitize === 'function' ? sanitize : null), parseBackup: (typeof parseBackup === 'function' ? parseBackup : null),
@@ -4818,7 +4818,7 @@ test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn v�
   assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(2 l)')), JSON.stringify(['(2 l)', '2 l', 'l']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
-  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, '').replace(/html\.desktop :is\(\.inv td:first-child[^}]*}/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
+  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, '').replace(/html\.desktop :is\(\.inv td:first-child[^}]*}/, '').replace(/\/\* 2\.38\.16 \(điện thoại\)[\s\S]*?(?=\/\* 2\.38\.3: cửa sổ thấp)/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
   assert.match(PAGE, /.sug__name{[^}]*white-space:nowrap[^}]*}/, '2.17.8 gợi ý tên mỗi vị 1 dòng');
 });
 
@@ -8223,4 +8223,48 @@ test('2.38.15 điện thoại tối giản: 1 nét phân cách dưới thanh đ�
   assert.ok(blk.includes('.tab.is-active{background:none;border-color:var(--text);box-shadow:none}'), 'tab chọn chỉ viền');
   assert.ok(!/#fff|#000/.test(blk), 'không màu cứng');
   assert.ok(!deskBlock().includes('2.38.15'), 'ngoài khối desktop');
+});
+
+test('2.38.16 N.4 swipeDir: |dx|>=60, |dy|<|dx|/2, dt<600, bắt đầu cách mép >16px, không bị chặn; trái = +1 (tab kế), phải = -1', () => {
+  const ok = { dx: -80, dy: 10, dt: 300, x0: 200, vw: 390, ok: true };
+  assert.equal(app.swipeDir(ok), 1);
+  assert.equal(app.swipeDir({ ...ok, dx: 80 }), -1);
+  assert.equal(app.swipeDir({ ...ok, dx: -59 }), 0, 'ngắn');
+  assert.equal(app.swipeDir({ ...ok, dx: -60 }), 1, 'đúng 60');
+  assert.equal(app.swipeDir({ ...ok, dy: 40 }), 0, '|dy| = |dx|/2');
+  assert.equal(app.swipeDir({ ...ok, dy: -39 }), 1, 'dọc nhẹ vẫn nhận');
+  assert.equal(app.swipeDir({ ...ok, dt: 600 }), 0, 'chậm');
+  assert.equal(app.swipeDir({ ...ok, dt: 599 }), 1);
+  assert.equal(app.swipeDir({ ...ok, x0: 16 }), 0, 'sát mép trái');
+  assert.equal(app.swipeDir({ ...ok, x0: 17 }), 1);
+  assert.equal(app.swipeDir({ ...ok, x0: 374 }), 0, 'sát mép phải (vw-16)');
+  assert.equal(app.swipeDir({ ...ok, x0: 373 }), 1);
+  assert.equal(app.swipeDir({ ...ok, ok: false }), 0, 'bị chặn');
+  assert.equal(app.swipeDir(null), 0);
+});
+
+test('2.38.16 N.4 nguồn: listener passive, không preventDefault; đổi tab qua activate + dừng 2 đầu; chặn ô nhập/bàn phím/hộp thoại/gợi ý/cuộn ngang/desktop', () => {
+  const fnBody = (name) => { const i = PAGE.indexOf('function ' + name + '('); assert.ok(i >= 0, name); const j = PAGE.indexOf('\nfunction ', i + 10); return PAGE.slice(i, j); };
+  const sw = fnBody('initSwipeTabs');
+  assert.equal([...sw.matchAll(/\{ passive: true \}/g)].length, 3, '3 listener passive');
+  assert.ok(!/preventDefault/.test(sw), 'không chặn cuộn dọc');
+  const bl = fnBody('swipeBlocked');
+  for (const k of ['kbMobile()', 'isDesk()', 'INPUT|TEXTAREA|SELECT', 'visualViewport', "dialog[open]", '.sug__list:not([hidden])', 'scrollWidth > e.clientWidth', 'overflowX']) assert.ok(bl.includes(k), k);
+  const tabs = fnBody('initTabs');
+  assert.match(tabs, /initSwipeTabs\(function\(dir\)\{[\s\S]*nx < 0 \|\| nx >= ids\.length\) return;[\s\S]*bx2\.open = true; activate\(bx2\.id\);/);
+});
+
+test('2.38.16 N.1/N.2 tờ ghi: tiêu đề "Tờ ghi" + nhãn cột trên hàng tiêu đề (điện thoại), desktop giữ chữ đủ và ẩn nhãn cột; trang chỉ hiện khi >1; dòng nhập 1 hàng cùng lưới --cols', () => {
+  for (const full of ['đơn bán lẻ', 'đơn thuốc chén', 'nhập hàng']) assert.ok(PAGE.includes('<span>Tờ ghi<span class="nh-d"> ' + full + '</span></span>'), full);
+  assert.ok(PAGE.includes('<span class="nh-q">SL (kg)</span><span class="nh-m">Giá bán</span>') && PAGE.includes('<span class="nh-q">SL (gram)</span></div>') && PAGE.includes('<span class="nh-q">SL (kg)</span><span class="nh-m">Giá nhập</span>'));
+  assert.ok(PAGE.includes('.nh-q,.nh-m{display:none}'), 'nhãn cột ẩn ngoài điện thoại');
+  assert.ok(!deskBlock().includes('nh-q'), 'khối desktop không đụng');
+  assert.equal([...PAGE.matchAll(/pg\.hidden = pages <= 1 && !isDesk\(\);/g)].length, 2, 'Trang x / y chỉ hiện khi >1 (điện thoại)');
+  const a = PAGE.indexOf('/* 2.38.16 (điện thoại)'); const blk = PAGE.slice(a, PAGE.indexOf('/* 2.38.3: cửa sổ thấp', a));
+  assert.ok(blk.includes('html:not(.desktop){--cn:26px;--cq:80px;--cm:70px;--ca:44px}'));
+  assert.ok(blk.includes('.note__head{display:grid;grid-template-columns:var(--cols);column-gap:0;'));
+  assert.ok(blk.includes('.note__pending tr.is-row{grid-template-columns:var(--cols);gap:0;'), 'dòng nhập 1 hàng');
+  assert.ok(blk.includes('td:nth-child(2){grid-column:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'tên dài cắt …');
+  assert.ok(a > PAGE.indexOf('/* 2.38.15:'), 'sau khối tối giản');
+  assert.ok(!deskBlock().includes('2.38.16'));
 });

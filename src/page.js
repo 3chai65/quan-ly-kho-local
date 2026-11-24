@@ -863,6 +863,38 @@ html:not(.desktop) .inp::placeholder{color:rgba(255,255,255,.5);opacity:1}
 html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--text);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 html:not(.desktop) .btn--danger{--ctl-c:var(--red-text)}
 html:not(.desktop) .top .tabs .tab.is-active{background:none;border-color:var(--text);box-shadow:none}
+/* 2.38.16 (điện thoại): tờ ghi cột thẳng hàng. Tiêu đề "TỜ GHI" + nhãn cột (SL, Giá) cùng lưới --cols với dòng đã ghi (bảng, colgroup) và dòng đang nhập (1 hàng: STT | tên | SL | giá | +). Tên dài cắt "…". "Trang x / y" chỉ hiện khi > 1 trang. Desktop: nhãn cột ẩn, tiêu đề đủ chữ. */
+.nh-q,.nh-m{display:none}
+html:not(.desktop){--cn:26px;--cq:80px;--cm:70px;--ca:44px}
+html:not(.desktop) :is(#retailNote,#nhapListBox){--cols:var(--cn) minmax(0,1fr) var(--cq) var(--cm) var(--ca)}
+html:not(.desktop) #remedyNote{--cols:var(--cn) minmax(0,1fr) var(--cq) var(--ca)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__head{display:grid;grid-template-columns:var(--cols);column-gap:0;align-items:center;padding:7px 0}
+html:not(.desktop) .note__head .nh-d{display:none}
+html:not(.desktop) .note__head>:first-child{grid-area:1/1/2/3;padding-left:5px}
+html:not(.desktop) .note__head>:is([id$=Pg],#nhapListCount){grid-area:1/2;justify-self:end;padding-right:5px}
+html:not(.desktop) .note__head :is(.nh-q,.nh-m){display:block;text-align:right;padding:0 5px;white-space:nowrap}
+html:not(.desktop) .note__head .nh-q{grid-area:1/3}
+html:not(.desktop) .note__head .nh-m{grid-area:1/4}
+html:not(.desktop) :is(#retailNote .note__list,#remedyNote .note__list)>table,html:not(.desktop) #nhapListBox>table{table-layout:fixed;width:100%}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-num{width:var(--cn)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:var(--cq)}
+html:not(.desktop) :is(#retailNote,#nhapListBox) col.cg-money{width:var(--cm)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-act{width:var(--ca)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) :is(tbody:not(.pend),tfoot) td.b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) :is(tbody:not(.pend),tfoot) td:nth-child(3){text-align:right}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row{grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td{grid-row:1;min-width:0;padding:0 5px;align-self:center}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(1){grid-column:1;text-align:center;padding:0}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(2){grid-column:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(3){grid-column:3}
+html:not(.desktop) :is(#retailNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(4){grid-column:4}
+html:not(.desktop) :is(#retailNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(5){grid-column:5;padding:0;justify-self:end}
+html:not(.desktop) #remedyNote .note__pending tr.is-row>td:nth-child(4){grid-column:4;padding:0;justify-self:end}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td::before{display:none}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row input.inp{padding-left:6px;padding-right:6px}
+html:not(.desktop) #nhapListBox .nhap-pend__tot{display:none}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoot tr{grid-template-columns:var(--cols)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoot td{padding:4px 5px}
 /* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
 @media (max-height:640px){
 html.desktop{--sth:76px}
@@ -1064,7 +1096,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
           </div>
         </div>
         <div class="note" id="retailNote">
-          <div class="note__head"><span>Tờ ghi đơn bán lẻ</span><span id="retailNotePg"></span></div>
+          <div class="note__head"><span>Tờ ghi<span class="nh-d"> đơn bán lẻ</span></span><span id="retailNotePg"></span><span class="nh-q">SL (kg)</span><span class="nh-m">Giá bán</span></div>
           <div class="note__list" id="retailNoteList">
           <table>
             <caption class="sr">Tờ ghi đơn bán lẻ</caption>
@@ -1128,7 +1160,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
           </div>
         </div>
         <div class="note" id="remedyNote">
-          <div class="note__head"><span>Tờ ghi đơn thuốc chén</span><span id="remedyNotePg"></span></div>
+          <div class="note__head"><span>Tờ ghi<span class="nh-d"> đơn thuốc chén</span></span><span id="remedyNotePg"></span><span class="nh-q">SL (gram)</span></div>
           <div class="sug note__search">
             <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
             <div class="sug__list" id="remedyList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
@@ -1207,7 +1239,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
         </div>
       </div>
       <div class="note" id="nhapListBox">
-        <div class="note__head"><span>Tờ ghi nhập hàng</span><span id="nhapListCount"></span></div>
+        <div class="note__head"><span>Tờ ghi<span class="nh-d"> nhập hàng</span></span><span id="nhapListCount"></span><span class="nh-q">SL (kg)</span><span class="nh-m">Giá nhập</span></div>
         <table>
           <caption class="sr">Danh sách vị thuốc chờ nhập</caption>
           <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
@@ -2650,7 +2682,7 @@ function renderRemedyNote(){
   var tf = $('#remedyNoteFoot');
   if (tf) tf.hidden = !remedyItems.length;
   var pg = $('#remedyNotePg');
-  if (pg) pg.textContent = 'Trang ' + remedyNotePage + ' / ' + pages;
+  if (pg) { pg.textContent = 'Trang ' + remedyNotePage + ' / ' + pages; pg.hidden = pages <= 1 && !isDesk(); }
   var host = $('#remedyNotePager');
   if (host) {
     host.hidden = pages <= 1 && !isDesk();
@@ -2826,7 +2858,7 @@ function renderNote(){
   var tf = $('#retailNoteFoot');
   if (tf) tf.hidden = !retailItems.length;
   var pg = $('#retailNotePg');
-  if (pg) pg.textContent = 'Trang ' + notePage + ' / ' + pages;
+  if (pg) { pg.textContent = 'Trang ' + notePage + ' / ' + pages; pg.hidden = pages <= 1 && !isDesk(); }
   var host = $('#retailNotePager');
   if (host) {
     host.hidden = pages <= 1 && !isDesk();
@@ -6077,6 +6109,42 @@ function initFootBars(){
 }
 /* ================= KHỞI ĐỘNG ================= */
 /* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */
+/* 2.38.16 N.4: vuốt trái/phải đổi tab (điện thoại). Hàm thuần: m = { dx, dy, dt (ms), x0 (chỗ bắt đầu), vw (rộng màn hình), ok (không bị chặn) } -> +1 tab kế (vuốt trái), -1 tab trước (vuốt phải), 0 không phải vuốt đổi tab. */
+function swipeDir(m){
+  if (!m || !m.ok) return 0;
+  if (!(m.x0 > 16) || !(m.x0 < m.vw - 16)) return 0;
+  if (Math.abs(m.dx) < 60 || Math.abs(m.dy) >= Math.abs(m.dx) / 2 || !(m.dt < 600)) return 0;
+  return m.dx < 0 ? 1 : -1;
+}
+/* Chặn: ngoài điện thoại, bắt đầu trong ô nhập/gợi ý, bàn phím đang mở (đang focus ô nhập hoặc vùng nhìn thấp hơn màn hình), hộp thoại mở, gợi ý mở, hoặc trong vùng cuộn ngang. */
+function swipeBlocked(t){
+  if (!kbMobile() || isDesk()) return true;
+  var ae = doc.activeElement;
+  if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && ae.type !== 'checkbox' && ae.type !== 'file') return true;
+  var vv = window.visualViewport;
+  if (vv && vv.height && vv.height < (window.innerHeight || 0) * 0.85) return true;
+  if (doc.querySelector('dialog[open]') || doc.querySelector('.sug__list:not([hidden])')) return true;
+  for (var e = t; e && e !== doc.body && e.nodeType === 1; e = e.parentNode) {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.tagName) || e.isContentEditable) return true;
+    if (e.scrollWidth > e.clientWidth + 1 && /(auto|scroll)/.test(window.getComputedStyle(e).overflowX)) return true;
+  }
+  return false;
+}
+function initSwipeTabs(go){
+  var st = null;
+  doc.addEventListener('touchstart', function(e){
+    var t = e.touches && e.touches.length === 1 ? e.touches[0] : null;
+    st = t ? { x: t.clientX, y: t.clientY, at: Date.now(), blocked: swipeBlocked(e.target) } : null;
+  }, { passive: true });
+  doc.addEventListener('touchcancel', function(){ st = null; }, { passive: true });
+  doc.addEventListener('touchend', function(e){
+    var s0 = st, t = e.changedTouches && e.changedTouches[0];
+    st = null;
+    if (!s0 || !t) return;
+    var dir = swipeDir({ dx: t.clientX - s0.x, dy: t.clientY - s0.y, dt: Date.now() - s0.at, x0: s0.x, vw: window.innerWidth || 0, ok: !s0.blocked });
+    if (dir) go(dir);
+  }, { passive: true });
+}
 function initTabs(){
   var nav = $('#tabs');
   if (!nav) return;
@@ -6113,6 +6181,14 @@ function initTabs(){
     if (!bx1) return;
     bx1.open = true;
     activate(bx1.id);
+  });
+  initSwipeTabs(function(dir){ /* dir +1 = tab kế, -1 = tab trước; dừng ở 2 đầu; cùng đường với bấm icon */
+    var cur = -1;
+    for (var q = 0; q < btns.length; q++) if (btns[q].classList.contains('is-active')) cur = q;
+    var nx = cur + dir;
+    if (cur < 0 || nx < 0 || nx >= ids.length) return;
+    var bx2 = doc.getElementById(ids[nx]);
+    if (bx2) { bx2.open = true; activate(bx2.id); }
   });
   var saved = null;
   try { saved = localStorage.getItem('qlk_tab'); } catch (e) {}

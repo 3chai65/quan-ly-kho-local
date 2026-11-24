@@ -5,6 +5,10 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.16] - 2026-11-24
+
+- Điện thoại: tờ ghi tiêu đề "TỜ GHI", nhãn cột SL/Giá lên hàng tiêu đề thẳng cột với ô nhập (STT 26 | tên | SL 80 | giá 70 | + 44), dòng nhập 1 hàng, "Trang x / y" chỉ hiện khi >1 trang; vuốt trái/phải đổi tab (dừng 2 đầu, không nhận khi gõ/bàn phím/hộp thoại/cuộn ngang/sát mép). Desktop không đổi; chưa thử iPhone thật.
+
 ## [2.38.15] - 2026-11-24
 
 ### Sửa
