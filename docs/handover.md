@@ -27,5 +27,6 @@
 ## Tauri / PWA
 - exe nằm ở `C:\Users\Yellows\AppData\Local\QuanLyKho\`; giao diện tải từ hub (hub lùi bản thì giao diện lùi theo). Tắt bằng nút X, không dùng `Stop-Process -Force` (mất cookie thiết bị).
 - PWA Edge phải cài từ `https://192.168.2.46`.
+- Nút HD/FHD (`div.szpick`) đã khôi phục từ 2.38.4, chỉ hiện khi có `__TAURI__`; Tauri 0.3.1 mở mặc định HD (không phải "bỏ từ 2.31.0").
 - `4feffae` là commit của repo quan-ly-kho-mac (app SwiftUI, chỉ trên Mac); không liên quan quan-ly-kho-local, không cần hợp nhất.
 - Đơn ghi qua X-Force (ghi đè khi xung đột/khôi phục) không được đánh dấu chưa đọc — chấp nhận.
