@@ -473,10 +473,6 @@ html{scroll-padding-bottom:230px}
 html:not(.desktop){scroll-padding-top:110px}
 /* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
 .kb-compact .note__list{overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,transparent 0,black 12px);mask-image:linear-gradient(to bottom,transparent 0,black 12px)}
-/* 2.15.10: khi nhập trên điện thoại JS khóa cuộn trang (body fixed, top âm); .kb-lock chặn neo cuộn/cuộn dội của iOS. */
-html.kb-lock,body.kb-lock{overflow-anchor:none;overscroll-behavior:none;transition:none!important}
-/* 2.15.11: .top sticky vẫn bám đỉnh vùng nhìn khi body fixed top âm (vvTop=0) và che đỉnh thẻ: ẩn khi khóa (visibility giữ nguyên bố cục). */
-html.kb-lock .top{visibility:hidden}
 #retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
 /* 2.15.18: khi gọn, tiêu đề cột trong danh sách (hiện khi có dòng nhập, +29px) bị ẩn: chiều cao danh sách không nhảy khi chọn vị, dòng cuối không lệch khỏi đáy. */
 #remedyBox.kb-compact #remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead,#remedyBox.kb-compact #remedyNote>.note__list>table>thead{display:none}
@@ -3230,6 +3226,7 @@ function savePreset(){
   if (sel) sel.value = cur.id; /* renderPresetOptions giữ lựa chọn này và tự gọi updatePresetUI */
   renderPresetOptions();
   if (nameInp) nameInp.value = cur.name;
+  afterSaveDone();
 }
 function delPreset(){
   var sel = $('#remedyPreset');
@@ -3297,6 +3294,7 @@ function saveRetail(){
   });
   resetRetail(); resetDateToday('retailDate');
   commit('Đã lưu đơn bán lẻ');
+  afterSaveDone();
 }
 function saveRemedy(){
   refreshAutoDates();
@@ -3361,6 +3359,7 @@ function saveRemedy(){
   });
   resetRemedy(); resetDateToday('remedyDate');
   commit('Đã bán đơn thuốc chén');
+  afterSaveDone();
 }
 
 /* ================= THỐNG KÊ ================= */
@@ -4777,6 +4776,7 @@ function saveNhap(e){
   renderNhapList();
   commit(savedN === 0 ? 'Đã tạo vị thuốc' : savedN > 1 ? 'Đã lưu nhập ' + savedN + ' vị thuốc' : 'Đã lưu nhập hàng');
   refreshAllQtyHints();
+  afterSaveDone();
 }
 
 /* ================= SẢN PHẨM ================= */
@@ -5977,11 +5977,10 @@ function compactRefit(){
 function compactApply(box, list, on, smooth){
   if (!box || !list) return;
   var was = !!(box.classList && box.classList.contains('kb-compact'));
-  if (!on) { box.classList.remove('kb-compact'); list.style.maxHeight = ''; kbUnlock('tat-gon'); return; }
+  if (!on) { box.classList.remove('kb-compact'); list.style.maxHeight = ''; return; }
   box.classList.add('kb-compact');
   compactFit(box, list);
   compactScrollEnd(list, !!smooth && was);
-  kbLock(box);
 }
 /* Đồng bộ chế độ gọn theo ô đang focus. force = đo lại và cuộn cuối (sau "+"). Tắt trễ 250ms để chuyển ô SL -> Thành tiền -> + không nhấp nháy. */
 function compactSync(force){
@@ -5995,7 +5994,7 @@ function compactSync(force){
     if (want) {
       if (compactOffTimer[p[0]]) { clearTimeout(compactOffTimer[p[0]]); compactOffTimer[p[0]] = 0; }
       if (force || !box.classList.contains('kb-compact')) compactApply(box, list, true, force);
-      else { kbLock(box); if (compactFit(box, list)) list.scrollTop = list.scrollHeight; } /* đã gọn nhưng khóa bị gỡ (xoay/đổi cỡ) mà vẫn đang nhập: khóa lại */
+      else if (compactFit(box, list)) list.scrollTop = list.scrollHeight;
     } else if (box.classList.contains('kb-compact') && !compactOffTimer[p[0]]) {
       compactOffTimer[p[0]] = setTimeout(function(){
         compactOffTimer[p[0]] = 0;
@@ -6006,55 +6005,18 @@ function compactSync(force){
     }
   });
 }
-/* 2.15.10: KHÓA CUỘN TRANG khi nhập trên điện thoại (thay mọi định vị bằng scrollTo/scrollBy của 2.15.8-2.15.9).
-   Lần đầu vào chế độ gọn: nhớ scrollY, đặt body position:fixed với top âm sao cho đỉnh thẻ cách đỉnh vùng nhìn KB_TOP_GAP px; vị trí hiển thị là hằng số, không còn gì để iOS cuộn.
-   Gỡ khóa (idempotent) ở mọi đường thoát: khi tắt gọn, blur ngoài thẻ (lưới 400ms), đóng thẻ, pagehide, ẩn tab, đổi chiều/cỡ, về >640px. Chỉ kbUnlock được gọi window.scrollTo. */
-var KB_TOP_GAP = 8;
-/* Hàm thuần: top (px, <= vvTop) của body khi khóa; absTop = đỉnh thẻ so với đỉnh trang; vvTop = offsetTop của visualViewport (iOS pan) bù vào để thẻ vẫn cách đỉnh vùng THẤY 8px. */
-function kbLockTop(absTop, vvTop){
-  var vt = vvTop > 0 ? vvTop : 0;
-  var a = absTop > KB_TOP_GAP ? absTop - KB_TOP_GAP : 0;
-  return Math.round(vt - a) || 0;
-}
-/* kbLastY: scrollY mới nhất TRƯỚC khi focus (cập nhật khi cuộn/chạm lúc chưa khóa). Cần vì trình duyệt có thể tự cuộn khi focus ô nhập (đo thật: 150 -> 190) trước khi khóa chạy; gỡ khóa phải về vị trí trước khi nhập. */
-var kbLastY = -1;
-function kbTrackY(){ if (!kbLockBox) kbLastY = window.pageYOffset || window.scrollY || 0; }
-var kbLockBox = null, kbSavedY = 0, kbLockAbs = 0, kbLockW = 0, kbDebug = false, kbReason = 'init';
+/* 2.38.11: bỏ khóa cuộn trang (body fixed + ẩn .top) của 2.15.10: không còn thanh chân fixed nên không cần; Bán lẻ/Thuốc chén cư xử như Nhập hàng (thanh đầu sticky nền đặc, iOS tự cuộn ô đang gõ vào tầm nhìn). */
+var KB_TOP_GAP = 8; /* khoảng đệm (px) compactAvail chừa quanh vùng nhìn khi bàn phím mở */
 function kbMobile(){ return !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches); }
 function kbVvTop(){ var vv = window.visualViewport; return vv ? (vv.offsetTop || 0) : 0; }
-/* Thẻ chứa ô nhập (INPUT không phải ngày) trong Bán lẻ/Thuốc chén; ngoài ra null. */
-function kbBoxOf(t){
-  if (!t || !t.closest || t.tagName !== 'INPUT' || t.type === 'date') return null;
-  return t.closest('#retailBox, #remedyBox');
+/* Sau lưu thành công (điện thoại): đóng bàn phím và về đầu trang để thấy thanh đầu + tờ ghi mới. */
+function afterSaveDone(){
+  if (!kbMobile()) return;
+  var a = doc.activeElement;
+  if (a && a !== doc.body && a.blur) a.blur();
+  if (window.scrollTo) window.scrollTo(0, 0);
 }
-function kbLockApply(){
-  var b = doc.body;
-  if (kbLockBox && b && b.style) b.style.top = kbLockTop(kbLockAbs, kbVvTop()) + 'px';
-}
-function kbLock(box){
-  var b = doc.body, r = doc.documentElement;
-  if (kbLockBox || !box || !b || !b.style || !box.getBoundingClientRect) return;
-  var y = window.pageYOffset || window.scrollY || 0;
-  kbSavedY = kbLastY >= 0 ? kbLastY : y;
-  kbLockAbs = box.getBoundingClientRect().top + y;
-  kbLockW = window.innerWidth || 0;
-  kbLockBox = box;
-  kbLockApply();
-  b.style.position = 'fixed'; b.style.left = '0'; b.style.right = '0'; b.style.width = '100%';
-  if (b.classList) b.classList.add('kb-lock');
-  if (r && r.classList) r.classList.add('kb-lock');
-  kbDbg('khoa');
-}
-function kbUnlock(why){
-  var b = doc.body, r = doc.documentElement;
-  var was = !!kbLockBox;
-  kbLockBox = null;
-  if (b && b.style) { b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = ''; }
-  if (b && b.classList) b.classList.remove('kb-lock');
-  if (r && r.classList) r.classList.remove('kb-lock');
-  if (was) window.scrollTo(0, kbSavedY);
-  kbDbg(why ? 'go: ' + why : 'go');
-}
+var kbDebug = false, kbReason = 'init';
 /* Dòng gỡ lỗi (?kbdebug=1), gắn vào <html> (không bị body fixed/top âm kéo đi), bám visualViewport. */
 function kbDbg(why){
   if (why) kbReason = why;
@@ -6066,29 +6028,12 @@ function kbDbg(why){
   var rb = $('#retailBox'), mb = $('#remedyBox');
   var cp = !!((rb && rb.classList && rb.classList.contains('kb-compact')) || (mb && mb.classList && mb.classList.contains('kb-compact')));
   d.style.transform = vv ? 'translate(' + Math.round(vv.offsetLeft || 0) + 'px,' + Math.round(vv.offsetTop || 0) + 'px)' : '';
-  d.textContent = 'savedY ' + Math.round(kbSavedY) + ' top ' + (kbLockBox ? (doc.body && doc.body.style ? doc.body.style.top : '') : '-') + ' vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' lock ' + (kbLockBox ? 1 : 0) + ' | ' + kbReason + '\n' + kbEvs.join('  ') + ' | preventScroll-chạm: ' + (kbPS ? 'có' : 'không');
+  d.textContent = 'vvH ' + Math.round(vv && vv.height ? vv.height : 0) + ' vvTop ' + Math.round(vv ? (vv.offsetTop || 0) : 0) + ' ih ' + ih + ' compact ' + (cp ? 1 : 0) + ' | ' + kbReason + '\n' + kbEvs.join('  ');
 }
-/* Lưới an toàn: sau blur 400ms mà không còn ô nhập trong thẻ thì gỡ khóa. */
-function kbRelease(){
-  setTimeout(function(){ if (!kbBoxOf(doc.activeElement)) kbUnlock('blur'); }, 400);
-}
-/* visualViewport đổi (bàn phím hiện/đổi, iOS pan): chỉ bù lại top theo vvTop; không cuộn. */
-function onVvChange(){ kbLockApply(); compactRefit(); kbEvRec('vv'); kbDbg(); }
-/* 2.15.11: chạm vào ô nhập KHÁC trong thẻ đang khóa: chặn hành vi mặc định (iOS tự căn giữa ô vừa focus = pan visualViewport) rồi focus preventScroll.
-   Nút Trước/Sau của thanh phụ iOS không chặn được; khi đó vẫn bù top đồng bộ trong sự kiện vv (không rAF, không transition). Ô đang focus: chạm như thường (đặt con trỏ). */
-var kbPS = false, kbEvs = [], kbEvAt = 0, kbVvPrev = 0, kbTouchAt = 0;
-function kbTouch(e){
-  var t = e && e.target, box = kbBoxOf(t);
-  kbEvRec('pointerdown');
-  kbPS = false;
-  /* 2.17.8: PWA iPhone (standalone) không bật bàn phím khi focus từ touchstart: để iOS xử lý chạm/focus mặc định. */
-  if (!isStandaloneMode() && kbLockBox && box === kbLockBox && t !== doc.activeElement && e.cancelable !== false && e.preventDefault) {
-    e.preventDefault();
-    kbPS = true;
-    focusNS(t);
-  }
-  kbDbg();
-}
+/* visualViewport đổi (bàn phím hiện/đổi, iOS pan): đo lại danh sách gọn. */
+function onVvChange(){ compactRefit(); kbEvRec('vv'); kbDbg(); }
+var kbEvs = [], kbEvAt = 0, kbVvPrev = 0, kbTouchAt = 0;
+function kbTouch(){ kbEvRec('pointerdown'); kbDbg(); }
 /* Gỡ lỗi (?kbdebug=1): ghi 3 sự kiện vv/chạm/focus gần nhất để biết iOS pan do đâu. */
 function kbEvRec(src){
   if (!kbDebug) return;
@@ -6099,38 +6044,21 @@ function kbEvRec(src){
   if (kbEvs.length > 3) kbEvs.shift();
   kbVvPrev = t; kbEvAt = now;
 }
-/* Đổi chiều/cỡ: gỡ khóa nếu rộng đổi hoặc về >640px (bàn phím Android đổi cao thì giữ). */
-function kbOnResize(){
-  if (kbLockBox && (!kbMobile() || (window.innerWidth || 0) !== kbLockW)) kbUnlock('resize');
-}
-/* nay chỉ lo bàn phím (kbLock/compact); tên cũ giữ vì nhiều test dùng */
+/* nay chỉ lo chế độ gọn khi nhập + gỡ lỗi; tên cũ giữ vì nhiều test dùng */
 function initFootBars(){
-  if (typeof window.addEventListener === 'function') {
-    window.addEventListener('scroll', kbTrackY, { passive: true });
-    window.addEventListener('resize', kbOnResize);
-    window.addEventListener('orientationchange', function(){ kbUnlock('xoay'); });
-    window.addEventListener('pagehide', function(){ kbUnlock('pagehide'); });
-  }
-  ['touchstart', 'mousedown'].forEach(function(n){ doc.addEventListener(n, kbTrackY, { passive: true, capture: true }); });
-  doc.addEventListener('touchstart', kbTouch, { passive: false, capture: true });
-  kbTrackY();
-  doc.addEventListener('visibilitychange', function(){ if (doc.visibilityState === 'hidden') kbUnlock('an-tab'); });
   if (window.visualViewport && window.visualViewport.addEventListener) {
     window.visualViewport.addEventListener('resize', onVvChange);
     window.visualViewport.addEventListener('scroll', onVvChange);
   }
   try { kbDebug = /[?&]kbdebug=1/.test((window.location && window.location.search) || ''); } catch (e) {}
   if (kbDebug) {
+    doc.addEventListener('touchstart', kbTouch, { passive: true, capture: true });
     kbDbg('mo-trang');
     doc.addEventListener('focusin', function(){ kbEvRec(kbTouchAt && Date.now() - kbTouchAt < 800 ? 'focusin' : 'next'); kbDbg(); });
     if (typeof window.addEventListener === 'function') window.addEventListener('scroll', function(){ kbDbg(); }, { passive: true });
   }
   doc.addEventListener('focusin', function(){ compactSync(false); });
-  doc.addEventListener('focusout', function(){ kbRelease(); setTimeout(compactSync, 0); });
-  ['retailBox', 'remedyBox'].forEach(function(id){
-    var b = $('#' + id);
-    if (b && b.addEventListener) b.addEventListener('toggle', function(){ kbUnlock('dong-the'); });
-  });
+  doc.addEventListener('focusout', function(){ setTimeout(compactSync, 0); });
 }
 /* ================= KHỞI ĐỘNG ================= */
 /* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */

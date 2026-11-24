@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.11] - 2026-11-24
+
+### Sửa
+- Điện thoại: bỏ chế độ khóa cuộn trang khi nhập (`kb-lock`: body fixed + ẩn thanh đầu) của Bán lẻ/Thuốc chén; chạm ô "Nhập tên" không còn làm mất thanh đầu hay kéo thẻ lên sát Dynamic Island, cư xử như Nhập hàng. Giữ chế độ gọn 2 dòng cuối. Xóa `kbLock`/`kbUnlock`/`kbRelease`/`kbLockTop`/`kbLockApply`/`kbSavedY`/`kbLastY`/`kbTrackY`/`kbPS` và các đường thoát liên quan.
+- Sau Bán đơn / Lưu đơn / Lưu nhập hàng thành công (điện thoại): bỏ focus ô đang gõ (đóng bàn phím) và cuộn về đầu trang; lưu lỗi thì giữ nguyên. Desktop không đổi. Chưa thử iPhone thật.
+
 ## [2.38.10] - 2026-11-23
 
 ### Sửa
