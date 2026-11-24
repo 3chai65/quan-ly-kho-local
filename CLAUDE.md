@@ -9,14 +9,15 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 
 ## Môi trường
 - Hub: Mac mini M1 `192.168.2.46`, LaunchDaemon `vn.kho.server` (8787) + Caddy (443), không Docker. Mã `~/kho/quan-ly-kho-local` (detached ở thẻ `vX.Y.Z`), dữ liệu `~/kho/data`, log `~/kho/logs/`. Node trên Mac: `PATH=/opt/homebrew/opt/node@22/bin:$PATH`.
-- Windows `192.168.2.47` chỉ để phát triển: `G:\quan-ly-kho-local`, Tauri `G:\quan-ly-kho-tauri`, GPUI `G:\quan-ly-kho-gpui`. Push `origin-local` (Windows) / `origin` (Mac), nhánh `main`; repo Worker `quan-ly-kho` không push.
+- Windows `192.168.2.47` chỉ để phát triển: `G:\quan-ly-kho-local`, Tauri `G:\quan-ly-kho-tauri`. Push `origin-local` (Windows) / `origin` (Mac), nhánh `main`; repo Worker `quan-ly-kho` không push.
 - Người dùng chủ yếu: iPhone PWA qua `https://192.168.2.46` và app Tauri trên Windows.
 
 ## Kiến trúc
 - `server.js`: `GET/PUT /api/state`, `GET /api/backups`, `GET /healthz`. Tiền = đồng nguyên (`moneyUnit:"dong"`). Đồng bộ theo snapshot: `X-Base-Updated` sai → 409/428, không tự ghi đè. Backup `VACUUM INTO` hằng ngày + `truoc-ghi-de` trước mỗi `X-Force`.
 - `src/page.js`: toàn bộ client inline (điện thoại + `html.desktop`). Ô nhập = nghìn đồng, đổi ở biên bằng `kToDong`/`kInput`. File rất lớn: không đọc cả file.
 - `auth.js` + `auth.db`: duyệt thiết bị, cookie `qlk_dev_*`, tối đa 2 thiết bị chủ. `pwa.js`: manifest, icon, font, sw passthrough (đường công khai trong PUBLIC).
-- App GPUI dùng chung schema, chỉ đọc bản chép của `app.db`; là chuẩn đối chiếu giao diện desktop.
+- Chuẩn giao diện desktop = `page.js` `html.desktop` (Tauri). App Mac SwiftUI (repo 3chai65/quan-ly-kho-mac, chỉ build trên Mac) đi theo chuẩn này; mọi thay đổi giao diện làm trên web trước.
+- Mac chỉ dùng Safari; "Hiệu ứng kính" đã bỏ từ 2.38.22.
 
 ## Test
 `tests/client.test.mjs` (chạy trên máy); `tests/server.test.mjs`, `tests/auth*.test.mjs` (Node 22, CI Docker); `npm run lint`. Chạy trên Windows/CI, không chạy trên hub. Sau mỗi lần push, kiểm tab Actions.
@@ -26,7 +27,7 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 
 ## Vai trò
 - Giám sát = Haiku (`.claude/agents/giam-sat.md`, chỉ đọc): chạy test, tóm tắt log, kiểm sau triển khai.
-- Người làm = Sonnet (`.claude/agents/worker.md`): sửa mã/test. Trước khi thêm mã/CSS/id/test phải tự hỏi: cần thật không? đã có sẵn chưa (Grep)? rút được thành một dòng không? Báo cáo ≤8 dòng, chỉ patch ngắn, kèm dòng "đã tự kiểm 3 câu: …".
+- Người làm = Sonnet (`.claude/agents/worker.md`): sửa mã/test. Trước khi thêm mã/CSS/id/test phải tự hỏi: cần thật không? đã có sẵn chưa (Grep)? rút được thành một dòng không? Báo cáo bằng file .md < 15 dòng (đường dẫn trong ~/.claude/CLAUDE.md của từng máy), dòng KÊNH cuối, chỉ patch ngắn, kèm dòng "đã tự kiểm 3 câu: …".
 - Người làm chỉ làm và báo cáo cho Người duyệt (file báo cáo + dòng KÊNH). Không giải thích, đề xuất hay hướng dẫn trực tiếp cho người dùng trong chat; chat chỉ gồm đường dẫn file báo cáo và dòng KÊNH. Câu hỏi hay việc người dùng phải tự làm (git tag, sudo, thử iPhone) ghi trong báo cáo; Người duyệt sẽ diễn giải lại. Ngoại lệ: phiên triển khai trên Mac vẫn hỏi "bật" và nhập sudo trực tiếp.
 - Người duyệt = phiên chính (Sonnet): lập kế hoạch, giao việc, duyệt; không tự viết mã; chỉ đọc phần được dán.
 - Opus = `.claude/agents/auditor.md` (chỉ đọc), khi chạm tiền/tồn/đồng bộ/xác thực, khi Sonnet không chắc, hoặc khi lỗi lặp lại. Một lượt trước "duyệt triển khai", báo cáo ≤15 dòng.
