@@ -17,7 +17,7 @@
 
 ## Giao diện
 - Xem thử: sinh trang tĩnh từ `src/page.js` (placeholder như `server.js`, dữ liệu mẫu tự bịa), mở bằng `.claude/launch.json` (cổng 8899), đo bằng `getBoundingClientRect` ở 320/375/800/1300px.
-- Kính: từ 2.23.0 mặc định giao diện phẳng mờ, công tắc "Hiệu ứng kính" tắt; `?glass=0` tắt hết. Giữ 4 `backdrop-filter` có chủ ý (FPS iPhone 14 Pro không khác biệt đáng kể).
+- Kính: đã bỏ từ 2.38.22 (công tắc "Hiệu ứng kính", `html.glass`, `?glass=`, khóa `kho_glass_v2`, `--blur/--blurb/--glass-bar/--glass-dark`, `--spec/--k3*`). Desktop và điện thoại cùng phong cách tối giản: nền trong suốt, chỉ viền `var(--border)`; focus `--sel-bd`; vô hiệu mờ 50%. Không còn `backdrop-filter` nào có giá trị khác `none`. `--glass` còn là tên cũ của màu nền panel (`.card` gốc, `.stats`, `html.pt .note`).
 - Khi lưu bị server từ chối (400/428), client hiện "Chưa lưu được: <lý do>" một lần và giữ nguyên tờ đơn.
 - Ô nhập nằm trong `.note__foot` (fixed): không được ẩn thanh khi chính ô đó đang focus (2.38.1).
 - App Mac/Tauri mở liên tục nhiều ngày: mọi giá trị "hôm nay" phải tính lại khi mở tab/focus, không chỉ lúc tải trang (2.38.3).

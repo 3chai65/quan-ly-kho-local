@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.22] - 2026-11-24
+
+- Desktop/Tauri: tối giản như điện thoại — nền trong suốt, chỉ viền `var(--border)` (thẻ, khung thanh bên, thẻ Bán/Lợi nhuận, tab, tờ ghi, ô nhập, nút, nút chính/Đơn mới, thanh phân trang, chip, bak-sec); focus viền `--sel-bd`, vô hiệu mờ 50%, hover chỉ đổi viền; tab chọn và trang hiện tại giữ `--sel-*`.
+- Bỏ hẳn "Hiệu ứng kính" (cả điện thoại): công tắc, `html.glass`, `?glass=`, khóa `kho_glass_v2`, `--blur/--blurb/--glass-bar/--glass-dark`, `--spec/--k3*`. Điện thoại giữ nguyên giao diện (đo getComputedStyle 8 tab × 27 phần tử, trừ công tắc kính ở cuối tab Sao lưu).
+
 ## [2.38.21] - 2026-11-24
 
 - Điện thoại: dòng nhập trống — ô td `height:auto` + stretch nên vạch chân nằm dưới đáy 4 ô (trước: ô 40px tràn khỏi td 34px); Q: chỉ còn viền `var(--border)`, bỏ nền thẻ Bán/Lợi nhuận, bỏ nền hover dòng (.pt); focus viền `--sel-bd`, vô hiệu mờ 50%; `.top` giữ nền đặc. Desktop không đổi. Chưa thử iPhone thật.

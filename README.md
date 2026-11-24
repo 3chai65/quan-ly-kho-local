@@ -19,7 +19,7 @@ Windows (192.168.2.47) chỉ để phát triển; Docker/`G:\...\data` là bản
   (409/428), không ghi đè âm thầm. Tab đang ẩn không tự tải (`document.hidden`).
 - Giao diện có hai chế độ trong cùng `src/page.js`: điện thoại, và desktop
   (`html.desktop`, bật trong app Tauri: thanh bên dọc, khung 1280x720 phóng đều,
-  nút kính). Phần dành riêng cho desktop không đổi giao diện điện thoại.
+  viền mảnh trong suốt). Phần dành riêng cho desktop không đổi giao diện điện thoại.
 
 ## Tinh thần dự án (đặt từ đầu)
 
