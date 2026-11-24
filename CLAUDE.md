@@ -20,7 +20,8 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 - Mac chỉ dùng Safari; "Hiệu ứng kính" đã bỏ từ 2.38.22.
 
 ## Test
-`tests/client.test.mjs` (chạy trên máy); `tests/server.test.mjs`, `tests/auth*.test.mjs` (Node 22, CI Docker); `npm run lint`. Chạy trên Windows/CI, không chạy trên hub. Sau mỗi lần push, kiểm tab Actions.
+Trên máy: `npm run lint` và `npm run test:client` (= `node --test tests/client.test.mjs`). Server/auth (`tests/server.test.mjs`, `tests/auth*.test.mjs`): chỉ tin CI Docker (Windows không chạy được). Không chạy trên hub. Sau mỗi lần push, kiểm tab Actions.
+Commit: `<version>: <tóm tắt không dấu>` cho bản có version; `docs: …` cho tài liệu; không amend commit đã push.
 
 ## Vùng nhạy cảm — sửa xong phải chạy test + phá thử (mutation) chứng minh test bắt được lỗi
 `sanitize`, `validateState`, `allocateRemedyProfitEvenly`, `pushState`/`pullState`, `checkLimits`, `auth.js`.
