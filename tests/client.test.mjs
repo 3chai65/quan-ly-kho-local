@@ -103,14 +103,12 @@ globalThis.__test = {
   rowMenu: (typeof rowMenu === 'function' ? rowMenu : null), closeRowMenu: (typeof closeRowMenu === 'function' ? closeRowMenu : null),
   getStockWarnText: function(){ return stockWarnText; },
   todayISO: (typeof todayISO === 'function' ? todayISO : null), thisYear: (typeof thisYear === 'function' ? thisYear : null),
-  getDateInput: (typeof getDateInput === 'function' ? getDateInput : null), setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
-  bindDateInput: (typeof bindDateInput === 'function' ? bindDateInput : null), bindMonthInput: (typeof bindMonthInput === 'function' ? bindMonthInput : null), userPickedDate: (typeof userPickedDate === 'function' ? userPickedDate : null),
-  refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), autoDateInput: (typeof autoDateInput === 'function' ? autoDateInput : null), 
-  getLastAuto: function(id){ return lastAuto[id]; },
+setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
+  bindMonthInput: (typeof bindMonthInput === 'function' ? bindMonthInput : null), 
+  refreshAutoDates: (typeof refreshAutoDates === 'function' ? refreshAutoDates : null), 
   setUnread: function(u){ unread = u; }, getUnread: function(){ return unread; }, renderUnread: renderUnread, markRead: markRead, unreadAll: unreadAll, refreshUnread: refreshUnread,
-  setLastAuto: function(id, v){ lastAuto[id] = v; },
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
-  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); lastAuto.retailDate = t; lastAuto.remedyDate = t; },
+  initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
   historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
@@ -124,7 +122,7 @@ globalThis.__test = {
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), phoneTop: (typeof phoneTop === 'function' ? phoneTop : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null),
-  loadLocalBundle: loadLocalBundle, setQuotaNote: function(v){ quotaNote = v; }, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
+  delProduct: delProduct, loadLocalBundle: loadLocalBundle, setQuotaNote: function(v){ quotaNote = v; }, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
 };
 })();`;
   const store = new Map();
@@ -1660,23 +1658,23 @@ function dateDoc() {
   return { doc, els };
 }
 
+const dIso = (els, id) => { const v = els['#' + id].value.split('/'); return v.length === 3 ? v[2] + '-' + v[1] + '-' + v[0] : ''; };
 test('ngày tự động: init D, qua D+1 gọi refresh thì cả hai ô chuyển sang D+1', () => {
   const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc } = dateDoc();
+  const { doc, els } = dateDoc();
   const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
   client.initDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-07');
+  assert.equal(dIso(els, 'retailDate'), '2026-11-07');
+  assert.equal(dIso(els, 'remedyDate'), '2026-11-07');
   FakeDate.setNow(2026, 10, 8, 12);
   client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
-  assert.equal(client.getLastAuto('retailDate'), '2026-11-08');
+  assert.equal(dIso(els, 'retailDate'), '2026-11-08');
+  assert.equal(dIso(els, 'remedyDate'), '2026-11-08');
 });
 
 test('ngày tự động: không sự kiện nào, saveRetail và saveRemedy vẫn ghi D+1', () => {
   const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc } = dateDoc();
+  const { doc, els } = dateDoc();
   const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
   client.initDates();
   client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
@@ -1685,63 +1683,13 @@ test('ngày tự động: không sự kiện nào, saveRetail và saveRemedy v�
   client.setRetailItems([{ pid: 'p1', kg: 1, amount: 2000 }]);
   client.saveRetail();
   assert.equal(client.getDb().transactions.at(-1).date, '2026-11-08');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
-});
-
-test('ngày tự động: người dùng chọn D sau nửa đêm và D-2 trước nửa đêm đều được giữ', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.setDateInput('retailDate', '2026-11-05');
-  client.setLastAuto('retailDate', null);
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
-  client.setDateInput('retailDate', '2026-11-07');
-  client.setLastAuto('retailDate', null);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-  client.setDateInput('remedyDate', '2026-11-08');
-  client.setLastAuto('remedyDate', null);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
-});
-
-test('ngày tự động: ngày người dùng chọn chỉ giữ tới khi bán đơn, sau đó theo hôm nay', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
-  client.initDates();
-  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-  client.setBase(1);
-  client.userPickedDate('retailDate', '2026-11-05');
-  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 2000 }]);
-  client.saveRetail();
-  assert.equal(client.getDb().transactions.at(-1).date, '2026-11-05');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
-});
-
-test('ngày tự động: ô đang focus không bị đổi', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.setActiveId('retailDate');
-  assert.equal(doc.activeElement, els['#retailDate']);
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
+  assert.equal(dIso(els, 'retailDate'), '2026-11-08');
 });
 
 test('todayISO đúng 00:30 giờ Việt Nam và saveNhap không đổi hành vi', () => {
   const FakeDate = fakeClock(2026, 10, 8, 0);
   FakeDate.setNow(2026, 10, 8, 0);
-  const { doc } = dateDoc();
+  const { doc, els } = dateDoc();
   const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
   assert.equal(client.todayISO(), '2026-11-08');
   client.initDates();
@@ -1753,118 +1701,6 @@ test('todayISO đúng 00:30 giờ Việt Nam và saveNhap không đổi hành vi
   assert.equal(client.getDb().transactions.at(-1).type, 'NHAP');
 });
 
-test('handler ô chữ: chọn ngày cũ bằng change, sang ngày mới vẫn giữ ngày cũ', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.bindDateInput('retailDate');
-  els['#retailDate'].value = '05/11/2026';
-  els['#retailDate'].fire('change');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
-  assert.equal(client.getLastAuto('retailDate'), null);
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
-});
-
-test('handler ô chữ: chọn đúng hôm nay, sang ngày mới thì ô theo ngày mới', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.bindDateInput('retailDate');
-  els['#retailDate'].value = '08/11/2026';
-  els['#retailDate'].fire('change');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
-  assert.equal(client.getLastAuto('retailDate'), '2026-11-08');
-  FakeDate.setNow(2026, 10, 9, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-09');
-});
-
-test('handler bộ chọn gốc: chọn ngày cũ bằng nat, sang ngày mới vẫn giữ', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.bindDateInput('retailDate');
-  els['#retailDateNative'].value = '2026-11-05';
-  els['#retailDateNative'].fire('change');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
-  assert.equal(client.getLastAuto('retailDate'), null);
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-05');
-});
-
-test('I.3 ô ngày chỉ đọc, chạm ô (lịch gốc phủ cả ô) mở khung lịch bằng showPicker sau khi đồng bộ ngày; chọn từ lịch bật cờ tay; thiếu showPicker không lỗi', () => {
-  assert.match(PAGE, /id="retailDate" type="text" readonly/); assert.match(PAGE, /id="remedyDate" type="text" readonly/);
-  assert.ok(PAGE.includes('.datefield__native{width:100%}'), 'lịch gốc phủ cả ô');
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates(); client.bindDateInput('retailDate'); client.bindDateInput('remedyDate');
-  const nat = els['#retailDateNative']; let shown = 0, seen = '';
-  els['#retailDate'].value = '05/11/2026';
-  nat.showPicker = () => { shown++; seen = nat.value; };
-  nat.fire('click');
-  assert.equal(shown, 1, 'chạm gọi showPicker'); assert.equal(seen, '2026-11-05', 'đồng bộ ngày của ô trước khi mở');
-  nat.value = '2026-11-03'; nat.fire('change');
-  assert.equal(client.getLastAuto('retailDate'), null, 'chọn từ lịch = chọn tay');
-  FakeDate.setNow(2026, 10, 8, 12); client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-03', 'qua nửa đêm không tự về hôm nay');
-  els['#remedyDateNative'].showPicker = () => { throw new Error('NotAllowed'); };
-  els['#remedyDateNative'].fire('click');
-  assert.equal(els['#remedyDateNative'].value, '2026-11-08', 'showPicker lỗi: nuốt, vẫn đồng bộ ngày');
-  els['#expMonthNative'].showPicker = () => { shown++; };
-  client.bindMonthInput('expMonth', () => {}); els['#expMonthNative'].fire('click'); assert.equal(shown, 2, 'ô tháng cũng mở bằng showPicker');
-});
-
-test('handler bộ chọn gốc: chọn đúng hôm nay, sang ngày mới thì ô theo', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.bindDateInput('remedyDate');
-  FakeDate.setNow(2026, 10, 8, 12);
-  els['#remedyDateNative'].value = '2026-11-08';
-  els['#remedyDateNative'].fire('change');
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
-  assert.equal(client.getLastAuto('remedyDate'), '2026-11-08');
-  FakeDate.setNow(2026, 10, 9, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-09');
-});
-
-test('handler ô chữ: để trống về hôm nay, văn bản sai giữ ngày cũ', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc, els } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.bindDateInput('retailDate');
-  els['#retailDate'].value = '   ';
-  els['#retailDate'].fire('change');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-  assert.equal(client.getLastAuto('retailDate'), '2026-11-07');
-  els['#retailDate'].value = 'không phải ngày';
-  els['#retailDate'].fire('change');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-});
-
-test('ô đang mở bộ chọn gốc (Native) không bị đổi', () => {
-  const FakeDate = fakeClock(2026, 10, 7, 12);
-  const { doc } = dateDoc();
-  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
-  client.initDates();
-  client.setActiveId('retailDateNative');
-  FakeDate.setNow(2026, 10, 8, 12);
-  client.refreshAutoDates();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
-  assert.equal(client.getDateInput('remedyDate'), '2026-11-08');
-});
-
 test('2.38.3 mở tab (activate) gọi refreshAutoDates: sang ngày mới, bấm tab thì ô ngày tờ = ngày mới', () => {
   const FakeDate = fakeClock(2026, 10, 7, 12);
   const { els } = dateDoc();
@@ -1873,10 +1709,10 @@ test('2.38.3 mở tab (activate) gọi refreshAutoDates: sang ngày mới, bấm
   const client = loadClient({ document: env.doc, localStorage: env.LS, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {} });
   client.initDates();
   client.initTabs();
-  assert.equal(client.getDateInput('retailDate'), '2026-11-07');
+  assert.equal(dIso(els, 'retailDate'), '2026-11-07');
   FakeDate.setNow(2026, 10, 8, 12);
   env.clickTab('retailBox');
-  assert.equal(client.getDateInput('retailDate'), '2026-11-08');
+  assert.equal(dIso(els, 'retailDate'), '2026-11-08');
 });
 
 test('giá nhập gần nhất: hai lần nhập 120 và 135 hiện (135)', () => {
@@ -2038,7 +1874,7 @@ test('(e) phân trang: trang 3 mở rộng khi có hơn 20 đơn', () => {
 });
 
 test('(f) bindEvents chạy được khi DOM không có phần tử tháng của lịch sử nhập', () => {
-  const { doc } = dateDoc();
+  const { doc, els } = dateDoc();
   // dateDoc không có #impMonth, chỉ có #impSearch và #expMonth -> không lỗi
   const client = loadClient({ document: doc, Date: fakeClock(2026, 10, 8, 12), setTimeout() { return 0; }, clearTimeout() {} });
   assert.ok(client);
@@ -4324,7 +4160,7 @@ test('2.10.0 id thẻ và data-action không đổi so với 1023b40; thứ tự
   const ids = s => new Set([...s.matchAll(/ id="([^"]*)"/g)].map(m => m[1]));
   const newIds = ids(PAGE);
   for (const id of TAB_ORDER_DOM) assert.ok(newIds.has(id), 'thiếu id thẻ ' + id);
-  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && id !== 'chartYear' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Btn|Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon' && id !== 'remedyQty') assert.ok(newIds.has(id), 'mất id ' + id); // 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
+  if (old !== null) for (const id of ids(old)) if (id !== 'invSort' && id !== 'chartYear' && !/^merge/.test(id) && id !== 'i-monitor' && id !== 'i-chart-line' && id !== 'remedyCopyPreset' && id !== 'i-chev-r' && id !== 'txEditId' && id !== 'retailTotal' && !/^theme(Btn|Menu|Label|Color)$/.test(id) && id !== 'i-sun' && id !== 'i-moon' && id !== 'remedyQty' && !/^(retail|remedy)DateNative$/.test(id)) assert.ok(newIds.has(id), 'mất id ' + id); // AC: bỏ ô lịch gốc ngày bán; 2.15.0: invSort chủ ý bỏ; 2.15.7: 2 symbol icon không dùng bỏ
   const cardOrder = s => [...s.matchAll(/<details class="card[^"]*" id="([^"]+)"/g)].map(m => m[1]);
   if (old !== null) assert.deepEqual(cardOrder(old), TAB_ORDER_DOM, 'thứ tự thẻ cũ không như kỳ vọng');
   assert.deepEqual(cardOrder(PAGE), TAB_ORDER_DOM, 'thứ tự DOM 8 thẻ đã đổi');
@@ -4974,7 +4810,6 @@ test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm 6/24px
   assert.match(PAGE, /#remedyBox \.card__bar\{padding-left:10px;padding-right:10px;gap:4px\}/);
   assert.match(PAGE, /#remedyBox \.card__bar-date\{flex:0 0 118px\}/);
   assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px;padding-right:24px\}/);
-  assert.match(PAGE, /\.card__bar-date \.datefield__ico\{right:6px;width:16px;height:16px\}/);
 });
 
 
@@ -8738,4 +8573,38 @@ test('AB: dòng tờ ghi desktop cao 50px cố định như Kho tồn (không gi
   assert.ok(PAGE.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}'));
   assert.ok(!PAGE.includes('.note__list>table,html.desktop #nhapListBox>table{height:100%}'), 'bỏ bảng height:100% (giãn 10 dòng thành 86px ở FHD)');
   assert.ok(PAGE.includes('html.desktop #nhapListBox>table{flex:none;margin-bottom:auto}'));
+});
+
+test('AC xóa vị: còn tồn / có giao dịch / nằm trong đơn thuốc → chặn (không hỏi, báo ngắn); vị trống xóa được', () => {
+  const toasts = [], asks = [];
+  const c = loadClient({ confirm(m) { asks.push(m); return true; }, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  const mk = () => ({ products: [{ id: 'a', name: 'Còn tồn', stock: 5, costPrice: 1 }, { id: 'b', name: 'Có giao dịch', stock: 0, costPrice: 1 }, { id: 'c', name: 'Trong đơn', stock: 0, costPrice: 1 }, { id: 'd', name: 'Trống', stock: 0, costPrice: 1 }],
+    transactions: [{ id: 't1', date: '2026-11-01', type: 'BAN', productId: 'b', qty: 1, price: 1, total: 1 }],
+    prescriptions: [{ id: 'r1', name: 'Bài', items: [{ productId: 'c', grams: 10 }] }], updatedAt: 1, moneyUnit: 'dong' });
+  c.setDb(mk()); c.setBase(1);
+  for (const id of ['a', 'b', 'c']) { c.delProduct(id); assert.ok(c.getDb().products.some(p => p.id === id), 'bị chặn: ' + id); }
+  assert.equal(asks.length, 0, 'bị chặn thì không hỏi xác nhận');
+  c.delProduct('d');
+  assert.equal(asks.length, 1); assert.ok(!c.getDb().products.some(p => p.id === 'd'), 'vị trống xóa được');
+  assert.ok(PAGE.includes('Vị này còn tồn hoặc đã có giao dịch, không xóa được.'));
+});
+
+test('AC ngày bán luôn là hôm nay: sửa ô ngày thành ngày khác vẫn ghi hôm nay (Bán lẻ + Thuốc chén); Nhập hàng cũng hôm nay', () => {
+  const FakeDate = fakeClock(2026, 10, 7, 12);
+  const { doc, els } = dateDoc();
+  const client = loadClient({ document: doc, Date: FakeDate, setTimeout() { return 0; }, clearTimeout() {}, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 1 }) }) });
+  client.initDates();
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 1000 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  client.setBase(1);
+  els['#retailDate'].value = '01/01/2026'; els['#retailDate'].setAttribute('data-iso', '2026-01-01');
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 2000 }]);
+  client.saveRetail();
+  assert.equal(client.getDb().transactions.at(-1).date, '2026-11-07');
+  assert.ok(!PAGE.includes('retailDateNative') && !PAGE.includes('remedyDateNative'), 'bỏ ô lịch gốc');
+  assert.ok(!/function (bindDateInput|userPickedDate|autoDateInput|resetDateToday)\b/.test(PAGE), 'bỏ mã chọn ngày');
+});
+
+test('AC hai map dùng Object.create(null): sales / inn / out', () => {
+  assert.ok(PAGE.includes('var sales = Object.create(null);'));
+  assert.ok(PAGE.includes('var inn = Object.create(null), out = Object.create(null);'));
 });

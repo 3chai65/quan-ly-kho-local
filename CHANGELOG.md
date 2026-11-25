@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.2] - 2026-11-25
+
+### Sửa
+- Xóa vị thuốc: chặn khi vị còn tồn, đã có giao dịch hoặc nằm trong đơn thuốc ("Vị này còn tồn hoặc đã có giao dịch, không xóa được."), để lịch sử không hiện "Đã xóa". Vị trống xóa như cũ. Không đổi schema.
+- Bán lẻ / Thuốc chén luôn ghi ngày hôm nay (như Nhập hàng): ô ngày chỉ hiển thị hôm nay, bỏ ô lịch gốc và biểu tượng lịch, bỏ mã chọn ngày. Ảnh mẫu 01–02 chụp lại.
+- Ba map thống kê (sales, inn, out) dùng Object.create(null).
+
 ## [2.39.1] - 2026-11-25
 
 ### Sửa

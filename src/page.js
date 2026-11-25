@@ -151,11 +151,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 select.inp{cursor:pointer}
 .datefield,.monthfield{position:relative}
 .monthfield .inp{padding-right:32px}
-.datefield__ico,.monthfield__ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
-.datefield__ico{width:18px;height:18px}
+.monthfield__ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
 .monthfield__ico{width:15px;height:15px;right:9px}
-.datefield__native,.monthfield__native{position:absolute;right:0;top:0;height:100%;opacity:0;border:0;padding:0;cursor:pointer}
-.datefield__native{width:100%}
+.monthfield__native{position:absolute;right:0;top:0;height:100%;opacity:0;border:0;padding:0;cursor:pointer}
 .monthfield__native{width:30px}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 /* ---------- table ---------- */
@@ -411,7 +409,6 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 122px;margin-left:auto}
 .card__bar-date .inp{padding-left:8px;padding-right:26px}
-.card__bar-date .datefield__ico{right:6px;width:16px;height:16px}
 .card__bar-month .inp{padding-left:8px}
 }
 @media (max-width:400px){
@@ -1060,9 +1057,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <div class="sug__list" id="retailList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
           </div>
           <div class="datefield card__bar-date">
-            <input class="inp" id="retailDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
-            <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-            <input class="datefield__native" id="retailDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
+            <input class="inp" id="retailDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Đơn luôn được ghi vào ngày hôm nay" tabindex="-1">
           </div>
         </div>
         <div class="note" id="retailNote">
@@ -1124,9 +1119,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <div id="remedyOpen"><span id="remedyOpenName"></span><button class="btn btn--icon" type="button" id="remedyClose" data-action="close-preset" aria-label="Bỏ đơn đang mở" title="Bỏ đơn đang mở"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
           </div>
           <div class="datefield card__bar-date">
-            <input class="inp" id="remedyDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Ngày ghi nhận đơn, mặc định là hôm nay">
-            <svg class="ico datefield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-            <input class="datefield__native" id="remedyDateNative" type="date" tabindex="-1" aria-label="Chọn ngày từ lịch">
+            <input class="inp" id="remedyDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Đơn luôn được ghi vào ngày hôm nay" tabindex="-1">
           </div>
         </div>
         <div class="note" id="remedyNote">
@@ -1839,58 +1832,19 @@ function dateInputVN(iso){
   var p = String(iso || '').split('-');
   return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '';
 }
-function getDateInput(id){
-  var n = $('#' + id);
-  if (!n) return '';
-  return parseDateVN(n.value) || n.getAttribute('data-iso') || '';
-}
 function setDateInput(id, iso){
   var n = $('#' + id);
   if (!n) return;
   n.value = dateInputVN(iso);
   n.setAttribute('data-iso', iso || '');
-  var nat = $('#' + id + 'Native');
-  if (nat) nat.value = iso || '';
 }
-function userPickedDate(id, iso){
-  setDateInput(id, iso);
-  lastAuto[id] = (iso === todayISO()) ? iso : null;   // chọn hôm nay = vẫn theo hôm nay
-}
-/* I.3: chạm vào ô (ô ngày chữ chỉ đọc, ô lịch gốc trong suốt phủ cả ô) mở khung lịch; không có showPicker thì chạm gốc của trình duyệt tự mở. */
+/* I.3: chạm vào ô tháng (ô chữ chỉ đọc, ô lịch gốc trong suốt phủ cả ô) mở khung lịch; không có showPicker thì chạm gốc của trình duyệt tự mở. */
 function openPicker(nat){ try { if (nat.showPicker) nat.showPicker(); } catch (e) {} }
-function bindDateInput(id){
-  var n = $('#' + id), nat = $('#' + id + 'Native');
-  if (!n) return;
-  n.addEventListener('change', function(){
-    if (!n.value.trim()) { var t0 = todayISO(); setDateInput(id, t0); lastAuto[id] = t0; return; }
-    var iso = parseDateVN(n.value);
-    if (iso) { userPickedDate(id, iso); return; }
-    var prev = n.getAttribute('data-iso') || '';
-    n.value = dateInputVN(prev);
-    toast(prev ? 'Ngày không hợp lệ, giữ nguyên ngày cũ' : 'Ngày không hợp lệ, dùng hôm nay', 'error');
-    if (!prev) { var t1 = todayISO(); setDateInput(id, t1); lastAuto[id] = t1; }
-  });
-  if (nat) {
-    var syncNat = function(){ nat.value = parseDateVN(n.value) || todayISO(); };
-    nat.addEventListener('focus', syncNat);
-    nat.addEventListener('click', function(){ syncNat(); openPicker(nat); });
-    nat.addEventListener('change', function(){ if (nat.value) { userPickedDate(id, nat.value); } });
-  }
-}
-function autoDateInput(id){
-  var t = todayISO();
-  var cur = getDateInput(id);
-  if (cur && cur !== (lastAuto[id] || '')) return;
-  if (cur === t) { lastAuto[id] = t; return; }
-  var n = $('#' + id);
-  if (n && doc.activeElement && (doc.activeElement === n || doc.activeElement.id === id + 'Native')) return;
-  setDateInput(id, t);
-  lastAuto[id] = t;
-}
-function resetDateToday(id){ var t = todayISO(); setDateInput(id, t); lastAuto[id] = t; }   // sau khi bán đơn: bỏ ngày người dùng đã chọn, theo hôm nay
+/* AC: Bán lẻ / Thuốc chén luôn ghi ngày hôm nay (như Nhập hàng); ô ngày chỉ HIỂN THỊ hôm nay, không chọn được. */
+function showToday(id){ setDateInput(id, todayISO()); }
 function refreshAutoDates(){
-  autoDateInput('retailDate');
-  autoDateInput('remedyDate');
+  showToday('retailDate');
+  showToday('remedyDate');
   var today = todayISO();
   if (lastStatsDay && lastStatsDay !== today) {
     renderStats();
@@ -2060,7 +2014,6 @@ var pushing = false;
 var DIRTY_BADGE_MS = 4000;
 var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
-var lastAuto = {};
 var lastStatsDay = '';
 
 function willScaleMoney(d){
@@ -3387,7 +3340,7 @@ function commit(msg, force){
 }
 function saveRetail(){
   refreshAutoDates();
-  var date = getDateInput('retailDate') || todayISO();
+  var date = todayISO(); /* AC: luôn hôm nay */
   if (!commitRetailRow()) return;
   var items = retailItems.map(function(it){ return { pid: it.pid, kg: it.kg, amount: it.amount }; });
   if (!items.length) { toast('Chọn vị thuốc và nhập số lượng hợp lệ', 'error'); return; }
@@ -3427,13 +3380,13 @@ function saveRetail(){
     if (oid) { tx.oid = oid; tx.oname = oname; }
     db.transactions.push(tx);
   });
-  resetRetail(); resetDateToday('retailDate');
+  resetRetail();
   commit('Đã lưu đơn bán lẻ');
   afterSaveDone();
 }
 function saveRemedy(){
   refreshAutoDates();
-  var date = getDateInput('remedyDate') || todayISO();
+  var date = todayISO(); /* AC: luôn hôm nay */
   if (!commitRemedyRow()) return;
   calcRemedy();
   var grand = remedyGrand();
@@ -3492,7 +3445,7 @@ function saveRemedy(){
     tx.oid = oid; tx.oname = oname;
     db.transactions.push(tx);
   });
-  resetRemedy(); resetDateToday('remedyDate');
+  resetRemedy();
   commit('Đã bán đơn thuốc chén');
   afterSaveDone();
 }
@@ -3683,7 +3636,7 @@ function renderInventory(){
   if (rb) { var rt = 'Đối chiếu tồn kho' + (nr ? ' (' + nr + ' lệch)' : ''); rb.title = rt; rb.setAttribute('aria-label', rt); }
 
   // Tổng kg đã bán theo từng vị (BAN: bán lẻ + đơn chén, đều lưu qty_kg)
-  var sales = {};
+  var sales = Object.create(null);
   db.transactions.forEach(function(t){
     if (t && t.type === 'BAN') {
       var pid = t.productId;
@@ -4179,7 +4132,7 @@ function renderHistory(kind){
 }
 /* ================= ĐỐI CHIẾU TỒN KHO ================= */
 function reconcileList(){
-  var inn = {}, out = {};
+  var inn = Object.create(null), out = Object.create(null);
   db.transactions.forEach(function(t){
     var m = t.type === 'NHAP' ? inn : out;
     m[t.productId] = (m[t.productId] || 0) + num(t.qty);
@@ -4967,7 +4920,12 @@ function closeEdit(){
 function delProduct(id){
   var p = findProduct(id);
   if (!p) return;
-  if (!confirm('Xóa "' + p.name + '" khỏi kho? Lịch sử giao dịch vẫn được giữ lại.')) return;
+  /* AC: giao dịch/đơn thuốc chỉ lưu productId, xóa vị còn dùng sẽ làm lịch sử hiện "Đã xóa": chỉ xóa vị trống (hết tồn, không giao dịch, không nằm trong đơn thuốc). */
+  var sid = String(id);
+  var used = num(p.stock) > 0 || db.transactions.some(function(t){ return String(t.productId) === sid; }) ||
+    (db.prescriptions || []).some(function(r){ return (r.items || []).some(function(it){ return String(it.productId) === sid; }); });
+  if (used) { toast('Vị này còn tồn hoặc đã có giao dịch, không xóa được.', 'error'); return; }
+  if (!confirm('Xóa "' + p.name + '" khỏi kho?')) return;
   db.products = db.products.filter(function(x){ return String(x.id) !== String(id); });
   commit('Đã xóa vị thuốc');
 }
@@ -6033,8 +5991,6 @@ function bindEvents(){
   var is = $('#invSearch');
   if (is) is.addEventListener('input', function(){ invPage = 1; renderInventory(); });
 
-  bindDateInput('retailDate');
-  bindDateInput('remedyDate');
   var impS = $('#impSearch');
   if (impS) impS.addEventListener('input', function(){ impPage = 1; renderHistory('imp'); });
   var expS = $('#expSearch');
@@ -6422,11 +6378,8 @@ function init(boot){
     dirty = false;
   }
 
-  var t = todayISO();
-  setDateInput('retailDate', t);
-  setDateInput('remedyDate', t);
-  lastAuto.retailDate = t;
-  lastAuto.remedyDate = t;
+  showToday('retailDate');
+  showToday('remedyDate');
 
   bindEvents();
   initSuggest();
