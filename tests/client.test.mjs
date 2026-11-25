@@ -8414,8 +8414,8 @@ test('Z.1 utf8Bytes: "thuốc chén 🚀" = 18 byte; ASCII, rỗng, ký tự 2/3
   assert.ok(!PAGE.includes(String.fromCharCode(0xFFFD)), 'src/page.js chứa U+FFFD');
 });
 
-/* Z.1 P1-1: cảnh báo khi thân PUT > 3 MB (theo BYTE), một lần mỗi lần vượt ngưỡng. */
-test('Z.1 pushState: thân > 3 MB byte (ký tự < 3M) toast "sắp đầy" đúng một lần; dưới ngưỡng không toast, vượt lại sau khi xuống thì cảnh báo lại', async () => {
+/* Z.1 P1-1 (ngưỡng hạ còn 2 MB theo localStorage iPhone): cảnh báo khi thân PUT > 2 MB (theo BYTE), một lần mỗi lần vượt ngưỡng. */
+test('Z.1 pushState: thân > 2 MB byte (ký tự < 2M) toast "sắp đầy" đúng một lần; dưới ngưỡng không toast, vượt lại sau khi xuống thì cảnh báo lại', async () => {
   const { doc } = toastDoc(false);
   const writes = [];
   const mEl = doc.querySelector('#toastMsg');
@@ -8426,11 +8426,14 @@ test('Z.1 pushState: thân > 3 MB byte (ký tự < 3M) toast "sắp đầy" đú
   client.setDb(mk(10)); client.setBase(1);
   await client.pushState(false, false);
   assert.equal(big(), 0, 'nhỏ: không cảnh báo');
-  client.setDb(mk(1.2e6)); client.setBase(1);
-  assert.ok(JSON.stringify(client.getDb()).length < 3 * 1024 * 1024, 'dữ kiện: số ký tự < 3 MB');
+  client.setDb(mk(0.6e6)); client.setBase(1);
+  await client.pushState(false, false);
+  assert.equal(big(), 0, '1,8 MB byte: chưa cảnh báo (dưới 2 MB)');
+  client.setDb(mk(0.8e6)); client.setBase(1);
+  assert.ok(JSON.stringify(client.getDb()).length < 2 * 1024 * 1024, 'dữ kiện: số ký tự < 2 MB nhưng byte 2,4 MB');
   await client.pushState(false, false);
   assert.equal(big(), 1, 'lớn theo byte: cảnh báo');
-  client.setDb(mk(1.2e6 + 1)); client.setBase(1);
+  client.setDb(mk(0.8e6 + 1)); client.setBase(1);
   await client.pushState(false, false);
   assert.equal(big(), 1, 'vẫn lớn: không lặp');
   client.setDb(mk(10)); client.setBase(1);

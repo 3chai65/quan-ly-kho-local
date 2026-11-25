@@ -9,6 +9,8 @@ tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 ### Sửa lỗi (đồng bộ)
 - Khi bản máy chủ bị từ chối (`sanitize` bỏ dòng), `pushState` không gửi PUT (trừ X-Force: Hủy ở hộp xung đột, khôi phục): hết vòng 409 lặp; thay đổi giữ trên máy, tải lại trang để kiểm lại.
+### Đổi ngưỡng
+- Cảnh báo "Dữ liệu sắp đầy" (2.38.35) hạ từ 3 MB xuống 2 MB (theo byte UTF-8): localStorage Safari iOS (~5 MB tính UTF-16) có thể đầy từ ~2,6 MB, trước trần 4 MB của máy chủ.
 ### Test / tài liệu
 - Test server tất định cho `updatedAt = max(now, trước+1)` (đồng hồ lùi); test client R1. Bỏ script `fix:native`; `docs/deploy.md`, README-LOCAL, CLAUDE.md: Windows dùng Node 22 (nvm), lỗi better-sqlite3 thì xóa node_modules + npm ci; trước mỗi commit chạy đủ lint, test:client, npm test, test:auth.
 

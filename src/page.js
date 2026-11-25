@@ -5225,14 +5225,14 @@ function noteStockWarnings(list){
   toast(stockWarnText, 'error');
 }
 var pendingOpSig = '', pendingOpId = '';
-/* Z.1 (P1-1 giảm đau): thân PUT > 3 MB (server từ chối > 4 MB) thì cảnh báo một lần mỗi lần mở trang; xuống dưới ngưỡng thì cho cảnh báo lại. */
-var BIG_STATE_BYTES = 3 * 1024 * 1024, bigStateWarned = false;
+/* Z.1 (P1-1 giảm đau): thân PUT > 2 MB (localStorage Safari iOS ~5 MB tính UTF-16 đầy khoảng 2,5 MB dữ liệu, trước trần 4 MB của server) thì cảnh báo một lần mỗi lần mở trang; xuống dưới ngưỡng thì cho cảnh báo lại. */
+var BIG_STATE_BYTES = 2 * 1024 * 1024, bigStateWarned = false;
 function warnBigState(body){
   var n = utf8Bytes(body);
   if (n <= BIG_STATE_BYTES) { bigStateWarned = false; return; }
   if (bigStateWarned) return;
   bigStateWarned = true;
-  toast('Dữ liệu sắp đầy (' + (n / 1048576).toFixed(1).replace('.', ',') + ' / 4 MB): hãy sao lưu và dọn bớt giao dịch cũ', 'error');
+  toast('Dữ liệu sắp đầy (' + (n / 1048576).toFixed(1).replace('.', ',') + ' MB): bộ nhớ trình duyệt iPhone có thể đầy trước mốc 4 MB của máy chủ, hãy sao lưu và dọn bớt giao dịch cũ', 'error');
 }
 function pushState(manual, force){
   if (pushing || conflictOpen) return Promise.resolve(false);
