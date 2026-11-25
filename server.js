@@ -730,7 +730,7 @@ app.use((err, req, res, next) => {
     return res.status(413).json({ success: false, error: 'Payload too large' });
   }
   if (err.type === 'encoding.unsupported') return res.status(415).json({ success: false, error: 'Content-Encoding không được hỗ trợ' });
-  if (err.status === 400 || err.statusCode === 400) return res.status(400).json({ success: false, error: 'Thân yêu cầu không hợp lệ (gzip hỏng?)' });
+  if (err.status === 400 || err.statusCode === 400) return res.status(400).json({ success: false, error: /^Z_/.test(String(err.code || '')) ? 'Thân yêu cầu gzip hỏng, không giải nén được' : 'Thân yêu cầu không hợp lệ' });
   console.error('[server error]', err && err.message ? err.message : err);
   res.status(err.status || 500).json({ success: false, error: err.message || 'Lỗi server' });
 });

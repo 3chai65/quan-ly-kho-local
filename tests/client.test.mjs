@@ -124,7 +124,7 @@ globalThis.__test = {
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), phoneTop: (typeof phoneTop === 'function' ? phoneTop : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null),
-  loadLocalBundle: loadLocalBundle, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
+  loadLocalBundle: loadLocalBundle, setQuotaNote: function(v){ quotaNote = v; }, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
 };
 })();`;
   const store = new Map();
@@ -4732,7 +4732,7 @@ test('2.14.0 gợi ý viết tắt "l": không còn chữ "lạng" trong gợi �
   assert.ok(typeof c.fmtQty === 'function' ? c.fmtQty(0.2) === '2 lạng' : /return fmtNum\(lang\) \+ ' lạng'/.test(PAGE), 'fmtQty vẫn ghi lạng');
 });
 
-test('2.15.0 dòng đồng bộ #syncLineM bấm = Tải lại: chỉ gắn data-action ở màn hình chính; có nháp/dirty thì hỏi trước, không thì tải lại ngay', () => {
+test('2.15.0 dòng đồng bộ #syncLineM bấm = Tải lại: chỉ gắn data-action ở màn hình chính; có đơn đang soạn thì hỏi trước (dirty đã lưu trên máy thì không), không thì tải lại ngay', () => {
   const mk = (extra) => {
     const btn = { setAttribute(k, v) { this[k] = v; }, removeAttribute(k) { delete this[k]; } };
     const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
@@ -4760,20 +4760,22 @@ test('2.15.0 dòng đồng bộ #syncLineM bấm = Tải lại: chỉ gắn data
   r.c.setDirty(false); r.c.setRetailItems([]); r.c.setRemedyItems([]); r.c.setNhapList([]);
   r.c.reloadAppClick();
   assert.equal(reloads, 1); assert.equal(confirms, 0, 'không nháp thì không hỏi');
-  /* dirty / nháp: hỏi; từ chối thì không tải lại */
-  answer = false;
+  /* AB: dirty (đã lưu trên máy, tự gửi khi có mạng) không hỏi; đơn đang soạn (chỉ trong bộ nhớ) thì hỏi, từ chối thì không tải lại */
   r.c.setDirty(true);
   r.c.reloadAppClick();
-  assert.equal(confirms, 1); assert.equal(reloads, 1, 'từ chối thì không tải lại');
+  assert.equal(confirms, 0, 'dirty: không hỏi'); assert.equal(reloads, 2); reloads = 1;
+  answer = false; r.c.setQuotaNote('Bộ nhớ trình duyệt đầy'); r.c.reloadAppClick();
+  assert.equal(confirms, 1, 'dirty mà lưu trên máy lỗi (quotaNote): vẫn hỏi'); assert.equal(reloads, 1); r.c.setQuotaNote(''); confirms = 0;
+  answer = false;
   r.c.setDirty(false); r.c.setRetailItems([{ id: 1 }]);
   r.c.reloadAppClick();
-  assert.equal(confirms, 2); assert.equal(reloads, 1);
+  assert.equal(confirms, 1); assert.equal(reloads, 1, 'từ chối thì không tải lại');
   r.c.setRetailItems([]); r.c.setNhapList([{ id: 1 }]);
   r.c.reloadAppClick();
-  assert.equal(confirms, 3); assert.equal(reloads, 1);
+  assert.equal(confirms, 2); assert.equal(reloads, 1);
   answer = true;
   r.c.reloadAppClick();
-  assert.equal(confirms, 4); assert.equal(reloads, 2, 'đồng ý thì tải lại');
+  assert.equal(confirms, 3); assert.equal(reloads, 2, 'đồng ý thì tải lại');
   /* CSS + markup */
   assert.ok(!PAGE.includes('reloadBtn'), 'H.2: đã bỏ nút #reloadBtn');
   assert.ok(PAGE.includes("case 'reload-app': reloadAppClick()"));
@@ -6149,7 +6151,7 @@ test('2.20.2 khung phủ kín viewport: thẻ lấp đầy chiều cao (cả 3 d
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
   assert.ok(block.includes('html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}'));
-  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}'));
+  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}'));
   assert.ok(block.includes('html.desktop #backupBox{align-self:start}'));
   assert.ok(PAGE.includes("['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); });"));
 });
@@ -7254,8 +7256,9 @@ test('2.28.0 Tải lại: hỏi đúng chữ khi có nháp, không hỏi khi s�
   const c = loadClient({ confirm(m) { msgs.push(m); return ans; }, location: { href: 'x', reload() { reloads++; } } });
   c.setDirty(false); c.setRetailItems([]); c.setRemedyItems([]); c.setNhapList([]);
   c.reloadAppClick(); assert.equal(reloads, 1); assert.equal(msgs.length, 0, 'sạch: không hỏi');
+  c.setDirty(true); c.reloadAppClick(); assert.equal(reloads, 2); assert.equal(msgs.length, 0, 'chỉ dirty (đã lưu trên máy): không hỏi'); reloads = 1; c.setDirty(false);
   c.setRemedyItems([{ id: 1 }]);
-  c.reloadAppClick(); assert.equal(msgs.pop(), 'Còn đơn nháp chưa lưu. Tải lại sẽ mất đơn nháp chưa lưu. Vẫn tải lại?'); assert.equal(reloads, 1, 'từ chối: không tải lại');
+  c.reloadAppClick(); assert.match(msgs.pop(), /^Còn đơn đang soạn chưa lưu\. Tải lại sẽ mất đơn đang soạn \(các thay đổi đã lưu trên máy vẫn giữ/); assert.equal(reloads, 1, 'từ chối: không tải lại');
   ans = true; c.reloadAppClick(); assert.equal(reloads, 2, 'đồng ý: tải lại');
   const sb0 = PAGE.indexOf('var sbf = document.createElement'); assert.ok(sb0 > 0);
   assert.doesNotMatch(PAGE.slice(sb0, sb0 + 1200), /logout|đăng xuất|cookie/i, 'thanh bên không có đường đăng xuất/xóa cookie');
@@ -8729,4 +8732,10 @@ test('AA IndexedDB: localStorage đầy lúc di trú: ghi cờ lỗi vẫn xóa 
   const c = idbEnv({}, { kho_db_local_v1: raw }, [], true);
   const bc = await c.client.loadLocalBundle();
   assert.equal(c.client.getIdbMode(), false); assert.equal(bc.local.products[0].name, 'Cũ'); assert.equal(c.store.get('kho_db_local_v1'), raw);
+});
+
+test('AB: dòng tờ ghi desktop cao 50px cố định như Kho tồn (không giãn theo bảng height:100%, không flex:1 ở Nhập hàng)', () => {
+  assert.ok(PAGE.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}'));
+  assert.ok(!PAGE.includes('.note__list>table,html.desktop #nhapListBox>table{height:100%}'), 'bỏ bảng height:100% (giãn 10 dòng thành 86px ở FHD)');
+  assert.ok(PAGE.includes('html.desktop #nhapListBox>table{flex:none;margin-bottom:auto}'));
 });

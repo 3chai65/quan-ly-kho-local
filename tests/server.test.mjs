@@ -1128,4 +1128,9 @@ test('server.js: AA bom nén: gzip nhỏ nhưng > 32 MB sau giải nén bị 413
   const r2 = await putRaw(bad, { 'Content-Encoding': 'gzip', 'X-Force': '1' });
   assert.equal(r2.status, 400);
   assert.equal(r2.body.success, false);
+  assert.match(r2.body.error, /gzip hỏng/, 'giải nén lỗi nói đúng nguyên nhân');
+  const js = await putRaw(Buffer.from('{không phải json'), { 'X-Force': '1' });
+  assert.equal(js.status, 400); assert.doesNotMatch(js.body.error, /gzip/, 'JSON hỏng không nhắc gzip');
+  const br = await putRaw(Buffer.from('x'), { 'Content-Encoding': 'br', 'X-Force': '1' });
+  assert.equal(br.status, 415, 'Content-Encoding lạ → 415');
 });

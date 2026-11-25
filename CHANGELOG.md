@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.1] - 2026-11-25
+
+### Sửa
+- Hộp "Tải lại" nói đúng sự thật: chỉ hỏi khi có đơn đang soạn chưa lưu (Bán lẻ, Thuốc chén, Nhập hàng); thay đổi đã lưu trên máy (dirty) không hỏi vì tự gửi khi có mạng; riêng khi lưu trên máy lỗi (bộ nhớ đầy) vẫn hỏi.
+- Server: lỗi 400 chỉ nhắc "gzip hỏng" khi giải nén thật sự lỗi; test Content-Encoding lạ → 415.
+- Desktop: dòng tờ ghi (Bán lẻ, Thuốc chén, Nhập hàng) cao 50px cố định như Kho tồn ở mọi cỡ (trước giãn 86px ở FHD); ảnh mẫu 01–03 chụp lại.
+- Chú thích loadLocalBundle khớp mã (localStorage luôn thắng).
+
 ## [2.39.0] - 2026-11-25
 
 ### Thêm (dung lượng dữ liệu, không đổi giao thức đồng bộ)

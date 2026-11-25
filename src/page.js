@@ -699,8 +699,9 @@ html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:non
 html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#retailNote,#remedyNote) .note__list{flex:1;min-height:0}
-html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}
-html.desktop #nhapListBox>table{flex:1}
+/* AB: dòng tờ ghi cao 50px cố định như Kho tồn (trước: bảng height:100% giãn 10 dòng ra 86px ở FHD) */
+html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}
+html.desktop #nhapListBox>table{flex:none;margin-bottom:auto}
 html.desktop #remedyBox>.card__body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 html.desktop #remedyBox .card__bar{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 html.desktop :is(.rbl,.rbr){display:flex;align-items:center;gap:8px;min-width:0}
@@ -2364,8 +2365,9 @@ function phoneEntry(){
 }
 /* 2.27.0: phép kiểm nháp của Tải lại (cờ chưa gửi + đơn nháp trong bộ nhớ); không đăng xuất, không xóa cookie. 2.28.0: Thoát đã bỏ (Tauri đóng bằng nút hệ điều hành). */
 function draftOk(verb){
-  var pending = dirty || (retailItems && retailItems.length) || (remedyItems && remedyItems.length) || (nhapList && nhapList.length);
-  return !pending || confirm('Còn đơn nháp chưa lưu. ' + verb + ' sẽ mất đơn nháp chưa lưu. Vẫn ' + verb.toLowerCase() + '?');
+  /* Chỉ hỏi khi có đơn đang soạn (chỉ nằm trong bộ nhớ, tải lại là mất). Thay đổi đã lưu trên máy (dirty) giữ nguyên và tự gửi khi có mạng, không cần hỏi. */
+  var pending = (dirty && quotaNote) /* dirty mà lưu trên máy lỗi (bộ nhớ đầy): thay đổi chỉ còn trong bộ nhớ */ || (retailItems && retailItems.length) || (remedyItems && remedyItems.length) || (nhapList && nhapList.length);
+  return !pending || confirm('Còn đơn đang soạn chưa lưu. ' + verb + ' sẽ mất đơn đang soạn (các thay đổi đã lưu trên máy vẫn giữ và tự gửi khi có mạng). Vẫn ' + verb.toLowerCase() + '?');
 }
 function reloadAppClick(){
   if (!draftOk('Tải lại')) return false;
@@ -2442,7 +2444,7 @@ function localBundleLS(){
   try { if (!b.local && localStorage.getItem(IDB_FLAG) === '1') b.idbLost = true; } catch (e) {}
   return b;
 }
-/* Trả null nếu không có IndexedDB (init chạy đồng bộ như cũ), ngược lại Promise<{local, wasDirty, savedBase}> (không bao giờ reject). Di trú: IDB trống mà localStorage có KEY → chép sang, đọc lại KHỚP mới xóa KEY; mọi lỗi → giữ localStorage. Cả hai cùng có → lấy bản updatedAt lớn hơn (localStorage lớn hơn khi IDB từng lỗi giữa chừng). */
+/* Trả null nếu không có IndexedDB (init chạy đồng bộ như cũ), ngược lại Promise<{local, wasDirty, savedBase}> (không bao giờ reject). Di trú: IDB trống mà localStorage có KEY → chép sang, đọc lại KHỚP mới xóa KEY; mọi lỗi → giữ localStorage. Cả hai cùng có → localStorage luôn thắng (KEY chỉ còn khi chưa di trú hoặc IDB từng lỗi giữa chừng, nên luôn mới hơn). */
 function loadLocalBundle(){
   if (!idbAvailable()) return null;
   var lsRaw = null;
