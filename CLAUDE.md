@@ -6,6 +6,7 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 - Triển khai, đường lui, vận hành Mac, sao lưu, khôi phục → BẮT BUỘC đọc `docs/deploy.md` trước.
 - Đầu mỗi task mới, việc giao diện, Tauri/PWA → đọc `docs/handover.md`.
 - Trạng thái máy bên kia: đọc kênh theo đường dẫn trong ~/.claude/CLAUDE.md của máy này.
+- Reviewer (soi repo, mẫu báo cáo, các việc đã quyết không làm) → `docs/review.md`.
 
 ## Môi trường
 - Hub: Mac mini M1 `192.168.2.46`, LaunchDaemon `vn.kho.server` (8787) + Caddy (443), không Docker. Mã `~/kho/quan-ly-kho-local` (detached ở thẻ `vX.Y.Z`), dữ liệu `~/kho/data`, log `~/kho/logs/`. Node trên Mac: `PATH=/opt/homebrew/opt/node@22/bin:$PATH`.
