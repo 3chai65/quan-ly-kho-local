@@ -45,6 +45,7 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 | A8 | Auditor 2.17.4 | Thiếu test thân PUT của client có `moneyUnit: 'dong'` | `tests/client.test.mjs` | 2.17.5 `880e699`: thêm test | |
 | — | Auditor W1+W3 (14/11) | Ca test W3 "đổi sau khi thành công" vẫn xanh khi xóa `pendingOpSig = ''` | `page.js` ~4399 | `206be66`: sửa ca test; thêm test `noteSave`, `commitRetailRow` (0,0004), `saveTxEdit` | Phá thử từng sửa đều làm test rớt |
 | R1–R17 (X.1) | review 2.38.30 | Mục 2, 5, 8, 11, 16, 17 + CI lint | `checkLimits` báo đúng nghĩa và dùng `isNumLike`; kiểm cỡ khôi phục theo byte; xóa CSS/biến chết; `productMap` cho `historyData`; `pushState` serialize 1 lần; CI lint client chặn | 2.38.31 | Test + phá thử (CHANGELOG) |
+| P1-1 (giảm đau), P2-1, P2-7, P2-8, P3-1, P3-2, P3-9 (Z.1) | review 9422ef5 | `utf8Bytes` hỏng do byte UTF-8 lỗi trong page.js; thân PUT gần trần 4 MB không có cảnh báo; khóa bằng dữ liệu trên `{}`; `delOrder`/`openOrder` oid rỗng; `txIndex` cũ; README lệch phiên bản, `v.png` vô chủ; dev Windows không build được better-sqlite3 | `utf8Bytes` dùng `TextEncoder` + lint chặn U+FFFD; client cảnh báo > 3 MB (theo byte), server log byte mỗi PUT; 6 chỗ `Object.create(null)`; `if (!oid) return`; `commit()` đặt `txIndex = null`; README trỏ CHANGELOG; `git rm v.png`; script `fix:native` (cần Node 22 trên Windows, máy này đang Node 26) | 2.38.35 | Test + phá thử; API ghi tăng dần/lưu trữ CHƯA làm, theo dõi qua log byte |
 
 ---
 
@@ -52,6 +53,16 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 
 | Mã | Nguồn | Lỗi báo | Bằng chứng / tái hiện | Lý do không xử lý | Xét lại khi |
 |---|---|---|---|---|---|
+| P2-3 | review 9422ef5 | Lockout là biến RAM toàn cục | `auth.js` | LAN gia đình; qua Caddy mọi IP đều là 127.0.0.1 nên khóa theo IP vô nghĩa | Có truy cập từ ngoài LAN / nhiều người dùng |
+| P2-9 | review 9422ef5 | Test client dùng DOM giả, thiếu e2e | `tests/client.test.mjs` | Playwright = thêm phụ thuộc lớn; để sau | Có lỗi UI lọt qua test lần thứ hai |
+| P3-3 | review 9422ef5 | Sửa số lượng dòng bán khi `cost == null` lấy giá nhập hiện tại | `page.js` sửa dòng bán | Dữ liệu cũ hiếm; chưa gặp trên hub | Gặp lãi lịch sử lệch thật |
+| P3-5 | review 9422ef5 | `X-Op-Id` thành công bất kể payload | `server.js` PUT | Client sinh opId theo nội dung nên an toàn | Thêm client khác ngoài page.js |
+| P3-6 | review 9422ef5 | `/api/backups` chỉ liệt kê | `server.js` | README-LOCAL đã có quy trình khôi phục tay | Cần khôi phục từ xa thường xuyên |
+| P3-7 | review 9422ef5 | 401 không thử lại, phải tải lại trang | `page.js` noteAuthLost | Hiếm; tải lại trang là đủ | Thiết bị bị thu hồi/duyệt lại thường xuyên |
+| P3-8 | review 9422ef5 | `renderAll` lọc/sort toàn bộ giao dịch mỗi lần lưu | `page.js` renderHistory | Chưa chậm ở quy mô hiện tại | Giao dịch > ~10k hoặc thấy trễ khi lưu |
+| P3-10 | review 9422ef5 | CSP `script-src unsafe-inline` | `server.js` | Bắt buộc do kiến trúc 1 file; bề mặt XSS gần 0 | Tách JS ra file |
+| P3-11 | review 9422ef5 | Trang không có ETag, tải lại toàn bộ | `server.js` GET / | LAN; vài trăm KB | Dùng qua mạng chậm |
+| P3-12 | review 9422ef5 | page.js 1 file rất lớn | `src/page.js` | Đổi kiến trúc, ngoài phạm vi | Khi cần module/build |
 | W2 | báo cáo 2.17.1 | Nhãn "Giá bán" nhưng ô lưu thành tiền cả dòng | Nhãn: `page.js:662,676,2169,2173,2291`; ô hiển thị `fmtMoney(it.amount)` `:2308`; `price = amount / kg`, `total = amount` `:2665-2666`; lịch sử ghi "Thành tiền" `:912,946,2993,3279` | Quyết định của người dùng 14/11: chỉ là lỗi câu chữ, bỏ qua | Có nhập nhầm giá/kg thành thành tiền gây sai dữ liệu |
 | E4 | ngoài 14/11 (mục 4) | `allocateRemedyProfitEvenly` khi tổng khách trả < tổng vốn | Tái hiện: 999 chia vốn [300,300,400] ra [299,299,401] | Hàm đúng như mô tả nhưng cả hai nơi gọi đã chặn trước: `balanceRemedyMoney` (`page.js` ~2396-2403, `if (g0 < totalCost) return null`) và `applyRemedyBalance` (từ 2.38.32 chặn qua `balanceRemedyMoney`, trả `false` khi `g0 < totalCost`) | Thêm nơi gọi thứ ba |
 | E6 | ngoài 14/11 (mục 6) | `txIndex` cache có thể cũ | `renderAll` luôn gọi `indexTx`; chỉ dùng cho bản ghi thiếu `ts` | Chưa có đường nào bỏ qua `renderAll` | Thêm đường sửa giao dịch bỏ qua `renderAll` |
@@ -78,6 +89,7 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 
 | Mã | Nguồn | Lỗi | Bằng chứng | Ghi chú |
 |---|---|---|---|---|
+| P3-4 | review 9422ef5 | `migrateMoneyToDong()` có thể nhân 1000 lần nữa nếu mất `app_meta.money_unit` | `server.js` (comment hẹn xóa sau 06/12/2026) | Xóa đúng hạn 06/12/2026 kèm sao lưu trước |
 | W1b | tự ghi nhận | Server vẫn chấp nhận giao dịch BAN có `total = 0` (dữ liệu cũ, client khác) | `server.js:279` (`total >= 0`) | Chỉ chặn ở client; có thể thêm cảnh báo ở server |
 | W3b | Auditor W1+W3 | (a) Tải lại tab giữa lúc gửi thì mất `opId`, 409 giả vẫn có thể xảy ra; (b) phản hồi cho PUT trùng op không kèm `warnings`/`stockDrift` của phản hồi gốc; (c) PUT trùng op trả 200 kể cả khi thiếu `X-Base-Updated` | `server.js` nhánh op trùng ~dòng 562-565 | (b), (c) vô hại theo Auditor |
 | G17 | CLAUDE.md | Sao lưu tự động có thể đè lên thông báo đang hiện | — | |

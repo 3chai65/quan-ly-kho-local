@@ -97,7 +97,7 @@ Bản `kho-backup-2026-11-06.json` trong `data/luu-tru/` xuất lúc 19:48, mu�
 ## Chạy test
 Chạy trên Windows hoặc CI, không chạy trên hub Mac.
 ```powershell
-# Node 22 (`.nvmrc`); không dùng Node 24+/26 (better-sqlite3 11.x không build).
+# Node 22 (`.nvmrc`); không dùng Node 24+/26 (better-sqlite3 11.x không build). Sau khi đổi Node: `npm run fix:native` (= npm rebuild better-sqlite3).
 npm run lint                         # kiểm cú pháp
 node --test tests/client.test.mjs    # test client
 npm test                             # test server (cần better-sqlite3)

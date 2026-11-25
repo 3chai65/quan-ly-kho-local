@@ -5,6 +5,16 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.35] - 2026-11-25
+
+### Sửa lỗi
+- `utf8Bytes` dùng `TextEncoder` (dòng cũ chứa byte UTF-8 hỏng); `tools/kiem-cu-phap.mjs` (trong `npm run lint`) từ chối `src/page.js` chứa U+FFFD.
+- Khóa bằng dữ liệu dùng `Object.create(null)` (`need`, `oidCount`, `map`, `byId`, `needOut`, `txIndex`); `delOrder`/`openOrder` bỏ qua oid rỗng (trước đây khớp mọi giao dịch không có oid); `commit()` đặt lại `txIndex`.
+### Thêm
+- Cảnh báo "Dữ liệu sắp đầy" khi thân PUT > 3 MB (đếm byte, một lần mỗi lần vượt); server log byte mỗi PUT thành công.
+### Tài liệu / dọn
+- README trỏ CHANGELOG thay vì ghi số phiên bản; xóa `v.png`; script `fix:native` (`npm rebuild better-sqlite3`, cần Node 22); BAO-CAO-REVIEW.md ghi mục bỏ qua của review 9422ef5.
+
 ## [2.38.34] - 2026-11-24
 
 ### Dọn mã (không đổi giao diện)

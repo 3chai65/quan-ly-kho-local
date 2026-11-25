@@ -1964,7 +1964,7 @@ function findProduct(id){
 }
 var txIndex = null;
 function indexTx(){
-  txIndex = {};
+  txIndex = Object.create(null);
   db.transactions.forEach(function(t, i){ txIndex[t.id] = i; });
 }
 function tsFromId(id){
@@ -3291,6 +3291,7 @@ function delPreset(){
 /* ================= LƯU ĐƠN ================= */
 function commit(msg, force){
   touch();
+  txIndex = null; /* chỉ mục giao dịch dựng lại lười sau mỗi lần ghi */
   renderAll();
   if (orderCur) renderOrder();
   pushState(false, !!force);
@@ -3312,7 +3313,7 @@ function saveRetail(){
   var oid = items.length > 1 ? uid('OD') : null;
   var ts = Date.now();
 
-  var need = {};
+  var need = Object.create(null);
   items.forEach(function(it){ need[it.pid] = (need[it.pid] || 0) + it.kg; });
   for (var pid in need) {
     var p = findProduct(pid);
@@ -3356,7 +3357,7 @@ function saveRemedy(){
   if (grand <= 0) { toast('Nhập giá 1 thang', 'error'); return; }
 
   var thang = remedyThang();
-  var need = {};
+  var need = Object.create(null);
   items.forEach(function(it){ need[it.pid] = (need[it.pid] || 0) + it.g / 1000 * thang; });
   for (var pid in need) {
     var p = findProduct(pid);
@@ -3414,7 +3415,7 @@ function txCost(t, byId){ return t.cost != null ? num(t.cost) : num(t.qty) * (by
 function computeStats(transactions, products, today){
   var ym = String(today || '').slice(0, 7), yr = String(today || '').slice(0, 4);
   var dExp = 0, dCogs = 0, mImp = 0, mExp = 0, mCogs = 0, yExp = 0, yCogs = 0;
-  var byId = {};
+  var byId = Object.create(null);
   (products || []).forEach(function(p){ byId[p.id] = p; });
   (transactions || []).forEach(function(t){
     if (!t || !t.date) return;
@@ -3920,6 +3921,7 @@ function renderOrder(){
   }
 }
 function openOrder(oid){
+  if (!oid) { toast('Đơn không còn tồn tại', 'error'); return; }
   if (!db.transactions.some(function(x){ return String(x.oid) === String(oid); })) {
     toast('Đơn không còn tồn tại', 'error');
     return;
@@ -3951,12 +3953,12 @@ function historyData(kind, month, q){
     return !month || (t.date && String(t.date).indexOf(month) === 0);
   });
 
-  var oidCount = {};
+  var oidCount = Object.create(null);
   if (isImp) {
     list.forEach(function(t){ if (t.oid) oidCount[t.oid] = (oidCount[t.oid] || 0) + 1; });
   }
 
-  var map = {}, rows = [];
+  var map = Object.create(null), rows = [];
   list.forEach(function(t){
     var groupable = !!t.oid && (isImp ? oidCount[t.oid] > 1 : !!t.oname);
     if (!groupable) {
@@ -4221,7 +4223,7 @@ function chartTicks(maxK){
 function chartDaysIn(y, m){ return m === 2 ? ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28) : (m === 4 || m === 6 || m === 9 || m === 11 ? 30 : 31); }
 function chartMonthStep(y, m, dir){ var k = Math.min(2100 * 12 + 11, Math.max(2000 * 12, y * 12 + m - 1 + dir)); return { y: Math.floor(k / 12), m: k % 12 + 1 }; }
 function chartBuckets(txs, prods, n, idxOf){
-  var byId = {}, a = [], b = [], p = [], i;
+  var byId = Object.create(null), a = [], b = [], p = [], i;
   (prods || []).forEach(function(q){ byId[q.id] = q; });
   for (i = 0; i < n; i++) { a.push(0); b.push(0); p.push(0); }
   txs.forEach(function(t){
@@ -4974,13 +4976,14 @@ function findTx(id){
   return null;
 }
 function delOrder(oid){
+  if (!oid) return; /* oid rỗng: String(undefined) khớp mọi giao dịch không có oid */
   var items = db.transactions.filter(function(x){ return String(x.oid) === String(oid); });
   if (!items.length) return;
   var label = (items[0].oname && items[0].oname !== items[0].oid) ? items[0].oname : (items[0].type === 'NHAP'
     ? 'đơn nhập ngày ' + dateVN(items[0].date)
     : 'đơn');
   /* Kiểm tra trước toàn bộ đơn nhập: không được để tồn âm. */
-  var needOut = {};
+  var needOut = Object.create(null);
   for (var i = 0; i < items.length; i++) {
     var t0 = items[i];
     if (t0.type !== 'NHAP') continue;
@@ -5222,6 +5225,15 @@ function noteStockWarnings(list){
   toast(stockWarnText, 'error');
 }
 var pendingOpSig = '', pendingOpId = '';
+/* Z.1 (P1-1 giảm đau): thân PUT > 3 MB (server từ chối > 4 MB) thì cảnh báo một lần mỗi lần mở trang; xuống dưới ngưỡng thì cho cảnh báo lại. */
+var BIG_STATE_BYTES = 3 * 1024 * 1024, bigStateWarned = false;
+function warnBigState(body){
+  var n = utf8Bytes(body);
+  if (n <= BIG_STATE_BYTES) { bigStateWarned = false; return; }
+  if (bigStateWarned) return;
+  bigStateWarned = true;
+  toast('Dữ liệu sắp đầy (' + (n / 1048576).toFixed(1).replace('.', ',') + ' / 4 MB): hãy sao lưu và dọn bớt giao dịch cũ', 'error');
+}
 function pushState(manual, force){
   if (pushing || conflictOpen) return Promise.resolve(false);
   pushing = true;
@@ -5234,6 +5246,7 @@ function pushState(manual, force){
   var opSig = JSON.stringify(rest);
   var body = db.updatedAt === undefined ? opSig : opSig.slice(0, -1) + (opSig.length > 2 ? ',' : '') + '"updatedAt":' + JSON.stringify(db.updatedAt) + '}';
   if (opSig !== pendingOpSig) { pendingOpSig = opSig; pendingOpId = uid('OP'); }
+  warnBigState(body);
   var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase), 'X-Op-Id': pendingOpId };
   if (force) headers['X-Force'] = '1';
   return apiFetch('/api/state', {
@@ -5612,7 +5625,7 @@ function parseBackup(text){
   return out;
 }
 /* Số BYTE UTF-8 (cùng đơn vị với MAX_BODY của server; .length đếm đơn vị UTF-16 nên đếm thiếu tiếng Việt có dấu). Không dùng Blob vì Blob là đường tải file. */
-function utf8Bytes(s){ return s.replace(/[�-�][�-�]/g, '____').replace(/[ࠀ-￿]/g, '___').replace(/[-߿]/g, '__').length; }
+function utf8Bytes(s){ return new TextEncoder().encode(String(s)).length; }
 function restoreFromFile(file){
   if (!file) return;
   if (authLost || refreshing) { toast(authLost ? 'Thiết bị chưa được duyệt: chưa thể khôi phục' : 'Đang đồng bộ, thử lại sau giây lát', 'error'); return; }

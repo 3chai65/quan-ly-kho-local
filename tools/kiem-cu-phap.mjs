@@ -11,5 +11,6 @@ if (process.argv[2]) {
   if (!code) { console.error('Không tìm thấy script chính trong src/page.js'); process.exit(1); }
   code = code.replace(/%%BOOT%%/g, 'null').replace(/%%NEEDFETCH%%/g, 'false');
 }
+if (!process.argv[2]) { const { PAGE: P2 } = await import('../src/page.js'); if (P2.includes('\uFFFD')) { console.error('src/page.js chứa ký tự thay thế U+FFFD (byte UTF-8 hỏng)'); process.exit(1); } }
 try { new Function(code); console.log('Cú pháp client OK'); }
 catch (e) { console.error('Lỗi cú pháp client: ' + e.message); process.exit(1); }

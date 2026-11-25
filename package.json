@@ -1,6 +1,6 @@
 {
   "name": "quan-ly-kho-local",
-  "version": "2.38.34",
+  "version": "2.38.35",
   "private": true,
   "type": "module",
   "description": "Quáº£n LÃ½ Kho â€” app má»™t ngÆ°á»i dÃ¹ng, cháº¡y local báº±ng Docker vÃ  SQLite",
@@ -13,6 +13,7 @@
     "test": "node --test --test-timeout=120000 tests/server.test.mjs",
     "test:client": "node --test --test-timeout=120000 tests/client.test.mjs",
     "test:auth": "node --test --test-timeout=120000 tests/auth.test.mjs tests/auth.devices.test.mjs",
+    "fix:native": "npm rebuild better-sqlite3",
     "lint:client": "node scripts/lint-client.mjs",
     "lint": "node --check server.js && node --check auth.js && node --check pwa.js && node tools/kiem-cu-phap.mjs"
   },

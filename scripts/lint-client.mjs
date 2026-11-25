@@ -16,7 +16,7 @@ code = code.replace(/%%BOOT%%/g, 'null').replace(/%%NEEDFETCH%%/g, 'false');
 const browserGlobals = {
   window: 'readonly', document: 'readonly', console: 'readonly', localStorage: 'readonly',
   fetch: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly', URL: 'readonly',
-  Blob: 'readonly', FileReader: 'readonly', Intl: 'readonly', confirm: 'readonly',
+  Blob: 'readonly', TextEncoder: 'readonly', FileReader: 'readonly', Intl: 'readonly', confirm: 'readonly',
   alert: 'readonly', MouseEvent: 'readonly', requestAnimationFrame: 'readonly',
   cancelAnimationFrame: 'readonly', getComputedStyle: 'readonly', navigator: 'readonly',
   location: 'readonly', addEventListener: 'readonly', removeEventListener: 'readonly',

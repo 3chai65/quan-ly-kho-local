@@ -156,7 +156,7 @@ globalThis.__test = {
     requestAnimationFrame() { return 0; }, cancelAnimationFrame() {},
     getComputedStyle() { return { getPropertyValue() { return ''; } }; },
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
-    Blob: class {}, FileReader: class {}, MouseEvent: class {},
+    Blob: class {}, FileReader: class {}, MouseEvent: class {}, TextEncoder,
     matchMedia: () => ({ matches: false, addEventListener() {} }),
   };
   Object.defineProperties(sandbox, Object.getOwnPropertyDescriptors(extra));
@@ -8401,4 +8401,73 @@ test('2.38.33: Lịch sử bán/nhập điện thoại — chấm + tên + "· N
   // mọi luật his-ord chỉ dưới html:not(.desktop)
   for (const m of PAGE.matchAll(/^[^\n{]*his-ord[^\n{]*\{/gm)) if (!m[0].includes('<td') && !m[0].includes('el(')) assert.ok(m[0].startsWith('html:not(.desktop) '), m[0]);
   assert.ok(!deskBlock().includes('his-ord'));
+});
+
+/* Z.1 P2-1: utf8Bytes đếm đúng byte UTF-8 (TextEncoder), không còn regex/byte hỏng; page.js không chứa U+FFFD. */
+test('Z.1 utf8Bytes: "thuốc chén 🚀" = 18 byte; ASCII, rỗng, ký tự 2/3/4 byte; page.js không có U+FFFD', () => {
+  const m = PAGE.match(/function utf8Bytes\(s\){[^\n]*}/);
+  assert.ok(m, 'thiếu utf8Bytes');
+  const u8 = new Function(m[0] + '; return utf8Bytes;')();
+  assert.equal(u8('thuốc chén 🚀'), 18);
+  assert.equal(u8(''), 0); assert.equal(u8('abc'), 3); assert.equal(u8('é'), 2); assert.equal(u8('€'), 3); assert.equal(u8('🚀'), 4);
+  assert.equal(u8('thuốc chén 🚀'), Buffer.byteLength('thuốc chén 🚀'));
+  assert.ok(!PAGE.includes(String.fromCharCode(0xFFFD)), 'src/page.js chứa U+FFFD');
+});
+
+/* Z.1 P1-1: cảnh báo khi thân PUT > 3 MB (theo BYTE), một lần mỗi lần vượt ngưỡng. */
+test('Z.1 pushState: thân > 3 MB byte (ký tự < 3M) toast "sắp đầy" đúng một lần; dưới ngưỡng không toast, vượt lại sau khi xuống thì cảnh báo lại', async () => {
+  const { doc } = toastDoc(false);
+  const writes = [];
+  const mEl = doc.querySelector('#toastMsg');
+  Object.defineProperty(mEl, 'textContent', { get() { return writes[writes.length - 1] || ''; }, set(v) { writes.push(v); } });
+  const client = loadClient({ document: doc, fetch: async () => ({ status: 200, json: async () => ({ success: true, updatedAt: 9 }) }), setTimeout() { return 0; }, clearTimeout() {} });
+  const mk = n => ({ products: [], transactions: [], prescriptions: [], updatedAt: 1, pad: 'ế'.repeat(n) });
+  const big = () => writes.filter(w => /sắp đầy/.test(w)).length;
+  client.setDb(mk(10)); client.setBase(1);
+  await client.pushState(false, false);
+  assert.equal(big(), 0, 'nhỏ: không cảnh báo');
+  client.setDb(mk(1.2e6)); client.setBase(1);
+  assert.ok(JSON.stringify(client.getDb()).length < 3 * 1024 * 1024, 'dữ kiện: số ký tự < 3 MB');
+  await client.pushState(false, false);
+  assert.equal(big(), 1, 'lớn theo byte: cảnh báo');
+  client.setDb(mk(1.2e6 + 1)); client.setBase(1);
+  await client.pushState(false, false);
+  assert.equal(big(), 1, 'vẫn lớn: không lặp');
+  client.setDb(mk(10)); client.setBase(1);
+  await client.pushState(false, false);
+  client.setDb(mk(1.2e6)); client.setBase(1);
+  await client.pushState(false, false);
+  assert.equal(big(), 2, 'xuống rồi vượt lại: cảnh báo lại');
+});
+
+/* Z.1 P3-1/P3-2/P3-9: khóa bằng dữ liệu không đụng thuộc tính Object.prototype; oid rỗng không xóa/mở đơn; commit() đặt lại chỉ mục giao dịch. */
+test('Z.1 historyData: oid trùng tên thuộc tính Object (toString) vẫn gộp thành đúng 1 đơn', () => {
+  const client = loadClient();
+  const mk = (i) => ({ id: 'g' + i, date: '2026-11-08', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 100 + i, oid: 'toString', oname: 'Đơn X' });
+  client.setDb({ products: [{ id: 'p1', name: 'A', stock: 10, costPrice: 500 }], transactions: [mk(1), mk(2)], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
+  const d = client.historyData('exp', null);
+  assert.equal(d.rows.length, 1);
+  assert.equal(d.rows[0].group, true);
+  assert.equal(d.rows[0].oid, 'toString');
+});
+
+test('Z.1 delOrder/openOrder với oid rỗng/undefined: không xóa giao dịch không có oid', () => {
+  const dom = limitStock();
+  const txs = [
+    { id: 'a', date: '2026-11-01', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 1000, retail: true },
+    { id: 'b', date: '2026-11-02', type: 'BAN', productId: 'p1', qty: 1, price: 1000, total: 1000, cost: 500, ts: 2000, retail: true }
+  ];
+  const c = limitClient(dom, [{ id: 'p1', name: 'A', stock: 5, costPrice: 500 }], txs);
+  c.delOrder(undefined); c.delOrder(''); c.delOrder(null);
+  assert.equal(c.getDb().transactions.length, 2);
+  c.openOrder(undefined);
+  assert.equal(c.getOrderCur(), null);
+});
+
+test('Z.1 nguồn: 6 chỗ khóa bằng dữ liệu dùng Object.create(null); commit() đặt txIndex = null', () => {
+  assert.ok(PAGE.includes('txIndex = Object.create(null);'));
+  assert.equal(PAGE.split('var need = Object.create(null);').length - 1, 2);
+  assert.ok(PAGE.includes('var oidCount = Object.create(null);') && PAGE.includes('var map = Object.create(null), rows = [];') && PAGE.includes('var needOut = Object.create(null);'));
+  assert.equal(PAGE.split('var byId = Object.create(null)').length - 1, 2);
+  assert.match(PAGE, /function commit\(msg, force\)\{\n  touch\(\);\n  txIndex = null;/);
 });

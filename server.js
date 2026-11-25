@@ -656,6 +656,7 @@ app.put('/api/state', (req, res) => {
       return res.status(500).json({ success: false, error: 'Không chụp được bản sao lưu trước khi ghi đè; chưa ghi gì' });
     }
     const updatedAt = writeState(checked.state, opId, force);
+    console.log(new Date().toISOString() + ' PUT /api/state ' + Buffer.byteLength(text) + ' byte' + (force ? ' (X-Force)' : ''));
     const reply = { success: true, updatedAt };
     if (checked.warnings.length) reply.warnings = checked.warnings;
     if (checked.stockDrift.length) reply.stockDrift = checked.stockDrift;
