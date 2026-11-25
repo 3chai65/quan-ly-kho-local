@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.0] - 2026-11-25
+
+### Thêm (dung lượng dữ liệu, không đổi giao thức đồng bộ)
+- Client gửi `PUT /api/state` nén gzip (`CompressionStream`, header `Content-Encoding: gzip`); không có `CompressionStream` thì gửi thường như cũ. Vẫn PUT toàn bộ, giữ X-Base-Updated / X-Op-Id / 409 / 428.
+- Server nhận cả gzip lẫn thường; giới hạn thân nâng 4 MB → 32 MB và tính SAU giải nén (chặn bom nén → 413); gzip hỏng → 400; log byte giải nén kèm byte nén.
+- Bản db trên máy lưu trong IndexedDB (một khóa, API gốc) thay cho localStorage (~5 MB UTF-16 trên Safari). Lần đầu: chép từ localStorage, đọc lại khớp mới xóa; IndexedDB lỗi/không có → dùng localStorage như cũ. Cờ dirty/base và các khóa nhỏ vẫn ở localStorage (ghi sau khi IndexedDB đã commit). Khởi động nạp db xong mới chạy init (render/pull/push).
+- Cảnh báo "Dữ liệu sắp đầy" ở 24 MB (75% trần 32 MB, đo utf8Bytes), bỏ câu về bộ nhớ iPhone.
+- Phần Mac (ngoài repo): `encode gzip` trong Caddyfile.mac, ghi ở kênh.
+
 ## [2.38.37] - 2026-11-25
 
 ### Sửa lỗi (đồng bộ)

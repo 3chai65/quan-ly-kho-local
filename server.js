@@ -35,7 +35,8 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'app.db');
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(DATA_DIR, 'backups');
 const BACKUP_KEEP_DAYS = Number(process.env.BACKUP_KEEP_DAYS) || 30;
-const MAX_BODY = 4 * 1024 * 1024;
+/* AA: trần thân PUT TÍNH SAU GIẢI NÉN (body-parser đếm byte đã inflate nên chặn bom nén); client gửi gzip (Content-Encoding) từ 2.39.0. */
+const MAX_BODY = 32 * 1024 * 1024;
 const MAX_INLINE = 200 * 1024;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const NAME_MAX = 200;
@@ -548,10 +549,10 @@ app.get('/healthz', (req, res) => {
 });
 
 // Mặc định từ chối: mọi route bên dưới chỉ mở cho thiết bị đã được duyệt.
-// Đặt TRƯỚC bộ đọc body để thiết bị lạ không đẩy được payload 4 MB lên.
+// Đặt TRƯỚC bộ đọc body để thiết bị lạ không đẩy được payload 32 MB lên.
 app.use(auth.gate);
 auth.mount(app, express.text({ type: '*/*', limit: '2kb' }));
-app.use(express.text({ type: '*/*', limit: MAX_BODY }));
+app.use(express.text({ type: '*/*', limit: MAX_BODY, inflate: true }));
 
 mountPwa(app);
 app.get('/robots.txt', (req, res) => {
@@ -658,7 +659,8 @@ app.put('/api/state', (req, res) => {
       return res.status(500).json({ success: false, error: 'Không chụp được bản sao lưu trước khi ghi đè; chưa ghi gì' });
     }
     const updatedAt = writeState(checked.state, opId, force);
-    console.log(new Date().toISOString() + ' PUT /api/state ' + Buffer.byteLength(text) + ' byte' + (force ? ' (X-Force)' : ''));
+    const wire = Number(req.get('Content-Length'));
+    console.log(new Date().toISOString() + ' PUT /api/state ' + Buffer.byteLength(text) + ' byte' + (req.get('Content-Encoding') && Number.isFinite(wire) ? ' (nén ' + req.get('Content-Encoding') + ' ' + wire + ' byte)' : '') + (force ? ' (X-Force)' : ''));
     const reply = { success: true, updatedAt };
     if (checked.warnings.length) reply.warnings = checked.warnings;
     if (checked.stockDrift.length) reply.stockDrift = checked.stockDrift;
@@ -727,6 +729,8 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large' || err.status === 413) {
     return res.status(413).json({ success: false, error: 'Payload too large' });
   }
+  if (err.type === 'encoding.unsupported') return res.status(415).json({ success: false, error: 'Content-Encoding không được hỗ trợ' });
+  if (err.status === 400 || err.statusCode === 400) return res.status(400).json({ success: false, error: 'Thân yêu cầu không hợp lệ (gzip hỏng?)' });
   console.error('[server error]', err && err.message ? err.message : err);
   res.status(err.status || 500).json({ success: false, error: err.message || 'Lỗi server' });
 });

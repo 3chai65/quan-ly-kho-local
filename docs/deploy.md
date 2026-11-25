@@ -36,3 +36,8 @@ Mẫu dòng: `Triển khai v<mới> = <hash>; khoảng v<hub>..v<mới> = <n> co
 
 ## Mất thiết bị chủ
 `scripts/auth-reset.mjs` (xóa `devices` + `invites`, không đụng `app.db`), rồi người dùng tự đọc mã trong log và nhập tại `/auth/setup`.
+
+## Dung lượng dữ liệu (2.39.0)
+- Server nhận body gzip (`Content-Encoding: gzip`) và thường; trần 32 MB tính sau giải nén. Client lưu db bằng IndexedDB (rớt về localStorage nếu lỗi).
+- Caddy (ngoài repo): thêm `encode gzip` vào khối site trong `~/kho/Caddyfile.mac`, kiểm `caddy validate --config ~/kho/Caddyfile.mac`, nạp lại `caddy reload`. Quay lui: bỏ dòng đó rồi reload.
+- Quay lui về bản < 2.39: trước khi lùi, mọi máy phải đã đồng bộ hết (không còn bản nháp chưa gửi); bản cũ chỉ đọc localStorage nên bản nháp trong IndexedDB sẽ không thấy.

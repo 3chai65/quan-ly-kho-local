@@ -123,7 +123,8 @@ globalThis.__test = {
   getRetailItems: function(){ return retailItems; }, getRemedyItems: function(){ return remedyItems; },
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), phoneTop: (typeof phoneTop === 'function' ? phoneTop : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
-  recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null)
+  recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null),
+  loadLocalBundle: loadLocalBundle, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
 };
 })();`;
   const store = new Map();
@@ -5864,7 +5865,7 @@ test('W6 downloadBackup: click ném lỗi thì không đóng dấu, trả false;
   assert.equal(ok.msgEl.textContent, 'Đã tạo file sao lưu');
 });
 
-test('W6 restoreFromFile: 5 MB không bị từ chối ở client, > 12 MB bị từ chối', () => {
+test('W6 restoreFromFile: 5 MB không bị từ chối ở client, > 48 MB bị từ chối', () => {
   const run = (size) => {
     let reads = 0;
     const c = loadClient({ FileReader: class { readAsText() { reads++; } } });
@@ -5872,8 +5873,8 @@ test('W6 restoreFromFile: 5 MB không bị từ chối ở client, > 12 MB bị 
     return reads;
   };
   assert.equal(run(5 * 1024 * 1024), 1);
-  assert.equal(run(12 * 1024 * 1024), 1);
-  assert.equal(run(12 * 1024 * 1024 + 1), 0);
+  assert.equal(run(48 * 1024 * 1024), 1);
+  assert.equal(run(48 * 1024 * 1024 + 1), 0);
 });
 
 test('W4b: header nhanh nhưng json() treo thì sau 15 s bị AbortError, pushing/GET nhả', async () => {
@@ -5920,7 +5921,7 @@ test('W5b tsFromId: khoảng 2025-2035 cả hai nhánh, id 13 số không gạch
   assert.equal(c.tsFromId('TX_' + parseInt('00000001', 36).toString(36).padStart(8, '0') + 'x'), 0);
 });
 
-test('W6b restoreFromFile: JSON gọn > 4 MB bị từ chối trước xác nhận; thụt lề 5 MB nhưng gọn < 4 MB vẫn qua', () => {
+test('W6b restoreFromFile: JSON gọn > 32 MB bị từ chối trước xác nhận; thụt lề nhiều nhưng gọn < 32 MB vẫn qua', () => {
   const mkData = (n, pad) => ({ products: Array.from({ length: n }, (_, i) => ({ id: 'P' + i, name: 'Vi ' + i + ' ' + pad, stock: 1, costPrice: 1000 })), transactions: [], prescriptions: [], moneyUnit: 'dong' });
   const run = (text) => {
     let asked = 0;
@@ -5929,12 +5930,12 @@ test('W6b restoreFromFile: JSON gọn > 4 MB bị từ chối trước xác nh�
     c.restoreFromFile({ size: text.length });
     return asked;
   };
-  const big = mkData(30000, 'x'.repeat(120));
-  assert.ok(JSON.stringify(big).length > 4 * 1024 * 1024);
+  const big = mkData(230000, 'x'.repeat(120));
+  assert.ok(JSON.stringify(big).length > 32 * 1024 * 1024);
   assert.equal(run(JSON.stringify(big)), 0);
   const small = mkData(3000, 'x');
   const txt = JSON.stringify(small, null, 8);
-  assert.ok(txt.length > 400 * 1024 && JSON.stringify(small).length < 4 * 1024 * 1024);
+  assert.ok(txt.length > 400 * 1024 && JSON.stringify(small).length < 32 * 1024 * 1024);
   assert.equal(run(txt), 1);
 });
 
@@ -8305,16 +8306,16 @@ test('2.38.31 X (5)(8): checkLimits báo đúng nghĩa — không phải số �
   assert.equal(c('thang', 1), null); assert.equal(c('q', '2.5'), null); assert.equal(c('money', 1e12), null); assert.equal(c('money', '150000'), null); assert.equal(c('grams', 0), null);
 });
 
-test('2.38.31 X (2): khôi phục kiểm cỡ theo BYTE UTF-8 (tiếng Việt có dấu), cùng ngưỡng 4 MB của server', () => {
+test('2.38.31 X (2): khôi phục kiểm cỡ theo BYTE UTF-8 (tiếng Việt có dấu), cùng ngưỡng 32 MB của server', () => {
   const run = (text) => { let asked = 0; class FR { readAsText() { this.result = text; this.onload(); } } const c = loadClient({ FileReader: FR, confirm: () => { asked++; return false; } }); c.restoreFromFile({ size: 1 }); return asked; };
   const mk = (n, pad) => JSON.stringify({ products: Array.from({ length: n }, (_, i) => ({ id: 'P' + i, name: 'Vị ' + i + ' ' + pad, stock: 1, costPrice: 1000 })), transactions: [], prescriptions: [], moneyUnit: 'dong' });
-  // 'ệ' = 1 đơn vị UTF-16 nhưng 3 byte: chuỗi < 4 MB ký tự mà > 4 MB byte phải bị từ chối
-  const dense = mk(12000, 'ệ'.repeat(100));
-  assert.ok(dense.length < 4 * 1024 * 1024 && Buffer.byteLength(dense) > 4 * 1024 * 1024, 'dữ kiện: ký tự < 4 MB < byte');
-  assert.equal(run(dense), 0, 'quá 4 MB byte: từ chối trước xác nhận');
-  const ok = mk(12000, 'ệ'.repeat(40));
-  assert.ok(Buffer.byteLength(ok) < 4 * 1024 * 1024);
-  assert.equal(run(ok), 1, 'dưới 4 MB byte: qua tới xác nhận');
+  // 'ệ' = 1 đơn vị UTF-16 nhưng 3 byte: chuỗi < 32 MB ký tự mà > 32 MB byte phải bị từ chối
+  const dense = mk(100000, 'ệ'.repeat(100));
+  assert.ok(dense.length < 32 * 1024 * 1024 && Buffer.byteLength(dense) > 32 * 1024 * 1024, 'dữ kiện: ký tự < 32 MB < byte');
+  assert.equal(run(dense), 0, 'quá 32 MB byte: từ chối trước xác nhận');
+  const ok = mk(100000, 'ệ'.repeat(40));
+  assert.ok(Buffer.byteLength(ok) < 32 * 1024 * 1024);
+  assert.equal(run(ok), 1, 'dưới 32 MB byte: qua tới xác nhận');
 });
 
 test('2.38.31 X (17): pushState serialize db 1 lần — thân PUT parse ra đúng db (kèm updatedAt, tên tiếng Việt), opId đổi theo nội dung', async () => {
@@ -8414,8 +8415,8 @@ test('Z.1 utf8Bytes: "thuốc chén 🚀" = 18 byte; ASCII, rỗng, ký tự 2/3
   assert.ok(!PAGE.includes(String.fromCharCode(0xFFFD)), 'src/page.js chứa U+FFFD');
 });
 
-/* Z.1 P1-1 (ngưỡng hạ còn 2 MB theo localStorage iPhone): cảnh báo khi thân PUT > 2 MB (theo BYTE), một lần mỗi lần vượt ngưỡng. */
-test('Z.1 pushState: thân > 2 MB byte (ký tự < 2M) toast "sắp đầy" đúng một lần; dưới ngưỡng không toast, vượt lại sau khi xuống thì cảnh báo lại', async () => {
+/* Z.1 P1-1 (AA: ngưỡng 24 MB = 75% trần 32 MB): cảnh báo khi thân PUT > 24 MB (theo BYTE), một lần mỗi lần vượt ngưỡng. */
+test('Z.1 pushState: thân > 24 MB byte (ký tự < 24M) toast "sắp đầy" đúng một lần; dưới ngưỡng không toast, vượt lại sau khi xuống thì cảnh báo lại', async () => {
   const { doc } = toastDoc(false);
   const writes = [];
   const mEl = doc.querySelector('#toastMsg');
@@ -8426,19 +8427,19 @@ test('Z.1 pushState: thân > 2 MB byte (ký tự < 2M) toast "sắp đầy" đú
   client.setDb(mk(10)); client.setBase(1);
   await client.pushState(false, false);
   assert.equal(big(), 0, 'nhỏ: không cảnh báo');
-  client.setDb(mk(0.6e6)); client.setBase(1);
+  client.setDb(mk(6e6)); client.setBase(1);
   await client.pushState(false, false);
-  assert.equal(big(), 0, '1,8 MB byte: chưa cảnh báo (dưới 2 MB)');
-  client.setDb(mk(0.8e6)); client.setBase(1);
-  assert.ok(JSON.stringify(client.getDb()).length < 2 * 1024 * 1024, 'dữ kiện: số ký tự < 2 MB nhưng byte 2,4 MB');
+  assert.equal(big(), 0, '18 MB byte: chưa cảnh báo (dưới 24 MB)');
+  client.setDb(mk(8.6e6)); client.setBase(1);
+  assert.ok(JSON.stringify(client.getDb()).length < 24 * 1024 * 1024, 'dữ kiện: số ký tự < 24 MB nhưng byte 25,8 MB');
   await client.pushState(false, false);
   assert.equal(big(), 1, 'lớn theo byte: cảnh báo');
-  client.setDb(mk(0.8e6 + 1)); client.setBase(1);
+  client.setDb(mk(8.6e6 + 1)); client.setBase(1);
   await client.pushState(false, false);
   assert.equal(big(), 1, 'vẫn lớn: không lặp');
   client.setDb(mk(10)); client.setBase(1);
   await client.pushState(false, false);
-  client.setDb(mk(1.2e6)); client.setBase(1);
+  client.setDb(mk(8.6e6)); client.setBase(1);
   await client.pushState(false, false);
   assert.equal(big(), 2, 'xuống rồi vượt lại: cảnh báo lại');
 });
@@ -8518,7 +8519,7 @@ test('Z.2 Dockerfile + docker-compose.yml đặt HOST=0.0.0.0', async () => {
 
 /* Z.2 P2-6 (init): dữ liệu nhúng sẵn có drops thì init không áp, dùng bản máy. */
 test('Z.2 init: window.__DB__ có tên vị thuốc trùng → không áp, giữ bản local', () => {
-  const m = PAGE.match(/function init\(\)\{\n  var rchk = window\.__DB__ \? checkServerData\(window\.__DB__, 'init'\) : null;[^\n]*\n  var remote = rchk && rchk\.ok \? rchk\.state : null;/);
+  const m = PAGE.match(/function init\(boot\)\{\n  var rchk = window\.__DB__ \? checkServerData\(window\.__DB__, 'init'\) : null;[^\n]*\n  var remote = rchk && rchk\.ok \? rchk\.state : null;/);
   assert.ok(m, 'init phải đi qua checkServerData');
 });
 
@@ -8548,4 +8549,184 @@ test('Z.2 R1 pushState: sau khi bản máy chủ bị từ chối thì không PU
   client.setDirty(true); client.setBase(800);
   assert.equal(await client.pushState(false, false), true);
   assert.ok(calls.includes('PUT'), 'bản sạch: PUT thường đi lại được');
+});
+
+/* AA: gửi nén gzip khi có CompressionStream; không có / lỗi thì gửi thường. */
+test('AA pushState: có CompressionStream → body gzip + Content-Encoding, giải nén khớp từng byte với thân gửi thường', async () => {
+  const zlib = await import('node:zlib');
+  const run = async (extra) => {
+    const sent = [];
+    const fetchStub = async (url, opts = {}) => { if ((opts.method || 'GET') === 'PUT') sent.push(opts); return { status: 200, json: async () => ({ success: true, updatedAt: 9 }) }; };
+    const c = loadClient({ fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {}, ...extra });
+    c.setDb({ products: [{ id: 'p1', name: 'Thuốc tiếng Việt ệ'.repeat(50), stock: 1, costPrice: 5 }], transactions: [], prescriptions: [], updatedAt: 3 });
+    c.setBase(3);
+    assert.equal(await c.pushState(false, false), true);
+    return sent[0];
+  };
+  const plain = await run({});
+  assert.equal(typeof plain.body, 'string');
+  assert.equal(plain.headers['Content-Encoding'], undefined);
+  const gz = await run({ Blob, Response, CompressionStream });
+  assert.equal(gz.headers['Content-Encoding'], 'gzip');
+  assert.equal(gz.headers['Content-Type'], 'application/json');
+  assert.ok(ArrayBuffer.isView(gz.body), 'thân nhị phân');
+  assert.ok(gz.body.length < Buffer.byteLength(plain.body), 'nén nhỏ hơn');
+  const norm = t => t.replace(/"updatedAt":\d+/, '"updatedAt":0'); /* touch() đổi updatedAt theo giờ giữa hai lần chạy */
+  assert.equal(norm(zlib.gunzipSync(Buffer.from(gz.body.buffer, gz.body.byteOffset, gz.body.byteLength)).toString('utf8')), norm(plain.body), 'giải nén khớp byte thân thường');
+});
+
+test('AA pushState: CompressionStream lỗi (ném/ reject) → vẫn gửi thân thường, không mất lần ghi', async () => {
+  const sent = [];
+  const fetchStub = async (url, opts = {}) => { if ((opts.method || 'GET') === 'PUT') sent.push(opts); return { status: 200, json: async () => ({ success: true, updatedAt: 9 }) }; };
+  const Bad = function () { throw new Error('không hỗ trợ'); };
+  const c = loadClient({ fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {}, Blob, Response, CompressionStream: Bad });
+  c.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 3 }); c.setBase(3);
+  assert.equal(await c.pushState(false, false), true);
+  assert.equal(typeof sent[0].body, 'string');
+  assert.equal(sent[0].headers['Content-Encoding'], undefined);
+});
+
+/* ------------------------------------------------------------------ */
+/* AA: lưu bản db trên máy bằng IndexedDB (fake) + di trú từ localStorage */
+/* ------------------------------------------------------------------ */
+function fakeIdb(state) {
+  const defer = (f) => Promise.resolve().then(f);
+  return {
+    open() {
+      const rq = { result: null, error: null };
+      defer(() => {
+        if (state.failOpen) { rq.error = new Error('open'); if (rq.onerror) rq.onerror(); return; }
+        const dbh = {
+          createObjectStore() {}, close() {},
+          transaction() {
+            const tx = { error: null };
+            tx.objectStore = () => ({
+              get(k) { const r = {}; defer(() => { r.result = state.data.get(k); if (r.onsuccess) r.onsuccess(); }); return r; },
+              put(v, k) {
+                state.puts++;
+                if (state.failPut) { tx.failed = true; defer(() => { tx.error = new Error('quota'); if (tx.onerror) tx.onerror(); if (tx.onabort) tx.onabort(); }); return {}; }
+                defer(() => defer(() => { state.data.set(k, state.corrupt ? v + 'X' : v); }));
+                return {};
+              }
+            });
+            defer(() => defer(() => defer(() => defer(() => { if (!tx.failed && tx.oncomplete) tx.oncomplete(); }))));
+            return tx;
+          }
+        };
+        rq.result = dbh;
+        if (rq.onupgradeneeded) rq.onupgradeneeded();
+        if (rq.onsuccess) rq.onsuccess();
+      });
+      return rq;
+    }
+  };
+}
+function idbEnv(extraState = {}, lsInit = {}, throwSet = [], throwRemove = false) {
+  const state = { data: new Map(), puts: 0, failPut: false, failOpen: false, corrupt: false, ...extraState };
+  const store = new Map(Object.entries(lsInit));
+  const localStorage = { getItem: k => (store.has(k) ? store.get(k) : null), setItem: (k, v) => { if (throwSet.includes(k)) throw new Error('quota'); store.set(k, String(v)); }, removeItem: k => { if (throwRemove) throw new Error('rm'); store.delete(k); }, clear: () => store.clear() };
+  const client = loadClient({ localStorage, indexedDB: fakeIdb(state), setTimeout() { return 0; }, clearTimeout() {} });
+  return { state, store, client };
+}
+const IDB_DB = (name, up) => ({ products: [{ id: 'p1', name, stock: 1, costPrice: 5 }], transactions: [], prescriptions: [], updatedAt: up, moneyUnit: 'dong' });
+
+test('AA IndexedDB: di trú localStorage → IDB: chép, đọc lại khớp mới xóa KEY; dữ liệu và cờ dirty/base nguyên vẹn', async () => {
+  const raw = JSON.stringify(IDB_DB('Cam thảo', 50));
+  const { state, store, client } = idbEnv({}, { kho_db_local_v1: raw, kho_db_dirty_v1: '1', kho_cloud_base_v1: '40' });
+  const b = await client.loadLocalBundle();
+  assert.equal(b.local.products[0].name, 'Cam thảo');
+  assert.equal(b.wasDirty, true); assert.equal(b.savedBase, 40);
+  assert.equal(state.data.get('db'), raw, 'IDB giữ đúng chuỗi');
+  assert.equal(store.has('kho_db_local_v1'), false, 'KEY localStorage đã xóa sau khi khớp');
+  assert.equal(client.getIdbMode(), true);
+});
+
+test('AA IndexedDB: di trú thất bại (ghi lỗi / đọc lại lệch / mở lỗi) → KHÔNG xóa localStorage, dùng localStorage, không mất dữ liệu', async () => {
+  const raw = JSON.stringify(IDB_DB('Đương quy', 60));
+  for (const st of [{ failPut: true }, { corrupt: true }, { failOpen: true }]) {
+    const { store, client } = idbEnv(st, { kho_db_local_v1: raw });
+    const b = await client.loadLocalBundle();
+    assert.equal(b.local.products[0].name, 'Đương quy', JSON.stringify(st));
+    assert.equal(store.get('kho_db_local_v1'), raw, 'localStorage còn nguyên: ' + JSON.stringify(st));
+    assert.equal(client.getIdbMode(), false, JSON.stringify(st));
+  }
+});
+
+test('AA IndexedDB: lưu qua IDB (bản mới nhất thắng, cờ dirty/base vào localStorage SAU commit, không ghi KEY localStorage); không có IndexedDB → như cũ', async () => {
+  const { state, store, client } = idbEnv();
+  await client.loadLocalBundle();
+  assert.equal(client.getIdbMode(), true);
+  client.setDb(IDB_DB('A', 1)); client.setBase(7); client.setDirty(true);
+  client.saveLocalFn(); client.setDb(IDB_DB('B', 2)); client.setBase(8); client.setDirty(true);
+  client.saveLocalFn();
+  assert.equal(store.has('kho_cloud_base_v1'), false, 'cờ chưa ghi trước khi IDB commit');
+  await client.getIdbChain();
+  assert.equal(JSON.parse(state.data.get('db')).products[0].name, 'B');
+  assert.equal(store.get('kho_cloud_base_v1'), '8'); assert.equal(store.get('kho_db_dirty_v1'), '1');
+  assert.equal(store.has('kho_db_local_v1'), false);
+  const plain = loadClient({ localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} } });
+  assert.equal(plain.loadLocalBundle(), null, 'không có indexedDB: init chạy đồng bộ như cũ');
+});
+
+test('AA IndexedDB: ghi IDB lỗi giữa chừng → rớt về localStorage với đúng bản đó (không mất dữ liệu); lần khởi động sau lấy bản mới hơn và di trú lại', async () => {
+  const { state, store, client } = idbEnv();
+  await client.loadLocalBundle();
+  state.failPut = true;
+  client.setDb(IDB_DB('Mới', 99)); client.setBase(5); client.setDirty(true);
+  client.saveLocalFn();
+  await client.getIdbChain();
+  assert.equal(client.getIdbMode(), false);
+  assert.equal(JSON.parse(store.get('kho_db_local_v1')).products[0].name, 'Mới');
+  assert.equal(store.get('kho_cloud_base_v1'), '5');
+  state.failPut = false; state.data.set('db', JSON.stringify(IDB_DB('Cũ', 10)));
+  const again = idbEnv({ data: state.data }, Object.fromEntries(store));
+  const b = await again.client.loadLocalBundle();
+  assert.equal(b.local.products[0].name, 'Mới', 'bản localStorage mới hơn thắng');
+  assert.equal(JSON.parse(again.state.data.get('db')).products[0].name, 'Mới', 'đã di trú lại sang IDB');
+  assert.equal(again.store.has('kho_db_local_v1'), false);
+});
+
+test('AA init: gọi loadLocalBundle trước init (bất đồng bộ) và init nhận bản đã nạp; không có IDB thì init() đồng bộ', () => {
+  assert.match(PAGE, /var bootP = loadLocalBundle\(\);\nfunction startApp\(\)\{\n  if \(!bootP\) \{ init\(\); return; \}\n  bootP\.then\(init, function\(\)\{ init\(\); \}\);/);
+  assert.match(PAGE, /boot = boot \|\| localBundleLS\(\);\n  idbLost = !!boot\.idbLost;\n  var local = boot\.local;/);
+});
+
+test('AA IndexedDB: đã di trú rồi IDB hỏng ở lần mở sau (KEY không còn, dirty=1) → idbLost: không ghi KEY/cờ dirty, bản nháp trong IDB còn nguyên', async () => {
+  const raw = JSON.stringify(IDB_DB('Nháp chưa gửi', 70));
+  const a = idbEnv({}, { kho_db_local_v1: raw, kho_db_dirty_v1: '1', kho_cloud_base_v1: '40' });
+  await a.client.loadLocalBundle();
+  assert.equal(a.store.has('kho_db_local_v1'), false); assert.equal(a.store.get('kho_idb_v1'), '1');
+  const b = idbEnv({ failOpen: true, data: a.state.data }, Object.fromEntries(a.store));
+  const bun = await b.client.loadLocalBundle();
+  assert.equal(bun.local, null); assert.equal(bun.idbLost, true); assert.equal(bun.wasDirty, true);
+  b.client.setIdbLost(true);
+  b.client.setDb(IDB_DB('Máy chủ', 80)); b.client.setDirty(false);
+  b.client.saveLocalFn();
+  assert.equal(b.store.has('kho_db_local_v1'), false, 'không ghi KEY');
+  assert.equal(b.store.get('kho_db_dirty_v1'), '1', 'cờ dirty giữ nguyên');
+  assert.equal(JSON.parse(a.state.data.get('db')).products[0].name, 'Nháp chưa gửi');
+  assert.ok(PAGE.includes('idbLost = !!boot.idbLost;'), 'init đặt idbLost từ bundle');
+});
+
+test('AA IndexedDB: cả KEY localStorage lẫn IDB cùng có → localStorage thắng dù updatedAt nhỏ hơn (lệch giờ máy); idbDrain không kẹt khi callback ném lỗi', async () => {
+  const { store, state, client } = idbEnv({}, { kho_db_local_v1: JSON.stringify(IDB_DB('LS', 5)) });
+  state.data.set('db', JSON.stringify(IDB_DB('IDB', 500)));
+  const b = await client.loadLocalBundle();
+  assert.equal(b.local.products[0].name, 'LS');
+  assert.ok(PAGE.includes('.then(idbDrain, idbDrain);'));
+  assert.equal(store.has('kho_db_local_v1'), false);
+});
+
+test('AA IndexedDB: localStorage đầy lúc di trú: ghi cờ lỗi vẫn xóa KEY (idbMode=true, không còn bản cũ đè lần sau); xóa KEY lỗi → idbMode=false, dùng localStorage', async () => {
+  const raw = JSON.stringify(IDB_DB('Cũ', 50));
+  const a = idbEnv({}, { kho_db_local_v1: raw }, ['kho_idb_v1']);
+  await a.client.loadLocalBundle();
+  assert.equal(a.store.has('kho_db_local_v1'), false); assert.equal(a.client.getIdbMode(), true);
+  a.client.setDb(IDB_DB('Mới', 90)); a.client.setBase(90); a.client.saveLocalFn(); await a.client.getIdbChain();
+  const again = idbEnv({ data: a.state.data }, Object.fromEntries(a.store));
+  const b = await again.client.loadLocalBundle();
+  assert.equal(b.local.products[0].name, 'Mới', 'bản mới nhất còn');
+  const c = idbEnv({}, { kho_db_local_v1: raw }, [], true);
+  const bc = await c.client.loadLocalBundle();
+  assert.equal(c.client.getIdbMode(), false); assert.equal(bc.local.products[0].name, 'Cũ'); assert.equal(c.store.get('kho_db_local_v1'), raw);
 });

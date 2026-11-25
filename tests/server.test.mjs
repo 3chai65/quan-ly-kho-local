@@ -381,7 +381,7 @@ test('server.js: tiền lẻ còn trong DB được đọc thành số nguyên',
 
 test('server.js: payload quá lớn trả JSON 413', async () => {
   const largeState = emptyState({
-    products: Array.from({ length: 80000 }, (_, i) => ({
+    products: Array.from({ length: 560000 }, (_, i) => ({
       id: 'P' + i,
       name: 'Thuoc ' + i,
       stock: 1,
@@ -389,8 +389,8 @@ test('server.js: payload quá lớn trả JSON 413', async () => {
     }))
   });
   const bodyStr = JSON.stringify(largeState);
-  // Ca này chỉ có nghĩa khi thân thật sự vượt MAX_BODY (4 MB); không có điều kiện bao quanh.
-  assert.ok(Buffer.byteLength(bodyStr) > 4 * 1024 * 1024, 'thân phải lớn hơn 4 MB, hiện ' + Buffer.byteLength(bodyStr));
+  // Ca này chỉ có nghĩa khi thân thật sự vượt MAX_BODY (32 MB); không có điều kiện bao quanh.
+  assert.ok(Buffer.byteLength(bodyStr) > 32 * 1024 * 1024, 'thân phải lớn hơn 32 MB, hiện ' + Buffer.byteLength(bodyStr));
   const r = await fetch(`${BASE}/api/state`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Cookie: deviceCookie },
@@ -1098,4 +1098,34 @@ test('server.js: Z.2 R2 updatedAt = max(now, trước+1): source_updated_at ở 
     assert.equal(r.status, 200, JSON.stringify(body));
     assert.equal(body.updatedAt, future + 1);
   } finally { s1.c.kill(); await waitExit(s1.c); rmDir(dir); }
+});
+
+/* AA: server nhận Content-Encoding: gzip; trần 32 MB tính SAU giải nén; gzip hỏng 400; thân thường vẫn chạy. */
+async function putRaw(bodyBuf, headers = {}) {
+  const r = await fetch(`${BASE}/api/state`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Cookie: deviceCookie, ...headers }, body: bodyBuf });
+  let body = null; try { body = await r.json(); } catch (e) {}
+  return { status: r.status, body };
+}
+test('server.js: AA body gzip được chấp nhận, dữ liệu giống hệt gửi thường', async () => {
+  const zlib = await import('node:zlib');
+  const state = emptyState({ products: [{ id: 'GZ1', name: 'Nén gzip thuốc', stock: 3, costPrice: 77 }] });
+  const raw = Buffer.from(JSON.stringify({ moneyUnit: 'dong', ...state }), 'utf8');
+  const res = await putRaw(zlib.gzipSync(raw), { 'Content-Encoding': 'gzip', 'X-Force': '1' });
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  const got = await getState();
+  assert.equal(got.products.find(p => p.id === 'GZ1').name, 'Nén gzip thuốc');
+  const plain = await putRaw(raw, { 'X-Base-Updated': String(res.body.updatedAt) });
+  assert.equal(plain.status, 200, 'thân thường vẫn chạy');
+});
+
+test('server.js: AA bom nén: gzip nhỏ nhưng > 32 MB sau giải nén bị 413; gzip hỏng bị 400', async () => {
+  const zlib = await import('node:zlib');
+  const bomb = zlib.gzipSync(Buffer.alloc(40 * 1024 * 1024, 0x20));
+  assert.ok(bomb.length < 200 * 1024, 'dữ kiện: bản nén rất nhỏ (' + bomb.length + ')');
+  const r1 = await putRaw(bomb, { 'Content-Encoding': 'gzip', 'X-Force': '1' });
+  assert.equal(r1.status, 413);
+  const bad = Buffer.from('không phải gzip'.repeat(5));
+  const r2 = await putRaw(bad, { 'Content-Encoding': 'gzip', 'X-Force': '1' });
+  assert.equal(r2.status, 400);
+  assert.equal(r2.body.success, false);
 });

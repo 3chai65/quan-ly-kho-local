@@ -2218,8 +2218,10 @@ function sanitize(d, drops){
   return o;
 }
 function readLocal(){
+  try { return parseLocalRaw(localStorage.getItem(KEY)); } catch (e) { return null; }
+}
+function parseLocalRaw(raw){
   try {
-    var raw = localStorage.getItem(KEY);
     if (!raw) return null;
     var parsed = JSON.parse(raw);
     var legacy = !parsed || willScaleMoney(parsed);
@@ -2367,7 +2369,8 @@ function draftOk(verb){
 }
 function reloadAppClick(){
   if (!draftOk('Tải lại')) return false;
-  location.reload();
+  if (idbBusy) idbChain.then(function(){ location.reload(); }); /* AA: chờ IndexedDB ghi xong rồi mới tải lại */
+  else location.reload();
   return true;
 }
 function discardUnsynced(){
@@ -2399,10 +2402,71 @@ function discardUnsynced(){
     return ok;
   });
 }
-function saveLocal(){
+/* AA: bản db trên máy lưu trong IndexedDB (một khóa, dạng chuỗi JSON) vì localStorage Safari ~5 MB UTF-16. Khóa nhỏ (cờ dirty/base, cài đặt) vẫn ở localStorage. IndexedDB không có/lỗi thì dùng localStorage như cũ (idbMode = false). */
+var IDB_NAME = 'kho_local', IDB_STORE = 'kv', IDB_REC = 'db';
+var idbMode = false, idbHandle = null, idbBusy = false, idbPending = null, idbChain = Promise.resolve();
+function idbAvailable(){
+  try { return typeof indexedDB === 'object' && !!indexedDB && typeof indexedDB.open === 'function'; } catch (e) { return false; }
+}
+function idbOpen(){
+  return new Promise(function(resolve, reject){
+    var done = false;
+    var tm = setTimeout(function(){ if (!done) { done = true; reject(new Error('idb timeout')); } }, 3000);
+    try {
+      var rq = indexedDB.open(IDB_NAME, 1);
+      rq.onupgradeneeded = function(){ try { rq.result.createObjectStore(IDB_STORE); } catch (e) {} };
+      rq.onsuccess = function(){
+        if (done) { try { rq.result.close(); } catch (e) {} return; }
+        done = true; clearTimeout(tm); resolve(rq.result);
+      };
+      rq.onerror = function(){ if (!done) { done = true; clearTimeout(tm); reject(rq.error || new Error('idb open')); } };
+    } catch (e) { done = true; clearTimeout(tm); reject(e); }
+  });
+}
+function idbTx(mode, run){
+  return new Promise(function(resolve, reject){
+    var out, tx;
+    try { tx = idbHandle.transaction(IDB_STORE, mode); } catch (e) { reject(e); return; }
+    tx.oncomplete = function(){ resolve(out); };
+    tx.onerror = function(){ reject(tx.error || new Error('idb tx')); };
+    tx.onabort = function(){ reject(tx.error || new Error('idb abort')); };
+    try { run(tx.objectStore(IDB_STORE), function(v){ out = v; }); } catch (e) { reject(e); }
+  });
+}
+function idbGetRaw(){ return idbTx('readonly', function(st, set){ var r = st.get(IDB_REC); r.onsuccess = function(){ set(r.result); }; }); }
+function idbPutRaw(str){ return idbTx('readwrite', function(st){ st.put(str, IDB_REC); }); }
+/* Cờ "db từng nằm trong IndexedDB" (localStorage). Nếu IndexedDB hỏng/treo mà KHÔNG còn KEY localStorage thì bản trên máy không đọc được (idbLost): tuyệt đối không ghi KEY/cờ dirty (sẽ mất bản nháp chưa gửi), chỉ xem bản máy chủ. */
+var IDB_FLAG = 'kho_idb_v1', idbLost = false;
+function localBundleLS(){
+  var b = { local: readLocal(), wasDirty: readDirty(), savedBase: readBase() };
+  try { if (!b.local && localStorage.getItem(IDB_FLAG) === '1') b.idbLost = true; } catch (e) {}
+  return b;
+}
+/* Trả null nếu không có IndexedDB (init chạy đồng bộ như cũ), ngược lại Promise<{local, wasDirty, savedBase}> (không bao giờ reject). Di trú: IDB trống mà localStorage có KEY → chép sang, đọc lại KHỚP mới xóa KEY; mọi lỗi → giữ localStorage. Cả hai cùng có → lấy bản updatedAt lớn hơn (localStorage lớn hơn khi IDB từng lỗi giữa chừng). */
+function loadLocalBundle(){
+  if (!idbAvailable()) return null;
+  var lsRaw = null;
+  try { lsRaw = localStorage.getItem(KEY) || null; } catch (e) {}
+  return idbOpen().then(function(h){
+    idbHandle = h;
+    return idbGetRaw().then(function(idbRaw){
+      if (typeof idbRaw !== 'string' || !idbRaw) idbRaw = null;
+      var fromLS = !!lsRaw; /* KEY localStorage chỉ còn khi chưa di trú hoặc IDB từng lỗi giữa chừng: luôn mới hơn bản IDB */
+      var raw = fromLS ? lsRaw : idbRaw;
+      var bundle = { local: raw ? parseLocalRaw(raw) : null, wasDirty: readDirty(), savedBase: readBase() };
+      if (!fromLS) { idbMode = true; try { localStorage.setItem(IDB_FLAG, '1'); } catch (e) {} return bundle; }
+      return idbPutRaw(lsRaw).then(function(){ return idbGetRaw(); }).then(function(back){
+        if (back === lsRaw) { var removed = false; try { localStorage.removeItem(KEY); removed = true; } catch (e) {} idbMode = removed; /* KEY còn mà idbMode=true sẽ làm bản cũ đè bản mới ở lần mở sau */ if (removed) { try { localStorage.setItem(IDB_FLAG, '1'); } catch (e) {} } } else idbMode = false;
+        return bundle;
+      }, function(){ idbMode = false; return bundle; });
+    });
+  }).catch(function(){ idbMode = false; return localBundleLS(); });
+}
+function saveLocalLS(str, dirtyV, baseV){
+  if (idbLost) { quotaNote = 'Không đọc được bộ nhớ máy (IndexedDB): thay đổi trên máy này chưa được lưu, hãy tải lại.'; renderSyncBadge(); return; }
   var keyOk = false;
   try {
-    localStorage.setItem(KEY, JSON.stringify(db));
+    localStorage.setItem(KEY, str);
     keyOk = true;
   } catch (e) {
     var quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
@@ -2413,13 +2477,35 @@ function saveLocal(){
     }
   }
   /* KEY lỗi: giữ base cũ (khớp KEY cũ), chỉ ghi cờ dirty khi đang dirty. */
-  if (keyOk || dirty) {
-    try { localStorage.setItem(DIRTY_KEY, dirty ? '1' : '0'); } catch (e2) {}
+  if (keyOk || dirtyV) {
+    try { localStorage.setItem(DIRTY_KEY, dirtyV ? '1' : '0'); } catch (e2) {}
   }
   if (keyOk) {
-    try { localStorage.setItem(BASE_KEY, String(cloudBase || 0)); } catch (e3) {}
+    try { localStorage.setItem(BASE_KEY, String(baseV || 0)); } catch (e3) {}
   }
   if (keyOk && quotaNote) { quotaNote = ''; quotaWarned = false; renderSyncBadge(); }
+}
+/* IndexedDB: chụp chuỗi + cờ NGAY (đồng bộ, nhất quán), ghi tuần tự, bản mới nhất thắng; cờ dirty/base chỉ ghi vào localStorage SAU khi IDB đã commit (giữ nguyên bất biến "base đi cùng bản đã lưu"). IDB lỗi → rớt về localStorage với đúng bản đó, không mất dữ liệu. */
+function idbDrain(){
+  var snap = idbPending; idbPending = null;
+  if (!snap) { idbBusy = false; return Promise.resolve(); }
+  if (!idbMode) { try { saveLocalLS(snap.s, snap.d, snap.b); } catch (e) {} return idbDrain(); }
+  return idbPutRaw(snap.s).then(function(){
+    try { localStorage.setItem(DIRTY_KEY, snap.d ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem(BASE_KEY, String(snap.b || 0)); } catch (e) {}
+    if (quotaNote) { quotaNote = ''; quotaWarned = false; renderSyncBadge(); }
+  }, function(){
+    idbMode = false;
+    saveLocalLS(snap.s, snap.d, snap.b);
+  }).then(idbDrain, idbDrain); /* lỗi trong callback không được làm idbBusy kẹt true */
+}
+function saveLocal(){
+  if (idbMode) {
+    idbPending = { s: JSON.stringify(db), d: dirty, b: cloudBase };
+    if (!idbBusy) { idbBusy = true; idbChain = idbDrain(); }
+    return;
+  }
+  saveLocalLS(JSON.stringify(db), dirty, cloudBase);
 }
 function touch(){
   db.updatedAt = Date.now();
@@ -5225,14 +5311,31 @@ function noteStockWarnings(list){
   toast(stockWarnText, 'error');
 }
 var pendingOpSig = '', pendingOpId = '';
-/* Z.1 (P1-1 giảm đau): thân PUT > 2 MB (localStorage Safari iOS ~5 MB tính UTF-16 đầy khoảng 2,5 MB dữ liệu, trước trần 4 MB của server) thì cảnh báo một lần mỗi lần mở trang; xuống dưới ngưỡng thì cho cảnh báo lại. */
-var BIG_STATE_BYTES = 2 * 1024 * 1024, bigStateWarned = false;
+/* AA: trần thân PUT của server là 32 MB sau giải nén (tính theo byte UTF-8, utf8Bytes); cảnh báo ở 75% = 24 MB, một lần mỗi lần vượt; xuống dưới ngưỡng thì cho cảnh báo lại. */
+var MAX_STATE_BYTES = 32 * 1024 * 1024, BIG_STATE_BYTES = 24 * 1024 * 1024, bigStateWarned = false;
 function warnBigState(body){
   var n = utf8Bytes(body);
   if (n <= BIG_STATE_BYTES) { bigStateWarned = false; return; }
   if (bigStateWarned) return;
   bigStateWarned = true;
-  toast('Dữ liệu sắp đầy (' + (n / 1048576).toFixed(1).replace('.', ',') + ' MB): bộ nhớ trình duyệt iPhone có thể đầy trước mốc 4 MB của máy chủ, hãy sao lưu và dọn bớt giao dịch cũ', 'error');
+  toast('Dữ liệu sắp đầy (' + (n / 1048576).toFixed(1).replace('.', ',') + ' / 32 MB): hãy sao lưu và dọn bớt giao dịch cũ', 'error');
+}
+/* AA: gửi nén. CompressionStream (Safari >= 16.4, WebView2) có thì nén gzip và gửi Content-Encoding: gzip (server inflate, trần 32 MB tính sau giải nén); không có thì gửi thường như cũ. Trả null (đồng bộ) nếu không nén được. */
+function gzipText(text){
+  if (typeof CompressionStream !== 'function' || typeof Blob !== 'function' || typeof Response !== 'function') return null;
+  try {
+    return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()
+      .then(function(buf){ return new Uint8Array(buf); }, function(){ return null; });
+  } catch (e) { return null; }
+}
+function sendStateBody(headers, body){
+  var gz = gzipText(body);
+  if (!gz) return apiFetch('/api/state', { method: 'PUT', headers: headers, body: body });
+  return gz.then(function(buf){
+    if (!buf) return apiFetch('/api/state', { method: 'PUT', headers: headers, body: body });
+    headers['Content-Encoding'] = 'gzip';
+    return apiFetch('/api/state', { method: 'PUT', headers: headers, body: buf });
+  });
 }
 function pushState(manual, force){
   if (pushing || conflictOpen) return Promise.resolve(false);
@@ -5253,11 +5356,7 @@ function pushState(manual, force){
   warnBigState(body);
   var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase), 'X-Op-Id': pendingOpId };
   if (force) headers['X-Force'] = '1';
-  return apiFetch('/api/state', {
-    method: 'PUT',
-    headers: headers,
-    body: body
-  }).then(function(r){
+  return sendStateBody(headers, body).then(function(r){
     if (!r) return { status: 0, d: null };
     return r.json().then(function(d){
       return { status: r.status || 0, d: d };
@@ -5650,7 +5749,7 @@ function utf8Bytes(s){ return new TextEncoder().encode(String(s)).length; }
 function restoreFromFile(file){
   if (!file) return;
   if (authLost || refreshing) { toast(authLost ? 'Thiết bị chưa được duyệt: chưa thể khôi phục' : 'Đang đồng bộ, thử lại sau giây lát', 'error'); return; }
-  if (file.size > 12 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
+  if (file.size > 48 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
   var fr = new FileReader();
   fr.onload = function(){
     var bak = null;
@@ -5658,7 +5757,7 @@ function restoreFromFile(file){
       backupParseError = 'File sao lưu không phải JSON hợp lệ';
     }
     if (!bak) { toast(backupParseError || 'File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
-    if (utf8Bytes(JSON.stringify(bak)) > 4 * 1024 * 1024) { toast('File sao lưu quá lớn', 'error'); return; }
+    if (utf8Bytes(JSON.stringify(bak)) > MAX_STATE_BYTES) { toast('File sao lưu quá lớn', 'error'); return; }
     var drops = bak._drops || [];
     var moneyNote = bak._moneyNote || '';
     delete bak._drops;
@@ -6285,12 +6384,14 @@ function initTabs(){
   if (sb) { sb.open = true; activate(start); }
 }
 
-function init(){
+function init(boot){
   var rchk = window.__DB__ ? checkServerData(window.__DB__, 'init') : null; /* Z.2: dữ liệu nhúng sẵn cũng không được áp nếu sanitize phải bỏ dòng */
   var remote = rchk && rchk.ok ? rchk.state : null;
-  var local = readLocal();
-  var wasDirty = readDirty();
-  var savedBase = readBase();
+  boot = boot || localBundleLS();
+  idbLost = !!boot.idbLost;
+  var local = boot.local;
+  var wasDirty = boot.wasDirty;
+  var savedBase = boot.savedBase;
 
   var scaledFromK = !!(local && local._scaledFromK);
   if (local) delete local._scaledFromK;
@@ -6359,8 +6460,14 @@ function init(){
 
 try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){}); } catch (e) {}
 
-if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init);
-else init();
+/* AA: nạp bản db trên máy (IndexedDB, bất đồng bộ) TRƯỚC init: init (render, pull, push, autoRefresh) chỉ chạy sau khi db đã nạp xong. Không có IndexedDB thì init đồng bộ như cũ. */
+var bootP = loadLocalBundle();
+function startApp(){
+  if (!bootP) { init(); return; }
+  bootP.then(init, function(){ init(); });
+}
+if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', startApp);
+else startApp();
 
 })();
 </script>
