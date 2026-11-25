@@ -8515,6 +8515,6 @@ test('Z.2 Dockerfile + docker-compose.yml đặt HOST=0.0.0.0', async () => {
 
 /* Z.2 P2-6 (init): dữ liệu nhúng sẵn có drops thì init không áp, dùng bản máy. */
 test('Z.2 init: window.__DB__ có tên vị thuốc trùng → không áp, giữ bản local', () => {
-  const m = PAGE.match(/function init\(\)\{\n  var rchk = [^\n]*\n  var remote = rchk && rchk\.ok \? rchk\.state : null;/);
+  const m = PAGE.match(/function init\(\)\{\n  var rchk = window\.__DB__ \? checkServerData\(window\.__DB__, 'init'\) : null;[^\n]*\n  var remote = rchk && rchk\.ok \? rchk\.state : null;/);
   assert.ok(m, 'init phải đi qua checkServerData');
 });
