@@ -8471,3 +8471,50 @@ test('Z.1 nguồn: 6 chỗ khóa bằng dữ liệu dùng Object.create(null); c
   assert.equal(PAGE.split('var byId = Object.create(null)').length - 1, 2);
   assert.match(PAGE, /function commit\(msg, force\)\{\n  touch\(\);\n  txIndex = null;/);
 });
+
+/* Z.2 P2-6: bản máy chủ bị sanitize bỏ dòng → không áp, không PUT, giữ nguyên máy; toast một lần. */
+test('Z.2 pullState + autoRefresh: bản máy chủ có tên vị thuốc trùng (drops > 0) KHÔNG được áp, KHÔNG PUT, giữ db/base/dirty', async () => {
+  const bad = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }, { id: 'p2', name: 'cam', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const calls = [];
+  const fetchStub = async (url, opts = {}) => { calls.push(opts.method || 'GET'); return { status: 200, json: async () => ({ success: true, data: bad, updatedAt: 999 }) }; };
+  const { doc } = toastDoc(false);
+  const writes = [];
+  const mEl = doc.querySelector('#toastMsg');
+  Object.defineProperty(mEl, 'textContent', { get() { return writes[writes.length - 1] || ''; }, set(v) { writes.push(v); } });
+  const client = loadClient({ document: doc, fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
+  const local = { products: [{ id: 'p9', name: 'Local', stock: 3, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100 };
+  client.setDb(local); client.setBase(100); client.setDirty(false);
+  assert.equal(await client.pullState(true), false);
+  assert.equal(client.getDb().products[0].name, 'Local');
+  assert.equal(client.getBase(), 100);
+  assert.equal(client.isDirty(), false);
+  assert.equal(await client.autoRefresh(), false);
+  assert.equal(client.getDb().products[0].name, 'Local');
+  assert.equal(client.getBase(), 100);
+  assert.deepEqual([...calls], ['GET', 'GET'], 'không PUT');
+  const w = writes.filter(x => /không hợp lệ nên chưa tải về/.test(x));
+  assert.equal(w.length, 1, 'toast cảnh báo đúng một lần');
+  assert.ok(!writes.includes('Không tải được dữ liệu'), 'không toast lỗi tải chung chung');
+});
+
+test('Z.2 pullState: bản máy chủ sạch (không drops) vẫn áp dụng bình thường', async () => {
+  const ok = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const client = loadClient({ fetch: async () => ({ status: 200, json: async () => ({ success: true, data: ok }) }) });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100 }); client.setBase(100);
+  assert.equal(await client.pullState(true), true);
+  assert.equal(client.getDb().products[0].name, 'Cam');
+  assert.equal(client.getBase(), 500);
+});
+
+/* Z.2 P2-4: Docker/compose phải đặt HOST=0.0.0.0 (server mặc định chỉ nghe 127.0.0.1). Kiểm trên host vì image CI không chứa hai file này. */
+test('Z.2 Dockerfile + docker-compose.yml đặt HOST=0.0.0.0', async () => {
+  const fs = await import('node:fs');
+  assert.match(fs.readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8'), /^ENV HOST=0\.0\.0\.0\s*$/m);
+  assert.match(fs.readFileSync(new URL('../docker-compose.yml', import.meta.url), 'utf8'), /^\s*- HOST=0\.0\.0\.0\s*$/m);
+});
+
+/* Z.2 P2-6 (init): dữ liệu nhúng sẵn có drops thì init không áp, dùng bản máy. */
+test('Z.2 init: window.__DB__ có tên vị thuốc trùng → không áp, giữ bản local', () => {
+  const m = PAGE.match(/function init\(\)\{\n  var rchk = [^\n]*\n  var remote = rchk && rchk\.ok \? rchk\.state : null;/);
+  assert.ok(m, 'init phải đi qua checkServerData');
+});

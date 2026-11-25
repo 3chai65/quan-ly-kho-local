@@ -16,7 +16,7 @@ Mẫu dòng: `Triển khai v<mới> = <hash>; khoảng v<hub>..v<mới> = <n> co
   3. `git fetch origin --tags`; kiểm thông điệp thẻ, `git rev-list --count <thẻ cũ>..<thẻ mới>` và `git log --oneline <thẻ cũ>..<thẻ mới>` phải khớp danh sách commit đã duyệt, khác thì dừng lại hỏi; rồi `git checkout --detach vX.Y.Z`;
   4. `PATH=/opt/homebrew/opt/node@22/bin:$PATH npm ci --omit=dev`;
   5. `sudo launchctl kickstart -k system/vn.kho.server` (gặp `Input/output error` thì chờ vài giây rồi thử lại);
-  6. kiểm: `healthz` ok ở `127.0.0.1:8787` và `https://192.168.2.46`; `package.json` đúng version; `pragma integrity_check` ok; số sản phẩm không đổi; `/` chưa đăng nhập trả 401; `~/kho/logs/server.err.log` không có lỗi mới.
+  6. kiểm: `healthz` ok ở `127.0.0.1:8787` và `https://192.168.2.46`; từ máy Windows `curl http://192.168.2.46:8787/healthz` PHẢI thất bại (server chỉ nghe 127.0.0.1 từ 2.38.36; LaunchDaemon và `~/kho/Caddyfile.mac` không được đặt `HOST` khác, Caddy proxy tới `127.0.0.1:8787`/`localhost:8787`) còn `https://192.168.2.46/healthz` phải ok; `package.json` đúng version; `pragma integrity_check` ok; số sản phẩm không đổi; `/` chưa đăng nhập trả 401; `~/kho/logs/server.err.log` không có lỗi mới.
 - Sau đó Giám sát (Haiku) kiểm lại. Báo cáo của Người làm ≤8 dòng, kèm hash trước/sau và "đã tự kiểm 3 câu". Cập nhật mục "Hiện tại" trong `docs/handover.md`.
 
 ## Đường lui

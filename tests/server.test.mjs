@@ -1052,3 +1052,22 @@ test('unread: khóa dài hơn 64 ký tự không được đánh dấu và PUT v
   assert.equal((await put(uState([uTx(long, 'BAN'), uTx(ok, 'BAN')]), { 'X-Base-Updated': await baseOf() })).status, 200);
   assert.deepEqual((await getUnread()).BAN, [ok]);
 });
+
+/* Z.2 P2-5: updatedAt tăng CHẶT dù nhiều lần ghi liên tiếp (cùng mili-giây). */
+test('server.js: Z.2 PUT liên tiếp liền nhau cho updatedAt tăng chặt (không bao giờ trùng lần trước)', async () => {
+  let prev = (await put(emptyState(), { 'X-Force': '1' })).body.updatedAt;
+  assert.ok(Number.isFinite(prev));
+  for (let i = 0; i < 15; i++) {
+    const r = await put(emptyState(), { 'X-Base-Updated': String(prev) });
+    assert.equal(r.status, 200);
+    assert.ok(r.body.updatedAt > prev, 'lần ' + i + ': ' + r.body.updatedAt + ' phải > ' + prev);
+    prev = r.body.updatedAt;
+  }
+});
+
+/* Z.2 P2-4: server chỉ nghe 127.0.0.1 mặc định; Docker đặt HOST=0.0.0.0. */
+test('server.js: Z.2 nghe HOST (mặc định 127.0.0.1, không cứng 0.0.0.0)', () => {
+  const src = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+  assert.ok(src.includes("process.env.HOST || '127.0.0.1'"));
+  assert.ok(!/app\.listen\(PORT, '0\.0\.0\.0'/.test(src), 'không cứng 0.0.0.0');
+});

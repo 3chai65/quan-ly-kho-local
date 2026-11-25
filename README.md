@@ -46,7 +46,7 @@ Mac mini 192.168.2.46 (máy chủ)                 iPhone / PC / app Tauri (cùn
 └───────────────────────────────┘
 ```
 
-- **Server**: Node 22 + Express + better-sqlite3 (`server.js`), nghe `0.0.0.0:8787`, chạy
+- **Server**: Node 22 + Express + better-sqlite3 (`server.js`), nghe `127.0.0.1:8787` (biến `HOST`; Docker đặt `0.0.0.0`), chạy
   bằng LaunchDaemon `vn.kho.server` (tự chạy lại, ghi log `~/kho/logs/`).
 - **Caddy (HTTPS)**: reverse proxy cổng 443, chứng chỉ `tls internal`; cấu hình chạy thật
   là `~/kho/Caddyfile.mac` (ngoài repo). `Caddyfile` trong repo là bản Docker cũ, không dùng.

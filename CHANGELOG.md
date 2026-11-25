@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.36] - 2026-11-25
+
+### Sửa lỗi (đồng bộ / máy chủ)
+- `pullState`/`autoRefresh`: bản máy chủ mà `sanitize` phải bỏ dòng (drops > 0) KHÔNG được áp dụng, không tự push; giữ dữ liệu máy, toast cảnh báo một lần + console.warn (trước đây áp bản đã mất dòng, lần ghi sau xóa dòng đó trên máy chủ).
+- Server: `updatedAt` luôn tăng chặt (`max(Date.now(), trước + 1)` trong transaction ghi), hai PUT cùng mili-giây không còn cùng `updatedAt`.
+- Server mặc định chỉ nghe `127.0.0.1` (biến `HOST`); Docker/compose đặt `HOST=0.0.0.0`. `docs/deploy.md`: bước kiểm sau triển khai (cổng 8787 từ máy khác phải thất bại, qua Caddy phải ok).
+
 ## [2.38.35] - 2026-11-25
 
 ### Sửa lỗi

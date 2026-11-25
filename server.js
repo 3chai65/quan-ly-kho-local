@@ -435,8 +435,10 @@ function getLastOp() {
   return id && at ? { id: id.value, updatedAt: Number(at.value) } : null;
 }
 function writeState(state, opId, force) {
-  const now = Date.now();
+  let now = 0;
   db.transaction(() => {
+    /* Z.2 (P2-5): updatedAt luôn TĂNG CHẶT dù hai lần ghi cùng mili-giây hoặc đồng hồ máy lùi: nếu không, X-Base-Updated của máy A bằng updatedAt mới của máy B và `current > baseNum` bỏ lọt xung đột. */
+    now = Math.max(Date.now(), getSourceUpdatedAt() + 1);
     writeStateRows(state, now, !!force);
     const up = db.prepare('INSERT INTO app_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
     if (opId) { up.run('last_op_id', opId); up.run('last_op_updated_at', String(now)); }
@@ -796,10 +798,12 @@ function migrateMoneyToDong() {
 
 migrateMoneyToDong();
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+/* Z.2 (P2-4): mặc định chỉ nghe 127.0.0.1 (Caddy trên cùng máy làm TLS); trong container Docker đặt HOST=0.0.0.0. */
+const HOST = process.env.HOST || '127.0.0.1';
+const server = app.listen(PORT, HOST, () => {
   console.log('Quản Lý Kho (local) đang chạy:');
   console.log('  PC    : https://localhost (dự phòng http://localhost:' + PORT + ')');
-  console.log('  Khác  : https://<IP-máy-tính> (ứng dụng nghe 0.0.0.0:' + PORT + '; mã thiết lập nằm trong log máy chủ, vd logs/server.out.log)');
+  console.log('  Khác  : https://<IP-máy-tính> (ứng dụng nghe ' + HOST + ':' + PORT + '; mã thiết lập nằm trong log máy chủ, vd logs/server.out.log)');
   console.log('  DB    : ' + DB_FILE);
   console.log('  Backup: ' + BACKUP_DIR + ' (giữ ' + BACKUP_KEEP_DAYS + ' bản)');
   auth.announce(PORT);

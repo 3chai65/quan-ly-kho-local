@@ -5314,6 +5314,19 @@ function pushState(manual, force){
     return ok;
   });
 }
+/* Z.2 (P2-6): bản máy chủ mà sanitize phải BỎ dòng (drops > 0) thì KHÔNG áp dụng, KHÔNG push: nếu áp rồi thì lần ghi sau sẽ xóa các dòng đó trên máy chủ. Giữ nguyên dữ liệu trên máy, toast cảnh báo (một lần mỗi số dòng) + console.warn. Trả { ok, state, bad }. */
+var serverDropWarned = -1;
+function checkServerData(raw, where){
+  var drops = [];
+  var st = sanitize(raw, drops);
+  if (!drops.length) return { ok: true, state: st, bad: false };
+  if (window.console && console.warn) console.warn('[sync] ' + where + ': bản máy chủ bị bỏ ' + drops.length + ' dòng, không áp dụng', drops.slice(0, 8));
+  if (serverDropWarned !== drops.length) {
+    serverDropWarned = drops.length;
+    toast('Dữ liệu trên máy chủ có ' + drops.length + ' dòng không hợp lệ nên chưa tải về; dữ liệu trên máy được giữ nguyên. Hãy xuất sao lưu rồi báo người quản trị.', 'error');
+  }
+  return { ok: false, state: null, bad: true };
+}
 function pullState(manual){
   var wasDirty = dirty; /* 2.37.1: dirty bật SAU khi gửi GET = người dùng vừa ghi, không được đè */
   return apiFetch('/api/state?t=' + Date.now())
@@ -5322,9 +5335,10 @@ function pullState(manual){
       return r ? r.json() : null;
     })
     .then(function(d){
-      var server = d && d.success ? sanitize(d.data) : null;
+      var chk = d && d.success ? checkServerData(d.data, 'pullState') : null;
+      var server = chk && chk.ok ? chk.state : null;
       if (!server) {
-        if (manual && !authLost) toast('Không tải được dữ liệu', 'error');
+        if (manual && !authLost && !(chk && chk.bad)) toast('Không tải được dữ liệu', 'error');
         return false;
       }
       authLost = false;
@@ -5370,7 +5384,8 @@ function autoRefresh(){
       /* Trong lúc chờ máy chủ, người dùng có thể bắt đầu sửa hoặc mở giỏ hàng.
          Không ghi đè bản đang làm. */
       if (dirty || conflictOpen || busyEditing()) return false;
-      var server = d && d.success ? sanitize(d.data) : null;
+      var chk = d && d.success ? checkServerData(d.data, 'autoRefresh') : null;
+      var server = chk && chk.ok ? chk.state : null;
       if (!server) return false;
       lastSyncOk = Date.now();
       renderSyncLine();
@@ -6265,7 +6280,8 @@ function initTabs(){
 }
 
 function init(){
-  var remote = window.__DB__ ? sanitize(window.__DB__) : null;
+  var rchk = window.__DB__ ? checkServerData(window.__DB__, 'init') : null; /* Z.2: dữ liệu nhúng sẵn cũng không được áp nếu sanitize phải bỏ dòng */
+  var remote = rchk && rchk.ok ? rchk.state : null;
   var local = readLocal();
   var wasDirty = readDirty();
   var savedBase = readBase();

@@ -10,6 +10,8 @@ services:
       - ./data:/data
     environment:
       - PORT=8787
+      # Trong container phải nghe 0.0.0.0 để Caddy (container khác) và cổng 127.0.0.1:8787 của máy tới được; mặc định server chỉ nghe 127.0.0.1.
+      - HOST=0.0.0.0
       - DATA_DIR=/data
       # Giờ VN để tên file backup (backup-YYYY-MM-DD.db) đúng ngày địa phương.
       - TZ=Asia/Ho_Chi_Minh
