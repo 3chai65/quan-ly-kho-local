@@ -9,6 +9,7 @@ Trước khi ghi dòng, đọc kênh lấy dòng triển khai gần nhất Mac �
 Mẫu dòng: `Triển khai v<mới> = <hash>; khoảng v<hub>..v<mới> = <n> commit: <hash…>; ĐIỀU KIỆN: thẻ v<mới> đã có trên origin (người dùng chỉ gắn sau CI xanh); chờ "bật".` Không ghi "chờ CI" kiểu khiến Mac phải hỏi lại.
 
 ## Các bước
+- Windows: dùng Node 22 (nvm use 22); nếu better-sqlite3 lỗi thì xóa node_modules + npm ci (không dùng npm rebuild). Trước mỗi commit chạy đủ `npm run lint`, `npm run test:client`, `npm test`, `npm run test:auth`.
 - Windows (người dùng tự chạy): `git tag vX.Y.Z <hash>`, `git push origin-local local-sqlite:main`, `git push origin-local vX.Y.Z`.
 - Mac (Người làm chạy, người dùng nhập `sudo`), trong `~/kho/quan-ly-kho-local`:
   1. `git rev-parse --short HEAD > ~/kho/truoc-khi-bat.txt` (đường lui);

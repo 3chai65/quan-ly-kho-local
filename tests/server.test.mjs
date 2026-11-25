@@ -1071,3 +1071,31 @@ test('server.js: Z.2 nghe HOST (mặc định 127.0.0.1, không cứng 0.0.0.0)'
   assert.ok(src.includes("process.env.HOST || '127.0.0.1'"));
   assert.ok(!/app\.listen\(PORT, '0\.0\.0\.0'/.test(src), 'không cứng 0.0.0.0');
 });
+
+/* Z.2 R2: tất định — đồng hồ máy "lùi" so với source_updated_at đã lưu (đặt trước vào tương lai): updatedAt phải = trước + 1, không phải Date.now(). */
+test('server.js: Z.2 R2 updatedAt = max(now, trước+1): source_updated_at ở tương lai thì lần ghi sau đúng trước+1', async () => {
+  const { default: Database } = await import('better-sqlite3');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-clock-'));
+  const port = await freePort();
+  const start = async () => {
+    const c = spawn(process.execPath, ['server.js'], { cwd: root, env: { ...process.env, PORT: String(port), DATA_DIR: dir, QLK_SETUP_CODE: SETUP_CODE }, stdio: 'ignore' });
+    const b = `http://127.0.0.1:${port}`;
+    for (let i = 0; i < 100; i++) { try { if ((await fetch(b + '/healthz')).ok) break; } catch (e) {} await new Promise(r => setTimeout(r, 150)); }
+    return { c, b };
+  };
+  let s1 = await start();
+  const future = Date.now() + 3600 * 1000;
+  try {
+    s1.c.kill(); await waitExit(s1.c);
+    const dbf = new Database(path.join(dir, 'app.db'));
+    dbf.prepare("INSERT INTO app_meta (key, value) VALUES ('source_updated_at', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(String(future));
+    dbf.close();
+    s1 = await start();
+    const setup = await fetch(`${s1.b}/auth/setup`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code: SETUP_CODE, name: 'May dong ho' }).toString() });
+    const cookie = String(setup.headers.getSetCookie()[0]).split(';')[0];
+    const r = await fetch(`${s1.b}/api/state`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Base-Updated': String(future), Cookie: cookie }, body: JSON.stringify({ moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 0 }) });
+    const body = await r.json();
+    assert.equal(r.status, 200, JSON.stringify(body));
+    assert.equal(body.updatedAt, future + 1);
+  } finally { s1.c.kill(); await waitExit(s1.c); rmDir(dir); }
+});

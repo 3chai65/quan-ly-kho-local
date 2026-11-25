@@ -5236,6 +5236,10 @@ function warnBigState(body){
 }
 function pushState(manual, force){
   if (pushing || conflictOpen) return Promise.resolve(false);
+  if (serverRejected && !force) {
+    noteSyncFailure('Bản trên máy chủ có dòng không hợp lệ nên chưa gửi thay đổi lên (tránh xóa dữ liệu trên máy chủ). Thay đổi vẫn giữ trên máy; hãy xuất sao lưu, báo người quản trị và tải lại trang sau khi đã sửa.', false, false);
+    return Promise.resolve(false);
+  }
   pushing = true;
   touch();
   renderSyncBadge();
@@ -5315,10 +5319,12 @@ function pushState(manual, force){
   });
 }
 /* Z.2 (P2-6): bản máy chủ mà sanitize phải BỎ dòng (drops > 0) thì KHÔNG áp dụng, KHÔNG push: nếu áp rồi thì lần ghi sau sẽ xóa các dòng đó trên máy chủ. Giữ nguyên dữ liệu trên máy, toast cảnh báo (một lần mỗi số dòng) + console.warn. Trả { ok, state, bad }. */
-var serverDropWarned = -1;
+var serverDropWarned = -1, serverRejected = false;
+/* R1: khi bản máy chủ bị từ chối (serverRejected) thì pushState (không X-Force) KHÔNG gửi: gửi sẽ 409 lặp hoặc, nếu đè, xóa các dòng đó trên máy chủ. Thay đổi giữ trên máy; tải lại trang (init) kiểm lại. */
 function checkServerData(raw, where){
   var drops = [];
   var st = sanitize(raw, drops);
+  serverRejected = drops.length > 0;
   if (!drops.length) return { ok: true, state: st, bad: false };
   if (window.console && console.warn) console.warn('[sync] ' + where + ': bản máy chủ bị bỏ ' + drops.length + ' dòng, không áp dụng', drops.slice(0, 8));
   if (serverDropWarned !== drops.length) {

@@ -8518,3 +8518,31 @@ test('Z.2 init: window.__DB__ có tên vị thuốc trùng → không áp, giữ
   const m = PAGE.match(/function init\(\)\{\n  var rchk = window\.__DB__ \? checkServerData\(window\.__DB__, 'init'\) : null;[^\n]*\n  var remote = rchk && rchk\.ok \? rchk\.state : null;/);
   assert.ok(m, 'init phải đi qua checkServerData');
 });
+
+/* Z.2 R1: bản máy chủ bị từ chối (drops) → pushState không gửi PUT (trừ X-Force); bản máy chủ sạch lần sau thì gửi lại được. */
+test('Z.2 R1 pushState: sau khi bản máy chủ bị từ chối thì không PUT (trừ force); tải được bản sạch thì PUT lại bình thường', async () => {
+  let serverData = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }, { id: 'p2', name: 'cam', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const calls = [];
+  const fetchStub = async (url, opts = {}) => {
+    const method = opts.method || 'GET';
+    calls.push(method + (opts.headers && opts.headers['X-Force'] ? ':force' : ''));
+    if (method === 'PUT') return { status: 200, json: async () => ({ success: true, updatedAt: 700 }) };
+    return { status: 200, json: async () => ({ success: true, data: serverData }) };
+  };
+  const client = loadClient({ fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
+  client.setDb({ products: [{ id: 'p9', name: 'Local', stock: 3, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100 });
+  client.setBase(100); client.setDirty(true);
+  assert.equal(await client.pullState(false), false);
+  assert.equal(await client.pushState(false, false), false);
+  assert.deepEqual([...calls], ['GET'], 'bị từ chối: không PUT');
+  assert.equal(client.isSyncErrorShown(), true);
+  assert.match(client.getSyncDetail(), /không hợp lệ/);
+  assert.equal(client.getDb().products[0].name, 'Local');
+  assert.equal(await client.pushState(true, true), true);
+  assert.ok(calls.includes('PUT:force') && !calls.includes('PUT'), 'X-Force vẫn là quyết định chủ động của người dùng');
+  serverData = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 800 };
+  assert.equal(await client.pullState(false), true);
+  client.setDirty(true); client.setBase(800);
+  assert.equal(await client.pushState(false, false), true);
+  assert.ok(calls.includes('PUT'), 'bản sạch: PUT thường đi lại được');
+});

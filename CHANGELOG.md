@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.38.37] - 2026-11-25
+
+### Sửa lỗi (đồng bộ)
+- Khi bản máy chủ bị từ chối (`sanitize` bỏ dòng), `pushState` không gửi PUT (trừ X-Force: Hủy ở hộp xung đột, khôi phục): hết vòng 409 lặp; thay đổi giữ trên máy, tải lại trang để kiểm lại.
+### Test / tài liệu
+- Test server tất định cho `updatedAt = max(now, trước+1)` (đồng hồ lùi); test client R1. Bỏ script `fix:native`; `docs/deploy.md`, README-LOCAL, CLAUDE.md: Windows dùng Node 22 (nvm), lỗi better-sqlite3 thì xóa node_modules + npm ci; trước mỗi commit chạy đủ lint, test:client, npm test, test:auth.
+
 ## [2.38.36] - 2026-11-25
 
 ### Sửa lỗi (đồng bộ / máy chủ)
