@@ -28,6 +28,16 @@ Lỗi better-sqlite3: xóa `node_modules` rồi `npm ci` (không dùng `npm rebu
 - Server kiểm ngày.
 - Cache giao diện để mở khi mất mạng.
 - Hộp xác nhận kiểu trình duyệt.
+- Host so sánh phân biệt hoa/thường.
+- Request không Origin (đã có `SameSite=Lax` + `Sec-Fetch-Site`).
+- `sanitize` cắt tên dài vs server từ chối.
+- `ts=0`.
+- `MAX_INLINE` đếm ký tự.
+- Ký tự bidi trong tên thiết bị.
+- Log kích thước PUT.
+
+## 5b. Chờ gộp bản sau
+- Lỗi 500 trả `err.message` thô (`server.js` ~735): trả câu chung cho 5xx, giữ message cho 4xx. Chưa cần báo lại.
 
 ## 6. Mẫu báo cáo
 - Mỗi mục xếp P1 / P2 / P3, kèm `file:dòng` và cách tái hiện.
