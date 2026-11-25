@@ -408,7 +408,7 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 @media (max-width:360px){#remedyNote #remedyThang{width:60px}#remedyNote #remedyUnitPrice{width:100px}}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 122px;margin-left:auto}
-.card__bar-date .inp{padding-left:8px}
+.card__bar-date .inp{padding-left:8px;padding-right:8px}
 .card__bar-month .inp{padding-left:8px}
 }
 @media (max-width:400px){
@@ -416,7 +416,7 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 /* 2.15.2: ô ngày Thuốc chén – dd/mm/yyyy cỡ 16px rộng ~81px; vùng chữ = 118 - viền 2 - đệm 6 - 24 = 86px. Thanh gọn lại (đệm 10, khe 4) để tiêu đề + ô chọn đơn (>=90) + ô ngày vẫn một hàng ở 375px. */
 #remedyBox .card__bar{padding-left:10px;padding-right:10px;gap:4px}
 #remedyBox .card__bar-date{flex:0 0 118px}
-#remedyBox .card__bar-date .inp{padding-left:6px}
+#remedyBox .card__bar-date .inp{padding-left:6px;padding-right:6px}
 /* 2.15.1: chú giải tháng cùng một hàng ở 375px kể cả số lớn. */
 .chart-tip,.chart-tip__m{font-size:12px}
 .chart-chip{font-size:12px;gap:4px}

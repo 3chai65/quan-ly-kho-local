@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.4] - 2026-11-25
+
+### Sửa
+- Điện thoại: ô ngày Bán lẻ / Thuốc chén không còn cắt số cuối ("25/11/202…"): đệm phải 8px (Thuốc chén 6px) thay vì 34px thừa kế từ desktop. Desktop không đổi.
+
 ## [2.39.3] - 2026-11-25
 
 ### Đổi (dọn cuối)

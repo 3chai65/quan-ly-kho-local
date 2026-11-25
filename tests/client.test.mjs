@@ -4750,7 +4750,7 @@ test('2.15.2 nguồn: chỉ renderStats và chú giải biểu đồ dùng hàm 
 test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm trái 6px (đủ dd/mm/yyyy cỡ 16px), thanh gọn đệm 10 khe 4', () => {
   assert.match(PAGE, /#remedyBox \.card__bar\{padding-left:10px;padding-right:10px;gap:4px\}/);
   assert.match(PAGE, /#remedyBox \.card__bar-date\{flex:0 0 118px\}/);
-  assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px;padding-right:6px\}/);
 });
 
 
