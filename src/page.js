@@ -408,7 +408,7 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 @media (max-width:360px){#remedyNote #remedyThang{width:60px}#remedyNote #remedyUnitPrice{width:100px}}
 @media (max-width:600px){
 .card__bar-date{order:2;flex:0 0 122px;margin-left:auto}
-.card__bar-date .inp{padding-left:8px;padding-right:26px}
+.card__bar-date .inp{padding-left:8px}
 .card__bar-month .inp{padding-left:8px}
 }
 @media (max-width:400px){
@@ -416,7 +416,7 @@ html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thea
 /* 2.15.2: ô ngày Thuốc chén – dd/mm/yyyy cỡ 16px rộng ~81px; vùng chữ = 118 - viền 2 - đệm 6 - 24 = 86px. Thanh gọn lại (đệm 10, khe 4) để tiêu đề + ô chọn đơn (>=90) + ô ngày vẫn một hàng ở 375px. */
 #remedyBox .card__bar{padding-left:10px;padding-right:10px;gap:4px}
 #remedyBox .card__bar-date{flex:0 0 118px}
-#remedyBox .card__bar-date .inp{padding-left:6px;padding-right:24px}
+#remedyBox .card__bar-date .inp{padding-left:6px}
 /* 2.15.1: chú giải tháng cùng một hàng ở 375px kể cả số lớn. */
 .chart-tip,.chart-tip__m{font-size:12px}
 .chart-chip{font-size:12px;gap:4px}
@@ -1836,7 +1836,6 @@ function setDateInput(id, iso){
   var n = $('#' + id);
   if (!n) return;
   n.value = dateInputVN(iso);
-  n.setAttribute('data-iso', iso || '');
 }
 /* I.3: chạm vào ô tháng (ô chữ chỉ đọc, ô lịch gốc trong suốt phủ cả ô) mở khung lịch; không có showPicker thì chạm gốc của trình duyệt tự mở. */
 function openPicker(nat){ try { if (nat.showPicker) nat.showPicker(); } catch (e) {} }
@@ -2016,27 +2015,11 @@ var SYNC_RETRY_MAX = 60000;
 var toastTimer = null;
 var lastStatsDay = '';
 
-function willScaleMoney(d){
-  return !!(d && d.moneyUnit !== 'dong');
-}
-function scaleLegacyMoney(d){
-  if (!willScaleMoney(d)) return d;
-  function up(n){ return Math.round(num(n) * DONG_PER_K); }
-  if (Array.isArray(d.products)) d.products.forEach(function(p){
-    if (p) p.costPrice = up(p.costPrice);
-  });
-  if (Array.isArray(d.transactions)) d.transactions.forEach(function(t){
-    if (!t) return;
-    t.price = up(t.price);
-    t.total = up(t.total);
-    if (t.cost != null && t.cost !== '') t.cost = up(t.cost);
-    if (t.unitPrice != null && t.unitPrice !== '') t.unitPrice = up(t.unitPrice);
-  });
-  if (Array.isArray(d.prescriptions)) d.prescriptions.forEach(function(r){
-    if (r) r.total = up(r.total);
-  });
-  d.moneyUnit = 'dong';
-  return d;
+/* AD: bỏ hàm đổi đơn vị nghìn → đồng. Dữ liệu kiểu cũ (không có moneyUnit === 'dong') bị TỪ CHỐI ở mọi cửa vào (init/pull/localStorage/IndexedDB/khôi phục file): không áp, không PUT. */
+var LEGACY_MONEY_MSG = 'Dữ liệu kiểu cũ (tiền theo nghìn), không dùng được với bản này.';
+var legacyRejected = false;
+function isLegacyMoney(d){
+  return !!(d && typeof d === 'object' && d.moneyUnit !== 'dong');
 }
 function sanitize(d, drops){
   var o = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
@@ -2178,10 +2161,8 @@ function parseLocalRaw(raw){
   try {
     if (!raw) return null;
     var parsed = JSON.parse(raw);
-    var legacy = !parsed || willScaleMoney(parsed);
-    var out = sanitize(scaleLegacyMoney(parsed));
-    if (legacy) out._scaledFromK = true;
-    return out;
+    if (isLegacyMoney(parsed)) { legacyRejected = true; return null; }
+    return sanitize(parsed);
   } catch (e) { return null; }
 }
 function readDirty(){
@@ -4924,7 +4905,7 @@ function delProduct(id){
   var sid = String(id);
   var used = num(p.stock) > 0 || db.transactions.some(function(t){ return String(t.productId) === sid; }) ||
     (db.prescriptions || []).some(function(r){ return (r.items || []).some(function(it){ return String(it.productId) === sid; }); });
-  if (used) { toast('Vị này còn tồn hoặc đã có giao dịch, không xóa được.', 'error'); return; }
+  if (used) { toast('Vị này còn tồn, đã có giao dịch hoặc nằm trong đơn thuốc, không xóa được.', 'error'); return; }
   if (!confirm('Xóa "' + p.name + '" khỏi kho?')) return;
   db.products = db.products.filter(function(x){ return String(x.id) !== String(id); });
   commit('Đã xóa vị thuốc');
@@ -5381,6 +5362,12 @@ function pushState(manual, force){
 var serverDropWarned = -1, serverRejected = false;
 /* R1: khi bản máy chủ bị từ chối (serverRejected) thì pushState (không X-Force) KHÔNG gửi: gửi sẽ 409 lặp hoặc, nếu đè, xóa các dòng đó trên máy chủ. Thay đổi giữ trên máy; tải lại trang (init) kiểm lại. */
 function checkServerData(raw, where){
+  if (isLegacyMoney(raw)) {
+    serverRejected = true;
+    if (window.console && console.warn) console.warn('[sync] ' + where + ': ' + LEGACY_MONEY_MSG);
+    toast(LEGACY_MONEY_MSG, 'error');
+    return { ok: false, state: null, bad: true };
+  }
   var drops = [];
   var st = sanitize(raw, drops);
   serverRejected = drops.length > 0;
@@ -5607,15 +5594,6 @@ function maybeAutoBackup(){
   toast('Đã gửi lệnh tải bản sao lưu hôm nay, hãy kiểm tra thư mục Tải xuống');
   return true;
 }
-function moneyRestoreNote(scale, sample, afterCost){
-  var line = scale
-    ? 'File này tính theo nghìn đồng, sẽ nhân 1000 khi nạp.'
-    : 'File này tính theo đồng, giữ nguyên.';
-  if (sample) {
-    line += '\nGiá nhập “' + sample.name + '”: ' + fmtNum(sample.cost) + ' → ' + fmtNum(afterCost) + '.';
-  }
-  return line;
-}
 var backupParseError = '';
 /* Cùng luật với validateState(server). Trả chuỗi lỗi đầu tiên hoặc ''. */
 function validateBackupState(d){
@@ -5680,28 +5658,12 @@ function parseBackup(text){
   }
   if (obj.app && obj.app !== 'quan-ly-kho') { backupParseError = 'File không phải bản sao lưu của Quản Lý Kho'; return null; }
   if (obj && obj.moneyUnit === 'dong') d.moneyUnit = 'dong'; /* cho file viết tay: downloadBackup không ghi moneyUnit ở lớp ngoài */
-  var scale = willScaleMoney(d);
-  var sample = null;
-  for (var s = 0; s < d.products.length; s++) {
-    var sp = d.products[s];
-    if (sp && sp.name) { sample = { name: String(sp.name), cost: num(sp.costPrice) }; break; }
-  }
-  var scaled = scaleLegacyMoney(d);
-  var err = validateBackupState(scaled);
+  if (isLegacyMoney(d)) { backupParseError = LEGACY_MONEY_MSG; return null; }
+  var err = validateBackupState(d);
   if (err) { backupParseError = err; return null; }
   var drops = [];
-  var out = sanitize(scaled, drops);
+  var out = sanitize(d, drops);
   if (drops.length) out._drops = drops;
-  var afterCost = null;
-  if (sample) {
-    for (var k = 0; k < out.products.length; k++) {
-      if (out.products[k] && out.products[k].name === sample.name) {
-        afterCost = out.products[k].costPrice;
-        break;
-      }
-    }
-  }
-  out._moneyNote = moneyRestoreNote(scale, afterCost == null ? null : sample, afterCost);
   return out;
 }
 /* Số BYTE UTF-8 (cùng đơn vị với MAX_BODY của server; .length đếm đơn vị UTF-16 nên đếm thiếu tiếng Việt có dấu). Không dùng Blob vì Blob là đường tải file. */
@@ -5719,14 +5681,11 @@ function restoreFromFile(file){
     if (!bak) { toast(backupParseError || 'File sao lưu không hợp lệ hoặc thiếu bảng dữ liệu', 'error'); return; }
     if (utf8Bytes(JSON.stringify(bak)) > MAX_STATE_BYTES) { toast('File sao lưu quá lớn', 'error'); return; }
     var drops = bak._drops || [];
-    var moneyNote = bak._moneyNote || '';
     delete bak._drops;
-    delete bak._moneyNote;
     var msg = 'Khôi phục ' + bak.products.length + ' vị thuốc, ' +
       bak.transactions.length + ' giao dịch, ' +
       bak.prescriptions.length + ' đơn thuốc?\n\n' +
       'Dữ liệu hiện tại (kể cả trên máy chủ) sẽ bị thay thế hoàn toàn.';
-    if (moneyNote) msg += '\n\n' + moneyNote;
     if (drops.length) {
       msg += '\n\nĐã bỏ ' + drops.length + ' dòng trùng:\n' + drops.slice(0, 8).join('\n');
       if (drops.length > 8) msg += '\n…';
@@ -6351,12 +6310,7 @@ function init(boot){
   var wasDirty = boot.wasDirty;
   var savedBase = boot.savedBase;
 
-  var scaledFromK = !!(local && local._scaledFromK);
-  if (local) delete local._scaledFromK;
-  /* Bản local cũ còn đơn vị nghìn. Server đã migrate sang đồng thì bỏ
-     bản đó, kẻo đẩy số đã làm tròn đè lên số lẻ gốc vừa nhân 1000. */
-  var dropLegacy = !!(local && wasDirty && scaledFromK && remote && remote.moneyUnit === 'dong');
-  if (local && wasDirty && !dropLegacy) {
+  if (local && wasDirty) {
     /* Có thay đổi chưa gửi: giữ bản local và đẩy lên máy chủ. */
     db = local;
     cloudBase = savedBase;
@@ -6392,7 +6346,7 @@ function init(boot){
   phoneEntry();
   renderSyncBadge();
   renderReloadBtn();
-  if (dropLegacy) toast('Đã bỏ thay đổi chưa gửi (nâng cấp dữ liệu)');
+  if (legacyRejected) { legacyRejected = false; toast(LEGACY_MONEY_MSG, 'error'); }
 
   if (dirty) {
     /* Đẩy bản local chưa gửi lên trước; server trả 409 nếu máy khác đã sửa. */

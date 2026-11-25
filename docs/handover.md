@@ -5,7 +5,7 @@
 - 2.38.2–2.38.25: điện thoại (bàn phím iOS/`--vv-top`, ô tên vào dòng nhập, viền mỏng) và desktop/Tauri tối giản (nền trong suốt, chỉ viền `--border`); bỏ kính; bảng Kho tồn/Lịch sử dòng cố định 50px.
 - Mac là chuẩn giao diện/nhập liệu; app Mac SwiftUI (repo 3chai65/quan-ly-kho-mac) làm theo bản web desktop làm chuẩn; Mac chỉ dùng Safari; kính đã bỏ (2.38.22). App Mac, Tauri và PWA phải giống nhau tối đa.
 - Test (2.37.2): client 477 ca, server 45, auth 45.
-- `migrateMoneyToDong` (server.js) và `truoc-lam-tron-*.json` có chú thích `XÓA SAU 06/12/2026`: xóa khi bản backup cũ nhất còn đơn vị nghìn đã bị xóa (cần chủ đồng ý).
+- 2.39.3: đã bỏ `migrateMoneyToDong` và đọc `truoc-lam-tron-*.json`. Dữ liệu kiểu cũ (tiền theo nghìn, không có `moneyUnit: "dong"`) bị TỪ CHỐI: server không khởi động khi DB có dữ liệu mà `app_meta.money_unit` khác `dong`; client không áp bản máy chủ/localStorage/file khôi phục kiểu cũ (không PUT).
 
 ## Chưa thử / chưa làm có chủ ý
 - `window.confirm/prompt` (xác nhận, tên đơn) và nút Thoát chưa thử trên Tauri/iPhone thật.

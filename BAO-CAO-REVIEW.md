@@ -82,7 +82,7 @@ Nguồn: báo cáo ngoài 12/11 (2.15.20); báo cáo ngoài 14/11 (HEAD 2.17.1, 
 | R10 | review 2.38.30 (mục 10) | Giới hạn năm 2059 | Mốc năm 2059 | Còn xa, không ảnh hưởng vận hành hiện tại | Gần năm 2050 |
 | R12 | review 2.38.30 (mục 12) | Gộp style inline | Chỉ gộp style trong mã | Churn lớn, không đổi hành vi | Có việc giao diện lớn chạm cùng vùng style |
 | R15,R18,R20–R23 | review 2.38.30 | Các mục còn lại | Đã có biện pháp hoặc thiết kế đúng (xem CHANGELOG) | Không có lỗi | Có tái hiện mới |
-| R3,R24 | review 2.38.30 | Dọn `migrateMoneyToDong` / `truoc-lam-tron-*.json` | Có chú thích `XÓA SAU 06/12/2026` | Xử lý cùng lúc khi xóa `migrateMoneyToDong` | 06/12/2026 và chủ đồng ý |
+| R3,R24 | review 2.38.30 | Dọn `migrateMoneyToDong` / `truoc-lam-tron-*.json` | Có chú thích `XÓA SAU 06/12/2026` | Đã xóa ở 2.39.3 (chủ quyết định làm ngay), thay bằng chốt chặn từ chối dữ liệu kiểu cũ | Xong 2.39.3 |
 
 ---
 

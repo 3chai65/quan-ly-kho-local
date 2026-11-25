@@ -136,13 +136,11 @@ Chỉ chạy test trên Windows/CI, **không** chạy trên Mac hub.
    - `money()` làm tròn tới đồng gần nhất, cả client lẫn `validateState` trên server.
    - Vốn một vị đơn thuốc = làm tròn `kg × giá nhập` tới đồng. Lãi chia đều, dòng cuối
      nhận số dư. Giá một thang và tổng các dòng có thể lệch vài đồng.
-   - JSON hoặc localStorage **không** có `moneyUnit: "dong"` là bản nghìn cũ.
-     Client nhân 1000 một lần (`scaleLegacyMoney`) rồi mới `sanitize`. Bản đã có cờ
-     thì giữ nguyên, không nhân lần hai.
-   - Migrate trên server chạy một lần khi `app_meta.money_unit` chưa phải `dong`.
-     Giao dịch có trong `data/truoc-lam-tron-2026-11-06-1047.json` lấy số lẻ gốc
-     rồi nhân 1000. Giao dịch không có trong file đó chỉ nhân 1000 từ số nghìn
-     nguyên đã lưu. Không nhân bản SQLite đã làm tròn nếu còn file số lẻ.
+   - JSON hoặc localStorage **không** có `moneyUnit: "dong"` là bản nghìn cũ: client TỪ CHỐI
+     (không nhân 1000, không áp, không PUT) với câu "Dữ liệu kiểu cũ (tiền theo nghìn), không
+     dùng được với bản này." (2.39.3).
+   - Server: `app.db` có dữ liệu mà `app_meta.money_unit` khác `dong` thì không khởi động; DB trống
+     được ghi nhãn `dong`.
 3. **Số kg**: dùng `dec()` để khử sai số dấu phẩy động nhị phân; hiển thị 1 kg = 10 lạng = 1000 g.
 4. **Đồng bộ**: `PUT /api/state` ghi snapshot toàn bộ trong 1 transaction SQLite.
    Client gửi `X-Base-Updated: <updatedAt>`; server so với `app_meta.source_updated_at`,

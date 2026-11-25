@@ -735,72 +735,19 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ success: false, error: err.message || 'Lỗi server' });
 });
 
-/* Một lần: nghìn đồng đã làm tròn trong DB → đồng nguyên.
-   Dòng còn trong file truoc-lam-tron lấy số lẻ gốc rồi nhân 1000.
-   Dòng phát sinh sau lần làm tròn chỉ còn số nguyên nghìn, nhân 1000 là đúng đơn vị đã nhập. */
-function dongFromK(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? Math.round(n * 1000) : 0;
-}
-function loadFractionalTransactions() {
-  const file = path.join(DATA_DIR, 'truoc-lam-tron-2026-11-06-1047.json');
-  if (!fs.existsSync(file)) return null;
-  try {
-    let text = fs.readFileSync(file, 'utf8');
-    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-    const obj = JSON.parse(text);
-    const data = obj && obj.data ? obj.data : obj;
-    const map = new Map();
-    for (const t of (data && data.transactions) || []) {
-      if (t && t.id != null) map.set(String(t.id), t);
-    }
-    return map;
-  } catch (err) {
-    /* File một lần có thể hỏng/thiếu; fallback nhân 1000 từ số đã lưu,
-       không để app kẹt vòng khởi động. */
-    console.error('[money] File số lẻ ' + file + ' lỗi, bỏ qua: ' + (err && err.message ? err.message : err));
-    return null;
-  }
-}
-// XÓA SAU 06/12/2026 (cùng file truoc-lam-tron-*.json): chỉ cần khi còn backup cũ đơn vị nghìn.
-function migrateMoneyToDong() {
+/* AD: bỏ hàm đổi đơn vị nghìn → đồng. Chốt chặn thay thế: DB có dữ liệu mà app_meta.money_unit khác 'dong' (bản sao lưu cũ tính theo nghìn) thì KHÔNG khởi động, để tiền không bị hiểu nhỏ đi 1000 lần. DB trống thì ghi nhãn 'dong'. */
+function assertMoneyUnit() {
   const row = db.prepare("SELECT value FROM app_meta WHERE key = 'money_unit'").get();
   if (row && row.value === 'dong') return;
-  const frac = loadFractionalTransactions();
-  const txRows = db.prepare('SELECT id, price_vnd, total_vnd, cost_vnd, unit_price_vnd FROM transactions').all();
-  const updateTx = db.prepare('UPDATE transactions SET price_vnd = ?, total_vnd = ?, cost_vnd = ?, unit_price_vnd = ? WHERE id = ?');
-  let fromFile = 0;
-  const run = db.transaction(() => {
-    for (const t of txRows) {
-      const old = frac && frac.get(String(t.id));
-      if (old) {
-        fromFile++;
-        updateTx.run(
-          dongFromK(old.price),
-          dongFromK(old.total),
-          old.cost == null || old.cost === '' ? null : dongFromK(old.cost),
-          old.unitPrice == null || old.unitPrice === '' ? null : dongFromK(old.unitPrice),
-          t.id
-        );
-      } else {
-        updateTx.run(
-          dongFromK(t.price_vnd),
-          dongFromK(t.total_vnd),
-          t.cost_vnd == null ? null : dongFromK(t.cost_vnd),
-          t.unit_price_vnd == null ? null : dongFromK(t.unit_price_vnd),
-          t.id
-        );
-      }
-    }
-    db.prepare('UPDATE products SET cost_price_vnd = ROUND(cost_price_vnd * 1000)').run();
-    db.prepare('UPDATE prescriptions SET total_vnd = ROUND(total_vnd * 1000)').run();
-    db.prepare("INSERT INTO app_meta(key, value) VALUES('money_unit', 'dong') ON CONFLICT(key) DO UPDATE SET value = excluded.value").run();
-  });
-  run();
-  console.log('[money] Đã lưu đồng nguyên. ' + fromFile + ' giao dịch lấy từ file còn số lẻ, ' + (txRows.length - fromFile) + ' giao dịch nhân từ số đã làm tròn.');
+  const n = ['products', 'transactions', 'prescriptions'].reduce((a, t) => a + db.prepare('SELECT COUNT(*) AS c FROM ' + t).get().c, 0);
+  if (n > 0) {
+    console.error('[money] Dữ liệu kiểu cũ (tiền theo nghìn), không dùng được với bản này. Không khởi động.');
+    process.exit(1);
+  }
+  db.prepare("INSERT INTO app_meta(key, value) VALUES('money_unit', 'dong') ON CONFLICT(key) DO UPDATE SET value = excluded.value").run();
 }
 
-migrateMoneyToDong();
+assertMoneyUnit();
 
 /* Z.2 (P2-4): mặc định chỉ nghe 127.0.0.1 (Caddy trên cùng máy làm TLS); trong container Docker đặt HOST=0.0.0.0. */
 const HOST = process.env.HOST || '127.0.0.1';

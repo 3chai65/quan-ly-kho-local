@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.3] - 2026-11-25
+
+### Đổi (dọn cuối)
+- Bỏ `migrateMoneyToDong` (server) và `scaleLegacyMoney` (client) cùng cờ/nhánh/test chỉ phục vụ chúng. Thay bằng chốt chặn: dữ liệu kiểu cũ (không có `moneyUnit: "dong"`) bị TỪ CHỐI ở init/pull/localStorage/khôi phục file (không áp, không PUT, báo "Dữ liệu kiểu cũ (tiền theo nghìn), không dùng được với bản này."); server không khởi động khi DB có dữ liệu mà `money_unit` khác `dong`.
+- Bỏ thuộc tính `data-iso` (chỉ ghi, không đọc) và padding phải 24–26px của ô ngày trên điện thoại (chừa cho biểu tượng đã bỏ).
+- Câu chặn xóa vị: "Vị này còn tồn, đã có giao dịch hoặc nằm trong đơn thuốc, không xóa được."
+
 ## [2.39.2] - 2026-11-25
 
 ### Sửa

@@ -122,7 +122,7 @@ setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   isStandaloneMode: (typeof isStandaloneMode === 'function' ? isStandaloneMode : null), renderReloadBtn: (typeof renderReloadBtn === 'function' ? renderReloadBtn : null), phoneTop: (typeof phoneTop === 'function' ? phoneTop : null), reloadAppClick: (typeof reloadAppClick === 'function' ? reloadAppClick : null), bakView: (typeof bakView === 'function' ? bakView : null), getRemedyNotePage: function(){ return remedyNotePage; }, setRemedyNotePage: function(v){ remedyNotePage = v; }, getPresetPage: function(){ return presetPage; }, setPresetPage: function(v){ presetPage = v; },
   loadBakList: (typeof loadBakList === 'function' ? loadBakList : null), bakSizeText: (typeof bakSizeText === 'function' ? bakSizeText : null),
   recFixAll: (typeof recFixAll === 'function' ? recFixAll : null), initTabs: (typeof initTabs === 'function' ? initTabs : null),
-  delProduct: delProduct, loadLocalBundle: loadLocalBundle, setQuotaNote: function(v){ quotaNote = v; }, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
+  delProduct: delProduct, getBackupParseError: function(){ return backupParseError; }, isServerRejected: function(){ return serverRejected; }, loadLocalBundle: loadLocalBundle, setQuotaNote: function(v){ quotaNote = v; }, setIdbLost: function(v){ idbLost = v; }, saveLocalLS: saveLocalLS, getIdbMode: function(){ return idbMode; }, getIdbChain: function(){ return idbChain; }, saveLocalFn: saveLocal
 };
 })();`;
   const store = new Map();
@@ -234,12 +234,12 @@ test('sanitize loại bản ghi trùng id/tên để không làm hỏng batch gh
 test('parseBackup chỉ nhận file đủ 3 bảng và số liệu hợp lệ', () => {
   const valid = {
     app: 'quan-ly-kho', version: 1,
-    data: { products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 2 }], transactions: [], prescriptions: [] }
+    data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 2 }], transactions: [], prescriptions: [] }
   };
   assert.ok(app.parseBackup(JSON.stringify(valid)));
 
-  assert.equal(app.parseBackup(JSON.stringify({ data: { products: [] } })), null);
-  assert.equal(app.parseBackup(JSON.stringify({ data: { products: [], transactions: [], prescriptions: [] }, app: 'khac' })), null);
+  assert.equal(app.parseBackup(JSON.stringify({ data: { moneyUnit: 'dong', products: [] } })), null);
+  assert.equal(app.parseBackup(JSON.stringify({ data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [] }, app: 'khac' })), null);
 
   const negativeStock = structuredClone(valid);
   negativeStock.data.products[0].stock = -1;
@@ -510,7 +510,7 @@ test('pushState 409 mở xung đột và không hẹn gửi lại', async () => 
     }
     return {
       status: 200,
-      json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 50, moneyUnit: 'dong' } })
+      json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 50, moneyUnit: 'dong' } })
     };
   };
   const client = loadClient({
@@ -537,7 +537,7 @@ test('W3 pushState gửi X-Op-Id, giữ nguyên khi thử lại cùng snapshot, 
       if (n === 1) return { status: 500, json: async () => ({ success: false }) };
       return { status: 200, json: async () => ({ success: true, updatedAt: 100 + n }) };
     }
-    return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' } }) };
+    return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' } }) };
   };
   const client = loadClient({ fetch: fetchStub, setTimeout(fn, ms) { return ms || 1; }, clearTimeout() {} });
   client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
@@ -624,7 +624,7 @@ test('nút bỏ thay đổi 4xx lấy bản máy chủ và không gửi lại b�
       status: 200,
       json: async () => ({
         success: true,
-        data: { products: [{ id: 's', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' }
+        data: { moneyUnit: 'dong', products: [{ id: 's', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' }
       })
     };
   };
@@ -647,7 +647,7 @@ test('nút bỏ thay đổi 4xx lấy bản máy chủ và không gửi lại b�
 
 test('hủy hộp xác nhận thì giữ bản nháp', async () => {
   let gets = 0;
-  const fetchStub = async () => { gets++; return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' } }) }; };
+  const fetchStub = async () => { gets++; return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' } }) }; };
   const client = loadClient({ fetch: fetchStub, confirm() { return false; } });
   client.setDb({ products: [{ id: 'l', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
   client.setSyncErrorShown(true);
@@ -683,114 +683,52 @@ test('sau PUT thành công lần lỗi sau bắt đầu lại ở 4 giây', asyn
   assert.equal(timers.some(t => t.ms > 4000 && t.ms !== 15000), false);
 });
 
-test('parseBackup báo nhân 1000 khi file thiếu cờ moneyUnit', () => {
-  const raw = JSON.stringify({
-    app: 'quan-ly-kho',
-    data: {
-      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
-      transactions: [],
-      prescriptions: []
-    }
-  });
-  const out = app.parseBackup(raw);
-  assert.equal(out.products[0].costPrice, 85000);
-  assert.match(out._moneyNote, /File này tính theo nghìn đồng, sẽ nhân 1000 khi nạp/);
-  assert.ok(out._moneyNote.includes('→ ' + app.fmtNum(out.products[0].costPrice)));
+const LEGACY_MSG = 'Dữ liệu kiểu cũ (tiền theo nghìn), không dùng được với bản này.';
+test('AD parseBackup từ chối file kiểu cũ (thiếu moneyUnit hoặc khác dong) với câu báo đúng, không nhân 1000', () => {
+  for (const data of [
+    { products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] },
+    { moneyUnit: 'k', products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] }
+  ]) {
+    assert.equal(app.parseBackup(JSON.stringify({ app: 'quan-ly-kho', data })), null);
+    assert.equal(app.getBackupParseError(), LEGACY_MSG);
+  }
 });
 
-test('parseBackup đọc moneyUnit trong data và giữ nguyên số đồng', () => {
-  const raw = JSON.stringify({
-    app: 'quan-ly-kho',
-    data: {
-      moneyUnit: 'dong',
-      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85000 }],
-      transactions: [],
-      prescriptions: []
-    }
-  });
-  const out = app.parseBackup(raw);
-  assert.equal(out.products[0].costPrice, 85000);
-  assert.match(out._moneyNote, /File này tính theo đồng, giữ nguyên/);
-  assert.ok(out._moneyNote.includes('→ ' + app.fmtNum(out.products[0].costPrice)));
-  assert.equal(out._moneyNote.includes('85.000.000'), false);
+test('AD parseBackup nhận file đồng (moneyUnit dong ở data hoặc lớp ngoài) và giữ nguyên số', () => {
+  const inData = app.parseBackup(JSON.stringify({ app: 'quan-ly-kho', data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85000 }], transactions: [], prescriptions: [] } }));
+  assert.equal(inData.products[0].costPrice, 85000); assert.equal(inData.moneyUnit, 'dong');
+  const outer = app.parseBackup(JSON.stringify({ app: 'quan-ly-kho', moneyUnit: 'dong', data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85000 }], transactions: [], prescriptions: [] } }));
+  assert.equal(outer.products[0].costPrice, 85000);
+  assert.equal(Object.hasOwn(outer, '_moneyNote'), false);
 });
 
-test('parseBackup tên viết thường vẫn hiện giá nhập mẫu', () => {
-  const raw = JSON.stringify({
-    app: 'quan-ly-kho',
-    data: {
-      products: [{ id: 'p1', name: 'a giao', stock: 1, costPrice: 85 }],
-      transactions: [],
-      prescriptions: []
-    }
-  });
-  const out = app.parseBackup(raw);
-  assert.equal(out.products[0].name, 'a giao');
-  assert.equal(out.products[0].costPrice, 85000);
-  assert.match(out._moneyNote, /Giá nhập “a giao”: 85 → 85\.000/);
-});
-
-test('parseBackup không có vị thuốc thì không bịa giá nhập', () => {
-  const raw = JSON.stringify({
-    app: 'quan-ly-kho',
-    data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [] }
-  });
-  const out = app.parseBackup(raw);
-  assert.equal(out.products.length, 0);
-  assert.match(out._moneyNote, /tính theo đồng, giữ nguyên/);
-  assert.equal(out._moneyNote.includes('Giá nhập'), false);
-});
-
-/* Mẫu nhỏ thay cho file sao lưu thật: không phụ thuộc máy, không bị skip. */
-const SAMPLE_GIAO = [{ id: 'PGIAO', name: 'A Giao', stock: 1, costPrice: 85 }];
-
-test('file nghìn (không có moneyUnit) nhân A Giao từ 85 thành 85000', () => {
-  const nghin = app.parseBackup(JSON.stringify({
-    app: 'quan-ly-kho',
-    data: { products: SAMPLE_GIAO, transactions: [], prescriptions: [] }
-  }));
-  const giao = nghin.products.find(p => p.name === 'A Giao');
-  assert.equal(giao.costPrice, 85000);
-  assert.equal(nghin.moneyUnit, 'dong');
-  assert.match(nghin._moneyNote, /nghìn đồng, sẽ nhân 1000/);
-  assert.ok(nghin._moneyNote.includes('→ ' + app.fmtNum(nghin.products[0].costPrice)));
-});
-
-test('file đồng (moneyUnit dong) giữ A Giao ở 85000', () => {
-  const dong = app.parseBackup(JSON.stringify({
-    app: 'quan-ly-kho',
-    moneyUnit: 'dong',
-    data: { products: [{ id: 'PGIAO', name: 'A Giao', stock: 1, costPrice: 85000 }], transactions: [], prescriptions: [] }
-  }));
-  const giao = dong.products.find(p => p.name === 'A Giao');
-  assert.equal(giao.costPrice, 85000);
-  assert.equal(dong.moneyUnit, 'dong');
-  assert.match(dong._moneyNote, /tính theo đồng, giữ nguyên/);
-  assert.ok(dong._moneyNote.includes('→ ' + app.fmtNum(dong.products[0].costPrice)));
-  assert.equal(dong._moneyNote.includes('85.000.000'), false);
-});
-
-test('nạp file nghìn, saveLocal, đọc lại localStorage không nhân lần hai', () => {
-  const raw = JSON.stringify({
-    app: 'quan-ly-kho',
-    data: {
-      products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
-      transactions: [],
-      prescriptions: []
-    }
-  });
-  const out = app.parseBackup(raw);
-  delete out._moneyNote;
+test('AD nạp file đồng, saveLocal, đọc lại localStorage giữ nguyên số', () => {
+  const out = app.parseBackup(JSON.stringify({ app: 'quan-ly-kho', data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85000 }], transactions: [], prescriptions: [] } }));
   delete out._drops;
-  assert.equal(out.products[0].costPrice, 85000);
-  assert.equal(out.moneyUnit, 'dong');
-  app.setDb(out);
-  app.setDirty(false);
-  app.saveLocal();
+  app.setDb(out); app.setDirty(false); app.saveLocal();
   const again = app.readLocal();
-  assert.equal(again.products[0].costPrice, 85000);
-  assert.equal(again.moneyUnit, 'dong');
-  assert.equal(again._scaledFromK, undefined);
+  assert.equal(again.products[0].costPrice, 85000); assert.equal(again.moneyUnit, 'dong');
+});
+
+test('AD localStorage kiểu cũ (thiếu moneyUnit) bị từ chối: readLocal = null, không nhân 1000', () => {
+  const store = new Map([['kho_db_local_v1', JSON.stringify({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [], updatedAt: 5 })]]);
+  const c = loadClient({ localStorage: { getItem: k => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: k => store.delete(k) } });
+  assert.equal(c.readLocal(), null);
+});
+
+test('AD bản máy chủ kiểu cũ: pullState + autoRefresh KHÔNG áp, KHÔNG PUT, báo đúng câu; bản mới áp bình thường', async () => {
+  for (const [moneyUnit, applied] of [[undefined, false], ['k', false], ['dong', true]]) {
+    const calls = [], toasts = [];
+    const remote = { products: [{ id: 'r1', name: 'Từ máy chủ', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [], updatedAt: 50, ...(moneyUnit ? { moneyUnit } : {}) };
+    const c = loadClient({ fetch: async (url, opts = {}) => { calls.push(opts.method || 'GET'); return { status: 200, json: async () => ({ success: true, data: remote, updatedAt: 50 }) }; }, setTimeout() { return 0; }, clearTimeout() {} });
+    c.setDb({ products: [{ id: 'l1', name: 'Máy này', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
+    c.setBase(10); c.setDirty(false);
+    await c.pullState(true);
+    assert.equal(c.getDb().products[0].name, applied ? 'Từ máy chủ' : 'Máy này', String(moneyUnit));
+    assert.equal(calls.filter(m => m === 'PUT').length, 0, 'không PUT');
+    if (!applied) assert.ok(c.isServerRejected(), 'serverRejected bật');
+  }
+  assert.ok(PAGE.includes(LEGACY_MSG));
 });
 
 function readerOf(text) {
@@ -806,6 +744,7 @@ test('hủy khôi phục hoặc lỗi tải bản nháp thì không giữ _money
   const raw = JSON.stringify({
     app: 'quan-ly-kho',
     data: {
+      moneyUnit: 'dong',
       products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
       transactions: [],
       prescriptions: []
@@ -838,6 +777,7 @@ test('restoreFromFile thành công xóa nháp trong bộ nhớ (resetDrafts)', (
   const raw = JSON.stringify({
     app: 'quan-ly-kho',
     data: {
+      moneyUnit: 'dong',
       products: [{ id: 'p1', name: 'A Giao', stock: 1, costPrice: 85 }],
       transactions: [],
       prescriptions: []
@@ -869,7 +809,7 @@ test('cloudConflict OK: tải nháp trước khi thay db; tải lỗi thì hủy
     confirm: () => true,
     fetch: async (url) => {
       order.push('fetch');
-      return { status: 200, json: async () => ({ success: true, data: { products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) };
+      return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) };
     }
   });
   client.setDb({ products: [{ id: 'old', name: 'Old', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
@@ -896,6 +836,7 @@ test('parseBackup ghi nhận vị thuốc trùng tên để khôi phục báo ch
     app: 'quan-ly-kho',
     moneyUnit: 'dong',
     data: {
+      moneyUnit: 'dong',
       products: [
         { id: 'p1', name: 'A Giao', stock: 1, costPrice: 10 },
         { id: 'p2', name: 'a giao', stock: 2, costPrice: 20 }
@@ -948,7 +889,7 @@ test('backupBeforeRestore trả false khi trình duyệt chặn tạo file', () 
 
 test('pushState khi 409: chọn Lấy bản mới thì tải remote, không ép ghi đè', async () => {
   const calls = [];
-  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20 };
+  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20, moneyUnit: 'dong' };
   const fetchStub = async (url, opts = {}) => {
     const method = opts.method || 'GET';
     calls.push({ method, headers: opts.headers || {} });
@@ -958,7 +899,7 @@ test('pushState khi 409: chọn Lấy bản mới thì tải remote, không ép 
     return { status: 200, json: async () => ({ success: true, data: remote }) };
   };
   const client = loadClient({ fetch: fetchStub, confirm: () => true });
-  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
   client.setBase(10);
   client.setDirty(true);
   await client.pushState(true, false);
@@ -996,7 +937,7 @@ test('pushState khi 409: chọn giữ bản máy này thì ghi đè bằng X-For
 
 test('2.37.0 pullState khi dirty: thay db bằng bản máy chủ, KHÔNG gửi PUT nào (không ghi đè lặng lẽ)', async () => {
   const calls = [];
-  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20 };
+  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20, moneyUnit: 'dong' };
   const fetchStub = async (url, opts = {}) => {
     const method = opts.method || 'GET';
     calls.push(method);
@@ -1005,7 +946,7 @@ test('2.37.0 pullState khi dirty: thay db bằng bản máy chủ, KHÔNG gửi 
     return { status: 200, json: async () => ({ success: true, data: remote }) };
   };
   const client = loadClient({ fetch: fetchStub });
-  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
   client.setBase(10);
   client.setDirty(true);
   await client.pullState(true);
@@ -1021,10 +962,10 @@ test('2.37.0 pullState khi dirty: thay db bằng bản máy chủ, KHÔNG gửi 
 /* ------------------------------------------------------------------ */
 
 test('autoRefresh: tải bản server mới hơn khi máy không có thay đổi', async () => {
-  const remote = { products: [{ id: 'p1', name: 'Moi', stock: 9, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const remote = { products: [{ id: 'p1', name: 'Moi', stock: 9, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500, moneyUnit: 'dong' };
   const fetchStub = async () => ({ status: 200, json: async () => ({ success: true, data: remote }) });
   const client = loadClient({ fetch: fetchStub });
-  client.setDb({ products: [{ id: 'p1', name: 'Cu', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100 });
+  client.setDb({ products: [{ id: 'p1', name: 'Cu', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
   client.setBase(100);
   client.setDirty(false);
   await client.autoRefresh();
@@ -1060,11 +1001,11 @@ test('autoRefresh: không render lại khi server không có gì mới', async (
 
 test('autoRefresh: có bản server mới thì render đúng 1 lần (đối chứng cho bộ đếm render)', async () => {
   let renderCalls = 0;
-  const remote = { products: [], transactions: [], prescriptions: [], updatedAt: 200 };
+  const remote = { products: [], transactions: [], prescriptions: [], updatedAt: 200, moneyUnit: 'dong' };
   const fetchStub = async () => ({ status: 200, json: async () => ({ success: true, data: remote }) });
   const client = loadClient({ fetch: fetchStub });
   client.wrapRenderInventory(() => { renderCalls++; });
-  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100 });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
   client.setBase(100);
   client.setDirty(false);
   const changed = await client.autoRefresh();
@@ -1537,7 +1478,7 @@ test('401 discard khi authLost (page.js thật): không confirm, không fetch, g
   const client = loadClient({
     document: doc,
     confirm() { confirms++; return true; },
-    fetch: async () => { fetches++; return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' } }) }; }
+    fetch: async () => { fetches++; return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 9, moneyUnit: 'dong' } }) }; }
   });
   client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
   client.setBase(10);
@@ -1555,7 +1496,7 @@ test('401 discard thành công (page.js thật): tải file nháp, lấy bản m
   const client = loadClient({
     document: doc,
     confirm: () => true,
-    fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { products: [{ id: 'p1', name: 'May chu', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 900, moneyUnit: 'dong' } }) })
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'May chu', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 900, moneyUnit: 'dong' } }) })
   });
   client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
   client.setBase(10);
@@ -2174,7 +2115,7 @@ test('pushState 409 rỗng vẫn mở xung đột, không đánh dấu từ ch�
         if (puts === 1) return { status: 409, json: async () => { throw new Error('empty'); } };
         return { status: 200, json: async () => ({ success: true, updatedAt: 2 }) };
       }
-      return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) };
+      return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) };
     }
   });
   client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
@@ -2946,7 +2887,7 @@ test('A7 cloudConflict chọn tải bản máy chủ: dirty tắt, cờ lỗi đ
   const c = loadClient({
     Blob: class { constructor() {} }, confirm: () => true,
     setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {},
-    fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) })
+    fetch: async () => ({ status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [{ id: 'sv', name: 'Server', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 2, moneyUnit: 'dong' } }) })
   });
   c.setDb(A_DB([{ id: 'old', name: 'Old', stock: 1, costPrice: 1 }]));
   c.setBase(1); c.setDirty(true); c.setSyncErrorShown(true);
@@ -3101,7 +3042,7 @@ test('B14 db khai báo ban đầu (trước init) có moneyUnit "dong"', () => {
 });
 
 test('B15 autoRefresh không viết hoa tên sản phẩm trong db (renderAll không còn chuẩn hóa)', async () => {
-  const remote = { products: [{ id: 'p1', name: 'cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const remote = { products: [{ id: 'p1', name: 'cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500, moneyUnit: 'dong' };
   const c = loadClient({ fetch: async () => ({ status: 200, json: async () => ({ success: true, data: remote }) }) });
   c.setDb({ products: [{ id: 'p1', name: 'Cu', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
   c.setBase(100);
@@ -4806,10 +4747,10 @@ test('2.15.2 nguồn: chỉ renderStats và chú giải biểu đồ dùng hàm 
   assert.ok(PAGE.includes("fmtKgExact(v){ return fmtNum(v) + ' kg'; }"), 'đối soát giữ đủ');
 });
 
-test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm 6/24px (đủ dd/mm/yyyy cỡ 16px), thanh gọn đệm 10 khe 4', () => {
+test('2.15.2 ô ngày Thuốc chén điện thoại: rộng 118px, đệm trái 6px (đủ dd/mm/yyyy cỡ 16px), thanh gọn đệm 10 khe 4', () => {
   assert.match(PAGE, /#remedyBox \.card__bar\{padding-left:10px;padding-right:10px;gap:4px\}/);
   assert.match(PAGE, /#remedyBox \.card__bar-date\{flex:0 0 118px\}/);
-  assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px;padding-right:24px\}/);
+  assert.match(PAGE, /#remedyBox \.card__bar-date \.inp\{padding-left:6px\}/);
 });
 
 
@@ -6356,7 +6297,7 @@ function bakDoc(handlers, downloads) {
 }
 
 test('2.21.1 P1.1 restore: tải bản hiện tại, hỏi lại có thấy file; Hủy ở hỏi lần hai thì không ghi đè', () => {
-  const raw = JSON.stringify({ app: 'quan-ly-kho', data: { products: [{ id: 'p1', name: 'Mới', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] } });
+  const raw = JSON.stringify({ app: 'quan-ly-kho', data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'Mới', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] } });
   const keep = { products: [{ id: 'keep', name: 'Giữ', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' };
   const run = (answers) => {
     const downloads = [], msgs = [];
@@ -6440,7 +6381,7 @@ test('2.21.1 P2.3 openTxEdit dòng thuốc chén cũ thiếu g: hiện gram quy 
 });
 
 test('2.21.5 restoreFromFile: authLost hoặc đang refreshing thì chặn, không confirm, không tải, không đổi dữ liệu', () => {
-  const raw = JSON.stringify({ app: 'quan-ly-kho', data: { products: [{ id: 'p1', name: 'Mới', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] } });
+  const raw = JSON.stringify({ app: 'quan-ly-kho', data: { moneyUnit: 'dong', products: [{ id: 'p1', name: 'Mới', stock: 1, costPrice: 85 }], transactions: [], prescriptions: [] } });
   const keep = { products: [{ id: 'keep', name: 'Giữ', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' };
   for (const set of ['setAuthLost', 'setRefreshing']) {
     const downloads = [], msgEl = makeEl(); let asked = 0;
@@ -7651,7 +7592,7 @@ test('2.37.0 pickSuggest: vị đã có trong tờ ghi thì mở sửa dòng đ�
 });
 
 test('2.37.1 xung đột: chọn OK rồi trong lúc pullState chờ, pushState (poll/retry) không gửi PUT thứ hai và không hiện hộp lần 2', async () => {
-  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20 };
+  const remote = { products: [{ id: 'p1', name: 'Remote', stock: 2, costPrice: 2 }], transactions: [], prescriptions: [], updatedAt: 20, moneyUnit: 'dong' };
   let puts = 0, confirms = 0, releaseGet;
   const getGate = new Promise(r => { releaseGet = r; });
   const fetchStub = async (url, opts = {}) => {
@@ -7660,7 +7601,7 @@ test('2.37.1 xung đột: chọn OK rồi trong lúc pullState chờ, pushState 
     return { status: 200, json: async () => ({ success: true, data: remote }) };
   };
   const client = loadClient({ fetch: fetchStub, confirm: () => { confirms++; return true; } });
-  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10 });
+  client.setDb({ products: [{ id: 'p1', name: 'Local', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 10, moneyUnit: 'dong' });
   client.setBase(10);
   client.setDirty(true);
   const first = client.pushState(true, false);
@@ -7882,7 +7823,7 @@ test('pushState gọi refreshUnread sau PUT thành công; lỗi của nó không
         calls.push((o.method || 'GET') + ' ' + url);
         if (o.method === 'PUT') return putRes;
         if (url === '/api/unread') { if (opts.rejectGet) throw new Error('net'); return { status: 200, json: async () => ({ success: true, data: { BAN: [], NHAP: [] } }) }; }
-        return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 50, moneyUnit: 'dong' } }) };
+        return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 50, moneyUnit: 'dong' } }) };
       } });
     client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 }); client.setBase(1); client.setDirty(true);
     const ok = await client.pushState(false, false);
@@ -8160,7 +8101,7 @@ test('2.38.31 X (17): pushState serialize db 1 lần — thân PUT parse ra đú
   const bodies = [], ops = [];
   const fetchStub = async (url, opts = {}) => {
     if ((opts.method || 'GET') === 'PUT') { bodies.push(opts.body); ops.push(opts.headers['X-Op-Id']); return { status: 200, json: async () => ({ success: true, updatedAt: 500 }) }; }
-    return { status: 200, json: async () => ({ success: true, data: { products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' } }) };
+    return { status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' } }) };
   };
   const client = loadClient({ fetch: fetchStub, setTimeout(fn, ms) { return ms || 1; }, clearTimeout() {} });
   const mk = (n) => ({ products: [{ id: 'P1', name: 'Bạch thược ' + n, stock: 2, costPrice: 1000 }], transactions: [], prescriptions: [{ id: 'R', name: 'Bát vị', items: [], total: 1, thang: 1, updatedAt: 7 }], updatedAt: 1, moneyUnit: 'dong' });
@@ -8316,7 +8257,7 @@ test('Z.1 nguồn: 6 chỗ khóa bằng dữ liệu dùng Object.create(null); c
 
 /* Z.2 P2-6: bản máy chủ bị sanitize bỏ dòng → không áp, không PUT, giữ nguyên máy; toast một lần. */
 test('Z.2 pullState + autoRefresh: bản máy chủ có tên vị thuốc trùng (drops > 0) KHÔNG được áp, KHÔNG PUT, giữ db/base/dirty', async () => {
-  const bad = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }, { id: 'p2', name: 'cam', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const bad = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }, { id: 'p2', name: 'cam', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500, moneyUnit: 'dong' };
   const calls = [];
   const fetchStub = async (url, opts = {}) => { calls.push(opts.method || 'GET'); return { status: 200, json: async () => ({ success: true, data: bad, updatedAt: 999 }) }; };
   const { doc } = toastDoc(false);
@@ -8324,7 +8265,7 @@ test('Z.2 pullState + autoRefresh: bản máy chủ có tên vị thuốc trùng
   const mEl = doc.querySelector('#toastMsg');
   Object.defineProperty(mEl, 'textContent', { get() { return writes[writes.length - 1] || ''; }, set(v) { writes.push(v); } });
   const client = loadClient({ document: doc, fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
-  const local = { products: [{ id: 'p9', name: 'Local', stock: 3, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100 };
+  const local = { products: [{ id: 'p9', name: 'Local', stock: 3, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' };
   client.setDb(local); client.setBase(100); client.setDirty(false);
   assert.equal(await client.pullState(true), false);
   assert.equal(client.getDb().products[0].name, 'Local');
@@ -8340,9 +8281,9 @@ test('Z.2 pullState + autoRefresh: bản máy chủ có tên vị thuốc trùng
 });
 
 test('Z.2 pullState: bản máy chủ sạch (không drops) vẫn áp dụng bình thường', async () => {
-  const ok = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  const ok = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500, moneyUnit: 'dong' };
   const client = loadClient({ fetch: async () => ({ status: 200, json: async () => ({ success: true, data: ok }) }) });
-  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100 }); client.setBase(100);
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' }); client.setBase(100);
   assert.equal(await client.pullState(true), true);
   assert.equal(client.getDb().products[0].name, 'Cam');
   assert.equal(client.getBase(), 500);
@@ -8363,7 +8304,7 @@ test('Z.2 init: window.__DB__ có tên vị thuốc trùng → không áp, giữ
 
 /* Z.2 R1: bản máy chủ bị từ chối (drops) → pushState không gửi PUT (trừ X-Force); bản máy chủ sạch lần sau thì gửi lại được. */
 test('Z.2 R1 pushState: sau khi bản máy chủ bị từ chối thì không PUT (trừ force); tải được bản sạch thì PUT lại bình thường', async () => {
-  let serverData = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }, { id: 'p2', name: 'cam', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
+  let serverData = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }, { id: 'p2', name: 'cam', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500, moneyUnit: 'dong' };
   const calls = [];
   const fetchStub = async (url, opts = {}) => {
     const method = opts.method || 'GET';
@@ -8372,7 +8313,7 @@ test('Z.2 R1 pushState: sau khi bản máy chủ bị từ chối thì không PU
     return { status: 200, json: async () => ({ success: true, data: serverData }) };
   };
   const client = loadClient({ fetch: fetchStub, setTimeout() { return 0; }, clearTimeout() {} });
-  client.setDb({ products: [{ id: 'p9', name: 'Local', stock: 3, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100 });
+  client.setDb({ products: [{ id: 'p9', name: 'Local', stock: 3, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
   client.setBase(100); client.setDirty(true);
   assert.equal(await client.pullState(false), false);
   assert.equal(await client.pushState(false, false), false);
@@ -8382,7 +8323,7 @@ test('Z.2 R1 pushState: sau khi bản máy chủ bị từ chối thì không PU
   assert.equal(client.getDb().products[0].name, 'Local');
   assert.equal(await client.pushState(true, true), true);
   assert.ok(calls.includes('PUT:force') && !calls.includes('PUT'), 'X-Force vẫn là quyết định chủ động của người dùng');
-  serverData = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 800 };
+  serverData = { products: [{ id: 'p1', name: 'Cam', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 800, moneyUnit: 'dong' };
   assert.equal(await client.pullState(false), true);
   client.setDirty(true); client.setBase(800);
   assert.equal(await client.pushState(false, false), true);
@@ -8586,7 +8527,7 @@ test('AC xóa vị: còn tồn / có giao dịch / nằm trong đơn thuốc →
   assert.equal(asks.length, 0, 'bị chặn thì không hỏi xác nhận');
   c.delProduct('d');
   assert.equal(asks.length, 1); assert.ok(!c.getDb().products.some(p => p.id === 'd'), 'vị trống xóa được');
-  assert.ok(PAGE.includes('Vị này còn tồn hoặc đã có giao dịch, không xóa được.'));
+  assert.ok(PAGE.includes('Vị này còn tồn, đã có giao dịch hoặc nằm trong đơn thuốc, không xóa được.'));
 });
 
 test('AC ngày bán luôn là hôm nay: sửa ô ngày thành ngày khác vẫn ghi hôm nay (Bán lẻ + Thuốc chén); Nhập hàng cũng hôm nay', () => {

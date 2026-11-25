@@ -740,31 +740,48 @@ test('server.js: ngày không có thật hoặc ngoài 2000-2100 bị 400', asyn
   assert.equal((await put(old, { 'X-Force': '1' })).status, 400);
 });
 
-test('server.js: file migration hỏng không chặn khởi động', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-bad-json-'));
+/* AD: bỏ migrateMoneyToDong; chốt chặn: DB có dữ liệu mà money_unit khác 'dong' (bản sao lưu cũ theo nghìn) → server KHÔNG khởi động; DB trống → ghi nhãn 'dong' và chạy. */
+async function runServerOnce(dir, waitHealth) {
   const port = await freePort();
-  fs.writeFileSync(path.join(dir, 'truoc-lam-tron-2026-11-06-1047.json'), '{bad');
-  const child2 = spawn(process.execPath, ['server.js'], {
-    cwd: root,
-    env: { ...process.env, PORT: String(port), DATA_DIR: dir, QLK_SETUP_CODE: 'TESTCODE2026KHO' },
-    stdio: 'ignore'
-  });
-  try {
-    const started = Date.now();
-    let ok = false;
-    while (Date.now() - started < 15000) {
-      try {
-        const r = await fetch(`http://127.0.0.1:${port}/healthz`);
-        if (r.ok) { ok = true; break; }
-      } catch (e) {}
-      await new Promise(resolve => setTimeout(resolve, 150));
-    }
-    assert.equal(ok, true, 'server phải khởi động dù file migration hỏng');
-  } finally {
-    child2.kill();
-    await waitExit(child2);
-    rmDir(dir);
+  let out = '';
+  const c = spawn(process.execPath, ['server.js'], { cwd: root, env: { ...process.env, PORT: String(port), DATA_DIR: dir, QLK_SETUP_CODE: 'TESTCODE2026KHO' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  c.stdout.on('data', d => { out += d; }); c.stderr.on('data', d => { out += d; });
+  const started = Date.now(); let healthy = false;
+  while (Date.now() - started < 15000) {
+    if (c.exitCode !== null) break;
+    if (waitHealth) { try { if ((await fetch(`http://127.0.0.1:${port}/healthz`)).ok) { healthy = true; break; } } catch (e) {} }
+    await new Promise(r => setTimeout(r, 150));
   }
+  if (!waitHealth) await waitExit(c);
+  const code = c.exitCode;
+  if (c.exitCode === null) { c.kill(); await waitExit(c); }
+  return { code, healthy, out };
+}
+test('server.js: AD DB kiểu cũ (có dữ liệu, không money_unit = dong) → từ chối khởi động; DB trống khởi động và ghi nhãn dong', async () => {
+  const { default: Database } = await import('better-sqlite3');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-money-'));
+  try {
+    const first = await runServerOnce(dir, true);
+    assert.equal(first.healthy, true, 'DB trống khởi động được');
+    let d = new Database(path.join(dir, 'app.db'));
+    assert.equal(d.prepare("SELECT value FROM app_meta WHERE key = 'money_unit'").get().value, 'dong');
+    d.prepare('INSERT INTO products (id, name, stock_kg, cost_price_vnd, created_at, updated_at) VALUES (?,?,?,?,?,?)').run('P1', 'A', 1, 85, 1, 1);
+    d.close();
+    const ok = await runServerOnce(dir, true);
+    assert.equal(ok.healthy, true, 'có dữ liệu + money_unit=dong khởi động bình thường');
+    d = new Database(path.join(dir, 'app.db'));
+    d.prepare("DELETE FROM app_meta WHERE key = 'money_unit'").run();
+    d.close();
+    const old = await runServerOnce(dir, false);
+    assert.equal(old.code, 1, 'DB kiểu cũ có dữ liệu bị từ chối');
+    assert.match(old.out, /Dữ liệu kiểu cũ \(tiền theo nghìn\), không dùng được với bản này/);
+    d = new Database(path.join(dir, 'app.db'));
+    assert.equal(d.prepare('SELECT cost_price_vnd FROM products WHERE id = ?').get('P1').cost_price_vnd, 85, 'không nhân 1000 lặng lẽ');
+    d.prepare("INSERT INTO app_meta(key, value) VALUES('money_unit', 'k')").run();
+    d.close();
+    const k = await runServerOnce(dir, false);
+    assert.equal(k.code, 1, 'money_unit khác dong cũng bị từ chối');
+  } finally { rmDir(dir); }
 });
 
 

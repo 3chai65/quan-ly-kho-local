@@ -121,7 +121,7 @@ tail -f ~/kho/logs/server.err.log                                              #
 - `truoc-lam-tron-2026-11-06-1047.json` — số lẻ gốc của giao dịch.
 - `kho-backup-2026-11-06.json` — bản JSON nghìn đồng xuất lúc 19:48 ngày 6/11. Có thêm đơn bán lẻ `TX_mw4yzqmggwli1` (Cam Thảo 0,1 kg, thành tiền 20 nghìn) mà sổ hiện tại không còn. Khôi phục từ file này sẽ đưa đơn đó trở lại.
 
-File `.db` này chỉ tự thành đồng khi `server.js` còn `migrateMoneyToDong()`: copy đè lên `data/app.db` (xóa `app.db-wal` và `app.db-shm`), khởi động server khi `app_meta` chưa có `money_unit = dong`. Giao dịch có trong file JSON được nhân từ số lẻ; giá nhập và tổng đơn nhân 1000 từ số nghìn đang lưu. Sau này nếu xóa hàm đó khỏi `server.js`, phải tự nhân 1000 các cột `price_vnd`, `total_vnd`, `cost_vnd`, `unit_price_vnd`, `cost_price_vnd`, `prescriptions.total_vnd`, rồi ghi `money_unit = dong`.
+Từ 2.39.3 server KHÔNG còn hàm đổi đơn vị: các bản nghìn đồng ở trên chỉ để lưu trữ, KHÔNG khôi phục được vào bản này (server từ chối khởi động nếu `app.db` có dữ liệu mà `app_meta.money_unit` chưa là `dong`; client từ chối file/dữ liệu không có `moneyUnit: "dong"`). Muốn dùng lại thì phải tự đổi sang đồng ngoài ứng dụng (nhân 1000 các cột `price_vnd`, `total_vnd`, `cost_vnd`, `unit_price_vnd`, `cost_price_vnd`, `prescriptions.total_vnd`, rồi ghi `money_unit = dong`).
 
 `~/kho/data/luu-tru/` và `backups/` nằm cùng ổ với `app.db`; `sao-luu.sh` chép chúng sang Google Drive mỗi ngày (không mirror, không xóa ở đích). Vài tháng mở thử một file `.db` trong `Kho-sao-luu/backups` bằng `sqlite3 <file> "pragma integrity_check;"`.
 
