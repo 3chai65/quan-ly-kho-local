@@ -610,7 +610,7 @@ html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark):hover{background
 html:is(.desktop,.pt) .btn--danger{background-color:var(--nb);border-color:var(--kb)}
 html:is(.desktop,.pt) .pager__num[aria-current]{color:#fff;font-weight:600;border-color:transparent;background-color:rgba(255,255,255,.22)}
 html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}
-html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:24px;height:24px}
+html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:calc(var(--tab-h) - 6px);height:calc(var(--tab-h) - 6px)}
 html.desktop .pager{gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:none}
 html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
 html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
@@ -689,7 +689,7 @@ html.desktop .main details:not(#backupBox)[open]{display:flex;flex-direction:col
 html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
 html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}
-html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}
+html.desktop table:is(.inv,.his) td{height:var(--tab-h);padding:1px 8px;white-space:nowrap}
 html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}
 html.desktop #expBox .card__bar-search{flex-basis:80px}
 html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
@@ -735,14 +735,14 @@ html.desktop #remedyNoteFoot td{height:38px;background:#ffffff0f}
 html.desktop .pend button{padding:0}
 html.desktop #remedyNote{margin-right:6px}
 html.desktop #remedyPresetBox{display:flex;flex-direction:column;min-height:0;margin-left:6px;overflow:clip}
-html.desktop #remedyPresetBox .rp-rows{flex:1;min-height:0;display:flex;flex-direction:column}
+html.desktop #remedyPresetBox .rp-rows{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 html.desktop #remedyNote .note__foot{flex-wrap:wrap;gap:6px;padding:4px 8px}
 html.desktop #remedyNote #remedyThang{width:44px}
 html.desktop #remedyNote #remedyUnitPrice{width:58px}
 html.desktop #remedyNote :is(.note__lbl,.note__row--btns .btn){white-space:nowrap}
 html.desktop #remedyNote .note__row--btns .btn{padding:3px 8px}
 html.desktop #remedyNote .note__row--btns .btn .ico{display:none}
-html.desktop .rp-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;width:100%;flex:1 1 0;min-height:0;padding:0 10px;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+html.desktop .rp-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;width:100%;flex:none;height:var(--tab-h);padding:0 10px;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
 html.desktop .rp-row:disabled{cursor:default}
 html.desktop .rp-row:not(:disabled):hover{background:var(--hv)}
 html.desktop .rp-row[aria-current]{background:var(--sel-bg);font-weight:800}
@@ -1984,14 +1984,22 @@ var KEY = 'kho_db_local_v1';
 var DIRTY_KEY = 'kho_db_dirty_v1';
 var BASE_KEY = 'kho_cloud_base_v1';
 var PAGE_SIZE = 10;
-/* 2.20.0: chỉ html.desktop: Lịch sử luôn đủ PAGE_SIZE hàng (hàng trống có đường kẻ). 2.39.6: tờ ghi desktop không còn hàng trống/phân trang. */
-function isDesk(){ return !!(doc.documentElement && doc.documentElement.classList && doc.documentElement.classList.contains('desktop')); }
-function blankRow(tb){
-  var tr = el('tr', 'note__blank'), td = el('td', '', ' ');
-  td.colSpan = (tb.parentNode && tb.parentNode.querySelectorAll ? tb.parentNode.querySelectorAll('thead th').length : 0) || 1;
-  tr.appendChild(td);
-  return tr;
+/* 2.39.7 desktop: Kho tồn, Lịch sử nhập/bán, đơn đã lưu (Thuốc chén): số dòng/trang = số dòng cao --tab-h vừa khung (box, trừ thead); khung ẩn (đo 0) thì giữ số lần trước. Đổi số dòng thì tính lại trang để dòng đầu đang xem vẫn trong trang. Điện thoại: PAGE_SIZE. */
+var fitPs = {};
+function fitPage(kind, box, page){
+  if (!isDesk()) return { ps: PAGE_SIZE, page: page };
+  var rh = 0, h = box ? box.clientHeight : 0, th = h && box.querySelector('thead');
+  try { rh = parseFloat(window.getComputedStyle(doc.documentElement).getPropertyValue('--tab-h')) || 0; } catch (e) {}
+  if (th) h -= th.offsetHeight;
+  var old = fitPs[kind] || PAGE_SIZE, ps = h > 0 && rh > 0 ? Math.max(1, Math.floor(h / rh)) : old;
+  fitPs[kind] = ps;
+  return { ps: ps, page: ps === old ? page : Math.floor((Math.max(1, page) - 1) * old / ps) + 1 };
 }
+function refitLists(){
+  if (!isDesk()) return;
+  renderInventory(); renderHistory('imp'); renderHistory('exp'); renderPresetList();
+}
+function isDesk(){ return !!(doc.documentElement && doc.documentElement.classList && doc.documentElement.classList.contains('desktop')); }
 var db = { products: [], transactions: [], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' };
 var invPage = 1, impPage = 1, expPage = 1;
 var LOW_STOCK_KG = 1, STOCK_EPS = 1e-9, invFilter = ''; /* 2.32.0: Kho tồn lọc 'low' (0 < tồn ≤ 1 kg) / 'out' (tồn ≤ 0, dung sai 1e-9) */
@@ -3054,12 +3062,14 @@ function renderPresetList(){
   var sel = $('#remedyPreset');
   var cur = sel ? sel.value : '';
   var list = sortedPresets();
-  var pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  var fp = fitPage('rpre', host, presetPage), ps = fp.ps;
+  presetPage = fp.page;
+  var pages = Math.max(1, Math.ceil(list.length / ps));
   if (presetPage > pages) presetPage = pages;
   if (presetPage < 1) presetPage = 1;
   host.textContent = '';
-  for (var k = 0; k < PAGE_SIZE; k++) {
-    var i = (presetPage - 1) * PAGE_SIZE + k, r = list[i];
+  for (var k = 0; k < ps; k++) {
+    var i = (presetPage - 1) * ps + k, r = list[i];
     var b = el('button', 'rp-row');
     b.type = 'button';
     if (!r) { b.disabled = true; b.tabIndex = -1; b.setAttribute('aria-hidden', 'true'); host.appendChild(b); continue; }
@@ -3641,10 +3651,12 @@ function renderInventory(){
     return;
   }
 
-  var totalPages = Math.ceil(list.length / PAGE_SIZE) || 1;
+  var fp = fitPage('inv', $('#invBox .tw'), invPage), ips = fp.ps;
+  invPage = fp.page;
+  var totalPages = Math.ceil(list.length / ips) || 1;
   if (invPage < 1) invPage = 1;
   if (invPage > totalPages) invPage = totalPages;
-  var slice = list.slice((invPage - 1) * PAGE_SIZE, invPage * PAGE_SIZE);
+  var slice = list.slice((invPage - 1) * ips, invPage * ips);
 
   slice.forEach(function(p){
     var tr = el('tr');
@@ -3668,7 +3680,6 @@ function renderInventory(){
     tr.appendChild(tdA);
     tbody.appendChild(tr);
   });
-  if (isDesk()) for (var bk = slice.length; bk < PAGE_SIZE; bk++) tbody.appendChild(blankRow(tbody)); /* 2.31.0: đủ PAGE_SIZE dòng, dòng trống có vạch kẻ */
   renderPager($('#invPager'), invPage, totalPages, 'inv');
 }
 
@@ -4067,11 +4078,13 @@ function renderHistory(kind){
   }
 
   var page = isImp ? impPage : expPage;
-  var totalPages = Math.ceil(rows.length / PAGE_SIZE) || 1;
+  var fp = fitPage(kind, $('#' + kind + 'Box .tw'), page), hps = fp.ps;
+  page = fp.page;
+  var totalPages = Math.ceil(rows.length / hps) || 1;
   if (page > totalPages) page = totalPages;
   if (page < 1) page = 1;
   if (isImp) impPage = page; else expPage = page;
-  var slice = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  var slice = rows.slice((page - 1) * hps, page * hps);
 
   slice.forEach(function(r){
     if (r.group) { appendOrderRow(tbody, r, isImp); return; }
@@ -4111,7 +4124,6 @@ function renderHistory(kind){
     tr.appendChild(td);
     tbody.appendChild(tr);
   });
-  if (isDesk()) for (var bk = slice.length; bk < PAGE_SIZE; bk++) tbody.appendChild(blankRow(tbody));
   renderPager($('#' + kind + 'Pager'), page, totalPages, kind);
 }
 /* ================= ĐỐI CHIẾU TỒN KHO ================= */
@@ -6205,7 +6217,7 @@ function initFootBars(){
   doc.addEventListener('focusout', function(){ setTimeout(compactSync, 0); });
 }
 /* ================= KHỞI ĐỘNG ================= */
-/* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class và localStorage 'qlk_tab'; không đụng dữ liệu. */
+/* 2.10.0: tab 8 mục. Chỉ đổi open/aria-selected/class; không đụng dữ liệu. 2.39.7: không nhớ tab (bỏ 'qlk_tab'). */
 /* 2.38.16 N.4: vuốt trái/phải đổi tab (điện thoại). Hàm thuần: m = { dx, dy, dt (ms), x0 (chỗ bắt đầu), vw (rộng màn hình), ok (không bị chặn) } -> +1 tab kế (vuốt trái), -1 tab trước (vuốt phải), 0 không phải vuốt đổi tab. */
 function swipeDir(m){
   if (!m || !m.ok) return 0;
@@ -6264,7 +6276,7 @@ function initTabs(){
       btns[m].classList.toggle('is-active', on);
       btns[m].setAttribute('aria-selected', on ? 'true' : 'false');
     }
-    try { localStorage.setItem('qlk_tab', id); } catch (e) {}
+    refitLists(); /* 2.39.7: khung vừa hiện mới đo được số dòng/trang */
   };
   boxes.forEach(function(bx){
     bx.addEventListener('toggle', function(){ if (bx.open) activate(bx.id); });
@@ -6287,12 +6299,11 @@ function initTabs(){
     var bx2 = doc.getElementById(ids[nx]);
     if (bx2) { bx2.open = true; activate(bx2.id); }
   });
-  var saved = null;
-  try { saved = localStorage.getItem('qlk_tab'); } catch (e) {}
-  var start = ids.indexOf(saved) >= 0 ? saved : 'retailBox';
-  if ((isDesk() || isStandaloneMode()) && ids.indexOf('chartBox') >= 0) start = 'chartBox'; /* 2.36.0: app (Tauri/PWA) mở là vào Thống kê; chỉ lúc khởi động */
-  var sb = doc.getElementById(start);
-  if (sb) { sb.open = true; activate(start); }
+  var rft = 0;
+  if (window.addEventListener) window.addEventListener('resize', function(){ clearTimeout(rft); rft = setTimeout(refitLists, 100); }); /* 2.39.7: đổi HD/FHD, cỡ cửa sổ */
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(refitLists); /* phông nạp xong có thể đổi chiều cao thanh đầu: đo lại */
+  var sb = doc.getElementById('retailBox'); /* 2.39.7: mọi nền tảng, mọi lần tải đều vào Bán lẻ (thay 2.10.0 nhớ tab, 2.36.0 app vào Thống kê) */
+  if (sb) { sb.open = true; activate('retailBox'); }
 }
 
 function init(boot){

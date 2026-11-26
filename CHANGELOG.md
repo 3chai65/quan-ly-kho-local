@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.7] - 2026-11-26
+
+### Đổi
+- Desktop: Kho tồn, Lịch sử nhập, Lịch sử bán và danh sách đơn đã lưu (Thuốc chén) dòng cao = `--tab-h` như tờ ghi. Giữ phân trang nhưng số dòng/trang = số dòng vừa khung (`fitPage`: chiều cao khung trừ đầu bảng, chia `--tab-h`; HD 18, FHD 30), tính lại khi đổi tab, đổi HD/FHD hay cỡ cửa sổ và giữ dòng đầu đang xem trong trang mới. Không cuộn trong trang; thanh trang ghim đáy. Bỏ hàng trống vẽ giả (`blankRow`). Nút hàng cao `--tab-h` − 6px để dòng không vượt biến ở cửa sổ thấp (26px); đo lại khi phông nạp xong. Điện thoại vẫn 10 dòng/trang. Bảng Đối chiếu (hộp thoại) và Thống kê không đổi.
+- Mọi nền tảng, mọi lần tải: mở app luôn vào Bán lẻ; bỏ đọc/ghi `qlk_tab` (2.10.0 nhớ tab cuối) và luật 2.36.0 (app mở vào Thống kê).
+- Ảnh mẫu 02, 04–06 chụp lại.
+
 ## [2.39.6] - 2026-11-26
 
 ### Đổi (desktop `html.desktop`; điện thoại không đổi)

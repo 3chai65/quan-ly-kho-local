@@ -54,7 +54,7 @@ globalThis.__test = {
   getRetailItems: function(){ return retailItems; },
   getNotePage: function(){ return notePage; }, setNotePage: function(v){ notePage = v; },
   getNhapList: function(){ return nhapList; },
-  renderNhapList: renderNhapList, noteTo: noteTo, bindEvents: bindEvents, orderEmpty: orderEmpty, addOrderRow: addOrderRow, calcNhap: calcNhap, nhapPick: nhapPick,
+  renderNhapList: renderNhapList, noteTo: noteTo, renderPresetList: renderPresetList, bindEvents: bindEvents, orderEmpty: orderEmpty, addOrderRow: addOrderRow, calcNhap: calcNhap, nhapPick: nhapPick,
   getTxEdit: function(){ return txEditCur; },
   getOrderCur: function(){ return orderCur; }, setOrderCur: function(v){ orderCur = v; },
   getNhapPid: function(){ return nhapPid; }, setNhapPid: function(v){ nhapPid = v; },
@@ -4176,25 +4176,24 @@ test('2.10.0 mặc định mở Bán lẻ: đúng một thẻ mở, nút đang c
   assert.deepEqual(env.activeIds(), ['retailBox']);
 });
 
-test('2.10.0 qlk_tab lưu mục gần nhất được khôi phục; giá trị lạ thì về Bán lẻ', () => {
-  const envOk = makeTabEnv('expBox');
-  loadClient({ document: envOk.doc, localStorage: envOk.LS }).initTabs();
-  assert.deepEqual(envOk.openIds(), ['expBox']);
-  assert.deepEqual(envOk.selectedIds(), ['expBox']);
-  const envBad = makeTabEnv('khong-co-muc-nay');
-  loadClient({ document: envBad.doc, localStorage: envBad.LS }).initTabs();
-  assert.deepEqual(envBad.openIds(), ['retailBox']);
-  assert.deepEqual(envBad.selectedIds(), ['retailBox']);
+test('2.39.7 mở app luôn vào Bán lẻ (mọi nền tảng, mọi lần tải), không đọc/ghi qlk_tab', () => {
+  const run = (saved, opts) => { const env = makeTabEnv(saved); const c = loadClient(Object.assign({ document: env.doc, localStorage: env.LS }, opts && opts(env))); c.initTabs(); return env; };
+  assert.deepEqual(run('expBox').openIds(), ['retailBox'], 'trình duyệt: không nhớ tab cũ');
+  assert.deepEqual(run('expBox').selectedIds(), ['retailBox']);
+  assert.deepEqual(run('chartBox', e => { e.doc.documentElement.classList.add('desktop'); return {}; }).openIds(), ['retailBox'], 'desktop/Tauri');
+  assert.deepEqual(run('expBox', () => ({ navigator: { standalone: true } })).openIds(), ['retailBox'], 'PWA iPhone');
+  assert.deepEqual(run(null, () => ({ matchMedia: q => ({ matches: /standalone/.test(q) }) })).openIds(), ['retailBox'], 'PWA display-mode');
+  const e2 = run(null); e2.clickTab('invBox'); assert.deepEqual(e2.openIds(), ['invBox'], 'bấm tab vẫn đổi'); assert.ok(!e2.store.get('qlk_tab'), 'không ghi qlk_tab');
+  assert.ok(!/(get|set)Item\('qlk_tab'/.test(PAGE), 'không còn đọc/ghi khóa qlk_tab');
 });
 
-test('2.10.0 chọn tab → đúng một <details> mở, nút cập nhật và lưu qlk_tab', () => {
+test('2.10.0 chọn tab → đúng một <details> mở, nút cập nhật', () => {
   const env = makeTabEnv(null);
   loadClient({ document: env.doc, localStorage: env.LS }).initTabs();
   env.clickTab('impBox');
   assert.deepEqual(env.openIds(), ['impBox']);
   assert.deepEqual(env.selectedIds(), ['impBox']);
   assert.deepEqual(env.activeIds(), ['impBox']);
-  assert.equal(env.store.get('qlk_tab'), 'impBox');
   env.clickTab('chartBox');
   assert.deepEqual(env.openIds(), ['chartBox']);
 });
@@ -7222,22 +7221,62 @@ test('2.31.0 thanh bên 180: nút tab cao tối thiểu 30 (nhãn dài xuống 2
   assert.ok(!w.classList.contains('is-open') && out.store.desktopBg === 'emerald' && out.attrs['data-bg'] === 'emerald', 'chọn xong: đóng, vẫn lưu desktopBg');
 });
 
-test('2.31.0 Kho tồn / Lịch sử nhập / Lịch sử bán desktop: 10 dòng chia đều hết chiều cao thẻ (>= 26, dòng trống có vạch kẻ), phân trang ghim đáy, không cuộn, tiêu đề cột chữ thường màu phụ', () => {
+/* 2.39.7: bộ đo giả: khung (box) cao h, thead 30, --tab-h 30px; đổi h rồi vẽ lại như khi đổi cỡ cửa sổ. */
+function fitKit39(desk, els, h) {
+  els['#toast'] = makeEl(); els['#toastMsg'] = makeEl();
+  const doc = trackDoc(els);
+  doc.documentElement.classList.contains = (k) => desk && k === 'desktop';
+  doc.createTextNode = () => makeEl();
+  const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH, getComputedStyle: () => ({ getPropertyValue: (v) => v === '--tab-h' ? ' 30px' : '' }) });
+  const d = { c, doc, els };
+  const g = { h };
+  for (const k of Object.keys(els)) if (/^#\w+Box \.tw$|^#remedyPresetRows$/.test(k)) Object.defineProperty(els[k], 'clientHeight', { get: () => g.h });
+  for (const k of Object.keys(els)) if (/ \.tw$/.test(k)) els[k].querySelector = (q) => q === 'thead' ? { offsetHeight: 30 } : null;
+  return { ...d, g };
+}
+function fitClient39(desk, kind, h, n) {
+  const body = clearKids29(makeEl()), pager = clearKids29(makeEl()), tw = makeEl();
+  const box = kind === 'rpre' ? body : tw;
+  const els = kind === 'inv' ? { '#invBody': body, '#invPager': pager, '#invBox .tw': tw } : kind === 'rpre' ? { '#remedyPresetRows': body, '#remedyPresetPager': pager } : { ['#' + kind + 'Body']: body, ['#' + kind + 'Pager']: pager, ['#' + kind + 'Box .tw']: tw };
+  const k = fitKit39(desk, els, h);
+  k.c.setDb({ products: Array.from({ length: n }, (_, i) => ({ id: 'p' + i, name: 'V' + String(i).padStart(3, '0'), stock: 1, costPrice: 1000 })),
+    transactions: Array.from({ length: n }, (_, i) => ({ id: 't' + i, date: '2026-11-' + String(1 + i % 20).padStart(2, '0'), type: kind === 'exp' ? 'BAN' : 'NHAP', productId: 'p0', qty: 1, price: 1000, total: 1000, cost: 500, ts: i + 1, retail: true })),
+    prescriptions: Array.from({ length: n }, (_, i) => ({ id: 'd' + i, name: 'Đơn ' + String(i).padStart(3, '0'), items: [{ productId: 'p0', grams: 10 }] })), updatedAt: 1, moneyUnit: 'dong' });
+  const render = () => kind === 'inv' ? k.c.renderInventory() : kind === 'rpre' ? k.c.renderPresetList() : k.c.renderHistory(kind);
+  const rows = () => body.children.filter(r => !r.disabled);
+  return { ...k, body, pager, box, render, rows };
+}
+
+test('2.39.7 Kho tồn / Lịch sử nhập / Lịch sử bán / đơn đã lưu desktop: dòng = --tab-h; số dòng/trang = số dòng vừa khung, đổi cỡ thì tính lại và giữ bản ghi đang xem; điện thoại giữ 10', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && !b.includes('html.desktop table:is(.inv,.his){height:100%}'), '2.38.24: bảng không kéo giãn, dòng đầu sát tiêu đề');
-  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'dòng tối thiểu 26');
+  assert.ok(b.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}') && !b.includes('html.desktop table:is(.inv,.his){height:100%}'), 'khung không cuộn, bảng không kéo giãn');
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:var(--tab-h);'), 'dòng bảng = biến tab');
+  assert.ok(/html\.desktop \.rp-row\{[^}]*flex:none;height:var\(--tab-h\);/.test(b), 'dòng đơn đã lưu = biến tab');
+  assert.ok(b.includes('html.desktop :is(#invPager,#impPager,#expPager){flex:none;'), 'phân trang ghim đáy thẻ');
+  assert.ok(!/blankRow|note__blank/.test(PAGE), 'không hàng trống vẽ giả');
   const th = /html\.desktop table:is\(\.inv,\.his\) th\{([^}]*)\}/.exec(b)[1];
   assert.ok(th.includes('text-transform:none') && th.includes('font-size:13px') && th.includes('color:var(--muted)') && !/uppercase/.test(th), 'tiêu đề chữ thường, cỡ thân, màu phụ');
   assert.ok(/\.note th\{[^}]*letter-spacing:\.06em/.test(b) && /th\{text-align:left;font-size:11px;letter-spacing:\.05em;text-transform:uppercase/.test(PAGE), 'tờ ghi giữ IN HOA');
-  assert.ok(b.includes('html.desktop :is(#invPager,#impPager,#expPager){flex:none;'), 'phân trang ghim đáy thẻ');
-  // JS: desktop độn đủ PAGE_SIZE dòng (dòng trống có class note__blank), điện thoại không độn
-  for (const [desk, want] of [[true, 10], [false, 4]]) {
-    const body = clearKids29(makeEl()), els = { '#invBody': body, '#invPager': makeEl() };
-    const d = deskKit29(desk, els);
-    d.c.setDb({ products: ['A', 'B', 'C', 'D'].map((n, i) => ({ id: 'p' + i, name: n, stock: 1, costPrice: 1000 })), transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-    d.c.renderInventory();
-    assert.equal(body.children.length, want, (desk ? 'desktop' : 'điện thoại') + ': số dòng');
-    assert.equal(body.children.filter(r => r.className === 'note__blank').length, desk ? 6 : 0);
+  assert.ok(b.includes('td.c-act .btn--icon{min-height:calc(var(--tab-h) - 6px);height:calc(var(--tab-h) - 6px)}'), 'nút hàng theo biến tab, dòng không cao hơn --tab-h');
+  assert.ok(/aria-selected', on \? 'true' : 'false'\);\s*\}\s*refitLists\(\);/.test(PAGE), 'đổi tab: đo lại số dòng');
+  assert.ok(/addEventListener\('resize', function\(\)\{ clearTimeout\(rft\); rft = setTimeout\(refitLists, 100\); \}\)/.test(PAGE), 'đổi cỡ cửa sổ: đo lại số dòng');
+  for (const kind of ['inv', 'imp', 'exp', 'rpre']) {
+    const head = kind === 'rpre' ? 0 : 30;
+    /* HD: khung 590 (trừ đầu 30) → 18 dòng; FHD: khung 950 → 30 dòng (số đo Edge) */
+    const d = fitClient39(true, kind, kind === 'rpre' ? 568 : 590, 100);
+    d.render();
+    assert.equal(d.rows().length, Math.floor(((kind === 'rpre' ? 568 : 590) - head) / 30), kind + ' HD: số dòng vừa khung');
+    assert.equal(d.pager.children[0].textContent, 'Trang 1 / ' + Math.ceil(100 / 18), kind + ' HD: số trang');
+    if (kind === 'inv') d.c.setInvPage(4); else if (kind === 'rpre') d.c.setPresetPage(4); else d.c[kind === 'imp' ? 'setImpPage' : 'setExpPage'](4);
+    d.render();
+    const first = d.rows()[0].children.map ? d.rows()[0].children.map(x => x.textContent).join('|') : String(d.rows()[0].textContent);
+    d.g.h = kind === 'rpre' ? 928 : 950; d.render();
+    const rows2 = d.rows().map(r => r.children.map ? r.children.map(x => x.textContent).join('|') : String(r.textContent));
+    assert.equal(rows2.length, 30, kind + ' FHD: 30 dòng');
+    assert.ok(rows2.includes(first), kind + ': đổi cỡ vẫn thấy dòng đầu đang xem (trang ' + (54 / 30 + 1 | 0) + ')');
+    d.g.h = 0; d.render(); assert.equal(d.rows().length, 30, kind + ': khung ẩn (đo 0) giữ số dòng lần trước');
+    const m = fitClient39(false, kind, 590, 100); m.render();
+    assert.equal(m.rows().length, 10, kind + ' điện thoại: 10');
   }
 });
 
@@ -7270,7 +7309,7 @@ test('2.31.0b cỡ chữ desktop không nhỏ hơn app Mac (px CSS = pt Mac): to
 /* ===== 2.31.1 sửa nhỏ desktop ===== */
 test('2.31.1 dòng danh sách Kho tồn / Lịch sử nhập / Lịch sử bán: mọi ô nowrap 1 dòng, cột tên chiếm phần còn lại và cắt "…" (không cỡ chữ nhỏ hơn), Lịch sử bán: ô tìm co để dòng đếm cùng hàng tiêu đề', () => {
   const b = deskBlock();
-  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'mọi ô nowrap');
+  assert.ok(b.includes('html.desktop table:is(.inv,.his) td{height:var(--tab-h);padding:1px 8px;white-space:nowrap}'), 'mọi ô nowrap');
   assert.ok(b.includes('html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}'), 'tên/đơn gộp chiếm phần còn lại, cắt "…"');
   assert.ok(b.includes('html.desktop #expBox .card__bar-search{flex-basis:80px}'), 'Lịch sử bán: dòng "n giao dịch · bán gần nhất" cùng hàng tiêu đề');
   assert.ok(!/\.his td:first-child\{[^}]*white-space:normal/.test(b) && !/table:is\(\.inv,\.his\) td\{[^}]*font-size/.test(b), 'không thu nhỏ chữ, không cho xuống dòng lại');
@@ -7485,15 +7524,6 @@ test('2.36.0 công tắc đổi chế độ luôn về kỳ hiện tại (không
   c.chartYearGo(-1); assert.equal(els['#chartMonth'].textContent, '--/2025'); c.chartModeSet('Y'); assert.equal(els['#chartMonth'].textContent, '2026');
   c.chartYearGo(-1); c.chartModeSet('D'); assert.equal(els['#chartMonth'].textContent, '18/11/2026');
   assert.deepEqual(Array.from(c.getChartDay()), ['D', 2026, 11]); assert.equal(c.getChartYr(), 2026);
-});
-
-test('2.36.0 mở app (desktop hoặc PWA standalone) vào Thống kê; trình duyệt thường giữ tab nhớ', () => {
-  const run = (saved, opts) => { const env = makeTabEnv(saved); const c = loadClient(Object.assign({ document: env.doc, localStorage: env.LS }, opts && opts(env))); c.initTabs(); return env; };
-  assert.deepEqual(run('expBox').openIds(), ['expBox'], 'trình duyệt thường: giữ tab nhớ');
-  assert.deepEqual(run('expBox', e => { e.doc.documentElement.classList.add('desktop'); return {}; }).openIds(), ['chartBox'], 'desktop');
-  assert.deepEqual(run('expBox', () => ({ navigator: { standalone: true } })).openIds(), ['chartBox'], 'PWA iPhone');
-  assert.deepEqual(run(null, () => ({ matchMedia: q => ({ matches: /standalone/.test(q) }) })).openIds(), ['chartBox'], 'PWA display-mode');
-  const e2 = run('expBox', () => ({ navigator: { standalone: true } })); e2.clickTab('invBox'); assert.deepEqual(e2.openIds(), ['invBox'], 'không ép lại khi đang dùng');
 });
 
 test('2.36.2 client: ts true/\'\'/[] bị bỏ giao dịch; thang lẻ làm tròn (1.5 → 2); kInput làm tròn đồng nguyên rồi chia 1000', () => {
@@ -7967,7 +7997,7 @@ test('2.38.23 R.1b desktop: hover dòng bảng không nền, chỉ chữ sáng; 
 
 test('2.38.25 S: Kho tồn/Lịch sử nhập/bán desktop — bảng không height:100%, dòng cố định 50px (không giãn theo cửa sổ)', () => {
   assert.ok(!/html\.desktop table:is\(\.inv,\.his\)\{[^}]*height:\s*100%/.test(PAGE), 'không kéo giãn bảng');
-  assert.ok(PAGE.includes('html.desktop table:is(.inv,.his) td{height:50px;padding:1px 8px;white-space:nowrap}'), 'dòng cao 26px');
+  assert.ok(PAGE.includes('html.desktop table:is(.inv,.his) td{height:var(--tab-h);padding:1px 8px;white-space:nowrap}'), 'dòng cao 26px');
   assert.ok(PAGE.includes('html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}'));
 });
 
