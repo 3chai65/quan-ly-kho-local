@@ -460,19 +460,23 @@ table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:var(--
 /* 2.14.0 (giai đoạn 4, M8): điện thoại – nút + dòng đang nhập giữ 44×44 (ghi đè quy tắc máy tính 36px ở trên). */
 #nhapListBox .note__pending .nhap-add{height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);width:44px;min-width:44px}
 table.ord tr.is-row>td.c-qty::before,table.ord tr.is-row>td.c-money::before,
-table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,
-table.inv tr.is-row>td:nth-child(4)::before,
 table.his tr.is-row>td:nth-child(3)::before,table.his tr.is-row>td:nth-child(4)::before,
 table.his tr.is-row>td:nth-child(5)::before{content:attr(data-label);display:block;font-size:10px;font-weight:700;
 letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 /* 2.14.0 (giai đoạn 4, M3a): Kho tồn điện thoại – hàng 1 tên + nút …; hàng 2 ba số liệu một dòng có nhãn nhỏ. Ước tính ≈52px (≤60). */
-table.inv tr.is-row{grid-template-columns:minmax(0,1fr) auto auto auto;column-gap:10px;row-gap:2px;padding:4px 2px}
-table.inv tr.is-row>td:nth-child(1){grid-area:1/1/2/4;min-width:0;overflow-wrap:anywhere}
+/* 2.39.9: không nhãn lặp từng dòng; 3 cột số bằng nhau căn phải, không xuống dòng; tên 1 dòng cắt "…" → mọi dòng cao bằng nhau. Hàng tiêu đề cùng lưới, ghim dưới thanh trên. */
+table.inv tr.is-row,html:not(.desktop) table.inv thead tr{grid-template-columns:repeat(3,minmax(0,1fr)) 34px;column-gap:10px;row-gap:2px;padding:4px 2px}
+table.inv tr.is-row>td:nth-child(1){grid-area:1/1/2/4;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 table.inv tr.is-row>td:nth-child(5){grid-area:1/4/3/5;justify-self:end;align-self:center}
 table.inv tr.is-row>td:nth-child(2){grid-area:2/1}
 table.inv tr.is-row>td:nth-child(3){grid-area:2/2}
-table.inv tr.is-row>td:nth-child(4){grid-area:2/3;text-align:left}
-table.inv tr.is-row>td:nth-child(2)::before,table.inv tr.is-row>td:nth-child(3)::before,table.inv tr.is-row>td:nth-child(4)::before{display:inline;margin:0 4px 0 0;font-size:10px;letter-spacing:0;text-transform:none}
+table.inv tr.is-row>td:nth-child(4){grid-area:2/3}
+table.inv tr.is-row>td.num{text-align:right;white-space:nowrap}
+html:not(.desktop) #invBox{overflow:clip}
+html:not(.desktop) table.inv thead{display:block;position:sticky;top:calc(var(--top-h,0px) + var(--vv-top,0px));z-index:2;background:var(--surface);border-bottom:1px solid var(--border)}
+html:not(.desktop) table.inv thead tr{display:grid;padding-block:6px}
+html:not(.desktop) table.inv th{padding:0;border:0;text-align:right;white-space:nowrap}
+html:not(.desktop) table.inv th:first-child{display:none}
 table.inv tr.is-row>td.c-del .btn--icon{width:34px;min-width:34px;height:34px;min-height:34px;padding:0;position:relative}
 table.inv tr.is-row>td.c-del .btn--icon::after{content:"";position:absolute;inset:-3px}
 /* 2.14.0 (giai đoạn 4, M3b): Lịch sử điện thoại – hàng 1 tên + ngày + …; hàng 2 SL, đơn giá, thành tiền (không nhãn chữ). Ước tính ≈49px (≤52). */
@@ -6172,6 +6176,13 @@ function kbVvApply(){
   kbVvPin = kbMobile() && vv ? vvTopPx(vv.height, window.innerHeight, vv.offsetTop) : 0;
   if (r && r.style && r.style.setProperty) r.style.setProperty('--vv-top', kbVvPin + 'px');
 }
+/* 2.39.9: điện thoại – chiều cao thanh trên (--top-h) để tiêu đề cột Kho tồn ghim ngay dưới nó. */
+function topHWatch(){
+  var t = $('.top'), r = doc.documentElement;
+  if (!t || isDesk() || typeof window.ResizeObserver !== 'function') return;
+  var set = function(){ r.style.setProperty('--top-h', t.offsetHeight + 'px'); };
+  set(); new window.ResizeObserver(set).observe(t); /* gọi sau phoneTop (thanh trên đã đủ nội dung) */
+}
 function onVvChange(){ kbVvApply(); compactRefit(); kbEvRec('vv'); kbDbg(); }
 var kbEvs = [], kbEvAt = 0, kbVvPrev = 0, kbTouchAt = 0;
 function kbTouch(){ kbEvRec('pointerdown'); kbDbg(); }
@@ -6347,6 +6358,7 @@ function init(boot){
   renderBackupInfo();
   phoneTop();
   phoneEntry();
+  topHWatch();
   renderSyncBadge();
   renderReloadBtn();
   if (legacyRejected) { legacyRejected = false; toast(LEGACY_MONEY_MSG, 'error'); }

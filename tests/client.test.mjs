@@ -4291,13 +4291,22 @@ test('2.10.0 summary của thẻ đang mở trong chế độ tab không đổi 
 });
 
 /* 2.14.0 (giai đoạn 4, M3a): Kho tồn điện thoại – hàng 1 tên + nút …, hàng 2 số liệu một dòng (nhãn nội tuyến); nút … 32px máy tính, 34px điện thoại có vùng bấm qua ::after. */
-test('2.14.0 M3a Kho tồn điện thoại: lưới 4 cột (tên + nút … ở hàng 1, ba số liệu ở hàng 2), nhãn nội tuyến, không còn lưới 3 cột cũ', () => {
+test('2.39.9 Kho tồn điện thoại: không nhãn lặp; hàng tiêu đề Tồn kho – Đã bán – Giá nhập ghim dưới thanh trên; 3 cột số bằng nhau căn phải không xuống dòng; tên 1 dòng cắt …', () => {
   const css = PAGE.replace(/\/\*[\s\S]*?\*\//g, '');
-  assert.match(css, /table\.inv tr\.is-row\{grid-template-columns:minmax\(0,1fr\) auto auto auto;column-gap:10px;row-gap:2px;padding:4px 2px\}/);
-  assert.doesNotMatch(css, /table\.inv tr\.is-row\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) auto\}/);
-  assert.match(css, /table\.inv tr\.is-row>td:nth-child\(5\)\{grid-area:1\/4\/3\/5;justify-self:end;align-self:center\}/);
-  assert.match(css, /table\.inv tr\.is-row>td:nth-child\(2\)::before,table\.inv tr\.is-row>td:nth-child\(3\)::before,table\.inv tr\.is-row>td:nth-child\(4\)::before\{display:inline;/);
-  assert.match(css, /table\.inv td\.c-del \.btn--icon,table\.his td\.c-act \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/, 'máy tính: nút … 32px (gộp cho Kho và Lịch sử)');
+  const k = css.indexOf('html:not(.desktop) table.inv thead{'), m = css.lastIndexOf('@media (max-width:600px){', k), e = css.indexOf('\n}\n', m);
+  assert.ok(k > m && k < e && m > 0, 'luật nằm trong khối điện thoại ≤600px');
+  const ph = css.slice(m, e);
+  assert.ok(ph.includes('table.inv tr.is-row,html:not(.desktop) table.inv thead tr{grid-template-columns:repeat(3,minmax(0,1fr)) 34px;column-gap:10px;'), 'dòng và hàng tiêu đề chung một lưới: 3 cột số bằng nhau + nút');
+  assert.ok(ph.includes('table.inv tr.is-row>td:nth-child(1){grid-area:1/1/2/4;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'tên 1 dòng cắt …');
+  assert.ok(ph.includes('table.inv tr.is-row>td.num{text-align:right;white-space:nowrap}'), 'số căn phải, không xuống dòng');
+  assert.ok(/table\.inv tr\.is-row>td:nth-child\(5\)\{grid-area:1\/4\/3\/5;/.test(ph), 'nút … bên phải hai hàng');
+  assert.ok(!/table\.inv[^{]*::before/.test(css), 'không nhãn "Tồn kho/Đã bán/Giá nhập" lặp ở từng dòng');
+  assert.ok(/html:not\(\.desktop\) table\.inv thead\{display:block;position:sticky;top:calc\(var\(--top-h,0px\) \+ var\(--vv-top,0px\)\);/.test(ph), 'tiêu đề ghim ngay dưới thanh trên');
+  assert.ok(ph.includes('html:not(.desktop) #invBox{overflow:clip}'), 'thẻ không tạo khung cuộn riêng (sticky theo trang)');
+  assert.ok(ph.includes('html:not(.desktop) table.inv th:first-child{display:none}') && ph.includes('html:not(.desktop) table.inv th{padding:0;border:0;text-align:right;'), 'tiêu đề chỉ 3 cột số, căn phải');
+  assert.match(PAGE, /phoneTop\(\);\s*phoneEntry\(\);\s*topHWatch\(\);/, 'đo thanh trên sau khi dựng xong');
+  assert.match(PAGE, /if \(!t \|\| isDesk\(\)[^\n]*return;\s*var set = function\(\)\{ r\.style\.setProperty\('--top-h', t\.offsetHeight \+ 'px'\); \};\s*set\(\); new window\.ResizeObserver\(set\)\.observe\(t\);/, 'desktop không đặt --top-h; điện thoại đo ngay + theo đổi cỡ');
+  assert.match(css, /table\.inv td\.c-del \.btn--icon,table\.his td\.c-act \.btn--icon\{width:32px;min-width:32px;height:32px;min-height:32px;padding:0\}/);
   assert.match(css, /table\.inv tr\.is-row>td\.c-del \.btn--icon::after\{content:"";position:absolute;inset:-3px\}/, 'điện thoại: vùng bấm 40px qua ::after');
 });
 
@@ -4486,7 +4495,7 @@ test('2.14.0 M2 rút gọn nội dung (không cắt "…"): luôn còn đơn v�
   assert.equal(JSON.stringify(c.qtyHintCandidates('(1.234,5 kg)')), JSON.stringify(['(1.234,5 kg)', '1.234,5 kg', '1.234 kg', 'kg']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(2 l)')), JSON.stringify(['(2 l)', '2 l', 'l']));
   assert.equal(JSON.stringify(c.qtyHintCandidates('(50 g)')), JSON.stringify(['(50 g)', '50 g', 'g']));
-  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, '').replace(/html\.desktop :is\(\.inv td:first-child[^}]*}/, '').replace(/\/\* 2\.38\.16 \(điện thoại\)[\s\S]*?(?=\/\* 2\.38\.3: cửa sổ thấp)/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
+  assert.doesNotMatch(PAGE.replace(/.sug__name{[^}]*}/, '').replace(/#remedyOpenName{[^}]*}/, '').replace(/html\.desktop :is\(\.inv td:first-child[^}]*}/, '').replace(/table\.inv tr\.is-row>td:nth-child\(1\)\{[^}]*}/, '').replace(/\/\* 2\.38\.16 \(điện thoại\)[\s\S]*?(?=\/\* 2\.38\.3: cửa sổ thấp)/, ''), /text-overflow:ellipsis/, 'M2 không còn ellipsis cho gợi ý đơn vị (chỉ .sug__name của khung gợi ý tên được cắt "…")');
   assert.match(PAGE, /.sug__name{[^}]*white-space:nowrap[^}]*}/, '2.17.8 gợi ý tên mỗi vị 1 dòng');
 });
 

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.9] - 2026-11-26
+
+### Sửa
+- Kho tồn điện thoại (html:not(.desktop)): bỏ nhãn "Tồn kho/Đã bán/Giá nhập" lặp ở từng dòng; thêm hàng tiêu đề cột (Tồn kho – Đã bán – Giá nhập) ghim ngay dưới thanh trên khi cuộn (`--top-h` đo bằng ResizeObserver sau phoneTop; thẻ #invBox `overflow:clip` để sticky theo trang). Dòng 1: tên cắt "…" + nút ⋯; dòng 2: ba số trong 3 cột bằng nhau, căn phải thẳng tiêu đề, không xuống dòng; mọi dòng cao 53px. Đo 390/375px với "14,325 kg", "41,672 kg", "153,846/kg": 0 xuống dòng, 0 chồng. Desktop không đổi.
+
 ## [2.39.8] - 2026-11-26
 
 ### Đổi
