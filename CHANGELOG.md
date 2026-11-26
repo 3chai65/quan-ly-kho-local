@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.0] - 2026-11-26
+
+### Thêm
+- Chốt sổ năm âm lịch (việc AN bước 2, docs/chot-so.md), bước 1 = hub + web, nút chốt còn ẩn (`CLOSE_UI = false`) tới khi app Mac hiểu dòng `open`.
+- `close.js` (hàm thuần `closePlan`, bảng Tết 2025–2035, `lunarStart`); `POST /api/close-year` (chỉ owner, cùng nguồn; dryRun; X-Base-Updated; backup `truoc-chot-<C>` → `luu-tru-truoc-<C>.json.tmp` → transaction gỡ `date < C`, chèn dòng tồn đầu kỳ, bảng tóm tắt cộng dồn, kiểm bất biến tồn → đổi tên); `GET /api/close-archive[/<file>]` (chỉ owner) + nút tải ở mục Sao lưu.
+- Cột `transactions.opening` (ALTER ADD); GET trả `open: true` và `closed: { cutoff, months }`. Luật Bảo vệ trong PUT (kể cả X-Force): giao dịch trước mốc hoặc dòng tồn đầu kỳ thiếu/thừa/sửa → 409 `closed`; client không mở hộp xung đột mà báo "Sổ đã chốt…".
+- Client: sanitize giữ `open`/`closed`; dòng `open` ẩn ở Lịch sử nhập, không vào Nhập tháng/Thống kê, không sửa/xóa; vẫn vào tồn, Đối chiếu, `lastImport`. Biểu đồ Tháng/Năm cộng `closed.months`. Ô "Năm" ở thanh bên và "Đã bán" ở Kho tồn tính từ Tết năm sổ hiện tại.
+- docs/chot-so.md dòng 3: C = Tết của năm âm chứa D (không lùi năm).
+
 ## [2.39.10] - 2026-11-26
 
 ### Sửa

@@ -110,6 +110,7 @@ setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   setActiveId: function(id){ doc.activeElement = id ? $('#' + id) : null; },
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
+  TET: (typeof TET !== 'undefined' ? TET : null), lunarStart: (typeof lunarStart === 'function' ? lunarStart : null), bookStart: (typeof bookStart === 'function' ? bookStart : null), statTxs: (typeof statTxs === 'function' ? statTxs : null), closeYearOf: (typeof closeYearOf === 'function' ? closeYearOf : null),
   historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
@@ -4152,7 +4153,7 @@ const NEW_213 = ['nhap-add', 'brand-tap'];
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app', 'open-backup-dir', 'bak-refresh'];
-const NEW_226 = ['close-preset', 'inv-low', 'inv-out', 'unread-all']; // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
+const NEW_226 = ['close-preset', 'inv-low', 'inv-out', 'unread-all', 'close-preview']; // 2.40.0: nút chốt sổ (ẩn); // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -4681,8 +4682,8 @@ test('2.15.0 Kho tồn: không còn ô #invSort; thiếu ô thì vẫn sắp the
   c.setDb({
     products: [{ id: 'a', name: 'Atiso', stock: 9, costPrice: 1 }, { id: 'b', name: 'Bạch chỉ', stock: 5, costPrice: 1 }, { id: 'c', name: 'Cam thảo', stock: 7, costPrice: 1 }],
     transactions: [
-      { id: 't1', date: '2026-01-01', type: 'BAN', productId: 'c', qty: 3, price: 1, total: 3 },
-      { id: 't2', date: '2026-01-01', type: 'BAN', productId: 'b', qty: 1, price: 1, total: 1 }
+      { id: 't1', date: c.todayISO(), type: 'BAN', productId: 'c', qty: 3, price: 1, total: 3 },
+      { id: 't2', date: c.todayISO(), type: 'BAN', productId: 'b', qty: 1, price: 1, total: 1 }
     ], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
   c.renderInventory();
   assert.deepEqual(body.children.map(tr => tr.children[0].textContent), ['Cam thảo', 'Bạch chỉ', 'Atiso']);
@@ -6649,7 +6650,8 @@ test('2.34.0 nghiệm thu: cột hôm nay = profitDay, tháng này = profitMonth
   assert.equal(s.profitDay, 800000);
   assert.equal(c.chartData().profK[17], s.profitDay, 'ngày');
   c.chartModeSet('M'); assert.equal(c.chartData().profK[10], s.profitMonth, 'tháng');
-  c.chartModeSet('Y'); const y = c.chartData(); assert.equal(y.profK[y.n - 1], s.profitYear, 'năm');
+  /* 2.40.0: ô Năm = năm sổ âm (từ Tết 17/02/2026); cột Năm của biểu đồ vẫn theo dương lịch → so với tổng tay. */
+  assert.equal(s.profitYear, 800000, 'năm sổ âm 2026: chỉ đơn 18/11/2026 (đơn 12/2025 thuộc năm sổ 2025)');
   const sx = c.computeStats(DESK_TX, [{ id: 'p1', costPrice: 1 }], '2026-12-01');
   c.chartModeSet('M'); assert.equal(c.chartData().profK[11], sx.profitMonth, 'T12/2026 (cost = 1, vốn 1)');
 });
@@ -6962,7 +6964,7 @@ test('2.28.0 viên Sao lưu | Thiết bị: chủ (fetch 200) → nút mở /aut
   await c.bakView('bak'); assert.equal(s1.hidden, false); assert.equal(sd.hidden, true); assert.equal(bb[0].attrs['aria-current'], 'true');
   const ph = loadClient({ document: trackDoc({ '#backupBox': bx }), fetch: () => { throw new Error('không gọi'); } });
   await ph.bakView('dev');
-  assert.ok(PAGE.includes("case 'open-devices': location.href = '/auth/devices'") && PAGE.includes("if (bbx.open) { loadBakList(); bakView('bak'); }"), 'nút mở trang thiết bị; mỗi lần vào tab = Sao lưu');
+  assert.ok(PAGE.includes("case 'open-devices': location.href = '/auth/devices'") && PAGE.includes("if (bbx.open) { loadBakList(); loadArchives(); bakView('bak'); }"), 'nút mở trang thiết bị; mỗi lần vào tab = Sao lưu');
 });
 
 test('2.26.1 dòng đang gõ trống ở desktop có đủ 4 ô: "+", chữ mờ, ô Gram và nút + (vô hiệu); điện thoại vẫn một ô gộp', () => {
@@ -8648,4 +8650,119 @@ test('2.39.8 Kho tồn: cột Tồn kho – Đã bán – Giá nhập (mọi n�
   assert.ok(heads.length >= 20, 'tìm thấy các tiêu đề cột số');
   for (const m of heads) assert.match(m[1], /class="[^"]*\bnum\b/, 'tiêu đề cột số căn phải: ' + m[2]);
   assert.ok(!/table\.his (td|th):nth-child\(4\),table\.his (td|th):nth-child\(5\)\{text-align:right\}/.test(PAGE), 'bỏ luật lẻ của Lịch sử');
+});
+
+/* ============================ 2.40.0 CHỐT SỔ (client) ============================ */
+const CLOSED_DB = () => ({
+  moneyUnit: 'dong', updatedAt: 5, prescriptions: [],
+  products: [{ id: 'A', name: 'Hoàng kỳ', stock: 9, costPrice: 120 }],
+  closed: { cutoff: '2025-01-29', months: [{ m: '2024-12', imp: 1000, rev: 600, cost: 300 }] },
+  transactions: [
+    { id: 'open-2025-01-29-A', date: '2025-01-29', type: 'NHAP', productId: 'A', qty: 7, price: 100, total: 0, cost: null, open: true },
+    { id: 't5', date: '2025-03-01', type: 'NHAP', productId: 'A', qty: 5, price: 90, total: 450 },
+    { id: 't6', date: '2025-03-05', type: 'BAN', productId: 'A', qty: 2, price: 250, total: 500, cost: 240 },
+    { id: 't7', date: '2026-03-01', type: 'BAN', productId: 'A', qty: 1, price: 300, total: 300, cost: 120 }
+  ]
+});
+
+test('2.40.0 chốt sổ: bảng Tết client trùng close.js; lunarStart/bookStart; D = Tết 2028 − 1 → C = Tết 2027', async () => {
+  const c = loadClient();
+  const srv = await import('../close.js');
+  assert.deepEqual(Array.from(c.TET), srv.TET, 'bảng Tết client = server');
+  for (const d of ['2025-01-28', '2025-01-29', '2026-02-16', '2026-02-17', '2026-11-26', '2028-01-25', '2028-01-26', '2035-02-07', '2035-02-08']) assert.equal(c.lunarStart(d), srv.lunarStart(d), d);
+  assert.equal(c.lunarStart('2028-01-25'), '2027-02-06');
+  assert.equal(c.bookStart('2026-11-26'), '2026-02-17');
+  assert.equal(c.bookStart('2024-06-01'), '2024-01-01', 'ngoài bảng → 01/01');
+});
+
+test('2.40.0 chốt sổ: sanitize giữ cờ open (chỉ NHAP) và closed hợp lệ; closed hỏng bị bỏ, giao dịch không rơi', () => {
+  const c = loadClient();
+  const drops = [];
+  const o = c.sanitize(CLOSED_DB(), drops);
+  assert.deepEqual(drops, []);
+  assert.equal(o.transactions[0].open, true);
+  assert.equal(o.transactions.filter(t => t.open).length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(o.closed)), CLOSED_DB().closed);
+  const bad = CLOSED_DB(); bad.transactions[2].open = true;
+  const d2 = []; const o2 = c.sanitize(bad, d2);
+  assert.equal(d2.length, 1, 'open trên BAN bị bỏ'); assert.equal(o2.transactions.length, 3);
+  const bc = CLOSED_DB(); bc.closed.months[0].m = '2024-13';
+  assert.equal(c.sanitize(bc).closed, undefined);
+  assert.equal(c.sanitize(bc).transactions.length, 4);
+});
+
+test('2.40.0 chốt sổ: dòng open ẩn ở Lịch sử nhập, không vào Nhập tháng/Thống kê; vẫn vào Đối chiếu và lastImport; không sửa/xóa được', () => {
+  const c = loadClient();
+  c.setDb(CLOSED_DB());
+  assert.deepEqual(Array.from(c.historyData('imp', '', '').rows, r => r.tx && r.tx.id), ['t5']);
+  assert.equal(c.reconcileList().length, 0, 'tồn 9 = 7 + 5 − 2 − 1');
+  assert.equal(c.lastImport('A').price, 90);
+  c.setDb({ ...CLOSED_DB(), transactions: CLOSED_DB().transactions.filter(t => t.id !== 't5') });
+  assert.equal(c.lastImport('A').price, 100, 'giá vốn tại mốc khi không còn lần nhập nào khác');
+  /* Nhập trong tháng: dòng open có total 0 nhưng vẫn phải bị bỏ dù total lạ. */
+  const tx = CLOSED_DB().transactions.map(t => t.open ? { ...t, date: '2026-03-02', total: 777 } : t);
+  const s = c.computeStats(tx, CLOSED_DB().products, '2026-03-10');
+  assert.equal(s.mImp, 0); assert.equal(s.yExp, 300, 'năm sổ 2026 từ 17/02/2026');
+  assert.equal(c.computeStats(tx, CLOSED_DB().products, '2026-02-10').yExp, 500, '10/02/2026 vẫn thuộc năm sổ 2025 (đơn 05/03/2025), không phải năm dương 2026');
+  c.setDb(CLOSED_DB());
+  const before = JSON.stringify(c.getDb());
+  c.delTx('open-2025-01-29-A'); c.openTxEdit('open-2025-01-29-A');
+  assert.equal(JSON.stringify(c.getDb()), before, 'không xóa/sửa');
+});
+
+test('2.40.0 chốt sổ: biểu đồ Tháng/Năm cộng closed.months; Ngày không cộng', () => {
+  const { c } = deskChart(DESK_TODAY, CLOSED_DB().transactions);
+  c.setDb(CLOSED_DB());
+  c.chartModeSet('Y');
+  const y = c.chartData(), i24 = y.labels.indexOf('2024'), i25 = y.labels.indexOf('2025');
+  assert.ok(i24 >= 0, 'năm 2024 chỉ có trong bảng tóm tắt vẫn hiện');
+  assert.equal(y.impK[i24], 1000); assert.equal(y.expK[i24], 600); assert.equal(y.profK[i24], 300);
+  assert.equal(y.impK[i25], 450, 'dòng open không vào Nhập');
+  c.chartModeSet('D');
+  assert.equal(c.statTxs(false).length, 3);
+});
+
+test('2.40.0 chốt sổ: PUT 409 "sổ đã chốt" không mở hộp xung đột, báo lỗi và giữ thay đổi', async () => {
+  let confirms = 0;
+  const { doc } = toastDoc(false);
+  const writes = [];
+  Object.defineProperty(doc.querySelector('#toastMsg'), 'textContent', { get() { return writes[writes.length - 1] || ''; }, set(v) { writes.push(v); } });
+  const client = loadClient({
+    document: doc,
+    fetch: async () => ({ status: 409, json: async () => ({ success: false, closed: true, cutoff: '2025-01-29', error: 'Sổ đã chốt đến 2025-01-29: có giao dịch trước mốc, hãy Tải lại' }) }),
+    confirm() { confirms++; return true; }, setTimeout() { return 0; }, clearTimeout() {}
+  });
+  client.setDb({ products: [], transactions: [], prescriptions: [], updatedAt: 1 });
+  client.setBase(1); client.setDirty(true);
+  assert.equal(await client.pushState(false, false), false);
+  assert.equal(confirms, 0, 'không hỏi Ghi đè (cũng bị chặn)');
+  assert.ok(writes.some(w => /Sổ đã chốt đến 2025-01-29/.test(w)));
+  assert.equal(client.isDirty(), true);
+  assert.equal(client.hasSyncRetry(), false);
+});
+
+test('2.40.0 chốt sổ: nút chốt còn ẩn (CLOSE_UI = false); xác nhận gõ CHOT <năm>; câu nhắc máy khác', () => {
+  assert.ok(PAGE.includes('var CLOSE_UI = false'));
+  assert.ok(PAGE.includes('Nên chốt khi các máy khác không đang nhập dở'));
+  assert.match(PAGE, /id="closeBtn" hidden/);
+  const c = loadClient();
+  assert.equal(c.closeYearOf('2027-02-06'), '2026');
+});
+
+test('2.40.0 Kho tồn: "Đã bán" chỉ tính từ Tết năm sổ hiện tại (bán năm trước không đẩy vị lên đầu)', () => {
+  const body = makeEl();
+  const doc = { readyState: 'loading', hidden: false, activeElement: null, documentElement: makeEl(), body: makeEl(),
+    querySelector(s) { return s === '#invBody' ? body : null; }, querySelectorAll() { return []; },
+    createElement() { return makeEl(); }, createElementNS() { return makeEl(); }, createTextNode(t) { return { textContent: String(t) }; },
+    addEventListener() {}, removeEventListener() {} };
+  const c = loadClient({ document: doc });
+  const ys = c.bookStart(c.todayISO());
+  const before = new Date(Date.UTC(+ys.slice(0, 4), +ys.slice(5, 7) - 1, +ys.slice(8, 10) - 1)).toISOString().slice(0, 10);
+  c.setDb({ products: [{ id: 'a', name: 'Atiso', stock: 9, costPrice: 1 }, { id: 'b', name: 'Bạch chỉ', stock: 5, costPrice: 1 }],
+    transactions: [
+      { id: 't1', date: before, type: 'BAN', productId: 'a', qty: 30, price: 1, total: 3 },
+      { id: 't2', date: ys, type: 'BAN', productId: 'b', qty: 1, price: 1, total: 1 }
+    ], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
+  c.renderInventory();
+  assert.deepEqual(body.children.map(tr => tr.children[0].textContent), ['Bạch chỉ', 'Atiso']);
 });

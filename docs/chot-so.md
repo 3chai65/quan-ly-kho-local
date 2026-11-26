@@ -1,7 +1,7 @@
-# Chốt sổ năm (âm lịch) — thiết kế (việc AN, bước 1, chưa có mã)
+# Chốt sổ năm (âm lịch) — thiết kế (việc AN; mã từ 2.40.0: close.js, server.js, src/page.js)
 Năm sổ N = từ Tết(N) đến Tết(N+1) − 1 ngày. App giữ năm sổ hiện tại + 1 năm sổ trước. Ví dụ chốt sau Tết 2028: mốc C = Tết 2027, gỡ mọi giao dịch có `date < C`.
-Ngày đề xuất: D = Tết(năm nay) − 1 (ngày cuối năm âm vừa hết). Người dùng sửa được D. C luôn = Tết của năm âm chứa D, lùi 1 năm.
-Bảng Tết (dương lịch, giờ VN UTC+7): 2025-01-29, 2026-02-17, 2027-02-06, 2028-01-26, 2029-02-13, 2030-02-03, 2031-01-23, 2032-02-11, 2033-01-31, 2034-02-19, 2035-02-08. Nguồn: lịch âm Việt Nam (thuật toán Hồ Ngọc Đức, UTC+7). PHẢI đối chiếu lại với lịch Nhà nước trước bước 2 (điểm mở).
+Ngày đề xuất: D = Tết(năm nay) − 1 (ngày cuối năm âm vừa hết). Người dùng sửa được D. C = Tết của năm âm chứa D (không lùi năm). Ví dụ D = Tết 2028 − 1 → C = Tết 2027: giữ năm sổ 2027 và 2028.
+Bảng Tết (dương lịch, giờ VN UTC+7): 2025-01-29, 2026-02-17, 2027-02-06, 2028-01-26, 2029-02-13, 2030-02-03, 2031-01-23, 2032-02-11, 2033-01-31, 2034-02-19, 2035-02-08. Nguồn: lịch âm Việt Nam (thuật toán Hồ Ngọc Đức, UTC+7). Người duyệt đã chốt bảng này (26/11/2026); `close.js` và `src/page.js` dùng chung, test so.
 
 ## 1. Dữ liệu: "Tồn đầu kỳ" = giao dịch NHAP có cờ `open: true` (cột mới `opening INTEGER NOT NULL DEFAULT 0`)
 - Chọn cách này thay vì thêm trường trên sản phẩm: giữ đúng bất biến `tồn = Σnhập − Σbán` (stockDrift, Đối chiếu) mà không đổi công thức. Thêm cột bằng `ALTER ADD`, không phải dựng lại bảng như khi đổi CHECK loại giao dịch.
@@ -26,8 +26,8 @@ Chốt chỉ DELETE/INSERT trên `transactions`; không đụng `products` (tồ
 
 ## Endpoint `POST /api/close-year` (chỉ owner, desktop), nhận `{ cutoff, dryRun }` + `X-Base-Updated`
 - dryRun: trả số giao dịch bị gỡ, tồn đầu kỳ và giá vốn từng vị, tổng nhập/doanh thu/lợi nhuận bị gỡ, lý do chặn. Không ghi gì.
-- Chạy thật: (1) base khớp, sai → 409; (2) `VACUUM INTO backup-…-truoc-chot-<C>.db`; (3) ghi `data/luu-tru-<năm âm>.json.tmp` (giao dịch bị gỡ + summary cũ); (4) trong `db.transaction`: xóa `date < C`, chèn dòng `open`, đặt `close_cutoff`/`close_summary`, tăng `updatedAt`, xóa last_op; (5) đổi `.tmp` → `.json`.
-- Lỗi ở bước 2–4: xóa `.tmp`; DB không đổi. Client: nút trong "Sao lưu khôi phục" → xem trước → gõ "CHOT <năm>" → `pullState`.
+- Chạy thật: (1) base khớp, sai → 409; (2) `VACUUM INTO backup-…-truoc-chot-<C>.db`; (3) ghi `data/luu-tru-truoc-<C>.json.tmp` (giao dịch bị gỡ + summary cũ); (4) trong `db.transaction`: xóa `date < C`, chèn dòng `open`, đặt `close_cutoff`/`close_summary`, tăng `updatedAt`, xóa last_op; (5) đổi `.tmp` → `.json`.
+- Lỗi ở bước 2–4: xóa `.tmp`; DB không đổi. `GET /api/close-archive[/<file>]` (chỉ owner): tải file lưu trữ ở mục Sao lưu. Client: nút trong "Sao lưu khôi phục" → xem trước → gõ "CHOT <năm>" → `pullState`.
 
 ## Bảo vệ: máy khác không ghi đè ngược sổ đã chốt
 - Mọi PUT (kể cả `X-Force` và khôi phục từ file) bị từ chối 409 "Sổ đã chốt đến <C>, hãy Tải lại" nếu có giao dịch `date < C`, hoặc thiếu/thừa/sửa dòng `open` so với DB.

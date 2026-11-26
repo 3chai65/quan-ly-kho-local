@@ -10,6 +10,8 @@
  *                        (id, name, stock, calc). Thiếu X-Base-Updated và không có X-Force: 428.
  *                        X-Base-Updated không phải số: 400. Base cũ: 409, trừ khi X-Force.
  *   GET  /api/backups -> danh sách file backup (không trả đường dẫn thư mục)
+ *   POST /api/close-year -> chốt sổ năm âm lịch (chỉ owner; { cutoff, dryRun }), docs/chot-so.md
+ *   GET  /api/close-archive[/<file>] -> danh sách / tải file lưu trữ phần đã chốt (chỉ owner)
  *   GET  /            -> HTML (src/page.js, CSP inline, không nonce)
  *
  * Chỉ thiết bị đã được duyệt mới vào được (auth.js, cookie qlk_dev; danh sách thiết bị
@@ -27,6 +29,7 @@ import Database from 'better-sqlite3';
 import { PAGE } from './src/page.js';
 import { createAuth } from './auth.js';
 import { mountPwa } from './pwa.js';
+import { closePlan, mergeMonths } from './close.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -119,6 +122,25 @@ function migrate() {
   `);
 }
 migrate();
+/* 2.40.0 chốt sổ: dòng "Tồn đầu kỳ" = NHAP có opening = 1 (ALTER ADD, không dựng lại bảng). */
+if (!db.prepare('PRAGMA table_info(transactions)').all().some(c => c.name === 'opening')) {
+  db.exec('ALTER TABLE transactions ADD COLUMN opening INTEGER NOT NULL DEFAULT 0');
+}
+function getMeta(key) {
+  const row = db.prepare('SELECT value FROM app_meta WHERE key = ?').get(key);
+  return row ? row.value : null;
+}
+function setMeta(key, value) {
+  db.prepare('INSERT INTO app_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
+}
+/* Bảng tóm tắt phần đã gỡ: server sở hữu, không nhận từ PUT. Hỏng → coi như rỗng (không chặn đọc). */
+function getClosed() {
+  const cutoff = getMeta('close_cutoff');
+  if (!cutoff) return null;
+  let months = [];
+  try { const v = JSON.parse(getMeta('close_summary') || '[]'); if (Array.isArray(v)) months = v; } catch (e) { /* giữ rỗng */ }
+  return { cutoff, months };
+}
 
 /* Danh sách thiết bị được duyệt nằm ở file riêng (data/auth.db), tách khỏi app.db
    để ghi snapshot hay khôi phục backup không làm đổi quyền truy cập. */
@@ -165,7 +187,7 @@ function getSourceUpdatedAt() {
 
 function readState() {
   const products = db.prepare('SELECT id, name, stock_kg AS stock, cost_price_vnd AS costPrice FROM products ORDER BY name COLLATE NOCASE').all();
-  const transactions = db.prepare('SELECT id, date, type, product_id AS productId, qty_kg AS qty, price_vnd AS price, total_vnd AS total, cost_vnd AS cost, order_id AS oid, order_name AS oname, retail, rx, grams AS g, thang, unit_price_vnd AS unitPrice, ts FROM transactions ORDER BY COALESCE(ts, 0) ASC, rowid ASC').all();
+  const transactions = db.prepare('SELECT id, date, type, product_id AS productId, qty_kg AS qty, price_vnd AS price, total_vnd AS total, cost_vnd AS cost, order_id AS oid, order_name AS oname, retail, rx, grams AS g, thang, unit_price_vnd AS unitPrice, ts, opening FROM transactions ORDER BY COALESCE(ts, 0) ASC, rowid ASC').all();
   const prescriptions = db.prepare('SELECT id, name, total_vnd AS total, thang, updated_at AS updatedAt FROM prescriptions ORDER BY updated_at DESC, rowid ASC').all();
   const prescriptionItems = db.prepare('SELECT prescription_id AS prescriptionId, product_id AS productId, grams FROM prescription_items ORDER BY prescription_id, rowid ASC').all();
 
@@ -196,13 +218,15 @@ function readState() {
       if (tx.thang == null) delete tx.thang;
       if (tx.unitPrice == null) delete tx.unitPrice;
       if (tx.ts == null) delete tx.ts;
+      if (Number(t.opening)) tx.open = true;
       return tx;
     }),
     prescriptions: prescriptions.map(r => ({
       id: String(r.id), name: String(r.name), items: itemsByPrescription.get(r.id) || [],
       total: money(r.total), thang: Math.max(1, Math.round(decNum(r.thang)) || 1), updatedAt: decNum(r.updatedAt)
     })),
-    updatedAt: getSourceUpdatedAt()
+    updatedAt: getSourceUpdatedAt(),
+    ...(getClosed() ? { closed: getClosed() } : {})
   };
 }
 
@@ -276,10 +300,13 @@ function validateState(d) {
   });
 
   const txIds = new Set();
+  const openPids = new Set();
   d.transactions.forEach((t, i) => {
     const label = 'Giao dịch #' + (i + 1);
     if (!t || typeof t !== 'object') { fail(label + ': không hợp lệ'); return; }
     if (t.type !== 'NHAP' && t.type !== 'BAN') { fail(label + ': loại phải là NHAP hoặc BAN'); return; }
+    if (t.open != null && t.open !== true && t.open !== false) { fail(label + ': cờ open không hợp lệ'); return; }
+    if (t.open === true && t.type !== 'NHAP') { fail(label + ': dòng tồn đầu kỳ phải là NHAP'); return; }
     if (!isRealDate(t.date)) { fail(label + ': ngày phải là ngày thật YYYY-MM-DD trong 2000-2100'); return; }
     const productId = String(t.productId || '').trim();
     if (!productId) { fail(label + ': thiếu productId'); return; }
@@ -295,6 +322,10 @@ function validateState(d) {
     const id = String(t.id || randomId());
     if (txIds.has(id)) { fail(label + ': trùng id giao dịch ' + id); return; }
     txIds.add(id);
+    if (t.open === true) {
+      if (openPids.has(productId)) { fail(label + ': hai dòng tồn đầu kỳ cho cùng vị ' + productId); return; }
+      openPids.add(productId);
+    }
     const rawOid = t.oid != null ? String(t.oid) : (t.orderId != null ? String(t.orderId) : null);
     const rawOname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : null);
     if (rawOname && rawOname.length > NAME_MAX) fail(label + ': tên đơn quá dài (tối đa ' + NAME_MAX + ' ký tự)');
@@ -305,7 +336,7 @@ function validateState(d) {
       qty: decNum(t.qty), price: money(t.price), total: money(t.total), cost: moneyNullable(t.cost),
       orderId, orderName,
       retail: !!t.retail, rx: !!t.rx, grams: decNullable(t.g), thang: t.thang == null ? null : Math.round(Number(t.thang)),
-      unitPrice: moneyNullable(t.unitPrice), ts: decNullable(t.ts)
+      unitPrice: moneyNullable(t.unitPrice), ts: decNullable(t.ts), opening: t.open === true
     });
   });
 
@@ -373,6 +404,32 @@ function randomId() {
   return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
+function insertTxRows(rows, prevCreated, now) {
+  const it = db.prepare('INSERT INTO transactions (id, date, type, product_id, qty_kg, price_vnd, total_vnd, cost_vnd, order_id, order_name, retail, rx, grams, thang, unit_price_vnd, ts, opening, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const t of rows) {
+    it.run(t.id, t.date, t.type, t.productId, t.qty, t.price, t.total, t.cost, t.orderId, t.orderName,
+      t.retail ? 1 : 0, t.rx ? 1 : 0, t.grams, t.thang, t.unitPrice, t.ts, t.opening ? 1 : 0, (prevCreated && prevCreated.get(t.id)) || now);
+  }
+}
+
+/* 2.40.0 luật Bảo vệ: sau khi chốt, mọi PUT (kể cả X-Force, khôi phục từ file) không được có giao dịch trước mốc
+   và phải giữ nguyên từng dòng tồn đầu kỳ (id, vị, ngày, số lượng, giá). Chưa chốt thì không nhận dòng tồn đầu kỳ. Trả câu lỗi hoặc null. */
+function closedGuard(state) {
+  const cutoff = getMeta('close_cutoff');
+  const opens = state.transactions.filter(t => t.opening);
+  if (!cutoff) return opens.length ? 'Có dòng tồn đầu kỳ nhưng sổ chưa chốt' : null;
+  if (state.transactions.some(t => t.date < cutoff)) return 'Sổ đã chốt đến ' + cutoff + ': có giao dịch trước mốc, hãy Tải lại';
+  const dbOpen = new Map(db.prepare('SELECT id, product_id AS productId, date, qty_kg AS qty, price_vnd AS price, total_vnd AS total FROM transactions WHERE opening = 1').all().map(r => [String(r.id), r]));
+  if (opens.length !== dbOpen.size) return 'Sổ đã chốt đến ' + cutoff + ': thiếu hoặc thừa dòng tồn đầu kỳ, hãy Tải lại';
+  for (const t of opens) {
+    const r = dbOpen.get(t.id);
+    if (!r || String(r.productId) !== t.productId || r.date !== t.date || Math.abs(decNum(r.qty) - t.qty) > 1e-9 || money(r.price) !== t.price || money(r.total) !== t.total) {
+      return 'Sổ đã chốt đến ' + cutoff + ': dòng tồn đầu kỳ bị sửa, hãy Tải lại';
+    }
+  }
+  return null;
+}
+
 /* Gọi trong transaction của writeState. */
 /* Mục "chưa đọc" của Lịch sử: một đơn (order_id, nếu không có thì id giao dịch) cùng loại BAN/NHAP = 1 mục. */
 const UNREAD_KEY_SQL = "COALESCE(NULLIF(order_id, ''), id)";
@@ -398,15 +455,12 @@ function writeStateRows(state, now, force) {
   const ip = db.prepare('INSERT INTO products (id, name, stock_kg, cost_price_vnd, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
   for (const p of state.products) ip.run(p.id, p.name, p.stock, p.costPrice, prevProductCreated.get(p.id) || now, now);
 
-  const it = db.prepare('INSERT INTO transactions (id, date, type, product_id, qty_kg, price_vnd, total_vnd, cost_vnd, order_id, order_name, retail, rx, grams, thang, unit_price_vnd, ts, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  for (const t of state.transactions) {
-    it.run(t.id, t.date, t.type, t.productId, t.qty, t.price, t.total, t.cost, t.orderId, t.orderName,
-      t.retail ? 1 : 0, t.rx ? 1 : 0, t.grams, t.thang, t.unitPrice, t.ts, prevTxCreated.get(t.id) || now);
-  }
+  insertTxRows(state.transactions, prevTxCreated, now);
 
   if (!force) {
     const fresh = new Map();
     for (const t of state.transactions) {
+      if (t.opening) continue; /* dòng tồn đầu kỳ không phải "mới" */
       const k = t.orderId || t.id, kk = t.type + '|' + k;
       if (!prevKeys.has(kk) && k.length <= UNREAD_KEY_MAX) fresh.set(kk, [t.type, k]);
     }
@@ -626,6 +680,11 @@ app.put('/api/state', (req, res) => {
       warnReject(400, 'Dữ liệu không hợp lệ (' + checked.errors.length + ' lỗi)');
       return res.status(400).json({ success: false, error: 'Dữ liệu không hợp lệ', details: checked.errors });
     }
+    const closedErr = closedGuard(checked.state);
+    if (closedErr) {
+      warnReject(409, 'sổ đã chốt');
+      return res.status(409).json({ success: false, closed: true, cutoff: getMeta('close_cutoff'), error: closedErr });
+    }
     const opHdr = req.get('X-Op-Id');
     const opId = opHdr && OP_ID_RE.test(opHdr) ? opHdr : null;
     const lastOp = opId ? getLastOp() : null;
@@ -705,7 +764,7 @@ app.get('/api/backups', (req, res) => {
   try {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
     const files = fs.readdirSync(BACKUP_DIR)
-      .filter(n => /^backup-\d{4}-\d{2}-\d{2}(-truoc-ghi-de-\d{9})?\.db$/.test(n))
+      .filter(n => /^backup-\d{4}-\d{2}-\d{2}(-truoc-ghi-de-\d{9}|-truoc-chot-\d{4}-\d{2}-\d{2})?\.db$/.test(n))
       .sort()
       .reverse()
       .map(n => {
@@ -716,6 +775,108 @@ app.get('/api/backups', (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: 'Không đọc được danh sách backup' });
   }
+});
+
+/* ============================ CHỐT SỔ (2.40.0) ============================ */
+const ARCHIVE_RE = /^luu-tru-truoc-\d{4}-\d{2}-\d{2}\.json$/;
+function isOwner(req) { return !!(req.device && req.device.role === 'owner'); }
+function todayLocal() {
+  /* QLK_CLOSE_TODAY: chỉ để test/thử chốt trên bản sao dữ liệu (giả "hôm nay"). */
+  if (/^\d{4}-\d{2}-\d{2}$/.test(process.env.QLK_CLOSE_TODAY || '')) return process.env.QLK_CLOSE_TODAY;
+  const d = new Date(), p = n => (n < 10 ? '0' : '') + n;
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+/* Chỉ để test gài lỗi từng bước (biến môi trường, không có trong vận hành). */
+function closeFailAt(step) { if (process.env.QLK_CLOSE_FAIL === String(step)) throw new Error('gài lỗi bước ' + step); }
+
+app.post('/api/close-year', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!auth.sameOrigin(req)) return res.status(403).json({ success: false, error: 'Forbidden' });
+  if (!isOwner(req)) return res.status(403).json({ success: false, error: 'Chỉ thiết bị chủ được chốt sổ' });
+  let b;
+  try { b = JSON.parse(typeof req.body === 'string' ? req.body : ''); } catch (e) { b = null; }
+  if (!b || typeof b !== 'object' || typeof b.cutoff !== 'string') return res.status(400).json({ success: false, error: 'Yêu cầu không hợp lệ' });
+  try {
+    const checked = validateState(readState());
+    if (checked.errors.length) return res.status(500).json({ success: false, error: 'Dữ liệu hiện tại không hợp lệ, không chốt' });
+    const closed = getClosed();
+    const plan = closePlan(checked.state, b.cutoff, todayLocal(), closed ? closed.cutoff : null, checked.stockDrift);
+    const preview = {
+      cutoff: plan.cutoff, blocks: plan.blocks, totals: plan.totals, months: plan.months,
+      opening: plan.opening.map(o => ({ productId: o.productId, name: o.name, qty: o.qty, price: o.price }))
+    };
+    if (b.dryRun === true) return res.json({ success: true, dryRun: true, ...preview, updatedAt: getSourceUpdatedAt() });
+    const base = Number(req.get('X-Base-Updated'));
+    if (!Number.isFinite(base) || getSourceUpdatedAt() !== base) return res.status(409).json({ success: false, conflict: true, error: 'Dữ liệu đã đổi, hãy xem trước lại' });
+    if (plan.blocks.length) return res.status(422).json({ success: false, error: plan.blocks.join('; '), ...preview });
+    const tag = 'truoc-chot-' + plan.cutoff;
+    const bak = path.join(BACKUP_DIR, 'backup-' + todayStamp() + '-' + tag + '.db');
+    const arc = path.join(DATA_DIR, 'luu-tru-truoc-' + plan.cutoff + '.json');
+    const tmp = arc + '.tmp';
+    let now = 0, committed = false;
+    try {
+      closeFailAt(2);
+      fs.mkdirSync(BACKUP_DIR, { recursive: true });
+      if (fs.existsSync(bak)) fs.unlinkSync(bak);
+      db.prepare('VACUUM INTO ?').run(bak);
+      closeFailAt(3);
+      fs.writeFileSync(tmp, JSON.stringify({ moneyUnit: 'dong', cutoff: plan.cutoff, createdAt: new Date().toISOString(),
+        transactions: plan.removed, products: checked.state.products, closedBefore: closed, months: plan.months }));
+      db.transaction(() => {
+        db.prepare('DELETE FROM transactions WHERE date < ?').run(plan.cutoff);
+        insertTxRows(plan.opening, null, Date.now());
+        setMeta('close_cutoff', plan.cutoff);
+        setMeta('close_summary', JSON.stringify(mergeMonths(closed ? closed.months : [], plan.months)));
+        const prev = getSourceUpdatedAt();
+        now = Math.max(Date.now(), prev + 1);
+        setMeta('source_updated_at', now);
+        db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
+        db.prepare("DELETE FROM unread WHERE kind = 'NHAP' AND key NOT IN (SELECT " + UNREAD_KEY_SQL + " FROM transactions WHERE type = 'NHAP')").run();
+        db.prepare("DELETE FROM unread WHERE kind = 'BAN' AND key NOT IN (SELECT " + UNREAD_KEY_SQL + " FROM transactions WHERE type = 'BAN')").run();
+        /* Bất biến: tồn vẫn = nhập − bán sau khi thay. Sai → ném lỗi, transaction tự rollback. */
+        const after = validateState(readState());
+        if (after.errors.length || after.stockDrift.length > checked.stockDrift.length) throw new Error('bất biến tồn sai sau khi chốt');
+        closeFailAt(4);
+      })();
+      committed = true;
+      closeFailAt(5);
+      fs.renameSync(tmp, arc);
+    } catch (err) {
+      if (committed) {
+        /* DB đã chốt: giữ .tmp (vẫn là bản lưu trữ đầy đủ), báo thành công kèm cảnh báo, không nói "không đổi". */
+        console.error('[chốt sổ] Đã chốt nhưng không đổi tên được file lưu trữ, còn ' + path.basename(tmp) + ':', err && err.message ? err.message : err);
+        return res.json({ success: true, updatedAt: now, archive: null, warning: 'Đã chốt nhưng file lưu trữ còn tên ' + path.basename(tmp) + ' trên hub', ...preview });
+      }
+      try { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); } catch (e) { /* bỏ qua */ }
+      console.error('[chốt sổ] Lỗi, không đổi gì:', err && err.message ? err.message : err);
+      return res.status(500).json({ success: false, error: 'Chốt sổ lỗi, dữ liệu không đổi' });
+    }
+    console.log(new Date().toISOString() + ' [chốt sổ] Đã chốt đến ' + plan.cutoff + ': gỡ ' + plan.totals.count + ' giao dịch, ' + plan.opening.length + ' dòng tồn đầu kỳ; backup ' + path.basename(bak) + ', lưu trữ ' + path.basename(arc));
+    res.json({ success: true, updatedAt: now, archive: path.basename(arc), ...preview });
+  } catch (err) {
+    console.error('/api/close-year', err);
+    res.status(500).json({ success: false, error: 'Chốt sổ lỗi, dữ liệu không đổi' });
+  }
+});
+
+app.get('/api/close-archive', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!isOwner(req)) return res.status(403).json({ success: false, error: 'Chỉ thiết bị chủ' });
+  try {
+    const files = fs.readdirSync(DATA_DIR).filter(n => ARCHIVE_RE.test(n)).sort().reverse()
+      .map(n => ({ name: n, size: fs.statSync(path.join(DATA_DIR, n)).size }));
+    res.json({ success: true, archives: files });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Không đọc được danh sách lưu trữ' });
+  }
+});
+app.get('/api/close-archive/:name', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!isOwner(req)) return res.status(403).json({ success: false, error: 'Chỉ thiết bị chủ' });
+  const n = String(req.params.name || '');
+  if (!ARCHIVE_RE.test(n) || !fs.existsSync(path.join(DATA_DIR, n))) return res.status(404).json({ success: false, error: 'Not found' });
+  res.set('Content-Disposition', 'attachment; filename="' + n + '"');
+  res.type('application/json').send(fs.readFileSync(path.join(DATA_DIR, n)));
 });
 
 // Đường không có thật: 404 JSON kèm header bảo mật (thay HTML mặc định của Express).

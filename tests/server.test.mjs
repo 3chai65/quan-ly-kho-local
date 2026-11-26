@@ -1151,3 +1151,212 @@ test('server.js: AA bom nén: gzip nhỏ nhưng > 32 MB sau giải nén bị 413
   const br = await putRaw(Buffer.from('x'), { 'Content-Encoding': 'br', 'X-Force': '1' });
   assert.equal(br.status, 415, 'Content-Encoding lạ → 415');
 });
+
+/* ============================ 2.40.0 CHỐT SỔ (docs/chot-so.md) ============================ */
+/* Server riêng (DATA_DIR riêng) để chốt không đụng các test khác. env: QLK_CLOSE_TODAY giả "hôm nay", QLK_CLOSE_FAIL gài lỗi bước. */
+async function closeServer(env = {}, dir = null) {
+  const d = dir || fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-close-'));
+  const port = await freePort();
+  const c = spawn(process.execPath, ['server.js'], { cwd: root, env: { ...process.env, PORT: String(port), DATA_DIR: d, QLK_SETUP_CODE: SETUP_CODE, ...env }, stdio: 'ignore' });
+  const b = `http://127.0.0.1:${port}`;
+  for (let i = 0; i < 100; i++) { try { if ((await fetch(b + '/healthz')).ok) break; } catch (e) {} await new Promise(r => setTimeout(r, 150)); }
+  let cookie = '';
+  const setup = await fetch(`${b}/auth/setup`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code: SETUP_CODE, name: 'Chu' }).toString() });
+  if (setup.status === 303) cookie = String(setup.headers.getSetCookie()[0]).split(';')[0];
+  const call = async (method, url, body, headers = {}, ck) => {
+    const r = await fetch(b + url, { method, headers: { 'Content-Type': 'application/json', Cookie: ck || cookie, ...headers }, body: body == null ? undefined : JSON.stringify(body) });
+    const text = await r.text(); let json = null; try { json = JSON.parse(text); } catch (e) {}
+    return { status: r.status, body: json, text, headers: r.headers };
+  };
+  const get = async () => (await call('GET', '/api/state')).body.data;
+  const stop = async () => { c.kill(); await waitExit(c); };
+  return { b, dir: d, call, get, stop, cookie: () => cookie, setCookie: v => { cookie = v; } };
+}
+function closeFixture() {
+  const T = (id, date, type, productId, qty, price, total, cost = null) => ({ id, date, type, productId, qty, price, total, cost });
+  return emptyState({
+    products: [{ id: 'A', name: 'Hoàng kỳ', stock: 10, costPrice: 120 }, { id: 'B', name: 'Bạch truật', stock: 0, costPrice: 50 }],
+    prescriptions: [{ id: 'RX1', name: 'Bài 1', total: 5000, thang: 1, items: [{ productId: 'A', grams: 10 }] }],
+    transactions: [
+      T('t1', '2024-11-01', 'NHAP', 'B', 4, 50, 200), T('t2', '2024-11-02', 'BAN', 'B', 4, 100, 400, 200),
+      T('t3', '2024-12-10', 'NHAP', 'A', 10, 100, 1000), T('t4', '2024-12-20', 'BAN', 'A', 3, 200, 600, 300),
+      T('t4c', '2025-01-29', 'NHAP', 'A', 1, 110, 110), /* đúng ngày mốc: phải được giữ */
+      T('t5', '2025-03-01', 'NHAP', 'A', 5, 120, 600), T('t6', '2025-03-05', 'BAN', 'A', 2, 250, 500, 240),
+      T('t7', '2026-03-01', 'BAN', 'A', 1, 300, 300, 120)
+    ]
+  });
+}
+/* Thống kê theo tháng như client: giao dịch còn lại (bỏ dòng tồn đầu kỳ) + bảng tóm tắt đã chốt. */
+function statMonths(st) {
+  const m = {};
+  const add = (k, f, v) => { m[k] = m[k] || { imp: 0, rev: 0, cost: 0 }; m[k][f] += v; };
+  for (const t of st.transactions) {
+    if (t.open) continue;
+    if (t.type === 'NHAP') add(t.date.slice(0, 7), 'imp', t.total); else { add(t.date.slice(0, 7), 'rev', t.total); add(t.date.slice(0, 7), 'cost', t.cost); }
+  }
+  for (const e of (st.closed ? st.closed.months : [])) { add(e.m, 'imp', e.imp); add(e.m, 'rev', e.rev); add(e.m, 'cost', e.cost); }
+  return JSON.stringify(Object.keys(m).sort().map(k => [k, m[k]]));
+}
+const stockOf = st => JSON.stringify(st.products.map(p => [p.id, p.stock]));
+const putState = (s, st, base) => s.call('PUT', '/api/state', { moneyUnit: 'dong', ...st }, base === 'force' ? { 'X-Force': '1' } : { 'X-Base-Updated': String(base) });
+
+test('2.40.0 chốt sổ: bảng Tết và mốc C = Tết của năm âm chứa D (D = Tết 2028 − 1 → C = Tết 2027)', async () => {
+  const { TET, lunarStart, cutoffFor } = await import('../close.js');
+  const { mergeMonths } = await import('../close.js');
+  assert.deepEqual(mergeMonths([{ m: '2025-01', imp: 1, rev: 2, cost: 3 }], [{ m: '2025-01', imp: 10, rev: 20, cost: 30 }, { m: '2024-12', imp: 5, rev: 0, cost: 0 }]),
+    [{ m: '2024-12', imp: 5, rev: 0, cost: 0 }, { m: '2025-01', imp: 11, rev: 22, cost: 33 }], 'tháng trùng (C giữa tháng) thì cộng');
+  /* Giá vốn tại mốc: cùng ngày thì xếp theo ts, thiếu ts lấy giờ trong id (như txStamp/lastImport ở client). */
+  const { closePlan } = await import('../close.js');
+  const pl = closePlan({ products: [{ id: 'A', name: 'A', stock: 2, costPrice: 1 }], transactions: [
+    { id: 'TX_1737000000000', date: '2025-01-10', type: 'NHAP', productId: 'A', qty: 1, price: 200, total: 200 },
+    { id: 'x', date: '2025-01-10', type: 'NHAP', productId: 'A', qty: 1, price: 100, total: 100, ts: 1736000000000 }
+  ] }, '2025-01-29', '2027-03-01', null, []);
+  assert.equal(pl.opening[0].price, 200);
+  assert.deepEqual(TET, ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08']);
+  assert.equal(cutoffFor('2028-01-25'), '2027-02-06');
+  assert.equal(cutoffFor('2028-01-26'), '2028-01-26');
+  assert.equal(lunarStart('2026-11-26'), '2026-02-17');
+  assert.equal(lunarStart('2025-01-28'), null, 'trước Tết đầu bảng');
+  assert.equal(lunarStart('2035-02-08'), null, 'từ Tết cuối bảng: chưa biết Tết kế');
+});
+
+test('2.40.0 chốt sổ: quyền, xem trước, 409 base, gài lỗi từng bước, chốt thật, luật Bảo vệ, chốt lần 2 cộng dồn', async () => {
+  const s = await closeServer({ QLK_CLOSE_TODAY: '2027-03-01' });
+  const crypto = await import('node:crypto');
+  const { default: Database } = await import('better-sqlite3');
+  try {
+    /* Chưa chốt: dòng open bị từ chối; open sai loại / trùng vị → 400. */
+    const fx = closeFixture();
+    const bad1 = await putState(s, { ...fx, transactions: [...fx.transactions, { id: 'o', date: '2025-01-29', type: 'NHAP', productId: 'A', qty: 1, price: 1, total: 0, open: true }] }, 'force');
+    assert.equal(bad1.status, 409, JSON.stringify(bad1.body)); assert.equal(bad1.body.closed, true);
+    const bad2 = await putState(s, { ...fx, transactions: fx.transactions.map(t => t.id === 't2' ? { ...t, open: true } : t) }, 'force');
+    assert.equal(bad2.status, 400);
+    /* Còn lệch tồn (stockDrift) thì chặn chốt. */
+    const drift = await putState(s, { ...fx, products: fx.products.map(p => p.id === 'A' ? { ...p, stock: 99 } : p) }, 'force');
+    assert.equal(drift.status, 200);
+    assert.match((await s.call('POST', '/api/close-year', { cutoff: '2025-01-29', dryRun: true })).body.blocks.join(), /Đối chiếu/);
+    const ok = await putState(s, fx, 'force');
+    assert.equal(ok.status, 200, JSON.stringify(ok.body));
+    const before = await s.get();
+
+    /* Quyền: thành viên 403, khác nguồn 403. */
+    const tok = 'member-token-' + Date.now();
+    const adb = new Database(path.join(s.dir, 'auth.db'));
+    adb.prepare("INSERT INTO devices (id, token_hash, role, name, created_at, last_seen_at) VALUES ('mmmmmmmmmmmm', ?, 'member', 'May tv', ?, ?)").run(crypto.createHash('sha256').update(tok).digest('hex'), Date.now(), Date.now());
+    adb.close();
+    const memberCk = s.cookie().split('=')[0] + '=' + tok;
+    assert.equal((await s.call('GET', '/api/state', null, {}, memberCk)).status, 200, 'cookie thành viên hợp lệ');
+    assert.equal((await s.call('POST', '/api/close-year', { cutoff: '2025-01-29', dryRun: true }, {}, memberCk)).status, 403);
+    assert.equal((await s.call('GET', '/api/close-archive', null, {}, memberCk)).status, 403);
+    assert.equal((await s.call('POST', '/api/close-year', { cutoff: '2025-01-29', dryRun: true }, { 'Sec-Fetch-Site': 'cross-site' })).status, 403);
+
+    /* Xem trước: không ghi; đủ số liệu; tổng = bảng tóm tắt. */
+    const dry = await s.call('POST', '/api/close-year', { cutoff: '2025-01-29', dryRun: true });
+    assert.equal(dry.status, 200, dry.text);
+    assert.deepEqual(dry.body.blocks, []);
+    assert.equal(dry.body.totals.count, 4);
+    assert.deepEqual(dry.body.opening, [{ productId: 'A', name: 'Hoàng kỳ', qty: 7, price: 100 }]);
+    assert.equal(dry.body.totals.rev, 1000); assert.equal(dry.body.totals.cost, 500); assert.equal(dry.body.totals.imp, 1200);
+    assert.equal(dry.body.months.reduce((a, e) => a + e.rev, 0), dry.body.totals.rev);
+    assert.equal((await s.get()).updatedAt, before.updatedAt, 'dryRun không ghi');
+    /* Chặn: mốc không phải Tết, mốc muộn hơn năm sổ trước. */
+    assert.ok((await s.call('POST', '/api/close-year', { cutoff: '2026-11-01', dryRun: true })).body.blocks.length > 0);
+    assert.match((await s.call('POST', '/api/close-year', { cutoff: '2027-02-06', dryRun: true })).body.blocks.join(), /mốc muộn nhất là 2026-02-17/);
+    const blocked = await s.call('POST', '/api/close-year', { cutoff: '2027-02-06' }, { 'X-Base-Updated': String(before.updatedAt) });
+    assert.equal(blocked.status, 422);
+    /* 409 khi base cũ hoặc thiếu. */
+    assert.equal((await s.call('POST', '/api/close-year', { cutoff: '2025-01-29' }, { 'X-Base-Updated': '1' })).status, 409);
+    assert.equal((await s.call('POST', '/api/close-year', { cutoff: '2025-01-29' })).status, 409);
+    assert.equal((await s.get()).updatedAt, before.updatedAt);
+  } finally { await s.stop(); }
+
+  /* Gài lỗi từng bước (backup, ghi file lưu trữ, cuối transaction): 500, dữ liệu không đổi, không còn .tmp/lưu trữ. */
+  const dir = s.dir;
+  for (const step of ['2', '3', '4']) {
+    const f = await closeServer({ QLK_CLOSE_TODAY: '2027-03-01', QLK_CLOSE_FAIL: step }, dir);
+    f.setCookie(s.cookie());
+    try {
+      const b0 = await f.get();
+      const r = await f.call('POST', '/api/close-year', { cutoff: '2025-01-29' }, { 'X-Base-Updated': String(b0.updatedAt) });
+      assert.equal(r.status, 500, 'bước ' + step);
+      const a0 = await f.get();
+      assert.equal(a0.updatedAt, b0.updatedAt, 'bước ' + step);
+      assert.equal(a0.transactions.length, 8); assert.equal(a0.closed, undefined);
+      assert.deepEqual(fs.readdirSync(dir).filter(n => /^luu-tru/.test(n)), [], 'bước ' + step + ' không để lại file lưu trữ/.tmp');
+    } finally { await f.stop(); }
+  }
+
+  /* Lỗi SAU khi transaction đã commit (đổi tên file lưu trữ): báo thành công kèm cảnh báo, giữ .tmp, không nói "không đổi". Chạy trên bản sao thư mục. */
+  const dir5 = dir + '-b5';
+  fs.cpSync(dir, dir5, { recursive: true });
+  const f5 = await closeServer({ QLK_CLOSE_TODAY: '2027-03-01', QLK_CLOSE_FAIL: '5' }, dir5);
+  f5.setCookie(s.cookie());
+  try {
+    const b5 = await f5.get();
+    const r5 = await f5.call('POST', '/api/close-year', { cutoff: '2025-01-29' }, { 'X-Base-Updated': String(b5.updatedAt) });
+    assert.equal(r5.status, 200, r5.text); assert.match(r5.body.warning, /\.tmp/);
+    assert.equal((await f5.get()).closed.cutoff, '2025-01-29');
+    assert.ok(fs.existsSync(path.join(dir5, 'luu-tru-truoc-2025-01-29.json.tmp')));
+  } finally { await f5.stop(); rmDir(dir5); }
+
+  const t = await closeServer({ QLK_CLOSE_TODAY: '2027-03-01' }, dir);
+  t.setCookie(s.cookie());
+  try {
+    const before = await t.get();
+    const r = await t.call('POST', '/api/close-year', { cutoff: '2025-01-29' }, { 'X-Base-Updated': String(before.updatedAt) });
+    assert.equal(r.status, 200, r.text);
+    const after = await t.get();
+    assert.ok(after.updatedAt > before.updatedAt);
+    assert.ok(after.transactions.every(x => x.date >= '2025-01-29'));
+    const open = after.transactions.filter(x => x.open);
+    assert.equal(open.length, 1);
+    assert.deepEqual([open[0].productId, open[0].date, open[0].qty, open[0].price, open[0].total, open[0].type], ['A', '2025-01-29', 7, 100, 0, 'NHAP']);
+    assert.deepEqual(after.closed.months.map(e => e.m), ['2024-11', '2024-12']);
+    const drops = [], cs = loadClientStateFns().sanitize(after, drops);
+    assert.deepEqual(drops, [], 'client sanitize nhận bản sau chốt, không rơi dòng');
+    assert.equal(cs.transactions.filter(x => x.open).length, 1); assert.equal(cs.closed.cutoff, '2025-01-29');
+    assert.equal(stockOf(after), stockOf(before), 'tồn từng vị không đổi');
+    assert.equal(statMonths(after), statMonths(before), 'Thống kê tháng không đổi');
+    assert.deepEqual(after.products, before.products);
+    assert.deepEqual(after.prescriptions, before.prescriptions);
+    /* File lưu trữ + backup truoc-chot; tải về chỉ owner; tên lạ 404. */
+    const list = await t.call('GET', '/api/close-archive');
+    assert.deepEqual(list.body.archives.map(a => a.name), ['luu-tru-truoc-2025-01-29.json']);
+    const dl = await t.call('GET', '/api/close-archive/luu-tru-truoc-2025-01-29.json');
+    assert.equal(dl.status, 200); assert.match(dl.headers.get('content-disposition'), /attachment/);
+    assert.equal(dl.body.transactions.length, 4);
+    assert.equal((await t.call('GET', '/api/close-archive/..%2Fapp.db')).status, 404);
+    const bk = await t.call('GET', '/api/backups');
+    assert.ok(bk.body.backups.some(x => /-truoc-chot-2025-01-29\.db$/.test(x.name)));
+
+    /* Bảo vệ (cả X-Force): giao dịch trước mốc, thiếu/sửa dòng open → 409 closed; bản đúng vẫn ghi. */
+    const old = { ...after, transactions: [...after.transactions, { id: 'cu', date: '2024-12-31', type: 'BAN', productId: 'A', qty: 0.5, price: 1, total: 1, cost: 1 }] };
+    for (const [name, st] of [
+      ['trước mốc', old],
+      ['thiếu open', { ...after, transactions: after.transactions.filter(x => !x.open) }],
+      ['sửa qty open', { ...after, transactions: after.transactions.map(x => x.open ? { ...x, qty: 8 } : x) }],
+      ['sửa giá open', { ...after, transactions: after.transactions.map(x => x.open ? { ...x, price: 99 } : x) }],
+      ['bỏ cờ open', { ...after, transactions: after.transactions.map(x => x.open ? { ...x, open: false } : x) }]
+    ]) {
+      const g = await putState(t, st, 'force');
+      assert.equal(g.status, 409, name); assert.equal(g.body.closed, true, name); assert.equal(g.body.cutoff, '2025-01-29');
+    }
+    assert.equal((await t.get()).updatedAt, after.updatedAt, 'Bảo vệ không ghi gì');
+    const good = await putState(t, after, after.updatedAt);
+    assert.equal(good.status, 200, JSON.stringify(good.body));
+
+    /* Chốt lần 2: cộng dồn bảng tóm tắt, dòng open cũ bị gỡ, dòng mới = tồn tại mốc mới. */
+    const b2 = await t.get();
+    assert.match((await t.call('POST', '/api/close-year', { cutoff: '2025-01-29', dryRun: true })).body.blocks.join(), /Đã chốt đến 2025-01-29/);
+    const r2 = await t.call('POST', '/api/close-year', { cutoff: '2026-02-17' }, { 'X-Base-Updated': String(b2.updatedAt) });
+    assert.equal(r2.status, 200, r2.text);
+    assert.equal(r2.body.totals.imp, 710, 'dòng open cũ không tính vào nhập');
+    const a2 = await t.get();
+    const o2 = a2.transactions.filter(x => x.open);
+    assert.deepEqual(o2.map(x => [x.productId, x.date, x.qty, x.price]), [['A', '2026-02-17', 11, 120]]);
+    assert.equal(a2.closed.cutoff, '2026-02-17');
+    assert.deepEqual(a2.closed.months.map(e => e.m), ['2024-11', '2024-12', '2025-01', '2025-03']);
+    assert.equal(stockOf(a2), stockOf(before));
+    assert.equal(statMonths(a2), statMonths(before), 'Thống kê không đổi qua 2 lần chốt');
+  } finally { await t.stop(); rmDir(dir); }
+});

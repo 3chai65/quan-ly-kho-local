@@ -1422,6 +1422,12 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
         <div id="bakList" role="list"><p class="hint bak-empty" role="none">Đang tải…</p></div><p class="sr" id="bakStat" role="status"></p>
         <div class="bak-pg" id="bakPager"></div>
         <p class="hint bak-note">Chỉ xem. Khôi phục: dừng máy chủ, chép đè data/app.db, xóa app.db-wal và app.db-shm nếu có, rồi khởi động lại (xem README).</p>
+        <div id="closeBox" class="mt-10" hidden>
+          <h3 class="bak-sec__t">Chốt sổ năm</h3>
+          <div id="arcList"></div>
+          <button class="btn" type="button" data-action="close-preview" id="closeBtn" hidden>Chốt sổ…</button>
+          <div id="closeOut"></div>
+        </div>
       </section>
     </div>
   </details>
@@ -1816,6 +1822,14 @@ function fmtUnitPrice(k){ return fmtMoney(k) + '/kg'; }
 function pad2(n){ return n < 10 ? '0' + n : '' + n; }
 function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 function thisYear(){ return todayISO().slice(0, 4); }
+/* 2.40.0 chốt sổ (docs/chot-so.md): bảng Tết dương lịch giờ VN, trùng close.js (test so). Năm sổ âm = từ Tết gần nhất <= ngày; ngoài bảng → 01/01. */
+var TET = ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08'];
+function lunarStart(iso){
+  var s = String(iso || '');
+  for (var i = TET.length - 2; i >= 0; i--) if (s >= TET[i] && s < TET[i + 1]) return TET[i];
+  return null;
+}
+function bookStart(today){ return lunarStart(today) || String(today || '').slice(0, 4) + '-01-01'; }
 function parseDateVN(s){
   s = String(s || '').trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
@@ -2090,7 +2104,8 @@ function sanitize(d, drops){
           (t.g != null && !inRange(t.g, 0, GRAMS_MAX)) ||
           (t.thang != null && !inRange(t.thang, 1, THANG_MAX)) ||
           (t.unitPrice != null && !inRange(t.unitPrice, 0, MONEY_MAX)) ||
-          (t.ts != null && !isNumLike(t.ts))) {
+          (t.ts != null && !isNumLike(t.ts)) ||
+          (t.open != null && t.open !== true && t.open !== false) || (t.open === true && type !== 'NHAP')) {
         if (drops) drops.push('Giao dịch không hợp lệ: ' + id);
         return;
       }
@@ -2118,6 +2133,7 @@ function sanitize(d, drops){
       if (t.thang != null) tx.thang = Math.round(Number(t.thang));
       if (t.unitPrice != null) tx.unitPrice = money(t.unitPrice);
       if (num(t.ts) > 0) tx.ts = num(t.ts);
+      if (t.open === true) tx.open = true; /* 2.40.0 dòng tồn đầu kỳ: rơi cờ thì PUT bị luật Bảo vệ chặn */
       o.transactions.push(tx);
     });
   }
@@ -2164,6 +2180,13 @@ function sanitize(d, drops){
         updatedAt: dec(r.updatedAt)
       });
     });
+  }
+  /* 2.40.0: bảng tóm tắt phần đã chốt (server sở hữu, chỉ đọc); tháng hỏng thì bỏ cả bảng, không làm rơi giao dịch. */
+  var cl = d.closed;
+  if (cl && typeof cl === 'object' && isRealDateISO(cl.cutoff) && Array.isArray(cl.months) && cl.months.every(function(e){
+    return e && /^\d{4}-(0[1-9]|1[0-2])$/.test(String(e.m)) && inRange(e.imp, 0, MONEY_MAX) && inRange(e.rev, 0, MONEY_MAX) && inRange(e.cost, 0, MONEY_MAX);
+  })) {
+    o.closed = { cutoff: cl.cutoff, months: cl.months.map(function(e){ return { m: String(e.m), imp: money(e.imp), rev: money(e.rev), cost: money(e.cost) }; }) };
   }
   return o;
 }
@@ -3453,15 +3476,15 @@ function saveRemedy(){
 /* 2.34.0: vốn của một giao dịch BÁN = cost nếu có (kể cả 0), không thì qty x costPrice hiện tại (0 nếu vị đã xóa); dùng chung computeStats và biểu đồ. */
 function txCost(t, byId){ return t.cost != null ? num(t.cost) : num(t.qty) * (byId[t.productId] ? num(byId[t.productId].costPrice) : 0); }
 function computeStats(transactions, products, today){
-  var ym = String(today || '').slice(0, 7), yr = String(today || '').slice(0, 4);
+  var ym = String(today || '').slice(0, 7), ys = bookStart(today);
   var dExp = 0, dCogs = 0, mImp = 0, mExp = 0, mCogs = 0, yExp = 0, yCogs = 0;
   var byId = Object.create(null);
   (products || []).forEach(function(p){ byId[p.id] = p; });
   (transactions || []).forEach(function(t){
-    if (!t || !t.date) return;
+    if (!t || !t.date || t.open) return;
     var inDay = t.date === today;
     var inMon = t.date.indexOf(ym) === 0;
-    var inYear = t.date.indexOf(yr) === 0;
+    var inYear = t.date >= ys && t.date <= today;
     if (!inDay && !inMon && !inYear) return;
     var v = num(t.total);
     if (t.type === 'NHAP') {
@@ -3636,8 +3659,9 @@ function renderInventory(){
 
   // Tổng kg đã bán theo từng vị (BAN: bán lẻ + đơn chén, đều lưu qty_kg)
   var sales = Object.create(null);
+  var ys = bookStart(todayISO()); /* 2.40.0: "Đã bán" tính từ Tết năm sổ hiện tại */
   db.transactions.forEach(function(t){
-    if (t && t.type === 'BAN') {
+    if (t && t.type === 'BAN' && String(t.date) >= ys) {
       var pid = t.productId;
       sales[pid] = (sales[pid] || 0) + num(t.qty);
     }
@@ -3989,7 +4013,7 @@ function historyData(kind, month, q){
   var pm = productMap();
   var nq = normSearch(q || '');
   var list = db.transactions.filter(function(t){
-    if (t.type !== (isImp ? 'NHAP' : 'BAN')) return false;
+    if (t.type !== (isImp ? 'NHAP' : 'BAN') || t.open) return false;
     if (isImp) return true;
     return !month || (t.date && String(t.date).indexOf(month) === 0);
   });
@@ -4277,8 +4301,17 @@ function chartBuckets(txs, prods, n, idxOf){
   return { impK: a.map(dec), expK: b.map(dec), profK: p.map(dec), n: n };
 }
 function chartDayTotals(txs, y, m, prods){ var ym = y + '-' + pad2(m); return chartBuckets(txs, prods, chartDaysIn(y, m), function(k){ return k.slice(0, 7) === ym ? parseInt(k.slice(8, 10), 10) - 1 : -1; }); }
+/* 2.40.0: giao dịch cho biểu đồ = bỏ dòng tồn đầu kỳ; Tháng/Năm cộng bảng tóm tắt đã chốt (mỗi tháng 2 dòng giả ngày 01, Ngày thì không vì không có số từng ngày). */
+function statTxs(withClosed){
+  var o = db.transactions.filter(function(t){ return !t.open; });
+  if (withClosed && db.closed) db.closed.months.forEach(function(e){
+    var d = e.m + '-01';
+    o.push({ date: d, type: 'NHAP', total: e.imp }, { date: d, type: 'BAN', total: e.rev, cost: e.cost, qty: 0 });
+  });
+  return o;
+}
 function chartData(){
-  var txs = db.transactions, yl = chartYears(txs, Number(thisYear())), d, lab = [], i;
+  var txs = statTxs(chartMode !== 'D'), yl = chartYears(txs, Number(thisYear())), d, lab = [], i;
   if (chartMode === 'D') d = chartDayTotals(txs, chartDy, chartDm, db.products);
   else if (chartMode === 'M') d = chartBuckets(txs, db.products, 12, function(k){ return parseInt(k.slice(0, 4), 10) === chartYr ? parseInt(k.slice(5, 7), 10) - 1 : -1; });
   else d = chartBuckets(txs, db.products, yl.length, function(k){ return parseInt(k.slice(0, 4), 10) - yl[0]; });
@@ -4975,6 +5008,7 @@ function delTx(id){
   var t = null, pos = -1;
   for (var i = 0; i < db.transactions.length; i++) if (db.transactions[i].id === id) { t = db.transactions[i]; pos = i; break; }
   if (!t) return;
+  if (t.open) { toast(OPEN_LOCK_MSG, 'error'); return; }
   var mates = remedyMates(t).filter(function(x){ return x.id !== t.id; });
   var msg = mates.length
     ? 'Xóa vị này khỏi đơn thuốc? Tồn kho hoàn lại. Tiền khách trả giữ nguyên và chia lại cho các vị còn lại.'
@@ -5062,7 +5096,9 @@ function txEditKg(t, qRaw){
   var thang = num(t.thang) > 0 ? num(t.thang) : 1;
   return dec(qRaw / 1000 * thang);
 }
+var OPEN_LOCK_MSG = 'Dòng tồn đầu kỳ (sổ đã chốt) không sửa hay xóa được';
 function openTxEdit(id){
+  if (db.transactions.some(function(t){ return t.id === id && t.open; })) { toast(OPEN_LOCK_MSG, 'error'); return; }
   var t = findTx(id);
   if (!t) return;
   txEditCur = t;
@@ -5319,7 +5355,7 @@ function pushState(manual, force){
   }).then(function(pack){
     var d = pack.d;
     var status = pack.status;
-    if ((d && d.conflict) || status === 409) {
+    if (((d && d.conflict) || status === 409) && !(d && d.closed)) { /* 2.40.0: 409 "sổ đã chốt" đi nhánh từ chối bên dưới (Ghi đè cũng bị chặn) */
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
       pushing = false;
       return cloudConflict();
@@ -5592,6 +5628,77 @@ function loadBakList(){
     done(j && j.success && Array.isArray(j.backups) ? j.backups : null);
   }, function(){ done(null); });
 }
+/* ================= CHỐT SỔ (2.40.0, docs/chot-so.md) ================= */
+/* Nút chốt ẩn tới khi app Mac hiểu dòng open + closed.months (mục 7). File lưu trữ: chỉ chủ thấy (server 403 với thiết bị khác). */
+var CLOSE_UI = false, closePv = null;
+function loadArchives(){
+  var box = $('#closeBox'), list = $('#arcList'), btn = $('#closeBtn');
+  if (!box || !list) return Promise.resolve();
+  return apiFetch('/api/close-archive').then(function(r){ return r && r.ok ? r.json() : null; }).then(function(j){
+    var a = j && j.success && Array.isArray(j.archives) ? j.archives : null;
+    list.textContent = '';
+    (a || []).forEach(function(f){
+      var l = el('a', 'btn btn--sm', 'Tải ' + f.name);
+      l.href = '/api/close-archive/' + encodeURIComponent(f.name); l.setAttribute('download', f.name);
+      list.appendChild(l);
+    });
+    if (btn) btn.hidden = !(a && CLOSE_UI);
+    box.hidden = !(a && (a.length || CLOSE_UI));
+  }, function(){});
+}
+function closeCall(cutoff, dryRun, base){
+  var h = { 'Content-Type': 'application/json' };
+  if (base != null) h['X-Base-Updated'] = String(base);
+  return apiFetch('/api/close-year', { method: 'POST', headers: h, body: JSON.stringify({ cutoff: cutoff, dryRun: dryRun }) })
+    .then(function(r){ return r.json().then(function(j){ return { status: r.status, j: j }; }); });
+}
+function closeYearOf(c){ return String(Number(String(c).slice(0, 4)) - 1); }
+function renderClosePreview(pv){
+  var out = $('#closeOut');
+  if (!out) return;
+  out.textContent = '';
+  var k = function(v){ return fmtNum(dec(num(v) / 1000)); }; /* số đúng, không cắt (khác fmtMoneyInt) */
+  out.appendChild(el('p', 'hint', 'Mốc ' + dateVN(pv.cutoff) + ': gỡ ' + pv.totals.count + ' giao dịch trước mốc. Nhập ' + k(pv.totals.imp) + ' · Doanh thu ' + k(pv.totals.rev) + ' · Giá vốn ' + k(pv.totals.cost) + ' · Lợi nhuận ' + k(pv.totals.profit) + ' (nghìn đồng).'));
+  var sm = pv.months.reduce(function(a, e){ return { rev: a.rev + e.rev, cost: a.cost + e.cost }; }, { rev: 0, cost: 0 });
+  out.appendChild(el('p', 'hint', 'Bảng tóm tắt ' + pv.months.length + ' tháng: doanh thu ' + k(sm.rev) + ', giá vốn ' + k(sm.cost) + '.'));
+  var tb = el('table', 'tbl');
+  var hd = el('tr'); ['Vị thuốc', 'Tồn tại mốc', 'Giá vốn'].forEach(function(x){ hd.appendChild(el('th', null, x)); }); tb.appendChild(hd);
+  pv.opening.forEach(function(o){ var tr = el('tr'); tr.appendChild(el('td', null, o.name)); tr.appendChild(el('td', 'num', fmtKgExact(o.qty))); tr.appendChild(el('td', 'num', k(o.price))); tb.appendChild(tr); });
+  out.appendChild(tb);
+  var bad = pv.blocks.slice();
+  if (sm.rev !== pv.totals.rev || sm.cost !== pv.totals.cost) bad.push('Tổng gỡ khác bảng tóm tắt');
+  if (bad.length) { bad.forEach(function(b){ out.appendChild(el('p', 'txt-red', b)); }); return; }
+  out.appendChild(el('p', 'hint', 'Nên chốt khi các máy khác không đang nhập dở. Gõ CHOT ' + closeYearOf(pv.cutoff) + ' để chốt.'));
+  var inp = el('input', 'inp'); inp.id = 'closeConfirm'; inp.autocomplete = 'off';
+  out.appendChild(inp);
+  var b = el('button', 'btn btn--danger', 'Chốt sổ'); b.type = 'button'; b.setAttribute('data-action', 'close-run');
+  out.appendChild(b);
+}
+function closePreview(){
+  /* D đề xuất = Tết năm nay − 1 (ngày cuối năm âm vừa hết); C = Tết của năm âm chứa D. */
+  var cur = lunarStart(todayISO());
+  var d = window.prompt('Ngày chốt (YYYY-MM-DD): gỡ giao dịch trước Tết của năm âm chứa ngày này', cur ? prevDayISO(cur) : '');
+  if (d == null) return Promise.resolve();
+  var c = lunarStart(String(d).trim());
+  if (!c) { toast('Ngày ngoài bảng Tết', 'error'); return Promise.resolve(); }
+  return closeCall(c, true).then(function(x){
+    if (!x.j || !x.j.success) { toast((x.j && x.j.error) || 'Không xem trước được', 'error'); return; }
+    closePv = x.j; renderClosePreview(x.j);
+  }, function(){ toast('Không xem trước được', 'error'); });
+}
+function closeRun(){
+  var pv = closePv, inp = $('#closeConfirm');
+  if (!pv || !inp || String(inp.value).trim() !== 'CHOT ' + closeYearOf(pv.cutoff)) { toast('Gõ đúng CHOT ' + (pv ? closeYearOf(pv.cutoff) : ''), 'error'); return Promise.resolve(); }
+  if (dirty) { toast('Còn thay đổi chưa gửi lên máy chủ, chờ đồng bộ rồi xem trước lại', 'error'); return Promise.resolve(); }
+  return closeCall(pv.cutoff, false, pv.updatedAt).then(function(x){
+    closePv = null;
+    var out = $('#closeOut'); if (out) out.textContent = '';
+    if (!x.j || !x.j.success) { toast((x.j && x.j.error) || 'Chốt sổ lỗi', 'error'); return; }
+    toast('Đã chốt sổ đến ' + dateVN(pv.cutoff));
+    return pullState(false).then(loadArchives);
+  }, function(){ toast('Chốt sổ lỗi, dữ liệu không đổi', 'error'); });
+}
+function prevDayISO(iso){ return new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) - 1)).toISOString().slice(0, 10); }
 function downloadBackup(manual, filename, skipStamp){
   var url = null;
   try {
@@ -5668,6 +5775,7 @@ function validateBackupState(d){
     if (t.thang != null && !inRange(t.thang, 1, THANG_MAX)) return tl + ': số thang phải từ 1 đến ' + THANG_MAX;
     if (t.unitPrice != null && !inRange(t.unitPrice, 0, MONEY_MAX)) return tl + ': giá 1 thang phải từ 0 đến ' + MONEY_MAX;
     if (t.ts != null && !isNumLike(t.ts)) return tl + ': ts không hợp lệ';
+    if (t.open === true && t.type !== 'NHAP') return tl + ': dòng tồn đầu kỳ phải là NHAP';
     var oname = t.oname != null ? String(t.oname).trim() : (t.orderName != null ? String(t.orderName).trim() : '');
     if (oname && oname.length > NAME_MAX) return tl + ': tên đơn quá dài (tối đa ' + NAME_MAX + ' ký tự)';
   }
@@ -5844,7 +5952,9 @@ function handleAction(btn){
     case 'rec-fix': recFix(id); break;
     case 'rec-fix-all': recFixAll(); break;
     case 'backup-now': downloadBackup(true); break;
-    case 'bak-refresh': loadBakList(); break;
+    case 'bak-refresh': loadBakList(); loadArchives(); break;
+    case 'close-preview': closePreview(); break;
+    case 'close-run': closeRun(); break;
     case 'open-backup-dir': {
       var T = window.__TAURI__;
       if (T && T.core) T.core.invoke('mo_thu_muc_sao_luu').catch(function(){ toast('Không mở được thư mục sao lưu'); });
@@ -6009,7 +6119,7 @@ function bindEvents(){
   });
   if (cb) cb.addEventListener('keydown', function(e){ if (isDesk() && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); chartKey(e.key === 'ArrowLeft' ? -1 : 1); } }); /* 2.34.0 */
   var bbx = $('#backupBox');
-  if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) { loadBakList(); bakView('bak'); } });
+  if (bbx) bbx.addEventListener('toggle', function(){ if (bbx.open) { loadBakList(); loadArchives(); bakView('bak'); } });
   var rbx = $('#remedyBox');
   if (rbx) rbx.addEventListener('toggle', function(){ if (rbx.open) { presetPage = 1; renderPresetList(); } }); /* 2.28.0: ĐƠN ĐÃ LƯU mở ở trang 1 khi vào tab */
   initTabs();
