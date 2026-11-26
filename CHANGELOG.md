@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.10] - 2026-11-26
+
+### Sửa
+- Đồng bộ (việc AO): autoRefresh 15s bị `busyEditing()` chặn cả lần TẢI khi có đơn soạn dở hoặc ô nhập đang focus (Tauri desktop thường như vậy) → không pull hàng giờ, lưu xong mới gặp 409. Nay luôn tải (trừ khi dirty/xung đột/ẩn), áp ngay nếu máy không có thay đổi chưa gửi; chỉ hoãn áp khi đang mở hộp thoại sửa (renderAll không vẽ lại tờ ghi/ô nhập).
+- Trước khi lưu Bán lẻ/Thuốc chén/Nhập hàng (`freshThen`): lần khớp hub cuối quá 15s thì tải và áp bản mới nhất rồi mới lưu; hub chậm thì chờ tối đa 3s rồi lưu; mất mạng hoặc lỗi khi áp vẫn lưu như cũ; bấm lặp khi đang chờ thì bỏ qua. Áp bản hub xong làm mới gợi ý "còn X" trong tờ ghi. Auditor Opus duyệt (đã sửa: freshing kẹt khi lỗi, chờ quá lâu).
+- Tải lại khi cửa sổ focus, visibilitychange về visible (đã có) và khi mạng có lại (`online`).
+- Chấm đồng bộ vàng khi quá 60s chưa xác nhận khớp bản hub (`lastFresh`). Chữ "Đã đồng bộ hh:mm" = lần liên lạc thành công gần nhất (pull hoặc push).
+
 ## [2.39.9] - 2026-11-26
 
 ### Sửa

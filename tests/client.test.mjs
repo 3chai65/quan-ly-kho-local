@@ -114,7 +114,7 @@ setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
   normSearch: (typeof normSearch === 'function' ? normSearch : null),
-  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), vvTopPx: (typeof vvTopPx === 'function' ? vvTopPx : null), logoTapsHit: (typeof logoTapsHit === 'function' ? logoTapsHit : null), brandTap: (typeof brandTap === 'function' ? brandTap : null), calcRemedyTyping: (typeof calcRemedyTyping === 'function' ? calcRemedyTyping : null), kbDebugOn: (typeof kbDebugOn === 'function' ? kbDebugOn : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
+  handleAction: (typeof handleAction === 'function' ? handleAction : null), toast: (typeof toast === 'function' ? toast : null), vvTopPx: (typeof vvTopPx === 'function' ? vvTopPx : null), logoTapsHit: (typeof logoTapsHit === 'function' ? logoTapsHit : null), brandTap: (typeof brandTap === 'function' ? brandTap : null), calcRemedyTyping: (typeof calcRemedyTyping === 'function' ? calcRemedyTyping : null), kbDebugOn: (typeof kbDebugOn === 'function' ? kbDebugOn : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), chartDefaultMonth: (typeof chartDefaultMonth === 'function' ? chartDefaultMonth : null), renderChart: (typeof renderChart === 'function' ? renderChart : null), onChartClick: (typeof onChartClick === 'function' ? onChartClick : null), getChartSel: function(){ return chartSel; }, chartYears: (typeof chartYears === 'function' ? chartYears : null), chartDefIdx: (typeof chartDefIdx === 'function' ? chartDefIdx : null), chartKeyStep: (typeof chartKeyStep === 'function' ? chartKeyStep : null), chartKey: (typeof chartKey === 'function' ? chartKey : null), chartBuckets: (typeof chartBuckets === 'function' ? chartBuckets : null), chartTicks: (typeof chartTicks === 'function' ? chartTicks : null), chartYearBw: (typeof chartYearBw === 'function' ? chartYearBw : null), chartLabelStep: (typeof chartLabelStep === 'function' ? chartLabelStep : null), chartLabelPlan: (typeof chartLabelPlan === 'function' ? chartLabelPlan : null), chartYearStep: (typeof chartYearStep === 'function' ? chartYearStep : null), chartYearGo: (typeof chartYearGo === 'function' ? chartYearGo : null), getChartYr: function(){ return chartYr; }, chartDaysIn: (typeof chartDaysIn === 'function' ? chartDaysIn : null), chartMonthStep: (typeof chartMonthStep === 'function' ? chartMonthStep : null), chartDayTotals: (typeof chartDayTotals === 'function' ? chartDayTotals : null), chartModeSet: (typeof chartModeSet === 'function' ? chartModeSet : null), chartWideW: (typeof chartWideW === 'function' ? chartWideW : null), chartScrollLeft: (typeof chartScrollLeft === 'function' ? chartScrollLeft : null), getChartDay: function(){ return [chartMode, chartDy, chartDm]; }, setChartDay: function(y, m){ chartDy = y; chartDm = m; }, noteSyncFailure: (typeof noteSyncFailure === 'function' ? noteSyncFailure : null), renderSyncLine: (typeof renderSyncLine === 'function' ? renderSyncLine : null), setLastSyncOk: function(v){ lastSyncOk = v; }, setLastFresh: function(v){ lastFresh = v; }, getLastFresh: function(){ return lastFresh; }, nowMs: function(){ return Date.now(); }, freshThen: (typeof freshThen === 'function' ? freshThen : null), takeServer: (typeof takeServer === 'function' ? takeServer : null), setTxEditCur: function(v){ txEditCur = v; }, setChartYr: function(v){ chartYr = v; }, chartData: (typeof chartData === 'function' ? chartData : null), onChartMove: (typeof onChartMove === 'function' ? onChartMove : null), setChartSel: function(v){ chartSel = v; }, addNhapItem: (typeof addNhapItem === 'function' ? addNhapItem : null), addRemedyToNote: (typeof addRemedyToNote === 'function' ? addRemedyToNote : null), delOrder: (typeof delOrder === 'function' ? delOrder : null), openOrder: (typeof openOrder === 'function' ? openOrder : null), pickSuggest: (typeof pickSuggest === 'function' ? pickSuggest : null),
   scheduleSyncRetry: (typeof scheduleSyncRetry === 'function' ? scheduleSyncRetry : null), noteSave: (typeof noteSave === 'function' ? noteSave : null), remedyNoteSave: (typeof remedyNoteSave === 'function' ? remedyNoteSave : null),
   savePreset: (typeof savePreset === 'function' ? savePreset : null), saveEdit: (typeof saveEdit === 'function' ? saveEdit : null), remedyPresetPick: (typeof remedyPresetPick === 'function' ? remedyPresetPick : null), remedySavePresetClick: (typeof remedySavePresetClick === 'function' ? remedySavePresetClick : null), remedyNameShow: (typeof remedyNameShow === 'function' ? remedyNameShow : null),
   setNoteEditIdx: function(v){ noteEditIdx = v; }, setRemedyEditIdx: function(v){ remedyEditIdx = v; },
@@ -1026,19 +1026,98 @@ test('busyEditing: nhận biết ô nhập và hộp thoại đang mở', () => 
   assert.equal(client.busyEditing(), false, 'nút bấm không chặn làm mới');
 });
 
-test('autoRefresh: KHÔNG tải khi đang gõ trong ô nhập', async () => {
-  let calls = 0;
-  const remote = { products: [{ id: 'p1', name: 'Moi', stock: 9, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500 };
-  const fetchStub = async () => { calls++; return { status: 200, json: async () => ({ success: true, data: remote }) }; };
-  const client = loadClient({ fetch: fetchStub });
-  client.setDb({ products: [{ id: 'p1', name: 'DangNhap', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100 });
+/* 2.39.10 (việc AO): Tauri không pull 5 tiếng vì busyEditing() chặn cả lần TẢI (đơn soạn dở / ô đang focus). Nay: vẫn tải, áp khi không dirty; chỉ hoãn áp khi có hộp thoại sửa. */
+const ao = (remote, over = {}) => {
+  const st = { calls: 0, fail: false };
+  const client = loadClient({ fetch: async () => { st.calls++; if (st.fail) throw new Error('net'); return { status: 200, json: async () => ({ success: true, data: remote }) }; }, ...over });
+  client.setDb({ products: [{ id: 'p1', name: 'Cu', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
   client.setBase(100);
   client.setDirty(false);
+  return { client, st };
+};
+const aoRemote = { products: [{ id: 'p1', name: 'Moi', stock: 9, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 500, moneyUnit: 'dong' };
+test('2.39.10 autoRefresh: đang gõ ô nhập + có đơn soạn dở vẫn tải và áp bản hub mới (không dirty); lastFresh cập nhật', async () => {
+  const { client, st } = ao(aoRemote);
   client.setActiveTag('INPUT');
-  await client.autoRefresh();
-  client.setActiveTag(null);
-  assert.equal(calls, 0, 'không được gọi mạng khi đang nhập');
-  assert.equal(client.getDb().products[0].name, 'DangNhap', 'giữ nguyên nội dung đang nhập');
+  client.setRetailItems([{ pid: 'p1', kg: 1, amount: 50 }]);
+  assert.equal(await client.autoRefresh(), true);
+  assert.equal(st.calls, 1, 'vẫn gọi mạng');
+  assert.equal(client.getDb().products[0].name, 'Moi', 'áp bản hub mới');
+  assert.ok(client.getLastFresh() > 0, 'ghi mốc khớp hub');
+  assert.equal(client.getRetailItems ? client.getRetailItems().length : 1, 1, 'đơn soạn dở giữ nguyên');
+  client.setActiveTag(null); client.setRetailItems([]);
+});
+test('2.39.10 autoRefresh: dirty thì không tải; hộp thoại sửa đang mở thì tải nhưng hoãn áp', async () => {
+  const a = ao(aoRemote);
+  a.client.setDirty(true);
+  assert.equal(await a.client.autoRefresh(), false);
+  assert.equal(a.st.calls, 0, 'có thay đổi chưa gửi: không tải');
+  const b = ao(aoRemote);
+  b.client.setTxEditCur({ id: 't1' });
+  assert.equal(await b.client.autoRefresh(), false);
+  assert.equal(b.st.calls, 1);
+  assert.equal(b.client.getDb().products[0].name, 'Cu', 'đang sửa giao dịch: chưa áp');
+  assert.equal(b.client.getLastFresh(), 0, 'chưa khớp hub → chấm sẽ vàng sau 60s');
+  b.client.setTxEditCur(null);
+});
+test('2.39.10 freshThen: quá 15s thì tải + áp bản hub TRƯỚC khi lưu; vừa khớp thì lưu ngay; lỗi mạng vẫn lưu; bấm lặp bỏ qua', async () => {
+  const a = ao(aoRemote);
+  let seen = null;
+  await a.client.freshThen(() => { seen = a.client.getDb().products[0].name; });
+  assert.equal(a.st.calls, 1);
+  assert.equal(seen, 'Moi', 'hàm lưu chạy trên bản hub mới');
+  assert.equal(a.client.getBase(), 500, 'cloudBase = bản hub → PUT không 409');
+  let n = 0;
+  await a.client.freshThen(() => { n++; });
+  assert.equal(a.st.calls, 1, 'vừa khớp (<15s): không tải lại');
+  assert.equal(n, 1);
+  a.client.setLastFresh(a.client.nowMs() - 16000);
+  const p1 = a.client.freshThen(() => { n++; }), p2 = a.client.freshThen(() => { n++; });
+  await p1; await p2;
+  assert.equal(n, 2, 'bấm lặp trong lúc chờ: chỉ lưu một lần');
+  const b = ao(aoRemote);
+  b.st.fail = true;
+  let ran = false;
+  await b.client.freshThen(() => { ran = true; });
+  assert.ok(ran, 'mất mạng: vẫn lưu (gửi lại sau)');
+  assert.equal(b.client.getDb().products[0].name, 'Cu');
+  const c = ao(aoRemote);
+  c.client.setDirty(true);
+  let ran2 = false;
+  await c.client.freshThen(() => { ran2 = true; });
+  assert.ok(ran2 && c.st.calls === 0, 'có thay đổi chưa gửi: không tải, không đè');
+  let cl = null;
+  const d = loadClient({ fetch: async () => { cl.setDirty(true); return { status: 200, json: async () => ({ success: true, data: aoRemote }) }; } });
+  cl = d;
+  d.setDb({ products: [{ id: 'p1', name: 'Cu', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 100, moneyUnit: 'dong' });
+  d.setBase(100); d.setDirty(false);
+  await d.freshThen(() => {});
+  assert.equal(d.getDb().products[0].name, 'Cu', 'vừa có thay đổi trong lúc chờ tải: không đè bằng bản hub');
+  assert.equal(d.getBase(), 100);
+  const e = ao(aoRemote, { fetch: () => new Promise(() => {}), setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: (x) => clearTimeout(x) });
+  const t0 = Date.now(); let ran3 = false;
+  await e.client.freshThen(() => { ran3 = true; });
+  assert.ok(ran3 && Date.now() - t0 >= 2900 && Date.now() - t0 < 6000, 'hub không trả lời: chờ ~3s rồi vẫn lưu');
+  assert.ok(/Promise\.race\(\[fetchServer\('freshThen'\), wait\]\)\n\s*\.then\(function\(server\)\{ takeServer\(server, true\); \}\)\n\s*\.catch\(function\(\)\{\}\)[^\n]*\n\s*\.then\(function\(\)\{ freshing = false; fn\(\); return true; \}\);/.test(PAGE), 'lỗi khi áp cũng không làm freshing kẹt');
+});
+test('2.39.10 nút lưu Bán lẻ/Thuốc chén/Nhập hàng đi qua freshThen; tải lại khi focus/visible/online; chấm vàng > 60s', () => {
+  assert.ok(PAGE.includes("case 'save-retail': freshThen(saveRetail); break;") && PAGE.includes("case 'save-remedy': freshThen(saveRemedy); break;"));
+  assert.ok(PAGE.includes("nf.addEventListener('submit', function(e){ e.preventDefault(); freshThen(saveNhap); });"));
+  assert.ok(!/addEventListener\('submit', saveNhap\)/.test(PAGE));
+  assert.ok(PAGE.includes("window.addEventListener('online', function(){ autoRefresh();"));
+  assert.ok(/visibilitychange[\s\S]{0,120}autoRefresh\(\)/.test(PAGE) && /addEventListener\('focus', function\(\)\{[^}]*autoRefresh\(\)/.test(PAGE));
+  assert.ok(/function autoRefresh\(\)\{\n  renderSyncLine\(\);[^\n]*\n  if \(refreshing \|\| authLost \|\| dirty \|\| conflictOpen \|\| doc\.hidden\) return/.test(PAGE), 'autoRefresh không còn bị busyEditing chặn');
+  assert.ok(/\.syncm\[data-st=warn\] \.syncm__d\{background:#FEBC2E\}/.test(PAGE) && /\.sbs\[data-st=warn\]::before\{background:#FEBC2E\}/.test(PAGE));
+});
+test('2.39.10 renderSyncLine: khớp hub trong 60s → xanh; quá 60s → vàng (warn); lỗi vẫn đỏ', () => {
+  const { c, els } = deskChart([2026, 10, 18, 12], []);
+  const L = els['#syncLine'];
+  c.setLastSyncOk(c.nowMs()); c.setLastFresh(c.nowMs() - 59000); c.renderSyncLine();
+  assert.equal(L.attrs['data-st'], 'ok');
+  c.setLastFresh(c.nowMs() - 61000); c.renderSyncLine();
+  assert.equal(L.attrs['data-st'], 'warn');
+  c.noteSyncFailure('x', true, true);
+  assert.equal(L.attrs['data-st'], 'err', 'lỗi ưu tiên hơn cảnh báo');
 });
 test('W7: sanitize giữ oname khi thiếu oid', () => {
   const out = app.sanitize({
@@ -6616,7 +6695,7 @@ test('2.25.0 dòng đồng bộ thanh bên (#syncLine): ổn có giờ, mất m�
   const { c, els } = deskChart([2026, 10, 18, 12], []);
   const L = els['#syncLine'];
   c.renderSyncLine(); assert.equal(L.textContent, 'Đang kết nối…'); assert.equal(L.attrs['data-st'], 'ok');
-  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.renderSyncLine();
+  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.setLastFresh(c.nowMs()); c.renderSyncLine();
   assert.equal(L.textContent, 'Đã đồng bộ 09:05'); assert.equal(L.attrs['data-st'], 'ok');
   c.noteSyncFailure('x', true, true);
   assert.equal(L.textContent, 'Mất kết nối — đang thử lại…'); assert.equal(L.attrs['data-st'], 'err');
@@ -6632,7 +6711,7 @@ test('2.25.0 dòng đồng bộ thanh bên (#syncLine): ổn có giờ, mất m�
 test('2.25.1 #syncLine: dirty quá hạn không lỗi → Chưa đồng bộ; hết dirty → Đã đồng bộ; syncNet ưu tiên hơn', () => {
   const { c, els } = deskChart([2026, 10, 18, 12], []);
   const L = els['#syncLine'];
-  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime());
+  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.setLastFresh(c.nowMs());
   c.setDirty(true); c.setDirtySince(1); c.renderSyncLine();
   assert.equal(L.textContent, 'Chưa đồng bộ'); assert.equal(L.attrs['data-st'], 'err');
   c.noteSyncFailure('x', true, true);
@@ -7678,7 +7757,7 @@ test('H.2 renderSyncLine cập nhật #syncLineM (chấm + HH:MM); phoneTop chuy
   const mkA = () => { const o = makeEl(); o.attrs = {}; o.setAttribute = (k, v) => { o.attrs[k] = v; }; return o; };
   const m = mkA(), t = mkA(); m.querySelector = (q) => (q === '.syncm__t' ? t : null);
   const c = loadClient({ document: limitDoc({ '#syncLineM': m }) });
-  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.renderSyncLine();
+  c.setLastSyncOk(new Date(2026, 10, 18, 9, 5).getTime()); c.setLastFresh(c.nowMs()); c.renderSyncLine();
   assert.equal(t.textContent, '09:05'); assert.equal(m.attrs['data-st'], 'ok'); assert.equal(m.attrs['aria-label'], 'Đã đồng bộ 09:05');
   c.noteSyncFailure('x', true, true); assert.equal(m.attrs['data-st'], 'err'); assert.equal(t.textContent, '09:05');
   const mv = []; const mkN = () => { const o = mkA(); o.insertBefore = (a, b) => { mv.push([a, b]); }; return o; };

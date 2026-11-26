@@ -533,6 +533,7 @@ html:not(.desktop) #brandBtn{font-size:0;flex:none;justify-content:center;width:
 .syncm{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:48px;min-height:44px;padding:0;border:0;background:none;color:var(--text2);font:inherit;font-size:11px;font-variant-numeric:tabular-nums}
 .syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}
 .syncm[data-st=err] .syncm__d{background:#FF5F57}
+.syncm[data-st=warn] .syncm__d{background:#FEBC2E} /* 2.39.10: quá 60s chưa xác nhận khớp bản hub */
 html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;margin:0;padding:2px 4px 3px}
 html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0;position:relative}
 .tab__bd{position:absolute;top:1px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#FF5F57;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center;pointer-events:none}
@@ -768,6 +769,7 @@ html.desktop .szpick button{flex:1;min-height:26px;border-radius:999px;border:1p
 html.desktop .sbs{flex:1;min-width:0;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
 html.desktop .sbs[data-st=err]::before{background:#FF5F57}
+html.desktop .sbs[data-st=warn]::before{background:#FEBC2E}
 html.desktop .brand__yin{cursor:pointer}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
@@ -2010,7 +2012,7 @@ var cloudBase = 0;
 var dirty = false;
 var syncErrorShown = false;
 var syncDetail = '';
-var lastSyncOk = 0, syncNet = false; /* 2.25.0: mốc đồng bộ thành công gần nhất; lỗi hiện tại là mất mạng */
+var lastSyncOk = 0, syncNet = false, lastFresh = 0, FRESH_MS = 15000, STALE_MS = 60000; /* 2.39.10: lastFresh = lần cuối biết chắc máy này khớp bản mới nhất trên hub (pull thấy không mới hơn / đã áp / PUT xong) */ /* 2.25.0: mốc đồng bộ thành công gần nhất; lỗi hiện tại là mất mạng */
 var quotaNote = '';
 var quotaWarned = false;
 var conflictOpen = false;
@@ -2231,11 +2233,12 @@ function renderSyncLine(){
   if (!el && !m) return;
   var stale = !!(dirty && dirtySince && Date.now() - dirtySince >= DIRTY_BADGE_MS);  /* cùng điều kiện huy hiệu */
   var bad = authLost || syncErrorShown || stale, d = new Date(lastSyncOk);
+  var st = bad ? 'err' : lastSyncOk && Date.now() - lastFresh > STALE_MS ? 'warn' : 'ok'; /* 2.39.10: chấm vàng khi quá 60s chưa xác nhận khớp hub */
   var txt = authLost ? 'Chưa lưu được' : syncErrorShown ? (syncNet ? 'Mất kết nối — đang thử lại…' : 'Chưa lưu được') :
     stale ? 'Chưa đồng bộ' : lastSyncOk ? 'Đã đồng bộ ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : 'Đang kết nối…';
-  if (el) { el.setAttribute('data-st', bad ? 'err' : 'ok'); el.textContent = txt; }
+  if (el) { el.setAttribute('data-st', st); el.textContent = txt; }
   if (m) { /* H.2: dòng đồng bộ trên thanh đầu điện thoại: chấm + HH:MM */
-    m.setAttribute('data-st', bad ? 'err' : 'ok'); m.setAttribute('aria-label', txt); m.title = txt;
+    m.setAttribute('data-st', st); m.setAttribute('aria-label', txt); m.title = txt;
     var t = $('.syncm__t', m); if (t) t.textContent = lastSyncOk ? pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : '--:--';
   }
 }
@@ -5339,7 +5342,7 @@ function pushState(manual, force){
       syncRejected = false;
       syncRetryDelay = DIRTY_BADGE_MS;
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
-      lastSyncOk = Date.now();
+      lastSyncOk = lastFresh = Date.now();
       saveLocal();
       renderSyncBadge();
       noteStockWarnings(d && d.stockDrift);
@@ -5410,6 +5413,7 @@ function pullState(manual){
       /* Luôn thay db bằng bản máy chủ (cả ba chỗ gọi đều là chủ động bỏ nháp/khởi động); không bao giờ gửi PUT ở đây. */
       db = server;
       dirty = false;
+      lastFresh = Date.now();
       saveLocal();
       renderAll();
       if (manual) toast('Đã tải dữ liệu mới nhất');
@@ -5432,36 +5436,65 @@ function busyEditing(){
   if (nhapList && nhapList.length) return true;
   return false;
 }
-function autoRefresh(){
-  if (refreshing || authLost || dirty || conflictOpen || doc.hidden || busyEditing()) return Promise.resolve(false);
-  refreshing = true;
+/* 2.39.10: chỉ hoãn ÁP khi đang mở hộp thoại (sửa giao dịch…). Đơn đang soạn và ô đang gõ không còn chặn: renderAll không vẽ lại tờ ghi/ô nhập.
+   Trước đây busyEditing() chặn cả lần TẢI → Tauri có đơn soạn dở/ô tên đang focus thì không pull hàng giờ, lưu xong mới gặp 409. */
+function dialogOpen(){
+  var d = doc.querySelectorAll ? doc.querySelectorAll('dialog[open]') : null;
+  return !!(d && d.length) || !!txEditCur;
+}
+function fetchServer(where){
   return apiFetch('/api/state?t=' + Date.now())
     .then(function(r){
       if (r && r.status === 401) { noteAuthLost(); return null; }
       return r ? r.json() : null;
     })
     .then(function(d){
+      var chk = d && d.success ? checkServerData(d.data, where) : null;
+      return chk && chk.ok ? chk.state : null;
+    });
+}
+/* Áp bản hub khi máy này không có thay đổi chưa gửi. Trả true nếu đã thay db. */
+function takeServer(server, quiet){
+  if (!server || dirty || conflictOpen) return false;
+  lastSyncOk = lastFresh = Date.now();
+  var newer = num(server.updatedAt) > num(cloudBase);
+  if (newer) {
+    cloudBase = num(server.updatedAt);
+    db = server;
+    dirty = false;
+    saveLocal();
+    renderAll();
+    try { refreshAllQtyHints(); } catch (e) {} /* gợi ý "còn X" trong tờ ghi theo tồn mới */
+    if (!quiet) toast('Đã cập nhật dữ liệu mới từ thiết bị khác');
+  }
+  renderSyncLine();
+  return newer;
+}
+function autoRefresh(){
+  renderSyncLine(); /* chấm vàng tự hiện khi quá 60s, cả khi nhịp này bị bỏ */
+  if (refreshing || authLost || dirty || conflictOpen || doc.hidden) return Promise.resolve(false);
+  refreshing = true;
+  return fetchServer('autoRefresh')
+    .then(function(server){
       refreshing = false;
-      /* Trong lúc chờ máy chủ, người dùng có thể bắt đầu sửa hoặc mở giỏ hàng.
-         Không ghi đè bản đang làm. */
-      if (dirty || conflictOpen || busyEditing()) return false;
-      var chk = d && d.success ? checkServerData(d.data, 'autoRefresh') : null;
-      var server = chk && chk.ok ? chk.state : null;
-      if (!server) return false;
-      lastSyncOk = Date.now();
-      renderSyncLine();
-      if (num(server.updatedAt) > num(cloudBase)) {
-        cloudBase = num(server.updatedAt);
-        db = server;
-        dirty = false;
-        saveLocal();
-        renderAll();
-        toast('Đã cập nhật dữ liệu mới từ thiết bị khác'); /* hộp đơn đang mở thì busyEditing() đã chặn ở trên */
-        return true;
-      }
-      return false;
+      if (!server || dirty || conflictOpen) return false;
+      if (dialogOpen() && num(server.updatedAt) > num(cloudBase)) return false; /* hoãn tới nhịp sau; lưu sẽ tự tải trước (freshThen) */
+      return takeServer(server, false);
     })
     .catch(function(){ refreshing = false; return false; });
+}
+/* 2.39.10: trước khi lưu đơn/nhập: lần khớp hub cuối quá 15s thì tải bản mới nhất, áp (máy này không có thay đổi chưa gửi), rồi mới lưu.
+   Lỗi mạng: vẫn lưu như cũ (dirty, gửi lại sau). Bấm lặp trong lúc chờ: bỏ qua. */
+var freshing = false, FRESH_WAIT_MS = 3000;
+function freshThen(fn){
+  if (freshing) return Promise.resolve(false);
+  if (dirty || conflictOpen || authLost || Date.now() - lastFresh <= FRESH_MS) { fn(); return Promise.resolve(true); }
+  freshing = true;
+  var wait = new Promise(function(r){ setTimeout(r, FRESH_WAIT_MS); }); /* hub chậm: chờ tối đa 3s rồi lưu luôn (đơn chỉ nằm trong bộ nhớ) */
+  return Promise.race([fetchServer('freshThen'), wait])
+    .then(function(server){ takeServer(server, true); })
+    .catch(function(){}) /* lỗi mạng hoặc lỗi khi áp: vẫn lưu, không để freshing kẹt */
+    .then(function(){ freshing = false; fn(); return true; });
 }
 function startAutoRefresh(){
   setInterval(autoRefresh, 15000);                      // định kỳ 15s
@@ -5471,6 +5504,7 @@ function startAutoRefresh(){
     if (!doc.hidden) { refreshAutoDates(); autoRefresh(); refreshUnread(); }
   });
   window.addEventListener('focus', function(){ refreshAutoDates(); autoRefresh(); refreshUnread(); }); // cửa sổ được focus
+  window.addEventListener('online', function(){ autoRefresh(); refreshUnread(); }); // 2.39.10: mạng có lại
 }
 
 /* ================= SAO LƯU / KHÔI PHỤC ================= */
@@ -5743,8 +5777,8 @@ function handleAction(btn){
   var id = btn.getAttribute('data-id');
   switch (a) {
     case 'nhap-add': addNhapItem(); break;
-    case 'save-retail': saveRetail(); break;
-    case 'save-remedy': saveRemedy(); break;
+    case 'save-retail': freshThen(saveRetail); break; /* 2.39.10: tải bản hub mới nhất trước khi lưu */
+    case 'save-remedy': freshThen(saveRemedy); break;
     case 'save-preset': remedySavePresetClick(); break;
     case 'del-preset': delPreset(); break;
     case 'pick-preset': pickPresetRow(id); break;
@@ -5844,7 +5878,7 @@ function bindEvents(){
   });
 
   var nf = $('#nhapForm');
-  if (nf) nf.addEventListener('submit', saveNhap);
+  if (nf) nf.addEventListener('submit', function(e){ e.preventDefault(); freshThen(saveNhap); });
   /* N2: lỗi trong hộp thoại tự xóa khi hộp đóng hoặc người dùng sửa một ô trong hộp. */
   $$('dialog').forEach(function(d){
     d.addEventListener('close', function(){ clearDlgErr(d); });
@@ -6334,7 +6368,7 @@ function init(boot){
     db = remote;
     cloudBase = num(remote.updatedAt) || savedBase;
     dirty = false;
-    lastSyncOk = Date.now();
+    lastSyncOk = lastFresh = Date.now();
     saveLocal();
   } else if (local) {
     db = local;
