@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.2] - 2026-11-26
+
+### Thêm
+- Nút "Hướng dẫn chốt sổ" cạnh "Chốt sổ…" (cùng điều kiện: thiết bị chủ, desktop), mở hộp `dlg dlg--wide` có sẵn với nội dung hướng dẫn của Người duyệt (việc AP), đã chỉnh vài chỗ cho khớp hành vi app. App Mac không làm theo.
+
 ## [2.40.1] - 2026-11-26
 
 ### Thêm

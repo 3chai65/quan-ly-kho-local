@@ -1426,6 +1426,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
           <h3 class="bak-sec__t">Chốt sổ năm</h3>
           <div id="arcList"></div>
           <button class="btn" type="button" data-action="close-preview" id="closeBtn" hidden>Chốt sổ…</button>
+          <button class="btn" type="button" data-action="guide-open" id="closeGuideBtn" hidden>Hướng dẫn chốt sổ</button>
           <div id="closeOut"></div>
         </div>
       </section>
@@ -1482,6 +1483,52 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
     <div class="card__foot dlg__foot">
       <button class="btn" type="button" data-action="close-rec">Đóng</button>
       <button class="btn btn--primary" type="button" data-action="rec-fix-all" id="recFixAll">Áp dụng tất cả</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg dlg--wide" id="guideDlg" aria-labelledby="guideTitle">
+  <div class="card dlg__card">
+    <div class="card__head">
+      <svg class="ico txt-brand" aria-hidden="true"><use href="#i-drive"/></svg>
+      <h2 class="card__title" id="guideTitle">Chốt sổ năm (theo năm âm lịch)</h2>
+    </div>
+    <div class="card__body">
+      <p>Chốt sổ làm gì:</p>
+      <ul>
+        <li>Gỡ giao dịch cũ khỏi app. App chỉ giữ năm sổ hiện tại và năm sổ trước (mỗi năm sổ tính từ Tết đến hết tháng Chạp).</li>
+        <li>Mỗi vị thuốc còn tồn tại mốc chốt có thêm 1 dòng "Tồn đầu kỳ" (không hiện trong Lịch sử nhập), giữ đúng số tồn và giá vốn.</li>
+        <li>Doanh thu, lợi nhuận các tháng cũ vẫn có trong Thống kê (xem theo Tháng hoặc Năm).</li>
+        <li>Toàn bộ giao dịch bị gỡ được lưu vào file lưu trữ trên máy chủ.</li>
+      </ul>
+      <p>Khi nào: mỗi năm 1 lần, sau Tết. Lần đầu có dữ liệu để gỡ là sau Tết 26/01/2028.</p>
+      <p>Trước khi chốt:</p>
+      <ol>
+        <li>Các máy khác không đang nhập dở; chấm đồng bộ trên các máy màu xanh.</li>
+        <li>Kho tồn → Đối chiếu: không còn vị lệch tồn. Nếu còn lệch, app sẽ chặn chốt.</li>
+        <li>Bấm "Sao lưu ngay" để có thêm 1 bản dự phòng.</li>
+      </ol>
+      <p>Các bước:</p>
+      <ol>
+        <li>Bấm "Chốt sổ…", giữ ngày app đề xuất (ngày cuối năm âm vừa hết) → OK.</li>
+        <li>Đọc bản xem trước (hiện ngay dưới nút): mốc chốt, số giao dịch bị gỡ, tồn tại mốc và giá vốn từng vị. Thấy gì bất thường thì DỪNG, không chốt. Có dòng chữ đỏ (ví dụ "Chưa có gì để chốt") thì nút chạy bị khóa.</li>
+        <li>Gõ đúng chữ app yêu cầu (CHOT kèm năm) vào ô, bấm "Chốt sổ", rồi xác nhận.</li>
+        <li>Xong thì tải file lưu trữ về máy (nút "Tải luu-tru-truoc-….json" ở mục Chốt sổ năm này), cất thêm 1 bản ở nơi khác (USB hoặc đám mây). Máy nào báo "Sổ đã chốt…, hãy Tải lại" thì tải lại app.</li>
+      </ol>
+      <p>Kiểm sau khi chốt:</p>
+      <ul>
+        <li>Kho tồn: số tồn từng vị không đổi.</li>
+        <li>Thống kê: các tháng cũ không đổi.</li>
+      </ul>
+      <p>Nếu có sai:</p>
+      <ul>
+        <li>Không chốt thêm lần nữa.</li>
+        <li>Nhờ người kỹ thuật khôi phục bản sao lưu "truoc-chot" trên máy chủ.</li>
+        <li>Không khôi phục từ file sao lưu cũ hơn mốc chốt: máy chủ sẽ từ chối.</li>
+      </ul>
+    </div>
+    <div class="card__foot dlg__foot">
+      <button class="btn" type="button" data-action="guide-close">Đóng</button>
     </div>
   </div>
 </dialog>
@@ -5644,6 +5691,7 @@ function loadArchives(){
     });
     var can = !!(a && CLOSE_UI && doc.documentElement.classList.contains('desktop'));
     if (btn) btn.hidden = !can;
+    var gb = $('#closeGuideBtn'); if (gb) gb.hidden = !can; /* 2.40.2: hướng dẫn cùng điều kiện với nút chốt */
     box.hidden = !(a && (a.length || can));
   }, function(){});
 }
@@ -5963,6 +6011,8 @@ function handleAction(btn){
     case 'bak-refresh': loadBakList(); loadArchives(); break;
     case 'close-preview': closePreview(); break;
     case 'close-run': closeRun(); break;
+    case 'guide-open': (function(d){ if (d && d.showModal) d.showModal(); else if (d) d.setAttribute('open', ''); })($('#guideDlg')); break;
+    case 'guide-close': (function(d){ if (d && d.close) d.close(); else if (d) d.removeAttribute('open'); })($('#guideDlg')); break;
     case 'open-backup-dir': {
       var T = window.__TAURI__;
       if (T && T.core) T.core.invoke('mo_thu_muc_sao_luu').catch(function(){ toast('Không mở được thư mục sao lưu'); });
@@ -6149,6 +6199,8 @@ function bindEvents(){
 
   var dlg = $('#editDlg');
   if (dlg) dlg.addEventListener('click', function(e){ if (e.target === dlg) closeEdit(); });
+  var gdD = $('#guideDlg');
+  if (gdD) gdD.addEventListener('click', function(e){ if (e.target === gdD) gdD.close(); });
   var recD = $('#recDlg');
   if (recD) recD.addEventListener('click', function(e){ if (e.target === recD) closeRec(); });
   var txd = $('#txDlg');

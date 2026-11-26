@@ -4154,7 +4154,7 @@ const NEW_213 = ['nhap-add', 'brand-tap'];
 const NEW_214 = [];
 /* 2.15.0: nút Tải lại (chỉ ở màn hình chính). */
 const NEW_215 = ['reload-app', 'open-backup-dir', 'bak-refresh'];
-const NEW_226 = ['close-preset', 'inv-low', 'inv-out', 'unread-all', 'close-preview']; // 2.40.0: nút chốt sổ (ẩn); // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
+const NEW_226 = ['close-preset', 'inv-low', 'inv-out', 'unread-all', 'close-preview', 'guide-open', 'guide-close']; // 2.40.0: nút chốt sổ (ẩn); // 2.32.0: lọc Kho tồn; // 2.26.0: nút ✕ bỏ đơn đang mở (desktop)
 /* 2.13.0 (N5) bỏ 4 nút Gần nhất/Tất cả: latest-imp, clear-imp, latest-exp, clear-exp. */
 const REMOVED_213 = ['latest-imp', 'clear-imp', 'latest-exp', 'clear-exp', 'merge-old', 'merge-do', 'close-merge', 'theme-menu'];
 const OLD_DATA_ACTIONS = ['backup-now', 'clear-exp', 'clear-imp', 'close-edit', 'close-merge', 'close-order', 'close-rec', 'close-tx',
@@ -8745,8 +8745,8 @@ test('2.40.0 chốt sổ: PUT 409 "sổ đã chốt" không mở hộp xung đ�
 const CLOSE_PV = (count) => ({ success: true, dryRun: true, cutoff: '2026-02-17', updatedAt: 77, opening: [], months: count ? [{ m: '2026-01', imp: 0, rev: 5000, cost: 2000 }] : [],
   totals: { count, imp: 0, rev: count ? 5000 : 0, cost: count ? 2000 : 0, profit: count ? 3000 : 0 }, blocks: count ? [] : ['Không có giao dịch nào trước mốc 2026-02-17'] });
 function closeKit({ desktop = true, archive = 200, confirmOk = true } = {}) {
-  const ids = { '#closeBox': makeEl(), '#arcList': makeEl(), '#closeBtn': makeEl(), '#closeOut': makeEl(), '#closeConfirm': makeEl() };
-  ids['#closeBox'].hidden = ids['#closeBtn'].hidden = true;
+  const ids = { '#closeBox': makeEl(), '#arcList': makeEl(), '#closeBtn': makeEl(), '#closeGuideBtn': makeEl(), '#closeOut': makeEl(), '#closeConfirm': makeEl() };
+  ids['#closeBox'].hidden = ids['#closeBtn'].hidden = ids['#closeGuideBtn'].hidden = true;
   const doc = trackDoc(ids);
   doc.documentElement.classList = { add() {}, remove() {}, toggle() {}, contains: (k) => desktop && k === 'desktop' };
   const calls = [], confirms = [];
@@ -8767,6 +8767,7 @@ test('2.40.1 chốt sổ: nút chỉ hiện cho thiết bị chủ trên desktop
     const k = closeKit({ desktop, archive });
     await k.c.loadArchives();
     assert.equal(k.ids['#closeBtn'].hidden, !shown, 'desktop=' + desktop + ' archive=' + archive);
+    assert.equal(k.ids['#closeGuideBtn'].hidden, !shown, '2.40.2 nút Hướng dẫn cùng điều kiện: desktop=' + desktop + ' archive=' + archive);
     assert.equal(k.ids['#closeBox'].hidden, !shown);
   }
 });
@@ -8829,4 +8830,12 @@ test('2.40.0 Kho tồn: "Đã bán" chỉ tính từ Tết năm sổ hiện tạ
     ], prescriptions: [], updatedAt: 0, moneyUnit: 'dong' });
   c.renderInventory();
   assert.deepEqual(body.children.map(tr => tr.children[0].textContent), ['Bạch chỉ', 'Atiso']);
+});
+
+test('2.40.2 Hướng dẫn chốt sổ: nút cạnh "Chốt sổ…", mở hộp dlg có sẵn, nội dung đúng hành vi app', () => {
+  assert.match(PAGE, /id="closeBtn" hidden>Chốt sổ…<\/button>\s*<button class="btn" type="button" data-action="guide-open" id="closeGuideBtn" hidden>Hướng dẫn chốt sổ<\/button>/);
+  const dlg = PAGE.slice(PAGE.indexOf('<dialog class="dlg dlg--wide" id="guideDlg"'), PAGE.indexOf('</dialog>', PAGE.indexOf('id="guideDlg"')));
+  for (const t of ['Lần đầu có dữ liệu để gỡ là sau Tết 26/01/2028', 'CHOT kèm năm', 'Chưa có gì để chốt', 'Tải luu-tru-truoc-', '"truoc-chot"', 'data-action="guide-close"']) assert.ok(dlg.includes(t), t);
+  assert.ok(PAGE.includes('Tải luu-tru-truoc-') && PAGE.includes("el('a', 'btn btn--sm', 'Tải ' + f.name)"), 'tên nút tải khớp');
+  assert.ok(PAGE.includes("'Chưa có gì để chốt'") && PAGE.includes("'CHOT ' + closeYearOf(pv.cutoff)"), 'chữ phải gõ / dòng khóa khớp');
 });
