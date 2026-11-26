@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.3] - 2026-11-26
+
+### Sửa
+- Review 4d68403 P2-1: `touch()` tăng `db.updatedAt` chặt (`max(now, cũ + 1)`, cùng luật server). Trước đây đổi dữ liệu trong lúc PUT đang treo cùng mili-giây thì updatedAt trùng `sent` → PUT thành công đánh dấu sạch, thay đổi mới không được gửi. Test tái hiện (đỏ trên mã cũ).
+
+### Dọn
+- P3: readState gọi getClosed một lần; chốt sổ dùng một `now` cho dòng tồn đầu kỳ và updatedAt; bỏ listener `input` rỗng của tờ ghi Bán lẻ; close.js bỏ `kept` và `cutoffFor`. P3-6 (backup trước chốt không tự dọn) cố ý không làm, ghi ở docs/review.md §5.
+
 ## [2.40.2] - 2026-11-26
 
 ### Thêm

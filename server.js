@@ -198,6 +198,7 @@ function readState() {
     itemsByPrescription.set(item.prescriptionId, list);
   }
 
+  const cl = getClosed();
   return {
     moneyUnit: 'dong',
     products: products.map(p => ({ id: String(p.id), name: String(p.name), stock: decNum(p.stock), costPrice: money(p.costPrice) })),
@@ -226,7 +227,7 @@ function readState() {
       total: money(r.total), thang: Math.max(1, Math.round(decNum(r.thang)) || 1), updatedAt: decNum(r.updatedAt)
     })),
     updatedAt: getSourceUpdatedAt(),
-    ...(getClosed() ? { closed: getClosed() } : {})
+    ...(cl ? { closed: cl } : {})
   };
 }
 
@@ -824,11 +825,10 @@ app.post('/api/close-year', (req, res) => {
         transactions: plan.removed, products: checked.state.products, closedBefore: closed, months: plan.months }));
       db.transaction(() => {
         db.prepare('DELETE FROM transactions WHERE date < ?').run(plan.cutoff);
-        insertTxRows(plan.opening, null, Date.now());
+        now = Math.max(Date.now(), getSourceUpdatedAt() + 1);
+        insertTxRows(plan.opening, null, now);
         setMeta('close_cutoff', plan.cutoff);
         setMeta('close_summary', JSON.stringify(mergeMonths(closed ? closed.months : [], plan.months)));
-        const prev = getSourceUpdatedAt();
-        now = Math.max(Date.now(), prev + 1);
         setMeta('source_updated_at', now);
         db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
         db.prepare("DELETE FROM unread WHERE kind = 'NHAP' AND key NOT IN (SELECT " + UNREAD_KEY_SQL + " FROM transactions WHERE type = 'NHAP')").run();

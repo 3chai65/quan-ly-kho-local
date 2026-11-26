@@ -111,6 +111,7 @@ setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
   TET: (typeof TET !== 'undefined' ? TET : null), lunarStart: (typeof lunarStart === 'function' ? lunarStart : null), bookStart: (typeof bookStart === 'function' ? bookStart : null), statTxs: (typeof statTxs === 'function' ? statTxs : null), closeYearOf: (typeof closeYearOf === 'function' ? closeYearOf : null),
+  touch: (typeof touch === 'function' ? touch : null),
   loadArchives: (typeof loadArchives === 'function' ? loadArchives : null), renderClosePreview: (typeof renderClosePreview === 'function' ? renderClosePreview : null), closeRun: (typeof closeRun === 'function' ? closeRun : null), setClosePv: function(v){ closePv = v; },
   historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
@@ -8838,4 +8839,28 @@ test('2.40.2 Hướng dẫn chốt sổ: nút cạnh "Chốt sổ…", mở hộ
   for (const t of ['Lần đầu có dữ liệu để gỡ là sau Tết 26/01/2028', 'CHOT kèm năm', 'Chưa có gì để chốt', 'Tải luu-tru-truoc-', '"truoc-chot"', 'data-action="guide-close"']) assert.ok(dlg.includes(t), t);
   assert.ok(PAGE.includes('Tải luu-tru-truoc-') && PAGE.includes("el('a', 'btn btn--sm', 'Tải ' + f.name)"), 'tên nút tải khớp');
   assert.ok(PAGE.includes("'Chưa có gì để chốt'") && PAGE.includes("'CHOT ' + closeYearOf(pv.cutoff)"), 'chữ phải gõ / dòng khóa khớp');
+});
+
+test('P2-1 touch() tăng chặt: đồng hồ đứng yên, PUT treo, đổi db trong lúc chờ → sau 200 vẫn dirty, lần gửi sau mang giao dịch mới', async () => {
+  const bodies = []; let release;
+  const fetch = (url, o = {}) => {
+    if ((o.method || 'GET') !== 'PUT') return Promise.resolve({ status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 1 } }) });
+    bodies.push(String(o.body));
+    if (bodies.length === 1) return new Promise(r => { release = () => r({ status: 200, json: async () => ({ success: true, updatedAt: 500 }) }); });
+    return Promise.resolve({ status: 200, json: async () => ({ success: true, updatedAt: 600 }) });
+  };
+  const c = loadClient({ Date: fakeClock(2026, 10, 26, 12), fetch, setTimeout() { return 0; }, clearTimeout() {} });
+  c.setDb({ moneyUnit: 'dong', products: [{ id: 'P', name: 'Cam thảo', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
+  c.setBase(1); c.setDirty(true);
+  const p = c.pushState(false, false);
+  await new Promise(r => setImmediate(r));
+  assert.equal(bodies.length, 1, 'PUT đầu đang treo');
+  c.getDb().transactions.push({ id: 'TX_MOI', date: '2026-11-26', type: 'NHAP', productId: 'P', qty: 1, price: 1, total: 1, cost: null });
+  c.touch();
+  release(); await p;
+  assert.equal(c.isDirty(), true, 'thay đổi trong lúc chờ không bị coi là đã gửi');
+  assert.ok(!bodies[0].includes('TX_MOI'));
+  await c.pushState(false, false);
+  assert.ok(bodies[1] && bodies[1].includes('TX_MOI'), 'lần gửi sau mang giao dịch mới');
+  assert.equal(c.isDirty(), false);
 });

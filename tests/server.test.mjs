@@ -1201,7 +1201,7 @@ const stockOf = st => JSON.stringify(st.products.map(p => [p.id, p.stock]));
 const putState = (s, st, base) => s.call('PUT', '/api/state', { moneyUnit: 'dong', ...st }, base === 'force' ? { 'X-Force': '1' } : { 'X-Base-Updated': String(base) });
 
 test('2.40.0 chốt sổ: bảng Tết và mốc C = Tết của năm âm chứa D (D = Tết 2028 − 1 → C = Tết 2027)', async () => {
-  const { TET, lunarStart, cutoffFor } = await import('../close.js');
+  const { TET, lunarStart } = await import('../close.js');
   const { mergeMonths } = await import('../close.js');
   assert.deepEqual(mergeMonths([{ m: '2025-01', imp: 1, rev: 2, cost: 3 }], [{ m: '2025-01', imp: 10, rev: 20, cost: 30 }, { m: '2024-12', imp: 5, rev: 0, cost: 0 }]),
     [{ m: '2024-12', imp: 5, rev: 0, cost: 0 }, { m: '2025-01', imp: 11, rev: 22, cost: 33 }], 'tháng trùng (C giữa tháng) thì cộng');
@@ -1213,8 +1213,8 @@ test('2.40.0 chốt sổ: bảng Tết và mốc C = Tết của năm âm chứa
   ] }, '2025-01-29', '2027-03-01', null, []);
   assert.equal(pl.opening[0].price, 200);
   assert.deepEqual(TET, ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08']);
-  assert.equal(cutoffFor('2028-01-25'), '2027-02-06');
-  assert.equal(cutoffFor('2028-01-26'), '2028-01-26');
+  assert.equal(lunarStart('2028-01-25'), '2027-02-06');
+  assert.equal(lunarStart('2028-01-26'), '2028-01-26');
   assert.equal(lunarStart('2026-11-26'), '2026-02-17');
   assert.equal(lunarStart('2025-01-28'), null, 'trước Tết đầu bảng');
   assert.equal(lunarStart('2035-02-08'), null, 'từ Tết cuối bảng: chưa biết Tết kế');

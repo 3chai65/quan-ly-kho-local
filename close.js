@@ -11,8 +11,7 @@ export function lunarStart(iso) {
   return null;
 }
 
-/* Mốc gỡ C = Tết của năm âm chứa ngày chốt D (giữ năm sổ chứa D và năm sổ hiện tại). D = Tết(2028) − 1 → C = Tết 2027. */
-export function cutoffFor(d) { return lunarStart(d); }
+/* Mốc gỡ C = lunarStart(D): Tết của năm âm chứa ngày chốt D. D = Tết(2028) − 1 → C = Tết 2027. */
 
 function round(n) { return Math.round(Number(n) || 0); }
 /* Cùng decQty của server (dọn nhiễu nhị phân, không làm tròn số kg thật). */
@@ -39,7 +38,7 @@ function txCost(t, byId) { return t.cost != null ? Number(t.cost) : Number(t.qty
 
 /**
  * state: dạng validateState (transactions có `opening`). today: YYYY-MM-DD giờ VN. prevCutoff: mốc chốt trước (hoặc null). drift: stockDrift hiện tại.
- * Trả { cutoff, blocks[], removed[], kept[], opening[], months[], totals }.
+ * Trả { cutoff, blocks[], removed[], opening[], months[], totals }.
  */
 export function closePlan(state, cutoff, today, prevCutoff, drift) {
   const blocks = [];
@@ -53,8 +52,7 @@ export function closePlan(state, cutoff, today, prevCutoff, drift) {
   if (drift && drift.length) blocks.push(drift.length + ' vị có tồn khác nhập − bán: sửa ở Đối chiếu trước');
 
   const byId = new Map(state.products.map(p => [p.id, p]));
-  const removed = [], kept = [];
-  for (const t of state.transactions) (t.date < C ? removed : kept).push(t);
+  const removed = state.transactions.filter(t => t.date < C);
 
   /* Tồn tại mốc (cộng dồn xuôi) và giá vốn tại mốc (NHAP gần nhất có giá > 0 trước C; thứ tự ngày rồi ts rồi vị trí). */
   const qty = new Map(), last = new Map();
@@ -93,7 +91,7 @@ export function closePlan(state, cutoff, today, prevCutoff, drift) {
   /* Tổng gỡ phải = tổng bảng tóm tắt; lệch từ 1 đồng (do làm tròn từng tháng) thì chặn. */
   if (Math.abs(sum('rev') - round(rev)) >= 1 || Math.abs(sum('cost') - round(cost)) >= 1 || Math.abs(sum('imp') - round(imp)) >= 1) blocks.push('Tổng gỡ khác bảng tóm tắt (lệch làm tròn), không chốt');
   if (!removed.length) blocks.push('Không có giao dịch nào trước mốc ' + C);
-  return { cutoff: C, blocks, removed, kept, opening, months, totals: { count: removed.length, imp: round(imp), rev: round(rev), cost: round(cost), profit: round(rev) - round(cost) } };
+  return { cutoff: C, blocks, removed, opening, months, totals: { count: removed.length, imp: round(imp), rev: round(rev), cost: round(cost), profit: round(rev) - round(cost) } };
 }
 
 /* Gộp bảng tóm tắt cũ với mới (tháng trùng thì cộng). */

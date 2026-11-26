@@ -35,6 +35,7 @@ Lỗi better-sqlite3: xóa `node_modules` rồi `npm ci` (không dùng `npm rebu
 - `MAX_INLINE` đếm ký tự.
 - Ký tự bidi trong tên thiết bị.
 - Log kích thước PUT.
+- Backup trước chốt sổ không tự dọn — cố ý, ~1 file/năm.
 
 ## 5b. Chờ gộp bản sau
 - Lỗi 500 trả `err.message` thô (`server.js` ~735): trả câu chung cho 5xx, giữ message cho 4xx. Chưa cần báo lại.

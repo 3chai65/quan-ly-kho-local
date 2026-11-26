@@ -2528,7 +2528,7 @@ function saveLocal(){
   saveLocalLS(JSON.stringify(db), dirty, cloudBase);
 }
 function touch(){
-  db.updatedAt = Date.now();
+  db.updatedAt = Math.max(Date.now(), num(db.updatedAt) + 1); /* tăng chặt (cùng luật server): đổi trong lúc PUT treo cùng mili-giây vẫn khác sent */
   if (!dirty) dirtySince = Date.now();
   dirty = true;
   saveLocal();
@@ -6085,9 +6085,6 @@ function bindEvents(){
     if (isDesk() || !tr || !tr.getAttribute('data-pid') || td !== tr.children[1]) return;
     tr.remove(); orderEmpty(body, 5, ''); renderNote();
     var s = $('#retailSearch'); if (s) focusNS(s);
-  });
-  if (body) body.addEventListener('input', function(e){
-    /* 2.38.18: gõ số KHÔNG dựng lại tờ ghi (nội dung tờ ghi không phụ thuộc ô đang gõ; dựng lại làm iOS cuộn trang khi gõ). */
   });
   var nbody = $('#retailNoteBody');
   if (nbody) nbody.addEventListener('keydown', function(e){
