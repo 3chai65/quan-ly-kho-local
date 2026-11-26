@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.5] - 2026-11-26
+
+### Sửa
+- Desktop HD (Tauri 1280x720): tờ ghi Bán lẻ / Thuốc chén / Nhập hàng có 9 dòng thì dòng nhập (dòng 10) không còn bị hàng "Tổng" đè và chen vào thanh phân trang (hồi quy 2.39.1: dòng cố định 50px, 10 dòng + đầu bảng = 528px không vừa khung ~505px). Nay 10 hàng chia đều khung, khung tối đa 528px: đủ chỗ (1600x900, FHD) dòng 50px; HD co đều ~46–47px như trước 2.39.1. Tổng/phân trang/chân không co. Đo Edge 1280x720, 1600x900, 1920x1080 với 0–11 dòng: không chồng.
+
 ## [2.39.4] - 2026-11-25
 
 ### Sửa

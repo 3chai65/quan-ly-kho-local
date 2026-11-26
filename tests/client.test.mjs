@@ -5927,7 +5927,7 @@ test('2.20.2 khung phủ kín viewport: thẻ lấp đầy chiều cao (cả 3 d
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
   assert.ok(block.includes('html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}'));
-  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}'));
+  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}'));
   assert.ok(block.includes('html.desktop #backupBox{align-self:start}'));
   assert.ok(PAGE.includes("['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); });"));
 });
@@ -8510,10 +8510,20 @@ test('AA IndexedDB: localStorage đầy lúc di trú: ghi cờ lỗi vẫn xóa 
   assert.equal(c.client.getIdbMode(), false); assert.equal(bc.local.products[0].name, 'Cũ'); assert.equal(c.store.get('kho_db_local_v1'), raw);
 });
 
-test('AB: dòng tờ ghi desktop cao 50px cố định như Kho tồn (không giãn theo bảng height:100%, không flex:1 ở Nhập hàng)', () => {
-  assert.ok(PAGE.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}'));
-  assert.ok(!PAGE.includes('.note__list>table,html.desktop #nhapListBox>table{height:100%}'), 'bỏ bảng height:100% (giãn 10 dòng thành 86px ở FHD)');
-  assert.ok(PAGE.includes('html.desktop #nhapListBox>table{flex:none;margin-bottom:auto}'));
+test('2.39.5: tờ ghi desktop 9 dòng + dòng nhập (dòng 10) vừa khung ở HD, không tràn xuống Tổng/phân trang; FHD dòng 50px', () => {
+  /* Mô hình bố cục đo trên Edge (Bán lẻ): khung cho bảng tờ ghi (từ đầu bảng tới mép trên Tổng) HD 1280x720 = 504.7px, FHD 1920x1080 = 864.7px; đầu bảng 28px; mỗi trang desktop luôn PAGE_SIZE hàng (dòng ghi + dòng nhập + hàng trống). */
+  const block = deskBlock(), PS = 10, HEAD = 28;
+  assert.ok(PAGE.includes('var PAGE_SIZE = ' + PS + ';'));
+  const fixed = /html\.desktop :is\(#retailNote,#remedyNote\) \.note__list>table td[^{]*\{height:(\d+)px/.exec(block);
+  const stretch = block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}');
+  const basis = /html\.desktop :is\(#retailNote,#remedyNote\) \.note__list,html\.desktop #nhapListBox>table\{flex:0 1 (\d+)px;min-height:0;margin-bottom:auto\}/.exec(block);
+  const rowH = avail => fixed ? +fixed[1] : (stretch && basis ? (Math.min(avail, +basis[1]) - HEAD) / PS : NaN);
+  for (const n of [9, 10, 0, 11]) {
+    const rowsOnPage = PS; /* n=9: 9 dòng ghi + dòng nhập = hàng 10; n=0/10/11: dòng nhập + hàng trống vẫn đủ 10 */
+    assert.ok(n >= 0 && HEAD + rowsOnPage * rowH(504.7) <= 504.7 + 1e-6, 'HD n=' + n + ': hàng 10 tràn ' + (HEAD + rowsOnPage * rowH(504.7) - 504.7).toFixed(1) + 'px xuống Tổng');
+  }
+  assert.equal(rowH(864.7), 50, 'FHD dòng 50px (không giãn 86px)');
+  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox)>:not(.note__list,table){flex:none}'), 'Tổng/phân trang/chân không co (tránh Tổng tràn 0.6px vào phân trang)');
 });
 
 test('AC xóa vị: còn tồn / có giao dịch / nằm trong đơn thuốc → chặn (không hỏi, báo ngắn); vị trống xóa được', () => {

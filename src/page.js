@@ -695,10 +695,10 @@ html.desktop #expBox .card__bar-search{flex-basis:80px}
 html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
 html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px}
 html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;display:flex;flex-direction:column}
-html.desktop :is(#retailNote,#remedyNote) .note__list{flex:1;min-height:0}
-/* AB: dòng tờ ghi cao 50px cố định như Kho tồn (trước: bảng height:100% giãn 10 dòng ra 86px ở FHD) */
-html.desktop :is(#retailNote,#remedyNote) .note__list>table td,html.desktop #nhapListBox>table:not(.ord) td{height:50px}
-html.desktop #nhapListBox>table{flex:none;margin-bottom:auto}
+/* 2.39.5: 10 dòng tờ ghi chia đều khung, khung tối đa 528px (đầu bảng 28 + 10×50): đủ chỗ thì dòng 50px như Kho tồn, HD co đều (2.39.1 cố định 50px làm dòng 10 tràn xuống Tổng/phân trang) */
+html.desktop :is(#retailNote,#remedyNote) .note__list,html.desktop #nhapListBox>table{flex:0 1 528px;min-height:0;margin-bottom:auto}
+html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox)>:not(.note__list,table){flex:none}
 html.desktop #remedyBox>.card__body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 html.desktop #remedyBox .card__bar{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 html.desktop :is(.rbl,.rbr){display:flex;align-items:center;gap:8px;min-width:0}
