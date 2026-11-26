@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.6] - 2026-11-26
+
+### Đổi (desktop `html.desktop`; điện thoại không đổi)
+- Tờ ghi Bán lẻ / Thuốc chén / Nhập hàng: dòng cao bằng tab thanh bên qua biến chung `--tab-h` (30px; cửa sổ thấp <640px: 26px), không co giãn theo khung (thay cách chia đều của 2.39.5).
+- Bỏ phân trang 10 dòng của tờ ghi trên desktop: bảng cuộn trong khung, đầu bảng ghim (sticky, nền = nền cửa sổ), dòng nhập luôn cuối danh sách; thêm dòng / chọn vị thì cuộn tới dòng nhập; chọn vị đã có trong tờ thì cuộn tới dòng đang sửa. Tổng + nút Bán đơn/Lưu đơn ở chân, không cuộn.
+- Bỏ hàng trống vẽ giả, tbody `*Fill`, `pendPaging`, thanh trang Nhập hàng (`#nhapListPager`, `nhapNotePage`, kiểu `nnote`). Điện thoại giữ trang 10 dòng ở Bán lẻ / Thuốc chén. Lịch sử giữ nguyên phân trang.
+- Ảnh mẫu 01–03 chụp lại.
+
 ## [2.39.5] - 2026-11-26
 
 ### Sửa

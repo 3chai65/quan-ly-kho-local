@@ -54,7 +54,7 @@ globalThis.__test = {
   getRetailItems: function(){ return retailItems; },
   getNotePage: function(){ return notePage; }, setNotePage: function(v){ notePage = v; },
   getNhapList: function(){ return nhapList; },
-  renderNhapList: renderNhapList, getNhapNotePage: function(){ return nhapNotePage; }, setNhapNotePage: function(v){ nhapNotePage = v; }, bindEvents: bindEvents, orderEmpty: orderEmpty, addOrderRow: addOrderRow, calcNhap: calcNhap, nhapPick: nhapPick,
+  renderNhapList: renderNhapList, noteTo: noteTo, bindEvents: bindEvents, orderEmpty: orderEmpty, addOrderRow: addOrderRow, calcNhap: calcNhap, nhapPick: nhapPick,
   getTxEdit: function(){ return txEditCur; },
   getOrderCur: function(){ return orderCur; }, setOrderCur: function(v){ orderCur = v; },
   getNhapPid: function(){ return nhapPid; }, setNhapPid: function(v){ nhapPid = v; },
@@ -3506,7 +3506,7 @@ test('2.14.0 Thuốc chén: chân tờ ghi ba hàng (note__row: tổng, phụ, n
   assert.match(PAGE, /\.note__pending tr\.is-empty\{display:none\}/);
   assert.match(PAGE, /renumber\(tb, isRetail \? retailItems\.length : remedyItems\.length\);/);
   assert.match(PAGE, /renumber\(pendingRb, remedyItems\.length\);/);
-  assert.ok(PAGE.includes('if (!it) { if (isDesk() && !(pendHere && i === remedyItems.length)) (fill || tb).appendChild(blankRow(tb)); continue; }\n    var p = findProduct(it.productId);'));
+  assert.ok(PAGE.includes('  for (var i = pp.from; i < pp.to; i++) {\n    var it = remedyItems[i];\n    var tr = el(\'tr\');\n    var p = findProduct(it.productId);'));
 });
 
 test('2.15.5 Thuốc chén hành vi: chọn "Đơn mới" (value rỗng) xóa tờ ghi như cũ, ô tên ẩn, không lưu', () => {
@@ -5734,7 +5734,7 @@ test('2.20.0 chế độ html.desktop: CSS chỉ dưới html.desktop, ≤8 KB, 
   assert.ok(block.includes('html.desktop .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}'), 'hộp thoại đục, bảng cùng độ trong với thẻ');
   assert.ok(block.includes('.card:not(.dlg__card)') && block.split(String.fromCharCode(10)).filter(x => x.includes('.note') && !x.includes(' .btn')).every(x => (x.startsWith('html.desktop .note') || x.startsWith('html.desktop :is(#retailNote') || x.startsWith('html.desktop :is(#retailBox,#remedyBox,#nhapBox) .note') || x.startsWith('html.desktop :is(.card__bar') || x.startsWith('html.desktop[data-bg]') || x.startsWith('html.desktop .dlg__card') || x.startsWith('html.desktop :is(.pager') || x.startsWith('html.desktop #remedyNote .note'))) && block.split('\n').filter(l => l.includes('.btn')).every(l => l.includes('.pager') || l.includes('.card__bar') || l.includes('.note__foot') || l.includes('.btn--primary') || l.startsWith('html.desktop .btn') || l.includes('.btn{') || l.includes('.btn--icon') || l.includes('.note td .btn--icon') || l.includes('.bgd') || l.includes('.note__row--btns') || l.startsWith('html.desktop[data-bg=navy]')));
   // 2.19.0: màu nhấn xanh lá (phân trang, nút chính, focus) và nút Bán đơn dính đáy khung
-  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}') && !block.includes('position:sticky'));
+  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}') && block.split('position:sticky').length === 2, '2.39.6: sticky duy nhất là đầu bảng tờ ghi');
   assert.ok(/\[\?&\]desktop=0\/\.test\(q\)\) localStorage\.setItem\('desktop', '0'\)/.test(PAGE));
   assert.ok(/\[\?&\]desktop=1\/\.test\(q\)\) localStorage\.setItem\('desktop', '1'\)/.test(PAGE));
   assert.ok(PAGE.includes("dk === '1' || (dk !== '0'"));
@@ -5805,7 +5805,7 @@ function deskBlock() {
 
 test('2.31.0 một cỡ, bố cục co giãn: không zoom/--z/--vw/--vh/__dz, thân = 100% x 100vh, lề 10 trên + 16 ngang/dưới, thanh bên 180', () => {
   const block = deskBlock();
-  assert.ok(block.includes('html.desktop{--sw:180px;--g:16px;overflow:hidden}') && block.includes('width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'));
+  assert.ok(block.includes('html.desktop{--sw:180px;--g:16px;--tab-h:30px;overflow:hidden}') && block.includes('width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}'));
   assert.ok(!/__dz|--vw|--vh|--z\b|zoom:|\.zoom/.test(PAGE) && !/\bzoom\b/.test(PAGE.replace('không zoom', '')), 'không còn zoom/--z/--vw/--vh/__dz');
   const r = runHead({ iw: 920, ih: 578 });
   assert.deepEqual(Object.keys(r.props), [], 'JS không đặt biến cỡ');
@@ -5867,10 +5867,10 @@ test('2.20.1 tờ ghi đồng bộ kính: không nền kem/amber, không viền 
   assert.ok(!block.includes('#remedyNote .note__search'), '2.20.6: ô tên Thuốc chén đã lên thanh đầu');
 });
 
-test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll trong desktop; ngoại lệ duy nhất là khung gợi ý (ẩn thanh cuộn)', () => {
+test('2.20.1 không cuộn: thẻ overflow:hidden, không overflow:auto/scroll trong desktop; ngoại lệ: khung gợi ý (ẩn thanh cuộn), khung tờ ghi 2.39.6', () => {
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .main details.card{grid-area:1/2/3/3;min-height:0;min-width:0;margin:0;overflow:hidden}'));
-  assert.ok(!/overflow(-[xy])?:\s*(auto|scroll)/.test(block));
+  assert.deepEqual(block.match(/[^\n]*overflow(-[xy])?:\s*(auto|scroll)/g), ['html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__list{flex:1;min-height:0;overflow-y:auto']);
   assert.ok(block.includes('html.desktop .sug__list{scrollbar-width:none') && block.includes('html.desktop .sug__list::-webkit-scrollbar{display:none}'));
   assert.ok(block.includes('html.desktop[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}'));
   assert.ok(/SUG_ROWS\s*=\s*3/.test(PAGE), 'khung gợi ý vẫn 3 dòng');
@@ -5927,7 +5927,7 @@ test('2.20.2 khung phủ kín viewport: thẻ lấp đầy chiều cao (cả 3 d
   const block = deskBlock();
   assert.ok(block.includes('html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}'));
   assert.ok(block.includes('html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}'));
-  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}'));
+  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}'));
   assert.ok(block.includes('html.desktop #backupBox{align-self:start}'));
   assert.ok(PAGE.includes("['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); });"));
 });
@@ -5990,40 +5990,22 @@ function deskNoteClient(desktop, n) {
   };
 }
 
-test('2.20.0 tờ ghi desktop: 25 dòng → 3 trang 10/10/5 (+5 hàng trống), STT liên tục, tổng tiền = không phân trang', () => {
-  const d = deskNoteClient(true, 25), n = deskNoteClient(false, 25);
-  const seen = [];
-  for (const [p, real] of [[1, 10], [2, 10], [3, 5]]) {
+test('2.39.6 tờ ghi desktop không phân trang: 30 dòng vẽ đủ 30 (không hàng trống), STT liên tục, không thanh trang; điện thoại vẫn trang 10', () => {
+  const d = deskNoteClient(true, 30), n = deskNoteClient(false, 25);
+  for (const p of [1, 3, 1e9]) {
     d.page(p);
-    assert.equal(d.rows(), 10, 'trang ' + p + ' luôn đủ 10 hàng');
-    assert.equal(d.stt().length, real);
-    assert.equal(d.blanks(), 10 - real);
-    assert.equal(d.pg.textContent, 'Trang ' + p + ' / 3');
-    seen.push(...d.stt());
+    assert.equal(d.rows(), 30, 'trang ' + p + ': mọi dòng');
+    assert.equal(d.blanks(), 0, 'không hàng trống vẽ giả');
+    assert.deepEqual(d.stt(), Array.from({ length: 30 }, (_, i) => String(i + 1)));
+    assert.equal(d.pager.hidden, true); assert.equal(d.pg.hidden, true);
+    assert.equal(d.c.getNotePage(), 1);
   }
-  assert.deepEqual(seen, Array.from({ length: 25 }, (_, i) => String(i + 1)), 'thứ tự dòng không đổi');
   n.page(3);
-  assert.equal(d.tot.textContent, n.tot.textContent);
-  assert.equal(n.tot.textContent, d.c.fmtMoney ? d.c.fmtMoney(1000 * (25 * 26 / 2)) : n.tot.textContent);
-  assert.equal(n.rows(), 5, 'không desktop: không hàng trống');
-  assert.equal(d.pager.hidden, false);
-});
-
-test('2.20.0 tờ ghi desktop: dòng thứ 11 lật sang trang 2; xóa còn 10 dòng thì lùi về trang 1; phân trang luôn hiện khi desktop', () => {
-  const d = deskNoteClient(true, 11);
-  d.page(1e9);
-  assert.equal(d.c.getNotePage(), 2, 'trang chứa dòng mới nhất');
-  assert.equal(d.stt()[0], '11');
-  d.c.setRetailItems(d.c.getRetailItems().slice(0, 10));
-  d.c.renderNote();
-  assert.equal(d.c.getNotePage(), 1, 'trang cuối rỗng thì lùi');
-  assert.equal(d.stt().length, 10);
-  const one = deskNoteClient(true, 3); one.page(1);
-  assert.equal(one.pager.hidden, false);
-  assert.equal(one.pager.children[0].textContent, 'Trang 1 / 1');
-  const off = deskNoteClient(false, 3); off.page(1);
-  assert.equal(off.pager.hidden, true, 'iPhone/PWA: 1 trang thì ẩn như cũ');
-  assert.ok(/notePage = 1e9;\s*tb\.textContent = '';/.test(PAGE), 'thêm dòng đặt trang cuối');
+  assert.equal(n.rows(), 5); assert.equal(n.pg.textContent, 'Trang 3 / 3'); assert.equal(n.pager.hidden, false, 'điện thoại giữ phân trang');
+  n.page(1e9); assert.equal(n.c.getNotePage(), 3);
+  const one = deskNoteClient(false, 3); one.page(1); assert.equal(one.pager.hidden, true, 'điện thoại 1 trang: ẩn thanh trang'); assert.equal(one.pg.hidden, true);
+  assert.equal(d.tot.textContent, d.c.fmtMoney ? d.c.fmtMoney(1000 * (30 * 31 / 2)) : d.tot.textContent);
+  assert.ok(!PAGE.includes('pendPaging') && !/retailFill|remedyFill|nhapFill|nhapListPager|nhapNotePage|'nnote'/.test(PAGE), 'bỏ mã chỉ phục vụ phân trang tờ ghi desktop');
 });
 
 test('2.20.4 desktop: mọi khung gợi ý/lọc cao đúng 3 hàng x 38px, guồng, không nửa dòng; điện thoại giữ cách đo cũ', () => {
@@ -6754,47 +6736,30 @@ test('2.26.0 ✕ bỏ đơn đang mở: tờ ghi về trống, giá/thang về m
   assert.equal(JSON.stringify(k.c.getDb().prescriptions), before, 'không xóa/sửa đơn đã lưu');
 });
 
-test('2.26.0 tờ ghi desktop: dòng đang gõ là dòng n+1, đủ 10 dòng thì sang trang mới; thứ tự dòng ghi, dòng gõ, dòng trống; điện thoại không đổi', () => {
+test('2.39.6 Thuốc chén desktop: mọi dòng ghi rồi dòng đang gõ (luôn hiện, cuối), không hàng trống/trang; điện thoại không đổi', () => {
   const mk = (desk) => {
-    const tb = makeEl(), fill = makeEl(), pend = makeEl(), pg = makeEl();
-    const els = { '#remedyNoteBody': tb, '#remedyFill': fill, '#remedyBody': pend, '#remedyNotePg': pg };
+    const tb = makeEl(), pend = makeEl(), pg = makeEl();
+    const els = { '#remedyNoteBody': tb, '#remedyBody': pend, '#remedyNotePg': pg };
     const doc = trackDoc(els);
     doc.documentElement.classList.contains = (k) => desk && k === 'desktop';
     doc.createTextNode = () => makeEl();
-    for (const e of [tb, fill]) Object.defineProperty(e, 'textContent', { get() { return ''; }, set() { e.children.length = 0; } });
+    Object.defineProperty(tb, 'textContent', { get() { return ''; }, set() { tb.children.length = 0; } });
     const c = loadClient({ document: doc, setTimeout() { return 0; }, clearTimeout() {}, fetch: N1_FAKE_FETCH });
     c.setDb({ products: [{ id: 'p1', name: 'A', stock: 1, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1, moneyUnit: 'dong' });
-    return { c, tb, fill, pend, pg };
+    return { c, tb, pend, pg };
   };
   const rows = (n) => Array.from({ length: n }, () => ({ productId: 'p1', grams: 5 }));
   const d = mk(true);
-  d.c.setRemedyItems(rows(3));
-  d.c.setRemedyNotePage(1);
-  d.c.renderRemedyNote();
-  assert.equal(d.tb.children.length, 3, 'dòng ghi');
-  assert.equal(d.fill.children.length, 6, '10 - 3 dòng ghi - 1 dòng đang gõ');
-  assert.equal(d.pend.hidden, false, 'dòng đang gõ hiện ở trang chứa nó');
-  assert.equal(d.pg.textContent, 'Trang 1 / 1');
-  d.c.setRemedyItems(rows(10));
-  d.c.setRemedyNotePage(1);
-  d.c.renderRemedyNote();
-  assert.equal(d.pg.textContent, 'Trang 1 / 2', 'đủ 10 dòng: dòng đang gõ sang trang 2');
-  assert.equal(d.tb.children.length, 10);
-  assert.equal(d.fill.children.length, 0);
-  assert.equal(d.pend.hidden, true, 'trang 1 không chứa dòng đang gõ');
-  d.c.setRemedyNotePage(1e9);
-  d.c.renderRemedyNote();
-  assert.equal(d.pg.textContent, 'Trang 2 / 2', 'nhảy tới trang chứa dòng đang gõ');
-  assert.equal(d.tb.children.length, 0);
-  assert.equal(d.fill.children.length, 9, 'trang 2: dòng đang gõ + 9 dòng trống');
-  assert.equal(d.pend.hidden, false);
+  for (const n of [0, 9, 10, 30]) {
+    d.c.setRemedyItems(rows(n)); d.c.setRemedyNotePage(1e9); d.c.renderRemedyNote();
+    assert.equal(d.tb.children.length, n, n + ' dòng ghi đủ');
+    assert.notEqual(d.pend.hidden, true, 'dòng đang gõ luôn hiện');
+    assert.equal(d.pg.hidden, true, 'không số trang');
+    assert.equal(d.c.getRemedyNotePage ? d.c.getRemedyNotePage() : 1, 1);
+  }
   const m = mk(false);
-  m.c.setRemedyItems(rows(10));
-  m.c.setRemedyNotePage(1);
-  m.c.renderRemedyNote();
-  assert.equal(m.pg.textContent, 'Trang 1 / 1', 'điện thoại/PWA hẹp: số trang như cũ');
-  assert.equal(m.fill.children.length, 0);
-  assert.equal(m.pend.hidden, false);
+  m.c.setRemedyItems(rows(25)); m.c.setRemedyNotePage(1e9); m.c.renderRemedyNote();
+  assert.equal(m.pg.textContent, 'Trang 3 / 3', 'điện thoại giữ trang 10'); assert.equal(m.tb.children.length, 5);
 });
 
 test('2.26.0 gợi ý số lượng: desktop viết "lạng", điện thoại giữ "l"; placeholder Gram chỉ desktop', () => {
@@ -7053,30 +7018,6 @@ const clearKids29 = (e) => { Object.defineProperty(e, 'textContent', { get() { r
 const listen29 = (e) => { e.ls = {}; e.addEventListener = (t, f) => { (e.ls[t] = e.ls[t] || []).push(f); }; return e; };
 const key29 = (host, target) => { let pd = false; for (const f of host.ls.keydown) f({ key: 'Enter', defaultPrevented: false, target, preventDefault() { pd = true; } }); return pd; };
 
-test('2.29.0 Bán lẻ desktop: dòng đang gõ là dòng n+1 (ngay sau dòng ghi cuối, trước dòng trống), đủ 10 dòng sang trang mới; điện thoại không đổi', () => {
-  const mk = (desk) => {
-    const tb = clearKids29(makeEl()), fill = clearKids29(makeEl()), pend = makeEl(), pg = makeEl();
-    pend.id = 'retailBody';
-    return { ...deskKit29(desk, { '#retailNoteBody': tb, '#retailFill': fill, '#retailBody': pend, '#retailNotePg': pg, '#retailNotePager': makeEl() }), tb, fill, pend, pg };
-  };
-  const rows = (n) => Array.from({ length: n }, () => ({ pid: 'p0', kg: 1, amount: 1000 }));
-  const d = mk(true);
-  d.c.setRetailItems(rows(3)); d.c.setNotePage(1); d.c.renderNote();
-  assert.equal(d.tb.children.length, 3, 'dòng ghi');
-  assert.equal(d.fill.children.length, 6, '10 - 3 dòng ghi - 1 dòng đang gõ');
-  assert.equal(d.pend.hidden, false);
-  assert.equal(d.pg.textContent, 'Trang 1 / 1');
-  d.c.setRetailItems(rows(10)); d.c.setNotePage(1); d.c.renderNote();
-  assert.equal(d.pg.textContent, 'Trang 1 / 2', 'đủ 10 dòng: dòng đang gõ sang trang 2');
-  assert.equal(d.fill.children.length, 0); assert.equal(d.pend.hidden, true);
-  d.c.setNotePage(1e9); d.c.renderNote();
-  assert.equal(d.pg.textContent, 'Trang 2 / 2'); assert.equal(d.tb.children.length, 0);
-  assert.equal(d.fill.children.length, 9, 'trang 2: dòng đang gõ + 9 dòng trống'); assert.equal(d.pend.hidden, false);
-  const m = mk(false);
-  m.c.setRetailItems(rows(10)); m.c.setNotePage(1); m.c.renderNote();
-  assert.equal(m.pg.textContent, 'Trang 1 / 1', 'điện thoại: số trang như cũ'); assert.equal(m.fill.children.length, 0); assert.equal(m.pend.hidden, false);
-});
-
 test('2.29.0 Bán lẻ desktop: dòng gõ trống đủ 5 ô, ô tiền chữ mờ "Tiền (nghìn)" không số 0, ô SL "SL"; điện thoại một ô trống như cũ', () => {
   const pend = makeEl(); pend.id = 'retailBody';
   const d = deskKit29(true, { '#retailBody': pend });
@@ -7094,26 +7035,31 @@ test('2.29.0 Bán lẻ desktop: dòng gõ trống đủ 5 ô, ô tiền chữ m�
   assert.ok(PAGE.includes("mi.placeholder = isDesk() ? 'Tiền (nghìn)' : '0'"));
 });
 
-test('2.29.0 Nhập hàng desktop: dòng gõ là dòng n+1, tự nhảy trang; chọn vị thuốc nhảy tới trang chứa dòng gõ; điện thoại không đổi', () => {
-  const mk = (desk) => {
-    const tb = clearKids29(makeEl()), fill = clearKids29(makeEl()), pend = makeEl(), pager = clearKids29(makeEl()), box = makeEl();
-    pend.children.push(makeEl()); // dòng nhập tĩnh trong HTML
-    const k = deskKit29(desk, { '#nhapListBox': box, '#nhapListBody': tb, '#nhapFill': fill, '#nhapPendingBody': pend, '#nhapListPager': pager });
-    return { ...k, tb, fill, pend, pager };
+/* 2.39.6: khung cuộn giả cho noteTo: dòng (rect top/bottom) nằm trong .note__list (rect 100..600, đầu bảng 28px). */
+function fakeList39(rowTop, rowBottom) {
+  const list = { scrollTop: 50, getBoundingClientRect: () => ({ top: 100, bottom: 600 }), querySelector: () => ({ offsetHeight: 28 }) };
+  const row = makeEl(); row.closest = (q) => q === '.note__list' ? list : null; row.getBoundingClientRect = () => ({ top: rowTop, bottom: rowBottom });
+  return { list, row };
+}
+
+test('2.39.6 Nhập hàng desktop: mọi dòng + dòng gõ cuối, không hàng trống/trang; chọn vị hoặc thêm dòng cuộn khung tới dòng gõ; điện thoại không đổi', () => {
+  const mk = (desk, f) => {
+    const tb = clearKids29(makeEl()), pend = f ? f.row : makeEl(), box = makeEl();
+    if (!f) pend.children.push(makeEl()); else pend.children = [makeEl()];
+    const k = deskKit29(desk, { '#nhapListBox': box, '#nhapListBody': tb, '#nhapPendingBody': pend });
+    return { ...k, tb, pend };
   };
   const rows = (n) => Array.from({ length: n }, () => ({ pid: 'p0', name: 'X', qty: 1, price: 1000 }));
   const d = mk(true);
-  d.c.setNhapList(rows(3)); d.c.setNhapNotePage(1); d.c.renderNhapList();
-  assert.equal(d.tb.children.length, 3); assert.equal(d.fill.children.length, 6); assert.equal(d.pend.hidden, false);
-  assert.equal(d.pager.children[0].textContent, 'Trang 1 / 1');
-  d.c.setNhapList(rows(10)); d.c.setNhapNotePage(1); d.c.renderNhapList();
-  assert.equal(d.pager.children[0].textContent, 'Trang 1 / 2'); assert.equal(d.fill.children.length, 0); assert.equal(d.pend.hidden, true);
-  d.c.nhapPick({ id: 'p1', name: 'A', costPrice: 0 });
-  assert.equal(d.c.getNhapNotePage(), 2, 'chọn vị: nhảy tới trang chứa dòng gõ');
-  assert.equal(d.pend.hidden, false); assert.equal(d.fill.children.length, 9);
-  const m = mk(false);
-  m.c.setNhapList(rows(10)); m.c.setNhapNotePage(1); m.c.renderNhapList();
-  assert.equal(m.fill.children.length, 0); assert.equal(m.pend.hidden, false); assert.equal(m.c.getNhapNotePage(), 1);
+  for (const n of [0, 9, 30]) { d.c.setNhapList(rows(n)); d.c.renderNhapList(); assert.equal(d.tb.children.length, n); assert.notEqual(d.pend.hidden, true); }
+  const f = fakeList39(900, 930), e = mk(true, f);
+  e.c.setNhapList(rows(30)); e.c.nhapPick({ id: 'p1', name: 'A', costPrice: 0 });
+  assert.equal(f.list.scrollTop, 50 + 330, 'cuộn đúng tới đáy dòng gõ');
+  const g = fakeList39(300, 330), h = mk(true, g); h.c.nhapPick({ id: 'p1', name: 'A', costPrice: 0 });
+  assert.equal(g.list.scrollTop, 50, 'dòng gõ đã thấy: không cuộn');
+  const m = mk(false, fakeList39(900, 930));
+  m.c.setNhapList(rows(30)); m.c.renderNhapList(); m.c.nhapPick({ id: 'p1', name: 'A', costPrice: 0 });
+  assert.equal(m.tb.children.length, 30, 'điện thoại: danh sách đủ như cũ');
 });
 
 test('2.29.0 Nhập hàng Enter: desktop SL -> ô tiền (không thêm), ô tiền -> thêm dòng + trỏ ô tìm; dòng sai báo lỗi trỏ ở ô lỗi; điện thoại giữ cũ (Enter ở SL có giá thì thêm)', () => {
@@ -7164,18 +7110,23 @@ test('2.29.0 Bán lẻ Enter: desktop SL -> ô tiền; ô tiền trống báo l�
   assert.equal(m.els['#toastMsg'].textContent, 'Nhập thành tiền lớn hơn 0', 'điện thoại: Enter ở SL vẫn thử thêm dòng (như cũ)');
 });
 
-test('2.29.0 Bán lẻ desktop: chọn vị khi đang xem trang khác nhảy tới trang chứa dòng gõ', () => {
-  const tb = clearKids29(makeEl()), fill = clearKids29(makeEl()), pend = clearKids29(makeEl());
+test('2.39.6 Bán lẻ desktop: chọn vị mới cuộn khung tới dòng gõ; chọn vị trùng cuộn tới dòng đang sửa (nằm trên đầu bảng ghim)', () => {
+  const tb = clearKids29(makeEl()), f = fakeList39(900, 930), pend = clearKids29(f.row);
   pend.id = 'retailBody';
-  const d = deskKit29(true, { '#retailNoteBody': tb, '#retailFill': fill, '#retailBody': pend, '#retailNotePg': makeEl(), '#retailNotePager': makeEl() });
-  d.c.setRetailItems(Array.from({ length: 10 }, () => ({ pid: 'p0', kg: 1, amount: 1000 })));
+  const d = deskKit29(true, { '#retailNoteBody': tb, '#retailBody': pend, '#retailNotePg': makeEl(), '#retailNotePager': makeEl() });
+  d.c.setRetailItems(Array.from({ length: 30 }, () => ({ pid: 'p0', kg: 1, amount: 1000 })));
   d.c.setNotePage(1);
   d.c.pickSuggest('retail', 'p1');
-  assert.equal(d.c.getNotePage(), 2, 'nhảy tới trang 2');
+  assert.equal(d.c.getNotePage(), 1); assert.equal(tb.children.length, 30);
+  assert.equal(f.list.scrollTop, 50 + 330, 'cuộn tới dòng gõ');
+  assert.ok(PAGE.includes("if (eq2) { focusNS(eq2); eq2.select(); noteTo(eq2.closest('tr')); }"), 'vị trùng: cuộn tới dòng sửa');
+  const g = fakeList39(80, 110); g.list.scrollTop = 200;
+  d.c.noteTo(g.row);
+  assert.equal(g.list.scrollTop, 200 - (100 + 28 - 80), 'dòng khuất trên đầu bảng: cuộn lên vừa đủ');
 });
 
 test('2.29.0 cấu trúc: 3 tờ ghi gộp dòng gõ + dòng trống vào bảng tờ ghi; tiêu đề SL (kg)/Giá bán; ô phẳng không viền, gợi ý đổi nằm trái ô SL không đè', () => {
-  assert.ok(PAGE.includes("[['remedyNoteBody', 'remedyBody', 'remedyFill'], ['retailNoteBody', 'retailBody', 'retailFill'], ['nhapListBody', 'nhapPendingBody', 'nhapFill']]"));
+  assert.ok(PAGE.includes("[['remedyNoteBody', 'remedyBody'], ['retailNoteBody', 'retailBody'], ['nhapListBody', 'nhapPendingBody']]"));
   assert.match(PAGE, /<th scope="col">SL \(kg\)<\/th>\s*<th scope="col" class="r">Giá bán<\/th>/);
   for (const id of ['retailBody', 'remedyBody', 'nhapPendingBody']) assert.ok(PAGE.includes('<tbody id="' + id + '" class="pend">'), id + ' có class pend');
   const b = deskBlock();
@@ -7256,7 +7207,7 @@ test('2.31.0 thanh bên 180: nút tab cao tối thiểu 30 (nhãn dài xuống 2
   const b = deskBlock();
   assert.ok(b.includes('html.desktop{--sw:180px;') && b.includes('margin:calc(58px + var(--sth)) 10px 0') && PAGE.includes('html.desktop{--sth:216px}'), 'thanh bên rộng 180, đệm trong 10');
   const tab = /html\.desktop \.tab\{([^}]*)\}/.exec(b)[1];
-  assert.ok(tab.includes('min-height:30px') && tab.includes('padding:6px 10px 6px 34px') && tab.includes('font-size:12.5px;font-weight:700') && tab.includes('display:block') && !/white-space:nowrap|text-overflow|overflow:hidden|height:\d+px;min-height/.test(tab), 'không height cố định, không nowrap/ellipsis (34 = đệm 10 + icon 18 + cách 6)');
+  assert.ok(tab.includes('min-height:var(--tab-h)') && b.includes('--tab-h:30px;') && tab.includes('padding:6px 10px 6px 34px') && tab.includes('font-size:12.5px;font-weight:700') && tab.includes('display:block') && !/white-space:nowrap|text-overflow|overflow:hidden|height:\d+px;min-height/.test(tab), 'không height cố định, không nowrap/ellipsis (34 = đệm 10 + icon 18 + cách 6)');
   assert.ok(b.includes('html.desktop .tab__ic{position:absolute;left:10px;') && b.includes('width:18px;height:18px'));
   assert.ok(b.includes('html.desktop .tab__l2{display:inline-block}'), '"khôi phục" xuống dòng cả cụm');
   assert.ok(b.includes('html.desktop .sbr{position:relative;display:flex;') && b.includes('html.desktop .sbp .ico{width:22px;height:22px}') && b.includes('html.desktop .bgdots{display:none;') && b.includes('html.desktop .bgdots.is-open{display:flex}'));
@@ -7662,7 +7613,7 @@ test('2.38.6 thẻ Bán/Lợi nhuận tháng desktop: nhãn 12, số 22, phụ 1
   const m = PAGE.slice(i, PAGE.indexOf('\n}\n', i));
   assert.ok(m.includes('html.desktop .stats .stat__k{font-size:12px;') && m.includes('html.desktop .stats .stat__v{font-size:22px;') && m.includes('html.desktop .stats .stat__sub{font-size:13px;'));
   assert.ok(!/html\.desktop \.stat__[kv]\{/.test(m), 'mọi rule có tiền tố .stats');
-  assert.ok(PAGE.includes('html.desktop{--sth:216px}') && PAGE.includes('html.desktop{--sth:76px}'));
+  assert.ok(PAGE.includes('html.desktop{--sth:216px}') && PAGE.includes('html.desktop{--sth:76px;--tab-h:26px}'));
 });
 
 test('H.1 chân tờ ghi nằm trong luồng ở điện thoại: không còn thanh fixed/JS đo thanh; .note__foot không position:fixed', () => {
@@ -7925,7 +7876,7 @@ test('2.38.16 N.1/N.2 tờ ghi: tiêu đề "Tờ ghi" + nhãn cột trên hàng
   assert.ok(PAGE.includes('<span class="nh-q">SL (kg)</span><span class="nh-m">Giá bán</span>') && PAGE.includes('<span class="nh-q">SL (gram)</span></div>') && PAGE.includes('<span class="nh-q">SL (kg)</span><span class="nh-m">Giá nhập</span>'));
   assert.ok(PAGE.includes('.nh-q,.nh-m{display:none}'), 'nhãn cột ẩn ngoài điện thoại');
   assert.ok(!deskBlock().includes('nh-q'), 'khối desktop không đụng');
-  assert.equal([...PAGE.matchAll(/pg\.hidden = pages <= 1 && !isDesk\(\);/g)].length, 2, 'Trang x / y chỉ hiện khi >1 (điện thoại)');
+  assert.equal([...PAGE.matchAll(/pg\.hidden = pages <= 1;/g)].length, 2, 'Trang x / y chỉ hiện khi >1 (desktop 2.39.6 luôn 1 trang)');
   const a = PAGE.indexOf('/* 2.38.16 (điện thoại)'); const blk = PAGE.slice(a, PAGE.indexOf('/* 2.38.3: cửa sổ thấp', a));
   assert.ok(blk.includes('html:not(.desktop){--cn:26px;--cq:80px;--cm:70px;--ca:44px}'));
   assert.ok(blk.includes('.note__head{display:grid;grid-template-columns:var(--cols);column-gap:0;'));
@@ -8510,20 +8461,23 @@ test('AA IndexedDB: localStorage đầy lúc di trú: ghi cờ lỗi vẫn xóa 
   assert.equal(c.client.getIdbMode(), false); assert.equal(bc.local.products[0].name, 'Cũ'); assert.equal(c.store.get('kho_db_local_v1'), raw);
 });
 
-test('2.39.5: tờ ghi desktop 9 dòng + dòng nhập (dòng 10) vừa khung ở HD, không tràn xuống Tổng/phân trang; FHD dòng 50px', () => {
-  /* Mô hình bố cục đo trên Edge (Bán lẻ): khung cho bảng tờ ghi (từ đầu bảng tới mép trên Tổng) HD 1280x720 = 504.7px, FHD 1920x1080 = 864.7px; đầu bảng 28px; mỗi trang desktop luôn PAGE_SIZE hàng (dòng ghi + dòng nhập + hàng trống). */
-  const block = deskBlock(), PS = 10, HEAD = 28;
-  assert.ok(PAGE.includes('var PAGE_SIZE = ' + PS + ';'));
-  const fixed = /html\.desktop :is\(#retailNote,#remedyNote\) \.note__list>table td[^{]*\{height:(\d+)px/.exec(block);
-  const stretch = block.includes('html.desktop :is(#retailNote,#remedyNote) .note__list>table,html.desktop #nhapListBox>table{height:100%}');
-  const basis = /html\.desktop :is\(#retailNote,#remedyNote\) \.note__list,html\.desktop #nhapListBox>table\{flex:0 1 (\d+)px;min-height:0;margin-bottom:auto\}/.exec(block);
-  const rowH = avail => fixed ? +fixed[1] : (stretch && basis ? (Math.min(avail, +basis[1]) - HEAD) / PS : NaN);
-  for (const n of [9, 10, 0, 11]) {
-    const rowsOnPage = PS; /* n=9: 9 dòng ghi + dòng nhập = hàng 10; n=0/10/11: dòng nhập + hàng trống vẫn đủ 10 */
-    assert.ok(n >= 0 && HEAD + rowsOnPage * rowH(504.7) <= 504.7 + 1e-6, 'HD n=' + n + ': hàng 10 tràn ' + (HEAD + rowsOnPage * rowH(504.7) - 504.7).toFixed(1) + 'px xuống Tổng');
-  }
-  assert.equal(rowH(864.7), 50, 'FHD dòng 50px (không giãn 86px)');
-  assert.ok(block.includes('html.desktop :is(#retailNote,#remedyNote,#nhapListBox)>:not(.note__list,table){flex:none}'), 'Tổng/phân trang/chân không co (tránh Tổng tràn 0.6px vào phân trang)');
+test('2.39.6: dòng tờ ghi desktop cao = biến tab thanh bên (--tab-h, kể cả cửa sổ thấp); 30 dòng không tràn chân (khung cuộn, đầu bảng ghim, Tổng/chân không co)', () => {
+  const b = deskBlock(), N = '(#retailNote,#remedyNote,#nhapListBox)';
+  const tabH = +/html\.desktop\{--sw:180px;--g:16px;--tab-h:(\d+)px;/.exec(b)[1];
+  assert.equal(tabH, 30);
+  assert.ok(/html\.desktop \.tab\{[^}]*min-height:var\(--tab-h\);/.test(b), 'tab dùng biến');
+  assert.ok(b.includes('html.desktop :is' + N + ' .note__list td{height:var(--tab-h)}'), 'dòng dùng CHUNG biến tab');
+  assert.ok(PAGE.includes('html.desktop{--sth:76px;--tab-h:26px}') && !/html\.desktop \.tab\{[^}]*min-height:\d+px/.test(PAGE), 'cửa sổ thấp: đổi biến, không số cứng');
+  /* Mô hình bố cục đo trên Edge 1280x720 (Bán lẻ): hộp tờ ghi 67..703 = 636px; phần không cuộn = tiêu đề 32 + Tổng 25 + chân 39 (flex:none); 30 dòng + dòng gõ + đầu 28 = 958px */
+  const list = /html\.desktop :is\(#retailNote,#remedyNote,#nhapListBox\) \.note__list\{([^}]*)\}/.exec(b);
+  const scrolls = !!list && /flex:1/.test(list[1]) && /min-height:0/.test(list[1]) && /overflow-y:auto/.test(list[1]);
+  const fixedSibs = b.includes('html.desktop :is' + N + '>:not(.note__list){flex:none}');
+  const box = 636, fixed = 32 + 25 + 39, content = 28 + 31 * tabH;
+  const footBottom = scrolls && fixedSibs ? box : fixed + content; /* không cuộn: chân bị đẩy xuống theo nội dung */
+  assert.ok(footBottom <= box, '30 dòng: chân tràn ' + (footBottom - box) + 'px');
+  assert.ok(!/note__list>table\{height:100%\}|flex:0 1 528px/.test(b), 'bỏ chia đều khung 2.39.5');
+  assert.ok(b.includes('html.desktop :is' + N + ' .note__list th{position:sticky;top:0;z-index:1;background:var(--bt) fixed}'), 'đầu bảng ghim, nền = nền cửa sổ');
+  assert.ok(Buffer.byteLength(b) <= 20736);
 });
 
 test('AC xóa vị: còn tồn / có giao dịch / nằm trong đơn thuốc → chặn (không hỏi, báo ngắn); vị trống xóa được', () => {
