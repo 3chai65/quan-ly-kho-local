@@ -3369,7 +3369,7 @@ test('2.14.0 Bán lẻ: bảng nhập (retailBody) nằm trong tờ ghi, sau dan
   assert.equal(PAGE.split('data-action="save-retail"').length - 1, 1);
   assert.match(PAGE, /<tfoot id="retailNoteFoot" hidden><tr><td><\/td><td class="b">Tổng<\/td><td><\/td><td class="num b r txt-green" id="retailNoteTotal">[\s\S]*?<div class="note__foot">\s*<button[^>]*data-action="save-retail"[\s\S]*?Bán đơn\s*<\/button>/);
   assert.doesNotMatch(PAGE.slice(PAGE.indexOf('<div class="note__foot">'), PAGE.indexOf('id="remedyBox"')), /Tổng/, '2.17.3: chân Bán lẻ chỉ còn nút');
-  assert.match(PAGE, /<th scope="col" class="r">Giá bán<\/th>/);
+  assert.match(PAGE, /<th scope="col" class="num">Giá bán<\/th>/);
   assert.doesNotMatch(PAGE.slice(PAGE.indexOf('id="retailBox"'), PAGE.indexOf('id="remedyBox"')), /Thành tiền/, '2.17.3: Bán lẻ đổi Thành tiền -> Giá bán');
 });
 
@@ -7126,7 +7126,7 @@ test('2.39.6 Bán lẻ desktop: chọn vị mới cuộn khung tới dòng gõ; 
 
 test('2.29.0 cấu trúc: 3 tờ ghi gộp dòng gõ + dòng trống vào bảng tờ ghi; tiêu đề SL (kg)/Giá bán; ô phẳng không viền, gợi ý đổi nằm trái ô SL không đè', () => {
   assert.ok(PAGE.includes("[['remedyNoteBody', 'remedyBody'], ['retailNoteBody', 'retailBody'], ['nhapListBody', 'nhapPendingBody']]"));
-  assert.match(PAGE, /<th scope="col">SL \(kg\)<\/th>\s*<th scope="col" class="r">Giá bán<\/th>/);
+  assert.match(PAGE, /<th class="num" scope="col">SL \(kg\)<\/th>\s*<th scope="col" class="num">Giá bán<\/th>/);
   for (const id of ['retailBody', 'remedyBody', 'nhapPendingBody']) assert.ok(PAGE.includes('<tbody id="' + id + '" class="pend">'), id + ' có class pend');
   const b = deskBlock();
   assert.ok(b.includes('html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}'), 'ô phẳng không viền');
@@ -8542,4 +8542,22 @@ test('AC ngày bán luôn là hôm nay: sửa ô ngày thành ngày khác vẫn 
 test('AC hai map dùng Object.create(null): sales / inn / out', () => {
   assert.ok(PAGE.includes('var sales = Object.create(null);'));
   assert.ok(PAGE.includes('var inn = Object.create(null), out = Object.create(null);'));
+});
+
+test('2.39.8 Kho tồn: cột Tồn kho – Đã bán – Giá nhập (mọi nền tảng); mọi cột số căn phải bằng một luật chung, tiêu đề theo; desktop cột số đệm 24px', () => {
+  assert.match(PAGE, /<th scope="col">Tên<\/th>\s*<th class="num" scope="col">Tồn kho<\/th>\s*<th class="num" scope="col">Đã bán<\/th>\s*<th class="num" scope="col">Giá nhập<\/th>/, 'tiêu đề Kho tồn đúng thứ tự');
+  for (const desk of [true, false]) {
+    const d = fitClient39(desk, 'inv', 590, 3);
+    d.render();
+    const c = d.rows()[0].children;
+    assert.deepEqual(c.slice(1, 4).map(x => x.className), ['num', 'num muted', 'num muted'], (desk ? 'desktop' : 'điện thoại') + ': Tồn kho (đậm) – Đã bán (mờ) – Giá nhập (mờ)');
+    assert.equal(c[1].textContent, '1 kg', 'ô thứ 2 là tồn (1 kg), không phải đã bán');
+  }
+  assert.ok(PAGE.includes(':is(td,th).num:not(.c-num){text-align:right}'), 'một luật chung căn phải cột số');
+  assert.ok(deskBlock().includes('html.desktop :is(td,th).num:not(.c-num){padding-left:24px;white-space:nowrap}'), 'desktop: cột số đệm 24px');
+  const numHead = /^(SL( \((kg|gram)\))?|Giá bán|Giá nhập( \(k\/kg\))?|Đơn giá|Thành tiền|Tồn kho|Đã bán|Tồn hiện tại|Theo lịch sử|Chênh)$/;
+  const heads = [...PAGE.matchAll(/<th([^>]*)>([^<]*)<\/th>/g)].filter(m => numHead.test(m[2].trim()));
+  assert.ok(heads.length >= 20, 'tìm thấy các tiêu đề cột số');
+  for (const m of heads) assert.match(m[1], /class="[^"]*\bnum\b/, 'tiêu đề cột số căn phải: ' + m[2]);
+  assert.ok(!/table\.his (td|th):nth-child\(4\),table\.his (td|th):nth-child\(5\)\{text-align:right\}/.test(PAGE), 'bỏ luật lẻ của Lịch sử');
 });

@@ -5,6 +5,14 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.39.8] - 2026-11-26
+
+### Đổi
+- Kho tồn (mọi nền tảng): cột phải theo thứ tự Tồn kho – Đã bán – Giá nhập; Tồn kho đậm, Đã bán và Giá nhập mờ như cũ. Sắp xếp và nút lọc không đổi.
+- Toàn app: mọi cột số (tờ ghi, Kho tồn, Lịch sử nhập/bán, Đối chiếu, đơn trong Lịch sử) căn phải, tiêu đề cột theo. Dùng một luật chung `:is(td,th).num:not(.c-num)`; tiêu đề số thêm lớp `num`, bỏ luật lẻ `table.his` nth-child(4,5). STT vẫn căn giữa; cột chữ (Tên, Ngày) căn trái. Thống kê không có bảng, nên không đổi.
+- Desktop: cột số đệm trái 24px, không xuống dòng (khe giữa hai cột số đo được 32px); cột Tên nhường chỗ và cắt "…".
+- Ảnh mẫu 01–06 chụp lại.
+
 ## [2.39.7] - 2026-11-26
 
 ### Đổi

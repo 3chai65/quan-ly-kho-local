@@ -166,6 +166,7 @@ td{padding:5px 8px;vertical-align:middle}
 tbody tr+tr{border-top:1px solid var(--border2)}
 tbody tr:hover{background:var(--surface2)}
 .num{font-variant-numeric:tabular-nums}
+:is(td,th).num:not(.c-num){text-align:right} /* 2.39.8: mọi cột số (ô + tiêu đề) căn phải, một luật chung */
 .c-num{width:46px;text-align:center}
 .c-del{width:46px;text-align:center}
 .c-act{width:104px;text-align:center}
@@ -494,10 +495,6 @@ table.inv .c-del,table.his .c-act{width:auto}
 .note>table>thead,.note>.note__list>table>thead{display:none}
 .note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
 }
-@media (min-width:601px){
-table.his th:nth-child(4),table.his th:nth-child(5),
-table.his td:nth-child(4),table.his td:nth-child(5){text-align:right}
-}
 /* 2.10.0: tab. 8 <details> giữ nguyên DOM; chỉ mục đang mở hiện (toàn chiều rộng), các mục khác ẩn. */
 .main>.grid2{display:contents}
 .main>details.card,.main>.grid2>details.card{margin-top:0}
@@ -690,6 +687,7 @@ html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;f
 html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
 html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}
 html.desktop table:is(.inv,.his) td{height:var(--tab-h);padding:1px 8px;white-space:nowrap}
+html.desktop :is(td,th).num:not(.c-num){padding-left:24px;white-space:nowrap} /* 2.39.8: cột số cách nhau ≥ 24px, cột Tên nhường chỗ */
 html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}
 html.desktop #expBox .card__bar-search{flex-basis:80px}
 html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
@@ -1071,8 +1069,8 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <thead><tr>
               <th class="c-num" scope="col">STT</th>
               <th scope="col">Tên</th>
-              <th scope="col">SL (kg)</th>
-              <th scope="col" class="r">Giá bán</th>
+              <th class="num" scope="col">SL (kg)</th>
+              <th scope="col" class="num">Giá bán</th>
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="retailNoteBody"></tbody>
@@ -1085,8 +1083,8 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
               <thead><tr>
                 <th class="c-num" scope="col">STT</th>
                 <th scope="col">Tên</th>
-                <th class="c-qty" scope="col">SL (kg)</th>
-                <th class="c-money" scope="col">Giá bán</th>
+                <th class="c-qty num" scope="col">SL (kg)</th>
+                <th class="c-money num" scope="col">Giá bán</th>
                 <th class="c-del" scope="col"><span class="sr">Thêm</span></th>
               </tr></thead>
               <tbody id="retailBody" class="pend"></tbody>
@@ -1137,7 +1135,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <thead><tr>
               <th class="c-num" scope="col">STT</th>
               <th scope="col">Tên</th>
-              <th scope="col">SL (gram)</th>
+              <th class="num" scope="col">SL (gram)</th>
               <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="remedyNoteBody"></tbody>
@@ -1150,7 +1148,7 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
               <thead><tr>
                 <th class="c-num" scope="col">STT</th>
                 <th scope="col">Tên</th>
-                <th class="c-qty" scope="col">SL (gram)</th>
+                <th class="c-qty num" scope="col">SL (gram)</th>
                 <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
               </tr></thead>
               <tbody id="remedyBody" class="pend"></tbody>
@@ -1211,8 +1209,8 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
           <thead><tr>
             <th class="c-num" scope="col">STT</th>
             <th scope="col">Tên</th>
-            <th class="c-qty" scope="col">SL (kg)</th>
-            <th class="c-money r" scope="col">Giá nhập</th>
+            <th class="c-qty num" scope="col">SL (kg)</th>
+            <th class="c-money num" scope="col">Giá nhập</th>
             <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
           </tr></thead>
           <tbody id="nhapListBody"></tbody>
@@ -1224,8 +1222,8 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <thead><tr>
               <th class="c-num" scope="col">STT</th>
               <th scope="col">Tên</th>
-              <th class="c-qty" scope="col">SL (kg)</th>
-              <th class="c-money" scope="col">Giá nhập (k/kg)</th>
+              <th class="c-qty num" scope="col">SL (kg)</th>
+              <th class="c-money num" scope="col">Giá nhập (k/kg)</th>
               <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
             </tr></thead>
             <tbody id="nhapPendingBody" class="pend"><tr class="is-row">
@@ -1295,9 +1293,9 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <caption class="sr">Tồn kho hiện tại</caption>
             <thead><tr>
               <th scope="col">Tên</th>
-              <th scope="col">Đã bán</th>
-              <th scope="col">Tồn kho</th>
-              <th scope="col">Giá nhập</th>
+              <th class="num" scope="col">Tồn kho</th>
+              <th class="num" scope="col">Đã bán</th>
+              <th class="num" scope="col">Giá nhập</th>
               <th scope="col" class="c-del"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="invBody"></tbody>
@@ -1330,9 +1328,9 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <thead><tr>
               <th scope="col">Ngày</th>
               <th scope="col">Vị thuốc</th>
-              <th scope="col">SL</th>
-              <th scope="col">Đơn giá</th>
-              <th scope="col">Thành tiền</th>
+              <th class="num" scope="col">SL</th>
+              <th class="num" scope="col">Đơn giá</th>
+              <th class="num" scope="col">Thành tiền</th>
               <th scope="col" class="c-act"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="impBody"></tbody>
@@ -1365,9 +1363,9 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
             <thead><tr>
               <th scope="col">Ngày</th>
               <th scope="col">Vị thuốc</th>
-              <th scope="col">SL</th>
-              <th scope="col">Đơn giá</th>
-              <th scope="col">Thành tiền</th>
+              <th class="num" scope="col">SL</th>
+              <th class="num" scope="col">Đơn giá</th>
+              <th class="num" scope="col">Thành tiền</th>
               <th scope="col" class="c-act"><span class="sr">Thao tác</span></th>
             </tr></thead>
             <tbody id="expBody"></tbody>
@@ -1460,9 +1458,9 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
           <caption class="sr">Các vị thuốc có tồn lệch với lịch sử</caption>
           <thead><tr>
             <th scope="col">Vị thuốc</th>
-            <th scope="col">Tồn hiện tại</th>
-            <th scope="col">Theo lịch sử</th>
-            <th scope="col">Chênh</th>
+            <th class="num" scope="col">Tồn hiện tại</th>
+            <th class="num" scope="col">Theo lịch sử</th>
+            <th class="num" scope="col">Chênh</th>
             <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
           </tr></thead>
           <tbody id="recBody"></tbody>
@@ -1525,9 +1523,9 @@ html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-siz
           <thead><tr>
             <th class="c-num" scope="col">STT</th>
             <th scope="col">Tên</th>
-            <th scope="col" id="orderQtyHead">SL</th>
-            <th class="r" scope="col" id="orderPriceHead" hidden>Đơn giá</th>
-            <th class="r" scope="col" id="orderMoneyHead" hidden>Thành tiền</th>
+            <th class="num" scope="col" id="orderQtyHead">SL</th>
+            <th class="num" scope="col" id="orderPriceHead" hidden>Đơn giá</th>
+            <th class="num" scope="col" id="orderMoneyHead" hidden>Thành tiền</th>
             <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
           </tr></thead>
           <tbody id="orderBody"></tbody>
@@ -3662,12 +3660,12 @@ function renderInventory(){
     var tr = el('tr');
     tr.className = 'is-row';
     tr.appendChild(el('td', 'b', p.name));
+    var cStock = el('td', 'num', fmtQty(p.stock)); /* 2.39.8: Tồn kho – Đã bán – Giá nhập */
+    cStock.setAttribute('data-label', 'Tồn kho');
+    tr.appendChild(cStock);
     var cSold = el('td', 'num muted', fmtQty(sales[p.id] || 0));
     cSold.setAttribute('data-label', 'Đã bán');
     tr.appendChild(cSold);
-    var cStock = el('td', 'num', fmtQty(p.stock));
-    cStock.setAttribute('data-label', 'Tồn kho');
-    tr.appendChild(cStock);
     var cCost = el('td', 'num muted', fmtUnitPrice(p.costPrice));
     cCost.setAttribute('data-label', 'Giá nhập');
     tr.appendChild(cCost);
