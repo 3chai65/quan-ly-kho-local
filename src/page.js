@@ -5629,8 +5629,8 @@ function loadBakList(){
   }, function(){ done(null); });
 }
 /* ================= CHỐT SỔ (2.40.0, docs/chot-so.md) ================= */
-/* Nút chốt ẩn tới khi app Mac hiểu dòng open + closed.months (mục 7). File lưu trữ: chỉ chủ thấy (server 403 với thiết bị khác). */
-var CLOSE_UI = false, closePv = null;
+/* 2.40.1: mở nút chốt (app Mac đã hiểu open/closed, kênh 8c6f896): chỉ thiết bị chủ (server 403 với thiết bị khác) và desktop. File lưu trữ: chỉ chủ thấy. */
+var CLOSE_UI = true, closePv = null;
 function loadArchives(){
   var box = $('#closeBox'), list = $('#arcList'), btn = $('#closeBtn');
   if (!box || !list) return Promise.resolve();
@@ -5642,8 +5642,9 @@ function loadArchives(){
       l.href = '/api/close-archive/' + encodeURIComponent(f.name); l.setAttribute('download', f.name);
       list.appendChild(l);
     });
-    if (btn) btn.hidden = !(a && CLOSE_UI);
-    box.hidden = !(a && (a.length || CLOSE_UI));
+    var can = !!(a && CLOSE_UI && doc.documentElement.classList.contains('desktop'));
+    if (btn) btn.hidden = !can;
+    box.hidden = !(a && (a.length || can));
   }, function(){});
 }
 function closeCall(cutoff, dryRun, base){
@@ -5665,13 +5666,18 @@ function renderClosePreview(pv){
   var hd = el('tr'); ['Vị thuốc', 'Tồn tại mốc', 'Giá vốn'].forEach(function(x){ hd.appendChild(el('th', null, x)); }); tb.appendChild(hd);
   pv.opening.forEach(function(o){ var tr = el('tr'); tr.appendChild(el('td', null, o.name)); tr.appendChild(el('td', 'num', fmtKgExact(o.qty))); tr.appendChild(el('td', 'num', k(o.price))); tb.appendChild(tr); });
   out.appendChild(tb);
-  var bad = pv.blocks.slice();
+  /* 0 giao dịch bị gỡ: một dòng "Chưa có gì để chốt" thay cho lý do chặn tương ứng của server. */
+  var bad = pv.totals.count ? pv.blocks.slice() : ['Chưa có gì để chốt'].concat(pv.blocks.filter(function(b){ return !/^Không có giao dịch nào/.test(b); }));
   if (sm.rev !== pv.totals.rev || sm.cost !== pv.totals.cost) bad.push('Tổng gỡ khác bảng tóm tắt');
-  if (bad.length) { bad.forEach(function(b){ out.appendChild(el('p', 'txt-red', b)); }); return; }
-  out.appendChild(el('p', 'hint', 'Nên chốt khi các máy khác không đang nhập dở. Gõ CHOT ' + closeYearOf(pv.cutoff) + ' để chốt.'));
-  var inp = el('input', 'inp'); inp.id = 'closeConfirm'; inp.autocomplete = 'off';
-  out.appendChild(inp);
+  pv.ok = !bad.length;
+  bad.forEach(function(b){ out.appendChild(el('p', 'txt-red', b)); });
+  if (pv.ok) {
+    out.appendChild(el('p', 'hint', 'Nên chốt khi các máy khác không đang nhập dở. Gõ CHOT ' + closeYearOf(pv.cutoff) + ' để chốt.'));
+    var inp = el('input', 'inp'); inp.id = 'closeConfirm'; inp.autocomplete = 'off';
+    out.appendChild(inp);
+  }
   var b = el('button', 'btn btn--danger', 'Chốt sổ'); b.type = 'button'; b.setAttribute('data-action', 'close-run');
+  b.disabled = !pv.ok;
   out.appendChild(b);
 }
 function closePreview(){
@@ -5688,8 +5694,10 @@ function closePreview(){
 }
 function closeRun(){
   var pv = closePv, inp = $('#closeConfirm');
-  if (!pv || !inp || String(inp.value).trim() !== 'CHOT ' + closeYearOf(pv.cutoff)) { toast('Gõ đúng CHOT ' + (pv ? closeYearOf(pv.cutoff) : ''), 'error'); return Promise.resolve(); }
+  if (!pv || !pv.ok) { toast('Xem trước trước khi chốt', 'error'); return Promise.resolve(); } /* xem trước bắt buộc, bị chặn thì không chạy */
+  if (!inp || String(inp.value).trim() !== 'CHOT ' + closeYearOf(pv.cutoff)) { toast('Gõ đúng CHOT ' + (pv ? closeYearOf(pv.cutoff) : ''), 'error'); return Promise.resolve(); }
   if (dirty) { toast('Còn thay đổi chưa gửi lên máy chủ, chờ đồng bộ rồi xem trước lại', 'error'); return Promise.resolve(); }
+  if (!confirm('Chốt sổ đến ' + dateVN(pv.cutoff) + ': gỡ ' + pv.totals.count + ' giao dịch trước mốc (có backup và file lưu trữ trên hub). Nên chốt khi các máy khác không đang nhập dở.')) return Promise.resolve();
   return closeCall(pv.cutoff, false, pv.updatedAt).then(function(x){
     closePv = null;
     var out = $('#closeOut'); if (out) out.textContent = '';

@@ -5,6 +5,11 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.1] - 2026-11-26
+
+### Thêm
+- Mở nút "Chốt sổ…" ở Sao lưu khôi phục (việc AN bước 3; app Mac đã hiểu open/closed, kênh 8c6f896): chỉ thiết bị chủ trên desktop. Bắt buộc xem trước; xem trước bị chặn thì nút chạy khóa; 0 giao dịch bị gỡ → dòng "Chưa có gì để chốt". Chạy: gõ "CHOT <năm>" rồi hộp xác nhận "Nên chốt khi các máy khác không đang nhập dở"; gửi với X-Base-Updated của bản xem trước.
+
 ## [2.40.0] - 2026-11-26
 
 ### Thêm

@@ -111,6 +111,7 @@ setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
   TET: (typeof TET !== 'undefined' ? TET : null), lunarStart: (typeof lunarStart === 'function' ? lunarStart : null), bookStart: (typeof bookStart === 'function' ? bookStart : null), statTxs: (typeof statTxs === 'function' ? statTxs : null), closeYearOf: (typeof closeYearOf === 'function' ? closeYearOf : null),
+  loadArchives: (typeof loadArchives === 'function' ? loadArchives : null), renderClosePreview: (typeof renderClosePreview === 'function' ? renderClosePreview : null), closeRun: (typeof closeRun === 'function' ? closeRun : null), setClosePv: function(v){ closePv = v; },
   historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
   setExpPage: function(v){ expPage = v; }, getExpPage: function(){ return expPage; },
@@ -8741,12 +8742,75 @@ test('2.40.0 chốt sổ: PUT 409 "sổ đã chốt" không mở hộp xung đ�
   assert.equal(client.hasSyncRetry(), false);
 });
 
-test('2.40.0 chốt sổ: nút chốt còn ẩn (CLOSE_UI = false); xác nhận gõ CHOT <năm>; câu nhắc máy khác', () => {
-  assert.ok(PAGE.includes('var CLOSE_UI = false'));
-  assert.ok(PAGE.includes('Nên chốt khi các máy khác không đang nhập dở'));
-  assert.match(PAGE, /id="closeBtn" hidden/);
-  const c = loadClient();
-  assert.equal(c.closeYearOf('2027-02-06'), '2026');
+const CLOSE_PV = (count) => ({ success: true, dryRun: true, cutoff: '2026-02-17', updatedAt: 77, opening: [], months: count ? [{ m: '2026-01', imp: 0, rev: 5000, cost: 2000 }] : [],
+  totals: { count, imp: 0, rev: count ? 5000 : 0, cost: count ? 2000 : 0, profit: count ? 3000 : 0 }, blocks: count ? [] : ['Không có giao dịch nào trước mốc 2026-02-17'] });
+function closeKit({ desktop = true, archive = 200, confirmOk = true } = {}) {
+  const ids = { '#closeBox': makeEl(), '#arcList': makeEl(), '#closeBtn': makeEl(), '#closeOut': makeEl(), '#closeConfirm': makeEl() };
+  ids['#closeBox'].hidden = ids['#closeBtn'].hidden = true;
+  const doc = trackDoc(ids);
+  doc.documentElement.classList = { add() {}, remove() {}, toggle() {}, contains: (k) => desktop && k === 'desktop' };
+  const calls = [], confirms = [];
+  const fetch = async (url, o = {}) => {
+    calls.push({ url, method: o.method || 'GET', headers: o.headers || {}, body: o.body });
+    if (url === '/api/close-archive') return { ok: archive === 200, status: archive, json: async () => ({ success: archive === 200, archives: [] }) };
+    if (url === '/api/close-year') return { ok: true, status: 200, json: async () => ({ success: true, updatedAt: 78 }) };
+    return { ok: true, status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 78 } }) };
+  };
+  const c = loadClient({ document: doc, fetch, confirm: (m) => { confirms.push(m); return confirmOk; }, setTimeout() { return 0; }, clearTimeout() {} });
+  return { c, ids, calls, confirms };
+}
+const texts = (el) => el.children.map(x => x.textContent);
+
+test('2.40.1 chốt sổ: nút chỉ hiện cho thiết bị chủ trên desktop (điện thoại, thiết bị khác: ẩn)', async () => {
+  assert.ok(PAGE.includes('var CLOSE_UI = true'));
+  for (const [desktop, archive, shown] of [[true, 200, true], [false, 200, false], [true, 403, false]]) {
+    const k = closeKit({ desktop, archive });
+    await k.c.loadArchives();
+    assert.equal(k.ids['#closeBtn'].hidden, !shown, 'desktop=' + desktop + ' archive=' + archive);
+    assert.equal(k.ids['#closeBox'].hidden, !shown);
+  }
+});
+
+test('2.40.1 chốt sổ: 0 giao dịch bị gỡ → "Chưa có gì để chốt", nút chạy khóa, không có ô gõ; bấm vẫn không gọi', async () => {
+  const k = closeKit();
+  const pv = CLOSE_PV(0);
+  k.c.setClosePv(pv); k.c.renderClosePreview(pv);
+  const out = k.ids['#closeOut'];
+  assert.ok(texts(out).includes('Chưa có gì để chốt'));
+  assert.ok(!texts(out).some(t => /Không có giao dịch nào/.test(t)), 'không lặp lý do của server');
+  const btn = out.children[out.children.length - 1];
+  assert.equal(btn.textContent, 'Chốt sổ'); assert.equal(btn.disabled, true);
+  assert.ok(!out.children.some(x => x.id === 'closeConfirm'));
+  k.ids['#closeConfirm'].value = 'CHOT 2025';
+  await k.c.closeRun();
+  assert.equal(k.calls.filter(x => x.url === '/api/close-year').length, 0);
+});
+
+test('2.40.1 chốt sổ: bắt buộc xem trước, gõ đúng CHOT <năm>, hộp xác nhận nhắc máy khác; rồi mới gửi với X-Base-Updated của bản xem trước', async () => {
+  let k = closeKit();
+  k.ids['#closeConfirm'].value = 'CHOT 2025';
+  await k.c.closeRun();
+  assert.equal(k.calls.length, 0, 'chưa xem trước thì không gửi');
+  const pv = CLOSE_PV(3);
+  k.c.setClosePv(pv); k.c.renderClosePreview(pv);
+  const out = k.ids['#closeOut'];
+  assert.equal(out.children[out.children.length - 1].disabled, false);
+  assert.ok(texts(out).some(t => /Nên chốt khi các máy khác không đang nhập dở\. Gõ CHOT 2025/.test(t)));
+  k.ids['#closeConfirm'].value = 'CHOT 2026';
+  await k.c.closeRun();
+  assert.equal(k.calls.length, 0, 'gõ sai năm');
+  k = closeKit({ confirmOk: false });
+  k.c.setClosePv(pv); k.c.renderClosePreview(pv); k.ids['#closeConfirm'].value = 'CHOT 2025';
+  await k.c.closeRun();
+  assert.equal(k.calls.length, 0, 'bỏ ở hộp xác nhận');
+  assert.match(k.confirms[0], /Nên chốt khi các máy khác không đang nhập dở/);
+  k = closeKit();
+  k.c.setClosePv(pv); k.c.renderClosePreview(pv); k.ids['#closeConfirm'].value = ' CHOT 2025 ';
+  await k.c.closeRun();
+  const post = k.calls.find(x => x.url === '/api/close-year');
+  assert.ok(post, 'đã gửi');
+  assert.equal(post.headers['X-Base-Updated'], '77');
+  assert.deepEqual(JSON.parse(post.body), { cutoff: '2026-02-17', dryRun: false });
 });
 
 test('2.40.0 Kho tồn: "Đã bán" chỉ tính từ Tết năm sổ hiện tại (bán năm trước không đẩy vị lên đầu)', () => {
