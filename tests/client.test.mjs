@@ -69,6 +69,7 @@ globalThis.__test = {
   isDirty: function(){ return dirty; }, tsFromId: tsFromId, txStamp: txStamp, lastImport: lastImport, uid: uid,
   setBase: function(v){ cloudBase = dec(v); },
   getBase: function(){ return cloudBase; },
+  setBootLocalAt: function(v){ bootLocalAt = v; }, pushPendingNow: (typeof pushPendingNow === 'function' ? pushPendingNow : null),
   saveLocal: (typeof saveLocal === 'function' ? saveLocal : null), readDirty: (typeof readDirty === 'function' ? readDirty : null), readBase: (typeof readBase === 'function' ? readBase : null),
   computeStats: (typeof computeStats === 'function' ? computeStats : null), allocateRemedyProfitEvenly: (typeof allocateRemedyProfitEvenly === 'function' ? allocateRemedyProfitEvenly : null),
   balanceRemedyMoney: (typeof balanceRemedyMoney === 'function' ? balanceRemedyMoney : null), kToDong: (typeof kToDong === 'function' ? kToDong : null),
@@ -552,6 +553,167 @@ test('W3 pushState gửi X-Op-Id, giữ nguyên khi thử lại cùng snapshot, 
   client.setDb({ products: [{ id: 'X', name: 'x', stock: 2, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
   await client.pushState(false, false);
   assert.notEqual(ops[3], ops[2]);
+});
+
+/* ===== 2.40.6 (việc AU): 409 giả khi làm tuần tự ===== */
+/* Hub giả cùng luật server.js: X-Op-Id trùng lần ghi cuối → success; base cũ → 409 kèm ops (op ghi sau base) + opsComplete; nhật ký mọi lần ghi. */
+function fakeHub() {
+  const hub = { state: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [] }, updatedAt: 10, lastOp: null, log: [{ at: 10, op: null }], puts: [] };
+  hub.fetchFor = (o2 = {}) => async (url, opts = {}) => {
+    const m = opts.method || 'GET';
+    if (String(url).startsWith('/api/unread')) return { status: 200, json: async () => ({ success: true, data: { BAN: [], NHAP: [] } }) };
+    if (m === 'GET') return { status: 200, json: async () => ({ success: true, data: JSON.parse(JSON.stringify({ ...hub.state, updatedAt: hub.updatedAt })) }) };
+    const h = opts.headers, op = h['X-Op-Id'], base = Number(h['X-Base-Updated']);
+    hub.puts.push({ op, base, force: h['X-Force'] === '1' });
+    let res;
+    if (hub.lastOp && hub.lastOp.id === op) res = { status: 200, d: { success: true, updatedAt: hub.lastOp.at } };
+    else if (h['X-Force'] !== '1' && hub.updatedAt > base) {
+      res = { status: 409, d: { success: false, conflict: true, updatedAt: hub.updatedAt, ops: hub.log.filter(x => x.at > base).map(x => x.op), opsComplete: hub.log.some(x => x.at <= base) } };
+    } else {
+      const body = JSON.parse(opts.body); delete body.updatedAt;
+      const now = hub.updatedAt + 1;
+      hub.state = body; hub.updatedAt = now; hub.lastOp = { id: op, at: now }; hub.log.push({ at: now, op });
+      res = { status: 200, d: { success: true, updatedAt: now } };
+    }
+    if (o2.lose && o2.lose()) throw new TypeError('Load failed'); /* hub ĐÃ ghi, máy mất phản hồi (iPhone khóa máy) */
+    return { status: res.status, json: async () => res.d };
+  };
+  return hub;
+}
+function auDevice(hub, extra = {}) {
+  let lose = false, confirms = 0;
+  const c = loadClient({ fetch: hub.fetchFor({ lose: () => lose }), confirm() { confirms++; return true; }, setTimeout() { return 1; }, clearTimeout() {}, ...extra });
+  c.setDb({ moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: hub.updatedAt });
+  c.setBase(hub.updatedAt);
+  return { c, setLose(v) { lose = v; }, confirms: () => confirms };
+}
+const auProd = (id, name) => ({ id, name, stock: 1, costPrice: 1000 });
+const auWith = (c, prods) => { const d = c.getDb(); c.setDb({ ...d, products: prods }); };
+
+test('2.40.6 AU H1: PUT đã ghi nhưng mất phản hồi, lưu tiếp trên CÙNG máy → không hộp 409, tự gửi lại với base mới', async () => {
+  const hub = fakeHub();
+  const ip = auDevice(hub);
+  ip.setLose(true);
+  auWith(ip.c, [auProd('A', 'Vị A')]);
+  assert.equal(await ip.c.pushState(false, false), false);   // hub đã ghi, máy không biết
+  assert.equal(hub.updatedAt, 11);
+  ip.setLose(false);
+  auWith(ip.c, [auProd('A', 'Vị A'), auProd('B', 'Vị B')]);    // đơn thứ hai (nội dung khác → opId mới)
+  assert.equal(await ip.c.pushState(false, false), true);
+  assert.equal(ip.confirms(), 0, 'không hỏi xung đột');
+  assert.ok(hub.puts.every(p => !p.force), 'không X-Force');
+  assert.deepEqual(hub.state.products.map(p => p.id), ['A', 'B']);
+  assert.equal(ip.c.getBase(), hub.updatedAt);
+  assert.equal(ip.c.isDirty(), false);
+});
+
+test('2.40.6 AU H1/H3: iPhone khóa máy sau khi lưu (mất phản hồi), Tauri ghi tiếp, iPhone mở lại gửi lại → lấy bản hub, KHÔNG đè Tauri', async () => {
+  const hub = fakeHub();
+  const ip = auDevice(hub), ta = auDevice(hub);
+  ip.setLose(true);
+  auWith(ip.c, [auProd('A', 'Vị A')]);
+  await ip.c.pushState(false, false);                          // tới hub, mất phản hồi; iPhone vẫn dirty
+  assert.equal(ip.c.isDirty(), true);
+  await ta.c.pullState(false);                                  // Tauri tải bản có Vị A rồi nhập thêm
+  auWith(ta.c, [auProd('A', 'Vị A'), auProd('T', 'Vị Tauri')]);
+  assert.equal(await ta.c.pushState(false, false), true);
+  ip.setLose(false);
+  await ip.c.pushState(false, false);                          // iPhone mở lại: gửi lại cùng nội dung
+  assert.equal(ip.confirms(), 0, 'không hỏi xung đột');
+  assert.ok(hub.puts.every(p => !p.force), 'không X-Force');
+  assert.deepEqual(hub.state.products.map(p => p.id), ['A', 'T'], 'thay đổi của Tauri còn nguyên');
+  assert.deepEqual(Array.from(ip.c.getDb().products, p => p.id), ['A', 'T'], 'iPhone nhận bản hub');
+  assert.equal(ip.c.isDirty(), false);
+  assert.equal(ip.c.getBase(), hub.updatedAt);
+});
+
+test('2.40.6 AU: xung đột THẬT (máy khác ghi, máy này có thay đổi chưa tới hub) vẫn hỏi; nhật ký không phủ tới base cũng hỏi', async () => {
+  const hub = fakeHub();
+  const ip = auDevice(hub), ta = auDevice(hub);
+  auWith(ta.c, [auProd('T', 'Vị Tauri')]);
+  await ta.c.pushState(false, false);
+  auWith(ip.c, [auProd('I', 'Vị iPhone')]);
+  await ip.c.pushState(false, false);
+  assert.equal(ip.confirms(), 1);
+  const hub2 = fakeHub();
+  const me = auDevice(hub2);
+  me.setLose(true); auWith(me.c, [auProd('A', 'A')]); await me.c.pushState(false, false);
+  hub2.log = hub2.log.filter(x => x.at > 10);                   // nhật ký đã cắt: không chứng minh được chỉ mình ghi
+  me.setLose(false); auWith(me.c, [auProd('A', 'A'), auProd('B', 'B')]); await me.c.pushState(false, false);
+  assert.equal(me.confirms(), 1);
+});
+
+test('2.40.6 AU: op của thẻ/lần nạp KHÁC chỉ tính là của mình khi bản nạp lúc khởi động đúng là bản op đó gửi (Auditor: 2 thẻ, KEY ghi lỗi)', async () => {
+  const mkLS = () => { const m = new Map(); return { getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) }; };
+  /* (a) hai thẻ: A gửi thành công, B giữ bản cũ rồi lưu → hỏi, không đè A */
+  const hub = fakeHub(), ls = mkLS();
+  const a = auDevice(hub, { localStorage: ls }), b = auDevice(hub, { localStorage: ls });
+  auWith(a.c, [auProd('A', 'A')]); assert.equal(await a.c.pushState(false, false), true);
+  auWith(b.c, [auProd('B', 'B')]); await b.c.pushState(false, false);
+  assert.equal(b.confirms(), 1, 'op của thẻ A không phải của B');
+  assert.ok(hub.puts.every(p => !p.force) || b.confirms() === 1);
+  /* (b) KEY ghi lỗi: trang mới nạp bản CŨ hơn bản op đã gửi → hỏi, không đè thay đổi của chính máy */
+  const hub2 = fakeHub(), ls2 = mkLS();
+  const old = auDevice(hub2, { localStorage: ls2 });
+  old.setLose(true); auWith(old.c, [auProd('A', 'A'), auProd('X', 'X')]); await old.c.pushState(false, false);
+  const reload = auDevice(hub2, { localStorage: ls2 });
+  reload.c.setBootLocalAt(10); reload.c.setBase(10);                                // bản nạp = bản trước khi có X
+  auWith(reload.c, [auProd('A', 'A')]);
+  await reload.c.pushState(false, false);
+  assert.equal(reload.confirms(), 1);
+  /* (c) iPhone PWA bị tắt rồi mở lại: nạp ĐÚNG bản đã gửi (mất phản hồi) → của mình, gửi lại không hỏi */
+  const hub3 = fakeHub(), ls3 = mkLS();
+  const ip = auDevice(hub3, { localStorage: ls3 });
+  ip.setLose(true); auWith(ip.c, [auProd('A', 'A')]); await ip.c.pushState(false, false);
+  const sentAt = ip.c.getDb().updatedAt;
+  const back = auDevice(hub3, { localStorage: ls3 });
+  back.c.setDb({ ...ip.c.getDb() }); back.c.setBootLocalAt(sentAt); back.c.setBase(10);
+  back.c.setDb({ ...back.c.getDb(), products: [auProd('A', 'A'), auProd('B', 'B')], updatedAt: sentAt + 1 });
+  assert.equal(await back.c.pushState(false, false), true);
+  assert.equal(back.confirms(), 0);
+  assert.deepEqual(hub3.state.products.map(p => p.id), ['A', 'B']);
+});
+
+test('2.40.6 AU H3: quay lại app (visible/focus/online) còn thay đổi chưa gửi → gửi ngay, không chờ hẹn', async () => {
+  const hub = fakeHub();
+  const ip = auDevice(hub);
+  auWith(ip.c, [auProd('A', 'A')]);
+  ip.c.setDirty(true);
+  ip.c.pushPendingNow();
+  await new Promise(r => setImmediate(r)); await new Promise(r => setImmediate(r));
+  assert.equal(hub.puts.length, 1);
+  assert.ok(/visibilitychange[\s\S]{0,160}pushPendingNow\(\)/.test(PAGE) && /addEventListener\('focus', function\(\)\{[^}]*pushPendingNow\(\)/.test(PAGE));
+});
+
+test('2.40.6 AU H1 (sai): lưu 2 đơn liên tiếp khi PUT đầu còn treo → PUT thứ hai chờ, gửi sau với base = updatedAt hub trả về (không tự tính)', async () => {
+  const hub = fakeHub();
+  let release, hold = true;
+  const base = hub.fetchFor();
+  const c = loadClient({ fetch: async (u, o = {}) => { if ((o.method || 'GET') === 'PUT' && hold) { hold = false; await new Promise(r => { release = r; }); } return base(u, o); }, setTimeout(fn, ms) { if (!ms) setImmediate(fn); return 1; }, clearTimeout() {} });
+  c.setDb({ moneyUnit: 'dong', products: [auProd('A', 'A')], transactions: [], prescriptions: [], updatedAt: 10 }); c.setBase(10);
+  const p1 = c.pushState(false, false);
+  await new Promise(r => setImmediate(r));
+  c.setDb({ ...c.getDb(), products: [auProd('A', 'A'), auProd('B', 'B')], updatedAt: c.getDb().updatedAt + 1 }); /* như commit(): touch() rồi pushState */
+  assert.equal(await c.pushState(false, false), false, 'đang gửi: không mở PUT thứ hai song song');
+  release();
+  await p1;
+  for (let i = 0; i < 5; i++) await new Promise(r => setImmediate(r));
+  assert.deepEqual(hub.puts.map(p => p.base), [10, 11], 'PUT 2 dùng base = updatedAt hub trả cho PUT 1');
+  assert.equal(hub.puts.length, 2);
+  assert.deepEqual(hub.state.products.map(p => p.id), ['A', 'B']);
+});
+
+test('2.40.6 AU H2 (sai): /api/unread và PUT lỗi không đẩy mốc khớp hub (lastFresh); chỉ GET state/PUT thành công mới đẩy', async () => {
+  const hub = fakeHub();
+  const c = loadClient({ fetch: hub.fetchFor(), setTimeout() { return 1; }, clearTimeout() {} });
+  c.setLastFresh(5);
+  await c.refreshUnread();
+  assert.equal(c.getLastFresh(), 5, '/api/unread không phải bằng chứng khớp hub');
+  const bad = loadClient({ fetch: async () => ({ status: 500, json: async () => ({ success: false }) }), setTimeout() { return 1; }, clearTimeout() {} });
+  bad.setDb({ moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 1 }); bad.setBase(1); bad.setLastFresh(5);
+  await bad.pushState(false, false);
+  assert.equal(bad.getLastFresh(), 5, 'PUT lỗi không đẩy mốc');
+  assert.ok(!/lastFresh\s*=/.test(PAGE.slice(PAGE.indexOf('function refreshUnread('), PAGE.indexOf('function refreshUnread(') + 3000)));
 });
 
 function hangFetch(log) {
@@ -1105,7 +1267,7 @@ test('2.39.10 nút lưu Bán lẻ/Thuốc chén/Nhập hàng đi qua freshThen; 
   assert.ok(PAGE.includes("case 'save-retail': freshThen(saveRetail); break;") && PAGE.includes("case 'save-remedy': freshThen(saveRemedy); break;"));
   assert.ok(PAGE.includes("nf.addEventListener('submit', function(e){ e.preventDefault(); freshThen(saveNhap); });"));
   assert.ok(!/addEventListener\('submit', saveNhap\)/.test(PAGE));
-  assert.ok(PAGE.includes("window.addEventListener('online', function(){ autoRefresh();"));
+  assert.ok(PAGE.includes("window.addEventListener('online', function(){ pushPendingNow(); autoRefresh();"));
   assert.ok(/visibilitychange[\s\S]{0,120}autoRefresh\(\)/.test(PAGE) && /addEventListener\('focus', function\(\)\{[^}]*autoRefresh\(\)/.test(PAGE));
   assert.ok(/function autoRefresh\(\)\{\n  renderSyncLine\(\);[^\n]*\n  if \(refreshing \|\| authLost \|\| dirty \|\| conflictOpen \|\| doc\.hidden\) return/.test(PAGE), 'autoRefresh không còn bị busyEditing chặn');
   assert.ok(/\.syncm\[data-st=warn\] \.syncm__d\{background:#FEBC2E\}/.test(PAGE) && /\.sbs\[data-st=warn\]::before\{background:#FEBC2E\}/.test(PAGE));

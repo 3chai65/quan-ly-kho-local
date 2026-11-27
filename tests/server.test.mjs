@@ -257,6 +257,35 @@ test('server.js: W3 X-Op-Id trùng lần ghi gần nhất trả lại success, k
   assert.equal((await put(st, { 'X-Base-Updated': '0', 'X-Op-Id': 'OP_test1' })).status, 409);
 });
 
+test('server.js: 2.40.6 409 trả ops (op ghi sau base, theo thứ tự) + opsComplete; log 409 có tên thiết bị, base, hiện tại', async () => {
+  const st = n => emptyState({ products: [{ id: 'AU' + n, name: 'Au ' + n, stock: 1, costPrice: 1 }] });
+  const a = await put(st(1), { 'X-Force': '1', 'X-Op-Id': 'OP_au1' });
+  const base = a.body.updatedAt;
+  const b = await put(st(2), { 'X-Base-Updated': String(base), 'X-Op-Id': 'OP_au2' });
+  const c = await put(st(3), { 'X-Base-Updated': String(b.body.updatedAt) });
+  assert.equal(c.status, 200);
+  const before = serverErr.length;
+  const r = await put(st(4), { 'X-Base-Updated': String(base), 'X-Op-Id': 'OP_au4' });
+  assert.equal(r.status, 409);
+  assert.deepEqual(r.body.ops, ['OP_au2', null], 'ghi không opId → null (không phải của ai)');
+  assert.equal(r.body.opsComplete, true);
+  assert.equal(r.body.updatedAt, (await getState()).updatedAt);
+  const line = serverErr.slice(before);
+  assert.match(line, new RegExp('409: xung đột[^\\n]*thiết bị "May test", base ' + base + ', hiện tại \\d+, 2 lần ghi sau base, op OP_au4'));
+  const old = await put(st(5), { 'X-Base-Updated': '1', 'X-Op-Id': 'OP_au5' });
+  assert.equal(old.status, 409);
+  assert.equal(old.body.opsComplete, false, 'base cũ hơn nhật ký: không khẳng định đủ');
+  /* Auditor: lùi về 2.40.5 (ghi không vào nhật ký) rồi lên lại → nhật ký có lỗ → không khẳng định đủ */
+  const DB = (await import('better-sqlite3')).default;
+  const raw = new DB(path.join(dataDir, 'app.db'));
+  const cur = Number(raw.prepare("SELECT value FROM app_meta WHERE key = 'source_updated_at'").get().value);
+  raw.prepare("UPDATE app_meta SET value = ? WHERE key = 'source_updated_at'").run(String(cur + 5));
+  raw.close();
+  const gap = await put(st(6), { 'X-Base-Updated': String(base), 'X-Op-Id': 'OP_au6' });
+  assert.equal(gap.status, 409);
+  assert.equal(gap.body.opsComplete, false, 'có lần ghi không nằm trong nhật ký');
+});
+
 test('server.js: X-Base-Updated không phải số bị từ chối (vá lỗi NaN)', async () => {
   const res = await put(emptyState({
     products: [{ id: 'P1', name: 'A', stock: 1, costPrice: 1 }]
@@ -1318,6 +1347,9 @@ test('2.40.0 chốt sổ: quyền, xem trước, 409 base, gài lỗi từng bư
     assert.equal(r.status, 200, r.text);
     const after = await t.get();
     assert.ok(after.updatedAt > before.updatedAt);
+    const stale = await t.call('PUT', '/api/state', after, { 'X-Base-Updated': String(before.updatedAt), 'X-Op-Id': 'OP_auclose' });
+    assert.equal(stale.status, 409, stale.text);
+    assert.equal(stale.body.ops[stale.body.ops.length - 1], null, '2.40.6: chốt sổ ghi nhật ký (op null = không phải của máy nào)');
     assert.ok(after.transactions.every(x => x.date >= '2025-01-29'));
     const open = after.transactions.filter(x => x.open);
     assert.equal(open.length, 1);

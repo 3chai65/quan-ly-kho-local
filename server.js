@@ -119,6 +119,11 @@ function migrate() {
       created_at INTEGER NOT NULL,
       PRIMARY KEY (kind, key)
     );
+
+    CREATE TABLE IF NOT EXISTS write_log (
+      updated_at INTEGER PRIMARY KEY,
+      op_id TEXT
+    );
   `);
 }
 migrate();
@@ -490,12 +495,32 @@ function getLastOp() {
   const id = g('last_op_id'), at = g('last_op_updated_at');
   return id && at ? { id: id.value, updatedAt: Number(at.value) } : null;
 }
+/* 2.40.6: nhật ký mỗi lần đổi source_updated_at (op_id null = ghi không có opId, vd chốt sổ). 409 trả các op ghi SAU base
+   để client nhận ra lần ghi của chính nó đã tới hub nhưng mất phản hồi (không phải máy khác ghi). Giữ 200 dòng gần nhất. */
+const WRITE_LOG_KEEP = 200;
+function logWrite(now, opId) {
+  db.prepare('INSERT OR REPLACE INTO write_log (updated_at, op_id) VALUES (?, ?)').run(now, opId || null);
+  db.prepare('DELETE FROM write_log WHERE updated_at < (SELECT MIN(updated_at) FROM (SELECT updated_at FROM write_log ORDER BY updated_at DESC LIMIT ?))').run(WRITE_LOG_KEEP);
+}
+/* Nhật ký phải liền mạch: lùi về bản cũ (không ghi nhật ký) rồi lên lại thì có lần ghi lọt → xóa nhật ký lúc khởi động nếu dòng cuối ≠ updatedAt hiện tại. */
+{
+  const last = db.prepare('SELECT MAX(updated_at) AS m FROM write_log').get().m;
+  if (last != null && last !== getSourceUpdatedAt()) db.prepare('DELETE FROM write_log').run();
+}
+/* complete = nhật ký phủ tới base (có dòng ≤ base) VÀ dòng cuối = updatedAt hiện tại, nên ops là ĐỦ mọi lần ghi sau base. */
+function opsSince(base) {
+  const ops = db.prepare('SELECT op_id FROM write_log WHERE updated_at > ? ORDER BY updated_at').all(base).map(r => r.op_id);
+  const complete = !!db.prepare('SELECT 1 FROM write_log WHERE updated_at <= ? LIMIT 1').get(base) &&
+    db.prepare('SELECT MAX(updated_at) AS m FROM write_log').get().m === getSourceUpdatedAt();
+  return { ops, complete };
+}
 function writeState(state, opId, force) {
   let now = 0;
   db.transaction(() => {
     /* Z.2 (P2-5): updatedAt luôn TĂNG CHẶT dù hai lần ghi cùng mili-giây hoặc đồng hồ máy lùi: nếu không, X-Base-Updated của máy A bằng updatedAt mới của máy B và `current > baseNum` bỏ lọt xung đột. */
     now = Math.max(Date.now(), getSourceUpdatedAt() + 1);
     writeStateRows(state, now, !!force);
+    logWrite(now, opId);
     const up = db.prepare('INSERT INTO app_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
     if (opId) { up.run('last_op_id', opId); up.run('last_op_updated_at', String(now)); }
     else db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
@@ -735,8 +760,11 @@ app.put('/api/state', (req, res) => {
       }
       const current = getSourceUpdatedAt();
       if (current > baseNum) {
-        warnReject(409, 'xung đột: máy chủ có bản mới hơn');
-        return res.status(409).json({ success: false, conflict: true, updatedAt: current });
+        const since = opsSince(baseNum);
+        /* 2.40.6: chẩn đoán 409 — tên thiết bị, base gửi lên, updatedAt hiện tại, số lần ghi sau base ("+?" = nhật ký không phủ tới base), opId gửi kèm. Không ghi dữ liệu. */
+        const dev = req.device && req.device.name ? String(req.device.name).replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 40) : '?';
+        warnReject(409, 'xung đột: máy chủ có bản mới hơn (thiết bị "' + dev + '", base ' + baseNum + ', hiện tại ' + current + ', ' + since.ops.length + (since.complete ? '' : '+?') + ' lần ghi sau base, op ' + (opId || '-') + ')');
+        return res.status(409).json({ success: false, conflict: true, updatedAt: current, ops: since.ops, opsComplete: since.complete });
       }
     }
     // Chụp TRƯỚC khi ghi: bản của ngày = trạng thái trước lần ghi đầu tiên trong ngày.
@@ -856,6 +884,7 @@ app.post('/api/close-year', (req, res) => {
         setMeta('close_cutoff', plan.cutoff);
         setMeta('close_summary', JSON.stringify(mergeMonths(closed ? closed.months : [], plan.months)));
         setMeta('source_updated_at', now);
+        logWrite(now, null);
         db.prepare("DELETE FROM app_meta WHERE key IN ('last_op_id', 'last_op_updated_at')").run();
         db.prepare("DELETE FROM unread WHERE kind = 'NHAP' AND key NOT IN (SELECT " + UNREAD_KEY_SQL + " FROM transactions WHERE type = 'NHAP')").run();
         db.prepare("DELETE FROM unread WHERE kind = 'BAN' AND key NOT IN (SELECT " + UNREAD_KEY_SQL + " FROM transactions WHERE type = 'BAN')").run();

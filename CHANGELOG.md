@@ -5,6 +5,15 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.6] - 2026-11-27
+
+### Sửa (việc AU: hộp 409 khi làm tuần tự)
+- Nguyên nhân: PUT đã ghi lên hub nhưng máy mất phản hồi (iPhone khóa máy/về nền ngay sau khi lưu, hoặc hết 15s) → base không tăng, máy vẫn "chưa gửi". Lần gửi sau (lưu đơn mới, hoặc gửi lại khi mở app sau khi máy khác đã ghi) gặp 409 với chính lần ghi của mình; chọn "Hủy" thì X-Force đè mất dữ liệu máy khác.
+- Hub: nhật ký có lỗ (lùi về bản cũ rồi lên lại) thì xóa lúc khởi động và `opsComplete` = false. Bảng `write_log` (updated_at, op_id) cho mọi lần ghi (PUT, chốt sổ; giữ 200 dòng). 409 trả thêm `ops` (op ghi sau base, null = không rõ chủ) và `opsComplete`. Dòng log 409 ghi tên thiết bị, base, updatedAt hiện tại, số lần ghi sau base, opId.
+- Client: nhớ opId đã gửi (localStorage, 30 cái, kèm thẻ và updatedAt bản gửi). Op của thẻ/lần nạp khác chỉ tính là của mình khi bản nạp lúc khởi động (còn dirty) đúng là bản op đó gửi (Auditor Opus: tránh 2 thẻ và KEY ghi lỗi). 409 mà mọi lần ghi sau base là của máy này → gửi lại với base mới (tối đa 2 lần), không hỏi. 409 mà op vừa gửi (cùng nội dung) đã nằm trên hub rồi máy khác ghi tiếp → lấy bản hub, không hỏi, không đè. Còn lại vẫn hộp cũ. Biết trước: "landed" nhận bản hub cả khi lần ghi sau là X-Force của máy khác (đã có bản truoc-ghi-de).
+- Quay lại app (visible/focus/online) còn thay đổi chưa gửi → gửi ngay, không chờ hẹn lùi.
+- Đã kiểm, KHÔNG phải nguyên nhân: PUT liên tiếp trên cùng máy đã xếp hàng, base lấy từ hub; mốc khớp hub (lastFresh) không bị /api/unread hay PUT lỗi đẩy lên.
+
 ## [2.40.5] - 2026-11-27
 
 ### Đổi (việc AR, không đổi hành vi)

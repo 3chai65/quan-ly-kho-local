@@ -3723,6 +3723,22 @@ function noteStockWarnings(list){
   toast(stockWarnText, 'error');
 }
 var pendingOpSig = '', pendingOpId = '';
+/* 2.40.6: opId máy này đã gửi, kèm thẻ (TAB_ID) và updatedAt của bản gửi (s), giữ qua tải lại trang, để nhận ra 409 do CHÍNH lần ghi trước
+   của mình: PUT đã tới hub nhưng mất phản hồi (iPhone khóa máy/về nền, hết 15s) nên base không tăng. Op của thẻ/lần nạp khác chỉ tính là
+   của mình khi bản nạp lúc khởi động (còn dirty) đúng là bản op đó đã gửi (bootLocalAt === s) — db hiện tại chắc chắn chứa nó. */
+var SENT_OPS_KEY = 'kho_sent_ops_v1', TAB_ID = uid('T'), bootLocalAt = 0;
+function readSentOps(){ try { var a = JSON.parse(localStorage.getItem(SENT_OPS_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function noteSentOp(id, sentAt){ var a = readSentOps(); a.push({ i: id, t: TAB_ID, s: sentAt }); try { localStorage.setItem(SENT_OPS_KEY, JSON.stringify(a.slice(-30))); } catch (e) {} }
+function isMyOp(id){
+  return readSentOps().some(function(e){ return e && e.i === id && (e.t === TAB_ID || (bootLocalAt > 0 && num(e.s) === bootLocalAt)); });
+}
+/* 409: 'self' = mọi lần ghi sau base đều là op của máy này (db hiện tại chứa chúng) → gửi lại với base mới;
+   'landed' = op vừa gửi (cùng nội dung) đã ghi trước đó rồi máy khác ghi tiếp → máy này không còn gì chưa gửi, lấy bản hub; '' = xung đột thật. */
+function ownConflict(d, op){
+  if (!d || d.opsComplete !== true || !Array.isArray(d.ops) || !d.ops.length) return '';
+  if (d.ops.every(function(x){ return typeof x === 'string' && isMyOp(x); })) return 'self';
+  return op && d.ops.indexOf(op) >= 0 ? 'landed' : '';
+}
 /* AA: trần thân PUT của server là 32 MB sau giải nén (tính theo byte UTF-8, utf8Bytes); cảnh báo ở 75% = 24 MB, một lần mỗi lần vượt; xuống dưới ngưỡng thì cho cảnh báo lại. */
 var MAX_STATE_BYTES = 32 * 1024 * 1024, BIG_STATE_BYTES = 24 * 1024 * 1024, bigStateWarned = false;
 function warnBigState(body){
@@ -3749,7 +3765,7 @@ function sendStateBody(headers, body){
     return apiFetch('/api/state', { method: 'PUT', headers: headers, body: buf });
   });
 }
-function pushState(manual, force){
+function pushState(manual, force, selfTry){
   if (pushing || conflictOpen) return Promise.resolve(false);
   if (serverRejected && !force) {
     noteSyncFailure('Bản trên máy chủ có dòng không hợp lệ nên chưa gửi thay đổi lên (tránh xóa dữ liệu trên máy chủ). Thay đổi vẫn giữ trên máy; hãy xuất sao lưu, báo người quản trị và tải lại trang sau khi đã sửa.', false, false);
@@ -3768,6 +3784,8 @@ function pushState(manual, force){
   warnBigState(body);
   var headers = { 'Content-Type': 'application/json', 'X-Base-Updated': String(cloudBase), 'X-Op-Id': pendingOpId };
   if (force) headers['X-Force'] = '1';
+  var opSent = pendingOpId;
+  noteSentOp(opSent, sent);
   return sendStateBody(headers, body).then(function(r){
     if (!r) return { status: 0, d: null };
     return r.json().then(function(d){
@@ -3781,6 +3799,15 @@ function pushState(manual, force){
     if (((d && d.conflict) || status === 409) && !(d && d.closed)) { /* 2.40.0: 409 "sổ đã chốt" đi nhánh từ chối bên dưới (Ghi đè cũng bị chặn) */
       if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
       pushing = false;
+      var own = force ? '' : ownConflict(d, opSent);
+      if (own === 'self' && (selfTry || 0) < 2) { cloudBase = num(d.updatedAt); return pushState(manual, false, (selfTry || 0) + 1); }
+      if (own === 'landed' && num(db.updatedAt) === sent) {
+        pendingOpSig = '';
+        dirty = false; dirtySince = 0; syncErrorShown = false; syncDetail = '';
+        saveLocal(); /* cờ dirty đã tắt: tải lại trang trước khi pull xong không hiện lại 409 */
+        renderSyncBadge();
+        return dialogOpen() ? false : pullState(false).then(function(){ return true; }); /* hộp sửa đang mở: autoRefresh áp sau khi đóng */
+      }
       return cloudConflict();
     }
     var ok = !!(d && d.success);
@@ -3955,15 +3982,22 @@ function freshThen(fn){
     .catch(function(){}) /* lỗi mạng hoặc lỗi khi áp: vẫn lưu, không để freshing kẹt */
     .then(function(){ freshing = false; fn(); return true; });
 }
+/* 2.40.6: quay lại app (iPhone mở từ nền) mà còn thay đổi chưa gửi (PUT trước bị cắt khi khóa máy): gửi NGAY thay vì chờ hẹn lùi,
+   để hub nhận/khớp trước khi người dùng lưu đơn mới (freshThen bỏ qua tải khi dirty). */
+function pushPendingNow(){
+  if (!dirty || pushing || conflictOpen || syncRejected || authLost || serverRejected || busyEditing()) return;
+  if (syncRetryTimer) { clearTimeout(syncRetryTimer); syncRetryTimer = null; }
+  pushState(false);
+}
 function startAutoRefresh(){
   setInterval(autoRefresh, 15000);                      // định kỳ 15s
   setInterval(refreshUnread, 15000);                    // chưa đọc của Lịch sử, nhịp riêng (không chung snapshot)
   setInterval(refreshAutoDates, 60000);                 // làm mới ngày qua nửa đêm
   doc.addEventListener('visibilitychange', function(){  // quay lại tab
-    if (!doc.hidden) { refreshAutoDates(); autoRefresh(); refreshUnread(); }
+    if (!doc.hidden) { refreshAutoDates(); pushPendingNow(); autoRefresh(); refreshUnread(); }
   });
-  window.addEventListener('focus', function(){ refreshAutoDates(); autoRefresh(); refreshUnread(); }); // cửa sổ được focus
-  window.addEventListener('online', function(){ autoRefresh(); refreshUnread(); }); // 2.39.10: mạng có lại
+  window.addEventListener('focus', function(){ refreshAutoDates(); pushPendingNow(); autoRefresh(); refreshUnread(); }); // cửa sổ được focus
+  window.addEventListener('online', function(){ pushPendingNow(); autoRefresh(); refreshUnread(); }); // 2.39.10: mạng có lại
 }
 
 /* ================= SAO LƯU / KHÔI PHỤC ================= */
@@ -4906,6 +4940,7 @@ function init(boot){
   if (local && wasDirty) {
     /* Có thay đổi chưa gửi: giữ bản local và đẩy lên máy chủ. */
     db = local;
+    bootLocalAt = num(local.updatedAt); /* 2.40.6: isMyOp */
     cloudBase = savedBase;
     dirty = true;
     dirtySince = Date.now();
