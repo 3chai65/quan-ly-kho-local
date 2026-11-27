@@ -38,7 +38,7 @@ Lỗi better-sqlite3: xóa `node_modules` rồi `npm ci` (không dùng `npm rebu
 - Backup trước chốt sổ không tự dọn — cố ý, ~1 file/năm.
 
 ## 5b. Chờ gộp bản sau
-- Lỗi 500 trả `err.message` thô (`server.js` ~735): trả câu chung cho 5xx, giữ message cho 4xx. Chưa cần báo lại.
+(trống)
 
 ## 6. Mẫu báo cáo
 - Mỗi mục xếp P1 / P2 / P3, kèm `file:dòng` và cách tái hiện.

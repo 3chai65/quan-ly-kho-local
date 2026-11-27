@@ -111,7 +111,7 @@ setDateInput: (typeof setDateInput === 'function' ? setDateInput : null),
   initDates: function(){ var t = todayISO(); setDateInput('retailDate', t); setDateInput('remedyDate', t); },
   latestImportMap: (typeof latestImportMap === 'function' ? latestImportMap : null), importParen: (typeof importParen === 'function' ? importParen : null), costParen: (typeof costParen === 'function' ? costParen : null),
   TET: (typeof TET !== 'undefined' ? TET : null), lunarStart: (typeof lunarStart === 'function' ? lunarStart : null), bookStart: (typeof bookStart === 'function' ? bookStart : null), statTxs: (typeof statTxs === 'function' ? statTxs : null), closeYearOf: (typeof closeYearOf === 'function' ? closeYearOf : null),
-  touch: (typeof touch === 'function' ? touch : null),
+  touch: (typeof touch === 'function' ? touch : null), isRetailName: (typeof isRetailName === 'function' ? isRetailName : null), capWords: (typeof capWords === 'function' ? capWords : null), closePreview: (typeof closePreview === 'function' ? closePreview : null), savePreset: (typeof savePreset === 'function' ? savePreset : null),
   loadArchives: (typeof loadArchives === 'function' ? loadArchives : null), renderClosePreview: (typeof renderClosePreview === 'function' ? renderClosePreview : null), closeRun: (typeof closeRun === 'function' ? closeRun : null), setClosePv: function(v){ closePv = v; },
   historyData: (typeof historyData === 'function' ? historyData : null), renderHistory: (typeof renderHistory === 'function' ? renderHistory : null), renderNote: (typeof renderNote === 'function' ? renderNote : null), qtyHintCandidates: (typeof qtyHintCandidates === 'function' ? qtyHintCandidates : null), qtyHintPlacement: (typeof qtyHintPlacement === 'function' ? qtyHintPlacement : null), qtyHintText: (typeof qtyHintText === 'function' ? qtyHintText : null), attachQtyHint: (typeof attachQtyHint === 'function' ? attachQtyHint : null), refreshAllQtyHints: (typeof refreshAllQtyHints === 'function' ? refreshAllQtyHints : null),
   setImpPage: function(v){ impPage = v; }, getImpPage: function(){ return impPage; },
@@ -8671,7 +8671,7 @@ test('2.40.0 chốt sổ: bảng Tết client trùng close.js; lunarStart/bookSt
   const c = loadClient();
   const srv = await import('../close.js');
   assert.deepEqual(Array.from(c.TET), srv.TET, 'bảng Tết client = server');
-  for (const d of ['2025-01-28', '2025-01-29', '2026-02-16', '2026-02-17', '2026-11-26', '2028-01-25', '2028-01-26', '2035-02-07', '2035-02-08']) assert.equal(c.lunarStart(d), srv.lunarStart(d), d);
+  for (const d of ['2025-01-28', '2025-01-29', '2026-02-16', '2026-02-17', '2026-11-26', '2028-01-25', '2028-01-26', '2035-02-07', '2035-02-08', '2040-02-11', '2045-02-16', '2045-02-17']) assert.equal(c.lunarStart(d), srv.lunarStart(d), d);
   assert.equal(c.lunarStart('2028-01-25'), '2027-02-06');
   assert.equal(c.bookStart('2026-11-26'), '2026-02-17');
   assert.equal(c.bookStart('2024-06-01'), '2024-01-01', 'ngoài bảng → 01/01');
@@ -8863,4 +8863,62 @@ test('P2-1 touch() tăng chặt: đồng hồ đứng yên, PUT treo, đổi db 
   await c.pushState(false, false);
   assert.ok(bodies[1] && bodies[1].includes('TX_MOI'), 'lần gửi sau mang giao dịch mới');
   assert.equal(c.isDirty(), false);
+});
+
+test('2.40.4 P3-1: tên "Bán lẻ" (mọi hoa thường, sau capWords) bị chặn khi lưu đơn thuốc chén và đơn mẫu; nhánh oname cũ giữ', () => {
+  const c = loadClient();
+  for (const n of ['Bán lẻ', 'bán LẺ', 'BÁN LẺ']) assert.equal(c.isRetailName(c.capWords(n)), true, n);
+  assert.equal(c.isRetailName(c.capWords('Bán lẻ 2')), false);
+  assert.equal(c.isRetailName(c.capWords('Ban le')), false);
+  assert.ok(PAGE.includes("if (isRetailName(oname)) { toast(RETAIL_NAME_MSG, 'error'); return; }"), 'saveRemedy chặn trước khi ghi');
+  assert.ok(PAGE.includes("if (!cur && isRetailName(name)) { toast(RETAIL_NAME_MSG, 'error'); return; }"), 'savePreset chặn tên mới');
+  assert.ok(PAGE.includes("|| oname === 'Bán lẻ');"), 'nhánh oname cho dữ liệu cũ còn nguyên');
+});
+
+test('2.40.4 P3-1: savePreset tên mới "bán lẻ" không tạo đơn mẫu, báo lỗi', () => {
+  const ids = { '#remedyName': makeEl(), '#remedyPreset': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl() };
+  ids['#remedyName'].value = 'bán lẻ';
+  const c = loadClient({ document: trackDoc(ids), setTimeout() { return 0; }, clearTimeout() {} });
+  c.setDb({ moneyUnit: 'dong', products: [{ id: 'P', name: 'Cam thảo', stock: 9, costPrice: 1 }], transactions: [], prescriptions: [], updatedAt: 1 });
+  c.setRemedyItems([{ productId: 'P', grams: 10 }]);
+  c.savePreset();
+  assert.equal(c.getDb().prescriptions.length, 0);
+  assert.match(ids['#toastMsg'].textContent, /dành cho đơn bán lẻ/);
+});
+
+test('2.40.4 P3-2: ngày chốt phải là YYYY-MM-DD thật; sai thì báo, không gọi máy chủ', async () => {
+  for (const [d, ok] of [['2026-02-30', false], ['16/02/2026', false], ['2026-2-16', false], ['abc', false], ['2026-02-16', true]]) {
+    const ids = { '#toast': makeEl(), '#toastMsg': makeEl(), '#closeOut': makeEl() };
+    const calls = [];
+    const c = loadClient({ document: trackDoc(ids), prompt: () => d, fetch: async (u) => { calls.push(u); return { ok: true, status: 200, json: async () => ({ success: true, dryRun: true, cutoff: '2025-01-29', updatedAt: 1, opening: [], months: [], totals: { count: 0, imp: 0, rev: 0, cost: 0, profit: 0 }, blocks: [] }) }; }, setTimeout() { return 0; }, clearTimeout() {} });
+    await c.closePreview();
+    assert.equal(calls.length, ok ? 1 : 0, d);
+    if (!ok) assert.equal(ids['#toastMsg'].textContent, 'Ngày không hợp lệ (YYYY-MM-DD)', d);
+  }
+});
+
+test('2.40.4 P3-3: chốt xong có warning thì báo cảnh báo; tải lại thất bại thì báo "Đã chốt, hãy tải lại app"', async () => {
+  const run = async (reply, stateOk) => {
+    const ids = { '#closeBox': makeEl(), '#arcList': makeEl(), '#closeBtn': makeEl(), '#closeGuideBtn': makeEl(), '#closeOut': makeEl(), '#closeConfirm': makeEl(), '#toast': makeEl(), '#toastMsg': makeEl() };
+    const msgs = [];
+    Object.defineProperty(ids['#toastMsg'], 'textContent', { get() { return msgs[msgs.length - 1] || ''; }, set(v) { msgs.push(v); } });
+    const doc = trackDoc(ids);
+    doc.documentElement.classList = { add() {}, remove() {}, toggle() {}, contains: (k) => k === 'desktop' };
+    const fetch = async (url) => {
+      if (url === '/api/close-year') return { ok: true, status: 200, json: async () => reply };
+      if (String(url).startsWith('/api/state')) return stateOk ? { ok: true, status: 200, json: async () => ({ success: true, data: { moneyUnit: 'dong', products: [], transactions: [], prescriptions: [], updatedAt: 78 } }) } : { ok: false, status: 500, json: async () => ({ success: false }) };
+      return { ok: true, status: 200, json: async () => ({ success: true, archives: [] }) };
+    };
+    const c = loadClient({ document: doc, fetch, confirm: () => true, setTimeout() { return 0; }, clearTimeout() {} });
+    const pv = CLOSE_PV(3);
+    c.setClosePv(pv); c.renderClosePreview(pv); ids['#closeConfirm'].value = 'CHOT 2025';
+    await c.closeRun();
+    return msgs;
+  };
+  let m = await run({ success: true, updatedAt: 78, warning: 'Đã chốt nhưng file lưu trữ còn tên x.json.tmp trên hub' }, true);
+  assert.ok(m.some(t => /Cảnh báo: Đã chốt nhưng file lưu trữ còn tên x\.json\.tmp/.test(t)), m.join(' | '));
+  m = await run({ success: true, updatedAt: 78 }, false);
+  assert.equal(m[m.length - 1], 'Đã chốt, hãy tải lại app');
+  m = await run({ success: true, updatedAt: 78 }, true);
+  assert.ok(!m.some(t => /Cảnh báo|hãy tải lại/.test(t)), m.join(' | '));
 });

@@ -1870,7 +1870,7 @@ function pad2(n){ return n < 10 ? '0' + n : '' + n; }
 function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 function thisYear(){ return todayISO().slice(0, 4); }
 /* 2.40.0 chốt sổ (docs/chot-so.md): bảng Tết dương lịch giờ VN, trùng close.js (test so). Năm sổ âm = từ Tết gần nhất <= ngày; ngoài bảng → 01/01. */
-var TET = ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08'];
+var TET = ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08', '2036-01-28', '2037-02-15', '2038-02-04', '2039-01-24', '2040-02-12', '2041-02-01', '2042-01-22', '2043-02-10', '2044-01-30', '2045-02-17'];
 function lunarStart(iso){
   var s = String(iso || '');
   for (var i = TET.length - 2; i >= 0; i--) if (s >= TET[i] && s < TET[i + 1]) return TET[i];
@@ -1966,6 +1966,9 @@ function bindMonthInput(id, onChange){
   }
 }
 function uid(p){ return p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+/* 2.40.4: tên "Bán lẻ" dành cho đơn bán lẻ (hộp đơn coi oname "Bán lẻ" là bán lẻ, nhánh cho dữ liệu cũ); không cho đặt tên đơn thuốc chén như vậy. */
+var RETAIL_NAME_MSG = 'Tên "Bán lẻ" dành cho đơn bán lẻ, hãy đặt tên khác';
+function isRetailName(n){ return String(n || '').normalize('NFC').toLowerCase() === 'bán lẻ'; }
 function capWords(s){
   if (!s) return '';
   return String(s).normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim()
@@ -3348,6 +3351,7 @@ function savePreset(){
       name = capWords(askedP);
     } else { toast('Nhập tên đơn', 'error'); if (nameInp) nameInp.focus(); return; }
   }
+  if (!cur && isRetailName(name)) { toast(RETAIL_NAME_MSG, 'error'); return; }
   if (nameInp) nameInp.value = name;
   var items = collectRemedyItems();
   if (!items.length) { toast('Chọn ít nhất 1 vị thuốc và nhập số gram', 'error'); return; }
@@ -3496,6 +3500,7 @@ function saveRemedy(){
     if (rlim2) { toast('Đơn giá vượt giới hạn (' + fmtNum(MONEY_MAX / DONG_PER_K) + ' nghìn đồng/kg)', 'error'); return; }
   }
   var oname = capWords(($('#remedyName') || {}).value) || 'Đơn thuốc lẻ';
+  if (isRetailName(oname)) { toast(RETAIL_NAME_MSG, 'error'); return; }
   var oid = uid('OD');
   var ts = Date.now();
   priced.forEach(function(row, idx){
@@ -5733,7 +5738,9 @@ function closePreview(){
   var cur = lunarStart(todayISO());
   var d = window.prompt('Ngày chốt (YYYY-MM-DD): gỡ giao dịch trước Tết của năm âm chứa ngày này', cur ? prevDayISO(cur) : '');
   if (d == null) return Promise.resolve();
-  var c = lunarStart(String(d).trim());
+  d = String(d).trim();
+  if (parseDateVN(d) !== d) { toast('Ngày không hợp lệ (YYYY-MM-DD)', 'error'); return Promise.resolve(); } /* 2.40.4: chỉ nhận ngày thật dạng ISO */
+  var c = lunarStart(d);
   if (!c) { toast('Ngày ngoài bảng Tết', 'error'); return Promise.resolve(); }
   return closeCall(c, true).then(function(x){
     if (!x.j || !x.j.success) { toast((x.j && x.j.error) || 'Không xem trước được', 'error'); return; }
@@ -5750,8 +5757,8 @@ function closeRun(){
     closePv = null;
     var out = $('#closeOut'); if (out) out.textContent = '';
     if (!x.j || !x.j.success) { toast((x.j && x.j.error) || 'Chốt sổ lỗi', 'error'); return; }
-    toast('Đã chốt sổ đến ' + dateVN(pv.cutoff));
-    return pullState(false).then(loadArchives);
+    toast(x.j.warning ? 'Đã chốt sổ đến ' + dateVN(pv.cutoff) + '. Cảnh báo: ' + x.j.warning : 'Đã chốt sổ đến ' + dateVN(pv.cutoff), x.j.warning ? 'error' : undefined);
+    return pullState(false).then(function(ok){ if (!ok) toast('Đã chốt, hãy tải lại app', 'error'); return loadArchives(); });
   }, function(){ toast('Chốt sổ lỗi, dữ liệu không đổi', 'error'); });
 }
 function prevDayISO(iso){ return new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) - 1)).toISOString().slice(0, 10); }

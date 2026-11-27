@@ -1212,12 +1212,14 @@ test('2.40.0 chốt sổ: bảng Tết và mốc C = Tết của năm âm chứa
     { id: 'x', date: '2025-01-10', type: 'NHAP', productId: 'A', qty: 1, price: 100, total: 100, ts: 1736000000000 }
   ] }, '2025-01-29', '2027-03-01', null, []);
   assert.equal(pl.opening[0].price, 200);
-  assert.deepEqual(TET, ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08']);
+  assert.deepEqual(TET, ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08', '2036-01-28', '2037-02-15', '2038-02-04', '2039-01-24', '2040-02-12', '2041-02-01', '2042-01-22', '2043-02-10', '2044-01-30', '2045-02-17']);
   assert.equal(lunarStart('2028-01-25'), '2027-02-06');
   assert.equal(lunarStart('2028-01-26'), '2028-01-26');
   assert.equal(lunarStart('2026-11-26'), '2026-02-17');
   assert.equal(lunarStart('2025-01-28'), null, 'trước Tết đầu bảng');
-  assert.equal(lunarStart('2035-02-08'), null, 'từ Tết cuối bảng: chưa biết Tết kế');
+  assert.equal(lunarStart('2035-02-08'), '2035-02-08', '2.40.4: bảng tới 2045');
+  assert.equal(lunarStart('2045-02-16'), '2044-01-30');
+  assert.equal(lunarStart('2045-02-17'), null, 'từ Tết cuối bảng: chưa biết Tết kế');
 });
 
 test('2.40.0 chốt sổ: quyền, xem trước, 409 base, gài lỗi từng bước, chốt thật, luật Bảo vệ, chốt lần 2 cộng dồn', async () => {
@@ -1359,4 +1361,46 @@ test('2.40.0 chốt sổ: quyền, xem trước, 409 base, gài lỗi từng bư
     assert.equal(stockOf(a2), stockOf(before));
     assert.equal(statMonths(a2), statMonths(before), 'Thống kê không đổi qua 2 lần chốt');
   } finally { await t.stop(); rmDir(dir); }
+});
+
+/* 2.40.4 P2-1: backup qua .tmp rồi đổi tên; file đích rỗng/hỏng thì tạo lại; .tmp sót thì xóa. */
+test('2.40.4 backup: file ngày hỏng/rỗng có sẵn được tạo lại, .tmp sót bị xóa, không để lại .tmp', async () => {
+  const { default: Database } = await import('better-sqlite3');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qlk-bak-'));
+  const bd = path.join(dir, 'backups');
+  fs.mkdirSync(bd);
+  const d = new Date(), p = n => (n < 10 ? '0' : '') + n;
+  const daily = path.join(bd, 'backup-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.db');
+  fs.writeFileSync(daily, 'không phải sqlite, file hỏng');
+  fs.writeFileSync(daily + '.tmp', 'rác lần trước');
+  const oldForceTmp = path.join(bd, 'backup-2026-01-01-truoc-ghi-de-101010101.db.tmp');
+  fs.writeFileSync(oldForceTmp, 'rác bản trước-ghi-đè dở');
+  const good = f => { if (!fs.existsSync(f) || fs.statSync(f).size === 0) return false; const c = new Database(f, { readonly: true }); try { return c.pragma('integrity_check', { simple: true }) === 'ok'; } finally { c.close(); } };
+  const s = await closeServer({}, dir);
+  try {
+    assert.ok(good(daily), 'lúc khởi động: .tmp sót bị xóa trước, file hỏng được tạo lại');
+    assert.ok(!fs.existsSync(oldForceTmp), '.tmp sót của bản trước-ghi-đè cũng bị dọn');
+    const src = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+    assert.deepEqual(src.match(/VACUUM INTO \?'\)\.run\([^)]*\)/g), ["VACUUM INTO ?').run(tmp)"], 'mọi VACUUM INTO đi qua vacuumTo (.tmp rồi rename)');
+    let r = await putState(s, emptyState({ products: [{ id: 'BK1', name: 'Sao lưu', stock: 0, costPrice: 1 }] }), 'force');
+    assert.equal(r.status, 200);
+    assert.ok(good(daily), 'file hỏng được tạo lại thành backup tốt');
+    assert.ok(!fs.readdirSync(bd).some(n => n.endsWith('.tmp')), 'không còn .tmp');
+    fs.writeFileSync(daily, ''); /* rỗng sau khi đã kiểm trong lần chạy này */
+    r = await putState(s, emptyState({ products: [{ id: 'BK2', name: 'Sao lưu 2', stock: 0, costPrice: 1 }] }), r.body.updatedAt);
+    assert.equal(r.status, 200);
+    assert.ok(good(daily), 'file rỗng được tạo lại');
+    const forced = fs.readdirSync(bd).filter(n => /-truoc-ghi-de-\d{9}\.db$/.test(n));
+    assert.ok(forced.length >= 1 && forced.every(n => good(path.join(bd, n))), 'bản trước-ghi-đè tốt');
+    assert.ok(!fs.readdirSync(bd).some(n => n.endsWith('.tmp')));
+  } finally { await s.stop(); rmDir(dir); }
+});
+
+test('2.40.4 P3-5: middleware lỗi: 5xx trả "Lỗi máy chủ" (không lộ err.message), 4xx giữ message', async () => {
+  const r = await fetch(`${BASE}/api/state`, { method: 'PUT', headers: { 'Content-Type': 'application/json; charset=klingon', Cookie: deviceCookie, 'X-Force': '1' }, body: '{}' });
+  const b = await r.json();
+  assert.equal(r.status, 415); assert.match(b.error, /klingon/i, '4xx giữ message của lỗi');
+  const src = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+  assert.match(src, /error: st >= 500 \? 'Lỗi máy chủ' : \(err\.message \|\| 'Yêu cầu không hợp lệ'\)/);
+  assert.doesNotMatch(src, /error: err\.message \|\| 'Lỗi server'/);
 });

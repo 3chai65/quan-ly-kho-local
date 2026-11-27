@@ -2,7 +2,7 @@
  * Chốt sổ năm âm lịch (docs/chot-so.md). Hàm thuần, không đụng DB: server.js gọi cho cả xem trước (dryRun) lẫn chạy thật; test gọi trực tiếp.
  * Bảng Tết (dương lịch, lịch Việt Nam UTC+7) — Người duyệt chốt 26/11/2026, trùng bảng trong src/page.js (test so).
  */
-export const TET = ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08'];
+export const TET = ['2025-01-29', '2026-02-17', '2027-02-06', '2028-01-26', '2029-02-13', '2030-02-03', '2031-01-23', '2032-02-11', '2033-01-31', '2034-02-19', '2035-02-08', '2036-01-28', '2037-02-15', '2038-02-04', '2039-01-24', '2040-02-12', '2041-02-01', '2042-01-22', '2043-02-10', '2044-01-30', '2045-02-17'];
 
 /* Tết mở đầu năm âm chứa ngày iso (YYYY-MM-DD). Ngoài bảng (trước Tết đầu hoặc sau Tết cuối, vì chưa biết Tết kế) → null. */
 export function lunarStart(iso) {

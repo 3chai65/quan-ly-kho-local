@@ -5,6 +5,16 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.4] - 2026-11-27
+
+### Sửa (review f55a679, việc AQ)
+- P2-1: backup ngày, trước-ghi-đè, trước-chốt đều VACUUM INTO ra `.tmp` rồi đổi tên (`vacuumTo`); file đích có sẵn mà rỗng/hỏng (integrity_check ≠ ok) thì xóa và tạo lại; `.tmp` sót (kể cả bản trước-ghi-đè) được dọn. Auditor Opus duyệt.
+- P3-1: không cho đặt tên đơn thuốc chén / đơn mẫu là "Bán lẻ" (không phân biệt hoa thường); nhánh oname "Bán lẻ" cho dữ liệu cũ giữ nguyên.
+- P3-2: ngày chốt sổ phải là ngày thật YYYY-MM-DD, sai báo "Ngày không hợp lệ (YYYY-MM-DD)".
+- P3-3: chốt xong có cảnh báo từ hub thì hiện; tải lại sau chốt lỗi thì báo "Đã chốt, hãy tải lại app".
+- P3-4: bảng Tết nới tới 2045 (close.js + page.js, test so hai bảng).
+- P3-5: middleware lỗi: 5xx trả "Lỗi máy chủ" (chi tiết ở log), 4xx giữ message.
+
 ## [2.40.3] - 2026-11-26
 
 ### Sửa

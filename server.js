@@ -516,14 +516,42 @@ function todayStamp() {
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 
+/* 2.40.4: file backup dùng được = có dữ liệu và integrity_check = ok. */
+function backupGood(file) {
+  try {
+    if (fs.statSync(file).size === 0) return false;
+    const c = new Database(file, { readonly: true, fileMustExist: true });
+    try { return c.pragma('integrity_check', { simple: true }) === 'ok'; } finally { c.close(); }
+  } catch (e) { return false; }
+}
+/* 2.40.4: VACUUM INTO ra <file>.tmp rồi đổi tên: lỗi/tắt máy giữa chừng không để lại file dở mang tên thật.
+   .tmp sót từ lần trước thì xóa. keepGood: file đích có sẵn và còn tốt thì giữ (trả false); rỗng/hỏng thì xóa, tạo lại.
+   VACUUM INTO tạo bản sao nhất quán, không bị ảnh hưởng bởi ghi đồng thời. Lỗi thì xóa .tmp rồi ném tiếp. */
+function vacuumTo(file, keepGood) {
+  const tmp = file + '.tmp';
+  if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+  if (fs.existsSync(file)) {
+    if (keepGood && backupGood(file)) return false;
+    console.warn('[backup] ' + (keepGood ? 'File rỗng/hỏng, tạo lại: ' : 'Tạo lại: ') + path.basename(file));
+    fs.unlinkSync(file);
+  }
+  try {
+    db.prepare('VACUUM INTO ?').run(tmp);
+    fs.renameSync(tmp, file);
+  } catch (err) {
+    try { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); } catch (e) { /* bỏ qua */ }
+    throw err;
+  }
+  return true;
+}
+let dailyChecked = ''; /* bản ngày đã kiểm tốt trong lần chạy này: không mở lại integrity_check mỗi lần ghi */
 function runDailyBackup() {
   try {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
     const file = path.join(BACKUP_DIR, 'backup-' + todayStamp() + '.db');
-    if (!fs.existsSync(file)) {
-      // VACUUM INTO tạo bản sao nhất quán, không bị ảnh hưởng bởi ghi đồng thời.
-      db.prepare('VACUUM INTO ?').run(file);
-      console.log('[backup] Đã sao lưu: ' + file);
+    if (dailyChecked !== file || !fs.existsSync(file) || fs.statSync(file).size === 0) {
+      if (vacuumTo(file, true)) console.log('[backup] Đã sao lưu: ' + file);
+      dailyChecked = file;
     }
   } catch (err) {
     console.error('[backup] Lỗi sao lưu:', err && err.message ? err.message : err);
@@ -543,10 +571,7 @@ function snapshotBeforeForce() {
     const ms = d.getMilliseconds();
     const hms = p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + (ms < 10 ? '00' : ms < 100 ? '0' : '') + ms;
     const file = path.join(BACKUP_DIR, 'backup-' + todayStamp() + '-truoc-ghi-de-' + hms + '.db');
-    if (!fs.existsSync(file)) {
-      db.prepare('VACUUM INTO ?').run(file);
-      console.log('[backup] Đã chụp bản trước khi ghi đè: ' + file);
-    }
+    if (vacuumTo(file, true)) console.log('[backup] Đã chụp bản trước khi ghi đè: ' + file);
   } catch (err) {
     console.error('[backup] Lỗi chụp bản trước khi ghi đè:', err && err.message ? err.message : err);
     return false;
@@ -562,6 +587,8 @@ function snapshotBeforeForce() {
 
 function pruneBackups() {
   try {
+    /* 2.40.4: .tmp sót (tắt máy giữa VACUUM INTO), kể cả bản trước-ghi-đè có tên theo mili-giây nên không bao giờ trùng lại. */
+    for (const n of fs.readdirSync(BACKUP_DIR).filter(n => /^backup-.*\.db\.tmp$/.test(n))) fs.unlinkSync(path.join(BACKUP_DIR, n));
     const files = fs.readdirSync(BACKUP_DIR)
       .filter(n => /^backup-\d{4}-\d{2}-\d{2}\.db$/.test(n))
       .sort();
@@ -818,8 +845,7 @@ app.post('/api/close-year', (req, res) => {
     try {
       closeFailAt(2);
       fs.mkdirSync(BACKUP_DIR, { recursive: true });
-      if (fs.existsSync(bak)) fs.unlinkSync(bak);
-      db.prepare('VACUUM INTO ?').run(bak);
+      vacuumTo(bak, false); /* luôn chụp mới ngay trước khi chốt */
       closeFailAt(3);
       fs.writeFileSync(tmp, JSON.stringify({ moneyUnit: 'dong', cutoff: plan.cutoff, createdAt: new Date().toISOString(),
         transactions: plan.removed, products: checked.state.products, closedBefore: closed, months: plan.months }));
@@ -892,8 +918,10 @@ app.use((err, req, res, next) => {
   }
   if (err.type === 'encoding.unsupported') return res.status(415).json({ success: false, error: 'Content-Encoding không được hỗ trợ' });
   if (err.status === 400 || err.statusCode === 400) return res.status(400).json({ success: false, error: /^Z_/.test(String(err.code || '')) ? 'Thân yêu cầu gzip hỏng, không giải nén được' : 'Thân yêu cầu không hợp lệ' });
-  console.error('[server error]', err && err.message ? err.message : err);
-  res.status(err.status || 500).json({ success: false, error: err.message || 'Lỗi server' });
+  console.error('[server error]', err && err.stack ? err.stack : err);
+  const st = Number(err.status || err.statusCode) || 500;
+  /* 2.40.4: 5xx không lộ err.message ra client (chi tiết đã ghi log ở trên); 4xx giữ message. */
+  res.status(st).json({ success: false, error: st >= 500 ? 'Lỗi máy chủ' : (err.message || 'Yêu cầu không hợp lệ') });
 });
 
 /* AD: bỏ hàm đổi đơn vị nghìn → đồng. Chốt chặn thay thế: DB có dữ liệu mà app_meta.money_unit khác 'dong' (bản sao lưu cũ tính theo nghìn) thì KHÔNG khởi động, để tiền không bị hiểu nhỏ đi 1000 lần. DB trống thì ghi nhãn 'dong'. */
