@@ -133,7 +133,7 @@ function emptyState(extra = {}) {
   return { products: [], transactions: [], prescriptions: [], updatedAt: 0, ...extra };
 }
 
-let serverErr = '';
+let serverErr = '', serverOut = '';
 test.before(async () => {
   PORT = await freePort();
   BASE = `http://127.0.0.1:${PORT}`;
@@ -141,8 +141,9 @@ test.before(async () => {
   child = spawn(process.execPath, ['server.js'], {
     cwd: root,
     env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, QLK_SETUP_CODE: SETUP_CODE },
-    stdio: ['ignore', 'ignore', 'pipe']
+    stdio: ['ignore', 'pipe', 'pipe']
   });
+  child.stdout.on('data', d => { serverOut += d.toString(); });
   child.stderr.on('data', d => { serverErr += d.toString(); });
   await waitForServer();
   await enrollDevice();
@@ -257,6 +258,24 @@ test('server.js: W3 X-Op-Id trùng lần ghi gần nhất trả lại success, k
   assert.equal((await put(st, { 'X-Base-Updated': '0', 'X-Op-Id': 'OP_test1' })).status, 409);
 });
 
+test('server.js: 2.40.6 log mỗi PUT (AU mục 4): ghi được / gửi lại op trùng / 409 đều có 1 dòng giờ, thiết bị, base, hub, kết quả, op', async () => {
+  const st = emptyState({ products: [{ id: 'LG1', name: 'Lg 1', stock: 1, costPrice: 1 }] });
+  const o0 = serverOut.length, e0 = serverErr.length;
+  const cur = (await getState()).updatedAt;
+  const w = await put(st, { 'X-Base-Updated': String(cur), 'X-Op-Id': 'OP_lg1' });
+  assert.equal(w.status, 200);
+  await put(st, { 'X-Base-Updated': String(cur), 'X-Op-Id': 'OP_lg1' });
+  const c = await put(st, { 'X-Base-Updated': String(cur), 'X-Op-Id': 'OP_lg2' });
+  assert.equal(c.status, 409);
+  await new Promise(r => setTimeout(r, 100));
+  const out = serverOut.slice(o0), err = serverErr.slice(e0);
+  const dev = '\\[[0-9a-f]{1,8} "May test"\\]';
+  assert.match(out, new RegExp('Z PUT /api/state ' + dev + ' base ' + cur + ' hub ' + cur + '→' + w.body.updatedAt + ' → 200 ghi op OP_lg1 \\d+ byte'));
+  assert.match(out, new RegExp(dev + ' base ' + cur + ' hub ' + w.body.updatedAt + ' → 200 đã ghi trước \\(gửi lại, op trùng\\) op OP_lg1'));
+  assert.match(err, new RegExp(dev + ' base ' + cur + ' hub ' + w.body.updatedAt + ' → 409 xung đột op OP_lg2 \\(1 lần ghi sau base: OP_lg1\\)'));
+  assert.doesNotMatch(out + err, /Lg 1/, 'không ghi dữ liệu');
+});
+
 test('server.js: 2.40.6 409 trả ops (op ghi sau base, theo thứ tự) + opsComplete; log 409 có tên thiết bị, base, hiện tại', async () => {
   const st = n => emptyState({ products: [{ id: 'AU' + n, name: 'Au ' + n, stock: 1, costPrice: 1 }] });
   const a = await put(st(1), { 'X-Force': '1', 'X-Op-Id': 'OP_au1' });
@@ -271,7 +290,7 @@ test('server.js: 2.40.6 409 trả ops (op ghi sau base, theo thứ tự) + opsCo
   assert.equal(r.body.opsComplete, true);
   assert.equal(r.body.updatedAt, (await getState()).updatedAt);
   const line = serverErr.slice(before);
-  assert.match(line, new RegExp('409: xung đột[^\\n]*thiết bị "May test", base ' + base + ', hiện tại \\d+, 2 lần ghi sau base, op OP_au4'));
+  assert.match(line, new RegExp('"May test"\\] base ' + base + ' hub \\d+ → 409 xung đột op OP_au4 \\(2 lần ghi sau base: OP_au2,\\?\\)'));
   const old = await put(st(5), { 'X-Base-Updated': '1', 'X-Op-Id': 'OP_au5' });
   assert.equal(old.status, 409);
   assert.equal(old.body.opsComplete, false, 'base cũ hơn nhật ký: không khẳng định đủ');
@@ -854,9 +873,9 @@ test('server.js: PUT bị từ chối (400/428/409) ghi một dòng log, không 
   assert.equal((await put(emptyState({ products: [{ id: 'L4', name: SECRET, stock: 1, costPrice: 1 }] }), { 'X-Base-Updated': '0' })).status, 409);
   await new Promise(r => setTimeout(r, 300));
   const log = serverErr.slice(start);
-  const lines = log.split(/\r?\n/).filter(l => l.includes('PUT /api/state từ chối'));
+  const lines = log.split(/\r?\n/).filter(l => l.includes('PUT /api/state từ chối') || l.includes(' → 409 ')); /* 2.40.6: 409 theo dòng putLog */
   assert.equal(lines.length, 3, log);
-  for (const code of ['400', '428', '409']) assert.ok(lines.some(l => l.includes(' ' + code + ':')), 'thiếu dòng ' + code);
+  for (const code of ['400', '428', '409']) assert.ok(lines.some(l => l.includes(' ' + code + ':') || l.includes(' → ' + code + ' ')), 'thiếu dòng ' + code);
   assert.match(lines[0], /^\d{4}-\d\d-\d\dT/);
   assert.ok(!log.includes(SECRET) && !log.includes('777777') && !log.includes('qlk_dev'), 'log lộ dữ liệu');
 });

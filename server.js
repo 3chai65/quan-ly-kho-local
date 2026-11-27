@@ -717,6 +717,18 @@ function warnReject(code, reason) {
   console.warn(new Date().toISOString() + ' PUT /api/state từ chối ' + code + ': ' + reason);
 }
 
+/* 2.40.6 (AU mục 4): MỖI PUT một dòng để rà xung đột: giờ, thiết bị (id rút gọn + tên), base gửi lên, updatedAt hub lúc xét, kết quả, opId.
+   Không ghi dữ liệu/số tiền/token. */
+function putLog(req, result, hub, extra) {
+  const d = req.device;
+  const dev = d ? String(d.id || '').slice(0, 8) + ' "' + String(d.name || '').replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 40) + '"' : '?';
+  const base = req.get('X-Base-Updated');
+  const op = req.get('X-Op-Id');
+  const line = new Date().toISOString() + ' PUT /api/state [' + dev + '] base ' + (base == null ? '-' : String(base).slice(0, 20)) +
+    ' hub ' + hub + ' → ' + result + ' op ' + (op ? (OP_ID_RE.test(op) ? op : '(sai)') : '-') + (extra ? ' ' + extra : '');
+  (/^409/.test(result) ? console.warn : console.log)(line);
+}
+
 app.put('/api/state', (req, res) => {
   res.set('Cache-Control', 'no-store');
   try {
@@ -735,7 +747,7 @@ app.put('/api/state', (req, res) => {
     }
     const closedErr = closedGuard(checked.state);
     if (closedErr) {
-      warnReject(409, 'sổ đã chốt');
+      putLog(req, '409 sổ đã chốt', getSourceUpdatedAt());
       return res.status(409).json({ success: false, closed: true, cutoff: getMeta('close_cutoff'), error: closedErr });
     }
     const opHdr = req.get('X-Op-Id');
@@ -743,6 +755,7 @@ app.put('/api/state', (req, res) => {
     const lastOp = opId ? getLastOp() : null;
     if (lastOp && lastOp.id === opId) {
       // PUT gửi lại sau khi mất phản hồi: đã ghi rồi, trả kết quả cũ, không ghi lại.
+      putLog(req, '200 đã ghi trước (gửi lại, op trùng)', getSourceUpdatedAt(), '(lần ghi ' + lastOp.updatedAt + ')');
       return res.json({ success: true, updatedAt: lastOp.updatedAt });
     }
     const force = req.get('X-Force') === '1';
@@ -761,9 +774,7 @@ app.put('/api/state', (req, res) => {
       const current = getSourceUpdatedAt();
       if (current > baseNum) {
         const since = opsSince(baseNum);
-        /* 2.40.6: chẩn đoán 409 — tên thiết bị, base gửi lên, updatedAt hiện tại, số lần ghi sau base ("+?" = nhật ký không phủ tới base), opId gửi kèm. Không ghi dữ liệu. */
-        const dev = req.device && req.device.name ? String(req.device.name).replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 40) : '?';
-        warnReject(409, 'xung đột: máy chủ có bản mới hơn (thiết bị "' + dev + '", base ' + baseNum + ', hiện tại ' + current + ', ' + since.ops.length + (since.complete ? '' : '+?') + ' lần ghi sau base, op ' + (opId || '-') + ')');
+        putLog(req, '409 xung đột', current, '(' + since.ops.length + (since.complete ? '' : '+?') + ' lần ghi sau base: ' + since.ops.map(x => x || '?').join(',').slice(0, 300) + ')');
         return res.status(409).json({ success: false, conflict: true, updatedAt: current, ops: since.ops, opsComplete: since.complete });
       }
     }
@@ -773,9 +784,10 @@ app.put('/api/state', (req, res) => {
       console.warn(new Date().toISOString() + ' PUT /api/state X-Force bị chặn: không chụp được bản trước ghi đè');
       return res.status(500).json({ success: false, error: 'Không chụp được bản sao lưu trước khi ghi đè; chưa ghi gì' });
     }
+    const hubBefore = getSourceUpdatedAt();
     const updatedAt = writeState(checked.state, opId, force);
     const wire = Number(req.get('Content-Length'));
-    console.log(new Date().toISOString() + ' PUT /api/state ' + Buffer.byteLength(text) + ' byte' + (req.get('Content-Encoding') && Number.isFinite(wire) ? ' (nén ' + req.get('Content-Encoding') + ' ' + wire + ' byte)' : '') + (force ? ' (X-Force)' : ''));
+    putLog(req, '200 ghi' + (force ? ' (X-Force)' : ''), hubBefore + '→' + updatedAt, Buffer.byteLength(text) + ' byte' + (req.get('Content-Encoding') && Number.isFinite(wire) ? ' (nén ' + req.get('Content-Encoding') + ' ' + wire + ' byte)' : ''));
     const reply = { success: true, updatedAt };
     if (checked.warnings.length) reply.warnings = checked.warnings;
     if (checked.stockDrift.length) reply.stockDrift = checked.stockDrift;
