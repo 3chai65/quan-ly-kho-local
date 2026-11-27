@@ -8674,6 +8674,7 @@ test('2.40.0 chốt sổ: bảng Tết client trùng close.js; lunarStart/bookSt
   for (const d of ['2025-01-28', '2025-01-29', '2026-02-16', '2026-02-17', '2026-11-26', '2028-01-25', '2028-01-26', '2035-02-07', '2035-02-08', '2040-02-11', '2045-02-16', '2045-02-17']) assert.equal(c.lunarStart(d), srv.lunarStart(d), d);
   assert.equal(c.lunarStart('2028-01-25'), '2027-02-06');
   assert.equal(c.bookStart('2026-11-26'), '2026-02-17');
+  assert.equal(c.bookStart('2030-02-02'), '2030-02-02', '2030-02-02 thuộc năm sổ 2030'); assert.equal(c.bookStart('2030-02-01'), '2029-02-13');
   assert.equal(c.bookStart('2024-06-01'), '2024-01-01', 'ngoài bảng → 01/01');
 });
 

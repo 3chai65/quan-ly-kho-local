@@ -1,7 +1,7 @@
 # Chốt sổ năm (âm lịch) — thiết kế (việc AN; mã từ 2.40.0: close.js, server.js, src/page.js)
 Năm sổ N = từ Tết(N) đến Tết(N+1) − 1 ngày. App giữ năm sổ hiện tại + 1 năm sổ trước. Ví dụ chốt sau Tết 2028: mốc C = Tết 2027, gỡ mọi giao dịch có `date < C`.
 Ngày đề xuất: D = Tết(năm nay) − 1 (ngày cuối năm âm vừa hết). Người dùng sửa được D. C = Tết của năm âm chứa D (không lùi năm). Ví dụ D = Tết 2028 − 1 → C = Tết 2027: giữ năm sổ 2027 và 2028.
-Bảng Tết (dương lịch, giờ VN UTC+7): 2025-01-29, 2026-02-17, 2027-02-06, 2028-01-26, 2029-02-13, 2030-02-03, 2031-01-23, 2032-02-11, 2033-01-31, 2034-02-19, 2035-02-08; từ 2.40.4 thêm 2036-01-28 … 2045-02-17 (đối chiếu thuật toán Hồ Ngọc Đức UTC+7: khớp). Lưu ý: thuật toán ra Tết 2030 = 02/02 (trăng mới 23:09 giờ VN), bảng đang ghi 03/02, chờ Người duyệt quyết. Người duyệt đã chốt bảng (26/11/2026); `close.js` và `src/page.js` dùng chung, test so.
+Bảng Tết (dương lịch, giờ VN UTC+7): 2025-01-29, 2026-02-17, 2027-02-06, 2028-01-26, 2029-02-13, 2030-02-02, 2031-01-23, 2032-02-11, 2033-01-31, 2034-02-19, 2035-02-08; từ 2.40.4 thêm 2036-01-28 … 2045-02-17 (đối chiếu thuật toán Hồ Ngọc Đức UTC+7: khớp). Tết 2030 = 02/02 (trăng mới 23:09 giờ VN; 03/02 là mùng 2, Người duyệt đối chiếu Báo Nghệ An, sửa 27/11/2026). Người duyệt đã chốt bảng (26/11/2026); `close.js` và `src/page.js` dùng chung, test so.
 
 ## 1. Dữ liệu: "Tồn đầu kỳ" = giao dịch NHAP có cờ `open: true` (cột mới `opening INTEGER NOT NULL DEFAULT 0`)
 - Chọn cách này thay vì thêm trường trên sản phẩm: giữ đúng bất biến `tồn = Σnhập − Σbán` (stockDrift, Đối chiếu) mà không đổi công thức. Thêm cột bằng `ALTER ADD`, không phải dựng lại bảng như khi đổi CHECK loại giao dịch.
