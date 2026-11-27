@@ -15,9 +15,9 @@ Lỗi reviewer đã xử lý: `BAO-CAO-REVIEW.md` — tra trước khi báo/sử
 
 ## Kiến trúc
 - `server.js`: `GET/PUT /api/state`, `GET /api/backups`, `GET /healthz`. Tiền = đồng nguyên (`moneyUnit:"dong"`). Đồng bộ theo snapshot: `X-Base-Updated` sai → 409/428, không tự ghi đè. Backup `VACUUM INTO` hằng ngày + `truoc-ghi-de` trước mỗi `X-Force`.
-- `src/page.js`: toàn bộ client inline (điện thoại + `html.desktop`). Ô nhập = nghìn đồng, đổi ở biên bằng `kToDong`/`kInput`. File rất lớn: không đọc cả file.
+- Client (điện thoại + `html.desktop`), từ 2.40.5 tách 3 file: `src/index.html` (khung + script khởi động `%%BOOT%%`), `src/style.css` (2 khối style, dấu `/*@@tach-style@@*/`), `src/app.js` (JS client, lint thẳng). `src/page.js` chỉ ghép lúc khởi động → `PAGE` (trùng byte bản inline cũ), `CSS`, `APP`. Ô nhập = nghìn đồng, đổi ở biên bằng `kToDong`/`kInput`. File lớn: không đọc cả file.
 - `auth.js` + `auth.db`: duyệt thiết bị, cookie `qlk_dev_*`, tối đa 2 thiết bị chủ. `pwa.js`: manifest, icon, font, sw passthrough (đường công khai trong PUBLIC).
-- Chuẩn giao diện desktop = `page.js` `html.desktop` (Tauri). App Mac SwiftUI (repo 3chai65/quan-ly-kho-mac, chỉ build trên Mac) đi theo chuẩn này; mọi thay đổi giao diện làm trên web trước.
+- Chuẩn giao diện desktop = `html.desktop` (index.html/style.css/app.js) (Tauri). App Mac SwiftUI (repo 3chai65/quan-ly-kho-mac, chỉ build trên Mac) đi theo chuẩn này; mọi thay đổi giao diện làm trên web trước.
 - Mac chỉ dùng Safari; "Hiệu ứng kính" đã bỏ từ 2.38.22.
 
 ## Test

@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quản Lý Kho — Sổ kho, đơn bán và doanh thu</title>
+<meta name="description" content="Quản lý kho dược liệu: đơn bán lẻ, đơn thuốc chén, nhập hàng, tồn kho, lịch sử giao dịch và thống kê doanh thu 12 tháng. Đồng bộ mạng nội bộ (LAN).">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#142844">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kho">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+%%STYLE%%</style>
+<script>
+(function(){
+  try { var q = location.search || '';
+    if (/[?&]desktop=0/.test(q)) localStorage.setItem('desktop', '0'); else if (/[?&]desktop=1/.test(q)) localStorage.setItem('desktop', '1');
+    var dk = localStorage.getItem('desktop'); /* 2.20.12: PWA Edge trên PC (standalone, >=900px, chuột) tự bật; '0' = đã tắt */
+    if (dk === '1' || (dk !== '0' && matchMedia('(display-mode: standalone)').matches && matchMedia('(pointer:fine)').matches && innerWidth >= 900)) document.documentElement.classList.add('desktop');
+    if (window.__TAURI__ && document.documentElement.classList.contains('desktop')) document.documentElement.classList.add('tauri'); /* 2.23.1: chừa lề trên cho thanh tiêu đề của app */
+    if (!document.documentElement.classList.contains('desktop') && !/[?&]pt=0/.test(q) && (/[?&]pt=1/.test(q) || matchMedia('(pointer:coarse)').matches)) { document.documentElement.classList.add('pt'); var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', '#142844'); } /* 2.20.13: điện thoại dùng chung lớp màu/nền với desktop */
+  } catch (e) {}
+  var R = document.documentElement, D = R.classList.contains('desktop');
+  if (D || R.classList.contains('pt')) {
+    /* 2.31.0: MỘT cỡ, bố cục co giãn theo cửa sổ (bỏ khung 1280x720 phóng đều và HD/FHD); 7 nền nhớ bằng localStorage 'desktopBg' */
+    var BGS = ['navy', 'prism', 'cyan', 'emerald', 'gold', 'rose', 'graphite'], NM = ['Navy', 'Prism', 'Cyan', 'Emerald', 'Amber', 'Rose', 'Graphite'], cur = 'navy';
+    try { cur = localStorage.getItem('desktopBg') || 'navy'; } catch (e) {}
+    if (BGS.indexOf(cur) < 0) cur = 'navy';
+    R.setAttribute('data-bg', cur);
+    document.addEventListener('DOMContentLoaded', function(){
+      var w = document.createElement('div'); w.className = 'bgdots'; w.setAttribute('role', 'group'); w.setAttribute('aria-label', 'Màu nền');
+      BGS.forEach(function(k, i){
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'bgd'; b.setAttribute('data-bg', k); b.title = b.ariaLabel = b.textContent = NM[i];
+        b.setAttribute('aria-pressed', k === cur ? 'true' : 'false');
+        b.onclick = function(){ cur = k; R.setAttribute('data-bg', k); try { localStorage.setItem('desktopBg', k); } catch (e) {} try { dispatchEvent(new Event('resize')); } catch (e) {} /* vẽ lại biểu đồ theo màu mới */
+          [].forEach.call(w.children, function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); }); w.classList.remove('is-open'); };
+        w.appendChild(b);
+      });
+      /* 2.38.18: viên Sao lưu | Thiết bị dựng cho cả điện thoại (lối vào Thiết bị chuyển từ logo vào đây) */
+      var bakSeg = function(){
+      var kb = document.getElementById('backupBox'), kbar = kb && kb.querySelector('.card__bar'), kbody = kb && kb.querySelector('.card__body');
+      if (kbar && kbody) {
+        var sg = document.createElement('div'), ds = document.createElement('section');
+        sg.className = 'pager bakseg'; sg.setAttribute('role', 'group'); sg.setAttribute('aria-label', 'Phần hiển thị');
+        [['bak', 'Sao lưu'], ['dev', 'Thiết bị']].forEach(function(p){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn--sm'; b.textContent = p[1]; b.setAttribute('data-action', 'bak-view'); b.setAttribute('data-view', p[0]); if (p[0] === 'bak') b.setAttribute('aria-current', 'true'); sg.appendChild(b); });
+        var dm = document.createElement('p'), dv = document.createElement('button');
+        dm.className = 'hint'; dm.id = 'devMsg'; dm.setAttribute('role', 'status');
+        dv.type = 'button'; dv.className = 'btn mt-10'; dv.id = 'devOpen'; dv.hidden = true; dv.textContent = 'Mở quản lý thiết bị'; dv.setAttribute('data-action', 'open-devices');
+        ds.className = 'bak-sec'; ds.id = 'devSec'; ds.hidden = true; ds.appendChild(dm); ds.appendChild(dv);
+        kbody.appendChild(ds); kbar.appendChild(sg);
+      }
+      };
+      if (!D) { var bb = document.querySelector('#backupBox .card__body'); if (bb) bb.appendChild(w); bakSeg(); return; } /* điện thoại: bộ chọn nền ở cuối tab Sao lưu, không dựng phần desktop */
+      /* 2.25.0: chân thanh bên = nền, dòng đồng bộ (#syncLine, chữ do renderSyncLine), công tắc kính. 2.28.0: bỏ nút Tải lại/Thoát; bấm logo hoặc chữ "Quản Lý Kho" = Tải lại (reloadAppClick, có hỏi nháp). */
+      var sbf = document.createElement('div'), sy = document.createElement('div');
+      sbf.className = 'sbf'; sy.className = 'sbs'; sy.id = 'syncLine'; sy.setAttribute('role', 'status'); sy.textContent = 'Đang kết nối…';
+      /* 2.31.0: bỏ hàng 7 chấm; một nút bảng màu cùng dòng với dòng đồng bộ, bấm mở bảng 7 chấm, chọn xong đóng */
+      var sr = document.createElement('div'), pb = document.createElement('button'); sr.className = 'sbr'; pb.type = 'button'; pb.className = 'sbp'; pb.title = 'Màu nền'; pb.setAttribute('aria-label', 'Màu nền'); pb.setAttribute('aria-expanded', 'false'); pb.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg>';
+      pb.onclick = function(e){ e.stopPropagation(); pb.setAttribute('aria-expanded', w.classList.toggle('is-open') ? 'true' : 'false'); };
+      document.addEventListener('click', function(){ w.classList.remove('is-open'); pb.setAttribute('aria-expanded', 'false'); });
+      [sy, pb, w].forEach(function(n){ sr.appendChild(n); }); sbf.appendChild(sr);
+      /* 2.38.4: viên HD/FHD chân thanh bên (như 2.20.1, bỏ ở 2.31.0); cỡ LOGIC gồm thanh tiêu đề, kẹp 16:9 theo screen.avail* (CSS px, không nhân dpr); chỉ có trong Tauri */
+      if (window.__TAURI__) { var sz = document.createElement('div'); sz.className = 'szpick'; sz.setAttribute('role', 'group'); sz.setAttribute('aria-label', 'Cỡ cửa sổ');
+        [['HD', 1280, 720], ['FHD', 1920, 1080]].forEach(function(p){
+          var b = document.createElement('button'); b.type = 'button'; b.textContent = p[0]; b.title = p[0] + ' ' + p[1] + '×' + p[2];
+          b.onclick = function(){ var T = window.__TAURI__, W = T && T.window; if (!W) return; var cw = p[1], ch = p[2], aw = screen.availWidth, ah = screen.availHeight;
+            if (aw > 0 && ah > 0 && (cw > aw || ch > ah)) { ch = Math.min(ah, Math.floor(aw * 9 / 16)); cw = Math.round(ch * 16 / 9); }
+            var win; /* cửa sổ khóa kéo cạnh (resizable:false): mở khóa, đặt cỡ, luôn khóa lại; mọi lỗi nuốt êm */
+            Promise.resolve().then(function(){ win = W.getCurrentWindow(); return win.unmaximize(); }).then(function(){ return win.setResizable(true); })
+              .then(function(){ return win.setSize(new (W.LogicalSize || (T.dpi && T.dpi.LogicalSize))(cw, ch)); }).catch(function(){})
+              .then(function(){ return win.setResizable(false); }).catch(function(){}); };
+          sz.appendChild(b); });
+        sbf.appendChild(sz); }
+      document.body.appendChild(sbf);
+      ['brandBtn', 'brandLogo'].forEach(function(i){ var n = document.getElementById(i); if (n) n.setAttribute('data-action', 'reload-app'), n.title = 'Tải lại'; });
+      /* 2.28.0: tab Sao lưu khôi phục: viên Sao lưu | Thiết bị (bakView) + thẻ Thiết bị (chỉ dẫn tới trang /auth/devices, không viết lại giao diện) */
+      bakSeg();
+      var th = document.querySelector('.thk'), ct = document.getElementById('chartTip'); if (th && ct) th.appendChild(ct); /* 2.25.0: dòng tháng + chip Nhập/Bán nằm dưới hàng 4 số */
+      var obd = document.querySelector('[data-action="open-backup-dir"]'); if (obd && window.__TAURI__) obd.hidden = false, obd.parentNode.hidden = false; /* 2.20.11; 2.22.0: ngoài Tauri ẩn cả dòng thư mục */
+      ['.top', '.top .bar'].forEach(function(q){ var e = document.querySelector(q); if (e) e.setAttribute('data-tauri-drag-region', ''); }); /* vùng trống quanh logo kéo được cửa sổ (nút con không kéo) */
+      /* 2.26.1: nút viên ở thanh đầu (chỉ desktop, tạo bằng JS nên điện thoại không có): Đơn mới (Thuốc chén; 2.31.0 nút + tròn), Xóa hết (Bán lẻ trái nút ngày, Nhập hàng cuối hàng) */
+      var bx = function(act, ico, txt){ var b = document.createElement('button'); b.type = 'button'; b.className = 'btn bx'; b.setAttribute('data-action', act); b.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + ico + '"/></svg>' + txt; return b; };
+      if (D) [['retailSearch', 'Nhập tên'], ['nhapSearch', 'Nhập tên'], ['nhapQty', 'SL'], ['nhapPrice', 'Giá (nghìn)']].forEach(function(p){ var n = document.getElementById(p[0]); if (n) n.placeholder = p[1]; }); /* 2.30.4 desktop theo Mac; aria-label giữ nguyên */
+      var rbar = document.querySelector('#retailBox .card__bar'), nbar = document.querySelector('#nhapBox .card__bar');
+      if (rbar) rbar.insertBefore(bx('clear-retail', 'trash', 'Xóa hết'), rbar.querySelector('.card__bar-date'));
+      if (nbar) nbar.appendChild(bx('clear-nhap', 'trash', 'Xóa hết'));
+      var rs = document.getElementById('remedySearch'), rb = document.querySelector('#remedyBox .card__bar'), rp = document.getElementById('remedyPreset'); /* 2.20.6: ô nhập tên Thuốc chén lên thanh đầu như Bán lẻ/Nhập hàng (chỉ dời nút, giữ id) */
+      if (rs && rb && rp) { /* 2.26.0: nửa trái = tiêu đề + Tìm vị thuốc; nửa phải = Tìm đơn đã lưu + ngày; dòng đang gõ và dòng trống nằm cùng bảng tờ ghi (thứ tự: dòng ghi, dòng gõ, dòng trống) */
+        var bl = document.createElement('div'), br = document.createElement('div');
+        rs = rs.parentNode; rs.className = 'sug card__bar-search'; bl.className = 'rbl'; br.className = 'rbr';
+        bl.appendChild(rb.querySelector('.card__bar-title')); bl.appendChild(rs); br.appendChild(document.getElementById('remedyFindBox')); br.appendChild(rb.querySelector('.card__bar-date'));
+        var nw = bx('new-remedy', 'plus', ''); nw.className += ' btn--icon bx--o'; nw.title = 'Đơn mới'; nw.setAttribute('aria-label', 'Đơn mới'); bl.appendChild(nw); /* 2.31.0: nút + tròn bên phải ô Nhập tên (thay nút "Đơn mới") */ rb.insertBefore(bl, rp); rb.appendChild(br);
+      }
+      /* 2.26.0/2.29.0: dòng đang gõ nằm cùng bảng tờ ghi, cuối danh sách (Thuốc chén, Bán lẻ, Nhập hàng); 2.39.6: Nhập hàng cũng bọc .note__list để cuộn */
+      [['remedyNoteBody', 'remedyBody'], ['retailNoteBody', 'retailBody'], ['nhapListBody', 'nhapPendingBody']].forEach(function(a){
+        var nb = document.getElementById(a[0]), pb = document.getElementById(a[1]), t = nb && nb.parentNode;
+        if (nb && pb) t.insertBefore(pb, nb.nextSibling);
+        if (t && !t.parentNode.classList.contains('note__list')) { var nl = document.createElement('div'); nl.className = 'note__list'; t.parentNode.insertBefore(nl, t); nl.appendChild(t); }
+      });
+    });
+  }
+  window.__DB__=%%BOOT%%;
+  window.__NEED_FETCH__=%%NEEDFETCH%%;
+})();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Bỏ qua điều hướng</a>
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+<symbol id="i-yin" viewBox="0 0 1024 1024"><path fill="currentColor" stroke="none" d="M483.6 900.2L483.6 538.2L483.2 537.3L97.8 316.5L97.2 316.4L96.8 316.8L96.2 319.2L95.1 324.8L94.1 333.2L93.6 343.2L93.6 377.8L93.6 669.2L94.1 685.2L95.1 695.2L96.2 701.8L97.6 708.8L99.8 716.2L102.1 722.8L105.1 729.2L108.2 734.8L112.6 741.2L119.2 749.0L127.8 756.9L139.2 765.4L153.8 774.4L457.8 947.9L479.2 959.8L483.2 961.3L483.6 960.8ZM929.4 561.8L929.4 342.8L928.8 332.2L927.9 324.2L926.3 316.8L925.8 316.4L925.2 316.5L539.9 537.2L539.5 538.2L539.5 716.2L539.5 960.8L539.6 961.2L540.2 961.3L542.8 960.4L546.8 958.4L566.2 947.4L870.2 773.9L880.8 767.4L890.2 760.9L898.2 754.4L903.8 749.1L908.2 744.0L912.3 738.8L916.4 732.2L919.4 726.2L922.3 719.2L924.3 712.8L926.3 704.8L927.8 695.8L928.8 686.2L929.4 674.2ZM371.3 122.2L439.8 83.1L446.2 79.6L459.2 73.7L468.8 70.1L475.2 68.1L484.8 65.6L493.2 64.0L501.8 63.0L511.8 62.6L521.8 63.1L530.2 64.1L540.8 66.1L552.8 69.5L561.2 72.6L569.8 76.1L577.8 80.0L586.2 84.6L877.2 251.1L888.8 258.2L895.2 263.1L898.8 266.4L899.2 267.2L869.7 284.2L747.2 354.4L745.2 355.5L744.2 355.4L354.2 133.4L353.3 132.8L353.8 132.2ZM321.2 379.8L124.2 267.6L123.8 267.2L123.9 266.8L126.8 264.1L131.8 260.2L139.2 255.1L297.8 164.6L488.3 273.8L686.8 387.6L687.2 388.2L686.2 388.9L511.8 487.9L510.2 487.3Z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></symbol>
+<symbol id="i-warehouse" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol>
+<symbol id="i-chart-col" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
+<symbol id="i-mortar" viewBox="0 0 24 24"><path d="M18 11h-4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h4"/><path d="M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"/><rect width="16" height="5" x="4" y="2" rx="1"/></symbol>
+<symbol id="i-cloud-down" viewBox="0 0 24 24"><path d="M12 13v8l-4-4"/><path d="m12 21 4-4"/><path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></symbol>
+<symbol id="i-edit"viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+<symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
+<symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-outbox" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol>
+<symbol id="i-drive" viewBox="0 0 24 24"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M8 16H3v5"/></symbol>
+</svg>
+<header class="top">
+  <div class="wrap bar">
+    <div class="brand-wrap">
+      <span class="brand__yin" id="brandLogo" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-yin"/></svg></span>
+      <button class="brand" type="button" id="brandBtn" data-action="brand-tap" aria-describedby="brandNote">Quản Lý Kho</button>
+    </div>
+    <div class="bar__actions">
+      <div class="sync-badge" id="syncBadge" role="status" hidden>Chưa đồng bộ</div>
+      <button class="btn btn--sm sync-discard" id="syncDiscard" type="button" data-action="sync-discard" hidden>Bỏ thay đổi chưa gửi, lấy bản máy chủ</button>
+    </div>
+  </div>
+  <p class="sr" id="brandNote" role="status"></p>
+</header>
+
+<main id="main" class="wrap main">
+  <h1 class="sr">Quản lý kho dược liệu</h1>
+
+  <section class="stats" aria-label="Bán và lợi nhuận tháng">
+    <div class="stats__c">
+      <p class="stat__k">Bán trong tháng</p>
+      <p class="stat__v" id="statExport">0</p>
+      <p class="stat__sub"><span>Hôm nay <b id="statExportDay">0</b></span><span>Năm <b id="statExportYear">0</b></span></p>
+    </div>
+    <div class="stats__c">
+      <p class="stat__k">Lợi nhuận tháng</p>
+      <p class="stat__v" id="statProfit">0</p>
+      <p class="stat__sub"><span>Hôm nay <b id="statProfitDay">0</b></span><span>Năm <b id="statProfitYear">0</b></span></p>
+    </div>
+  </section>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Chọn mục">
+    <button type="button" class="tab" role="tab" data-tab="retailBox" aria-controls="retailBox" aria-selected="false" aria-label="Bán lẻ"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-receipt"/></svg><span class="tab__l1">Bán</span><span class="tab__l2">lẻ</span></button>
+    <button type="button" class="tab" role="tab" data-tab="remedyBox" aria-controls="remedyBox" aria-selected="false" aria-label="Thuốc chén"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-mortar"/></svg><span class="tab__l1">Thuốc</span><span class="tab__l2">chén</span></button>
+    <button type="button" class="tab" role="tab" data-tab="nhapBox" aria-controls="nhapBox" aria-selected="false" aria-label="Nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-cart"/></svg><span class="tab__l1">Nhập</span><span class="tab__l2">hàng</span></button>
+    <button type="button" class="tab" role="tab" data-tab="invBox" aria-controls="invBox" aria-selected="false" aria-label="Kho tồn"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-warehouse"/></svg><span class="tab__l1">Kho</span><span class="tab__l2">tồn</span></button>
+    <button type="button" class="tab" role="tab" data-tab="impBox" aria-controls="impBox" aria-selected="false" aria-label="Lịch sử nhập hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-inbox"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">nhập</span></button>
+    <button type="button" class="tab" role="tab" data-tab="expBox" aria-controls="expBox" aria-selected="false" aria-label="Lịch sử bán hàng"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-outbox"/></svg><span class="tab__l1">Lịch sử</span><span class="tab__l2">bán</span></button>
+    <button type="button" class="tab" role="tab" data-tab="chartBox" aria-controls="chartBox" aria-selected="false" aria-label="Thống kê"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-chart-col"/></svg><span class="tab__l1">Thống</span><span class="tab__l2">kê</span></button>
+    <button type="button" class="tab" role="tab" data-tab="backupBox" aria-controls="backupBox" aria-selected="false" aria-label="Sao lưu &amp; khôi phục"><svg class="ico tab__ic" aria-hidden="true"><use href="#i-drive"/></svg><span class="tab__l1">Sao lưu</span><span class="tab__l2">khôi phục</span></button>
+  </nav>
+
+  <div class="grid2">
+    <details class="card" id="retailBox">
+      <summary class="card__head sr-summary">
+        <svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>
+        <h2 class="card__title">Bán lẻ</h2>
+      </summary>
+      <div class="card__body">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>Bán lẻ</span>
+          <div class="sug card__bar-search">
+            <input class="inp" id="retailSearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để bán" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="retailList">
+            <div class="sug__list" id="retailList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
+          </div>
+          <div class="datefield card__bar-date">
+            <input class="inp" id="retailDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Đơn luôn được ghi vào ngày hôm nay" tabindex="-1">
+          </div>
+        </div>
+        <div class="note" id="retailNote">
+          <div class="note__head"><span>Tờ ghi<span class="nh-d"> đơn bán lẻ</span></span><span id="retailNotePg"></span><span class="nh-q">SL (kg)</span><span class="nh-m">Giá bán</span></div>
+          <div class="note__list" id="retailNoteList">
+          <table>
+            <caption class="sr">Tờ ghi đơn bán lẻ</caption>
+            <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
+            <thead><tr>
+              <th class="c-num" scope="col">STT</th>
+              <th scope="col">Tên</th>
+              <th class="num" scope="col">SL (kg)</th>
+              <th scope="col" class="num">Giá bán</th>
+              <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
+            </tr></thead>
+            <tbody id="retailNoteBody"></tbody>
+          </table>
+          </div>
+          <div class="tw note__pending">
+            <table class="ord">
+              <caption class="sr">Dòng đang nhập đơn bán lẻ</caption>
+              <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
+              <thead><tr>
+                <th class="c-num" scope="col">STT</th>
+                <th scope="col">Tên</th>
+                <th class="c-qty num" scope="col">SL (kg)</th>
+                <th class="c-money num" scope="col">Giá bán</th>
+                <th class="c-del" scope="col"><span class="sr">Thêm</span></th>
+              </tr></thead>
+              <tbody id="retailBody" class="pend"></tbody>
+              <tfoot id="retailNoteFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-green" id="retailNoteTotal">0</td><td></td></tr></tfoot>
+            </table>
+          </div>
+          <div class="foot" id="retailNotePager" hidden></div>
+          <div class="note__foot">
+            <button class="btn btn--green" type="button" data-action="save-retail" data-keep-focus>
+              <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Bán đơn
+            </button>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="remedyBox">
+      <summary class="card__head sr-summary">
+        <svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>
+        <h2 class="card__title">Thuốc chén</h2>
+      </summary>
+      <div class="card__body">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-mortar"/></svg>Thuốc chén</span>
+          <select class="inp card__bar-preset" id="remedyPreset" aria-label="Đơn có sẵn">
+            <option value="">Đơn mới</option>
+          </select>
+          <div id="remedyFindBox">
+            <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+            <input class="inp" id="remedyFind" type="search" autocomplete="off" placeholder="Tìm đơn đã lưu" aria-label="Tìm đơn đã lưu" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyFindList">
+            <div class="sug__list" id="remedyFindList" role="listbox" aria-label="Đơn đã lưu" hidden></div>
+            <div id="remedyOpen"><span id="remedyOpenName"></span><button class="btn btn--icon" type="button" id="remedyClose" data-action="close-preset" aria-label="Bỏ đơn đang mở" title="Bỏ đơn đang mở"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+          </div>
+          <div class="datefield card__bar-date">
+            <input class="inp" id="remedyDate" type="text" readonly inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" aria-label="Ngày bán" title="Đơn luôn được ghi vào ngày hôm nay" tabindex="-1">
+          </div>
+        </div>
+        <div class="note" id="remedyNote">
+          <div class="note__head"><span>Tờ ghi<span class="nh-d"> đơn thuốc chén</span></span><span id="remedyNotePg"></span><span class="nh-q">SL (gram)</span></div>
+          <div class="sug note__search">
+            <input class="inp" id="remedySearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc cho đơn thuốc chén" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="remedyList">
+            <div class="sug__list" id="remedyList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
+          </div>
+          <div class="note__list" id="remedyNoteList">
+          <table>
+            <caption class="sr">Tờ ghi đơn thuốc chén</caption>
+            <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-act"></colgroup>
+            <thead><tr>
+              <th class="c-num" scope="col">STT</th>
+              <th scope="col">Tên</th>
+              <th class="num" scope="col">SL (gram)</th>
+              <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
+            </tr></thead>
+            <tbody id="remedyNoteBody"></tbody>
+          </table>
+          </div>
+          <div class="tw note__pending">
+            <table class="ord">
+              <caption class="sr">Dòng đang nhập vị thuốc cho đơn thuốc chén</caption>
+              <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-act"></colgroup>
+              <thead><tr>
+                <th class="c-num" scope="col">STT</th>
+                <th scope="col">Tên</th>
+                <th class="c-qty num" scope="col">SL (gram)</th>
+                <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
+              </tr></thead>
+              <tbody id="remedyBody" class="pend"></tbody>
+              <tfoot id="remedyNoteFoot" hidden><tr><td></td><td class="b">1 thang</td><td class="num b txt-brand" id="remedyNoteTotal">0 g</td><td></td></tr></tfoot>
+            </table>
+          </div>
+          <div class="foot" id="remedyNotePager" hidden></div>
+          <div class="note__foot">
+            <div class="note__row">
+              <span class="inline-row">
+                <input class="inp inp--sm inp--num w-70" id="remedyThang" type="number" step="1" min="1" max="10000" inputmode="numeric" value="1" aria-label="Số thang">
+                <span class="note__lbl" aria-hidden="true">thang ×</span>
+                <input class="inp inp--sm inp--num w-120" id="remedyUnitPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá 1 thang" title="Giá 1 thang">
+              </span>
+              <span class="b txt-brand note__eq" aria-hidden="true">=</span>
+              <span class="b txt-brand num" id="remedyTotal" aria-live="polite">0</span>
+            </div>
+            <input class="inp inp--sm note__name" id="remedyName" type="text" autocomplete="off" placeholder="Tên đơn mới" aria-label="Tên đơn mới" maxlength="200" hidden>
+            <div class="note__row note__row--btns">
+              <button class="btn btn--sm btn--danger" type="button" data-action="del-preset" id="remedyDelPreset" hidden>
+                <svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg>Xóa đơn
+              </button>
+              <button class="btn btn--sm" type="button" data-action="save-preset" id="remedySavePreset">
+                <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="remedySaveLabel">Lưu đơn</span>
+              </button>
+              <button class="btn btn--primary" type="button" data-action="save-remedy" data-keep-focus>
+                <svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg>Bán đơn
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="note" id="remedyPresetBox">
+          <div class="note__head"><span>Đơn đã lưu</span></div>
+          <div class="rp-rows" id="remedyPresetRows"></div>
+          <div class="foot" id="remedyPresetPager"></div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <details class="card mt-18" id="nhapBox">
+    <summary class="card__head sr-summary">
+      <svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>
+      <h2 class="card__title">Nhập hàng</h2>
+    </summary>
+    <form class="card__body" id="nhapForm" novalidate>
+      <div class="card__bar">
+        <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-blue" aria-hidden="true"><use href="#i-cart"/></svg>Nhập hàng</span>
+        <div class="sug card__bar-search">
+          <input class="inp" id="nhapSearch" type="text" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để nhập" maxlength="200" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="nhapList">
+          <div class="sug__list" id="nhapList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
+        </div>
+      </div>
+      <div class="note" id="nhapListBox">
+        <div class="note__head"><span>Tờ ghi<span class="nh-d"> nhập hàng</span></span><span id="nhapListCount"></span><span class="nh-q">SL (kg)</span><span class="nh-m">Giá nhập</span></div>
+        <table>
+          <caption class="sr">Danh sách vị thuốc chờ nhập</caption>
+          <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
+          <thead><tr>
+            <th class="c-num" scope="col">STT</th>
+            <th scope="col">Tên</th>
+            <th class="c-qty num" scope="col">SL (kg)</th>
+            <th class="c-money num" scope="col">Giá nhập</th>
+            <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
+          </tr></thead>
+          <tbody id="nhapListBody"></tbody>
+        </table>
+        <div class="tw note__pending">
+          <table class="ord">
+            <caption class="sr">Dòng đang nhập hàng</caption>
+            <colgroup><col class="cg-num"><col class="cg-name"><col class="cg-qty"><col class="cg-money"><col class="cg-act"></colgroup>
+            <thead><tr>
+              <th class="c-num" scope="col">STT</th>
+              <th scope="col">Tên</th>
+              <th class="c-qty num" scope="col">SL (kg)</th>
+              <th class="c-money num" scope="col">Giá nhập (k/kg)</th>
+              <th class="c-del" scope="col"><span class="sr">Thêm vào tờ ghi</span></th>
+            </tr></thead>
+            <tbody id="nhapPendingBody" class="pend"><tr class="is-row">
+              <td class="c-num num muted"></td>
+              <td><span id="nhapPendName" class="nhap-pend__name is-muted">Chọn vị thuốc ở ô trên</span> <span class="note__tot nhap-pend__tot">Giá nhập <b class="txt-blue num" id="nhapTotal">0</b></span><p class="hint nhap-hint" id="nhapHint" hidden></p></td>
+              <td class="c-qty" data-label="SL (kg)"><input class="inp inp--sm inp--num" id="nhapQty" type="number" step="any" min="0" max="1000000" inputmode="decimal" placeholder="0" aria-label="Số lượng (kg)"></td>
+              <td class="c-money" data-label="Giá nhập (k/kg)"><input class="inp inp--sm inp--num" id="nhapPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal" placeholder="0" aria-label="Giá nhập (k/kg)"></td>
+              <td class="c-del"><button type="button" class="btn btn--primary nhap-add" data-action="nhap-add" data-keep-focus aria-label="Thêm vào tờ ghi" title="Thêm vào tờ ghi"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button></td>
+            </tr></tbody>
+            <tfoot id="nhapListFoot" hidden><tr><td></td><td class="b">Tổng</td><td></td><td class="num b r txt-blue" id="nhapListTotal">0</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <div class="note__foot">
+          <span class="nhap-foot__tot">Tổng tiền nhập (nghìn): <b id="nhapFootTot">0</b></span>
+          <button class="btn btn--dark" type="submit" data-keep-focus>
+            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span id="nhapSaveLabel">Lưu nhập hàng</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </details>
+  <div class="grid2 mt-18">
+    <details class="card" id="chartBox">
+      <summary class="card__head chart-head">
+        <svg class="ico txt-brand" aria-hidden="true"><use href="#i-chart-col"/></svg>
+        <h2 class="card__title">Thống kê</h2>
+        <span class="chart-head__stats">
+          <span class="chart-head__c"><span class="stat__k">Nhập trong tháng</span><span class="stat__v" id="statImport">0</span></span>
+          <span class="chart-head__c"><span class="stat__k">Tổng tồn kho</span><span class="stat__v" id="statStock">0g</span></span>
+        </span>
+      </summary>
+      <div class="card__body" tabindex="-1">
+        <div class="thk"><div class="thk__h"><h3 class="thk__t">Thống kê (nghìn đồng)</h3><div class="thk__r"><div class="thk__m" role="group" aria-label="Xem theo"><button type="button" id="chartModeY" aria-pressed="false">Năm</button><button type="button" id="chartModeM" aria-pressed="false">Tháng</button><button type="button" id="chartModeD" class="on" aria-pressed="true">Ngày</button></div><div class="thk__y"><button type="button" class="btn btn--icon" id="chartPrev" aria-label="Năm trước">‹</button><span id="chartYrK">Tháng</span><b id="chartYrL" aria-live="polite"></b><button type="button" class="btn btn--icon" id="chartNext" aria-label="Năm sau" disabled>›</button></div></div></div></div>
+        <div class="chart-scroll"><canvas class="chart" id="statsChart" role="img" aria-label="Biểu đồ cột so sánh tổng nhập và tổng bán theo từng tháng"></canvas></div>
+        <div class="chart-tip" id="chartTip" aria-live="polite">
+          <span class="chart-tip__m" id="chartMonth" aria-hidden="true">--/----</span>
+          <span class="chart-chip chart-chip--imp" id="chartImpChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Nhập</span><b class="chart-chip__v" id="chartImpVal">0</b></span>
+          <span class="chart-chip chart-chip--exp" id="chartExpChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Bán</span><b class="chart-chip__v" id="chartExpVal">0</b></span>
+          <span class="chart-chip chart-chip--prf" id="chartPrfChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Lợi nhuận</span><b class="chart-chip__v" id="chartPrfVal">0</b></span>
+          <span class="chart-chip chart-chip--stk" id="chartStkChip" aria-hidden="true"><i class="chart-chip__sw"></i><span class="chart-chip__k">Tổng tồn kho</span><b class="chart-chip__v" id="chartStkVal">0g</b></span>
+          <span class="sr" id="chartTipSr"></span>
+        </div>
+      </div>
+    </details>
+
+    <details class="card" id="invBox">
+      <summary class="card__head sr-summary">
+        <svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>
+        <h2 class="card__title">Kho tồn</h2>
+      </summary>
+      <div class="card__body">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-warehouse"/></svg>Kho tồn</span>
+          <div class="sug card__bar-search">
+            <input class="inp" id="invSearch" type="search" autocomplete="off" placeholder="Nhập tên" aria-label="Tìm vị thuốc để lọc kho" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="invList">
+            <div class="sug__list" id="invList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
+          </div>
+          <button class="btn btn--sm inv-chip" id="invLowBtn" type="button" data-action="inv-low" aria-pressed="false" aria-label="Gần hết" title="Gần hết (còn từ 0 đến 1 kg)"><svg class="ico" aria-hidden="true"><use href="#i-warn"/></svg><span class="inv-chip__l">Gần hết</span><span class="inv-chip__n" id="invLowN">0</span></button>
+          <button class="btn btn--sm inv-chip" id="invOutBtn" type="button" data-action="inv-out" aria-pressed="false" aria-label="Hết hàng" title="Hết hàng (tồn 0 hoặc âm)"><svg class="ico" aria-hidden="true"><use href="#i-ban"/></svg><span class="inv-chip__l">Hết hàng</span><span class="inv-chip__n" id="invOutN">0</span></button>
+          <button class="btn btn--sm card__bar-btn" id="invRecBtn" type="button" data-action="reconcile" aria-label="Đối chiếu tồn kho" title="Đối chiếu tồn kho">
+            <svg class="ico" aria-hidden="true"><use href="#i-swap"/></svg><span class="inv-dot" id="invRecN" hidden></span>
+          </button>
+          <span class="hint card__bar-count" id="invCount"></span>
+        </div>
+        <div class="tw">
+          <table class="inv">
+            <caption class="sr">Tồn kho hiện tại</caption>
+            <thead><tr>
+              <th scope="col">Tên</th>
+              <th class="num" scope="col">Tồn kho</th>
+              <th class="num" scope="col">Đã bán</th>
+              <th class="num" scope="col">Giá nhập</th>
+              <th scope="col" class="c-del"><span class="sr">Thao tác</span></th>
+            </tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+        <div class="foot" id="invPager"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="grid2 mt-18">
+    <details class="card" id="impBox">
+      <summary class="card__head sr-summary">
+        <svg class="ico txt-blue" aria-hidden="true"><use href="#i-inbox"/></svg>
+        <h2 class="card__title">Lịch sử nhập hàng</h2>
+      </summary>
+      <div class="card__body">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-blue" aria-hidden="true"><use href="#i-inbox"/></svg>Lịch sử nhập</span>
+          <div class="sug card__bar-search is-inline">
+            <input class="inp inp--sm" id="impSearch" type="text" autocomplete="off" placeholder="Nhập tên" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="impSearchList" aria-label="Tìm tên vị thuốc trong lịch sử nhập">
+            <div class="sug__list" id="impSearchList" role="listbox" aria-label="Gợi ý vị thuốc" hidden></div>
+          </div>
+          <button class="btn btn--sm" id="impReadAll" type="button" data-action="unread-all" data-kind="NHAP" hidden>Đọc hết</button>
+          <span class="hint card__bar-count" id="impCount"></span>
+        </div>
+        <div class="tw">
+          <table class="his">
+            <caption class="sr">Lịch sử nhập hàng</caption>
+            <thead><tr>
+              <th scope="col">Ngày</th>
+              <th scope="col">Vị thuốc</th>
+              <th class="num" scope="col">SL</th>
+              <th class="num" scope="col">Đơn giá</th>
+              <th class="num" scope="col">Thành tiền</th>
+              <th scope="col" class="c-act"><span class="sr">Thao tác</span></th>
+            </tr></thead>
+            <tbody id="impBody"></tbody>
+          </table>
+        </div>
+        <div class="foot" id="impPager"></div>
+      </div>
+    </details>
+
+    <details class="card" id="expBox">
+      <summary class="card__head sr-summary">
+        <svg class="ico txt-green" aria-hidden="true"><use href="#i-outbox"/></svg>
+        <h2 class="card__title">Lịch sử bán hàng</h2>
+      </summary>
+      <div class="card__body">
+        <div class="card__bar">
+          <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-green" aria-hidden="true"><use href="#i-outbox"/></svg>Lịch sử bán</span>
+          <div class="monthfield card__bar-month">
+            <input class="inp inp--sm" id="expMonth" type="text" inputmode="numeric" autocomplete="off" placeholder="mm/yyyy" maxlength="7" aria-label="Lọc theo tháng (mm/yyyy)">
+            <svg class="ico monthfield__ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+            <input class="monthfield__native" id="expMonthNative" type="month" tabindex="-1" aria-label="Chọn tháng từ lịch">
+          </div>
+          <input class="inp inp--sm card__bar-search" id="expSearch" type="text" autocomplete="off" placeholder="Nhập tên" maxlength="200" aria-label="Tìm theo tên vị thuốc">
+          <button class="btn btn--sm" id="expReadAll" type="button" data-action="unread-all" data-kind="BAN" hidden>Đọc hết</button>
+          <span class="hint card__bar-count" id="expCount"></span>
+        </div>
+        <div class="tw">
+          <table class="his">
+            <caption class="sr">Lịch sử bán hàng</caption>
+            <thead><tr>
+              <th scope="col">Ngày</th>
+              <th scope="col">Vị thuốc</th>
+              <th class="num" scope="col">SL</th>
+              <th class="num" scope="col">Đơn giá</th>
+              <th class="num" scope="col">Thành tiền</th>
+              <th scope="col" class="c-act"><span class="sr">Thao tác</span></th>
+            </tr></thead>
+            <tbody id="expBody"></tbody>
+          </table>
+        </div>
+        <div class="foot" id="expPager"></div>
+      </div>
+    </details>
+  </div>
+
+  <details class="card mt-18" id="backupBox">
+    <summary class="card__head sr-summary">
+      <svg class="ico txt-brand" aria-hidden="true"><use href="#i-drive"/></svg>
+      <h2 class="card__title">Sao lưu &amp; khôi phục</h2>
+    </summary>
+    <div class="card__bar">
+      <span class="card__bar-title" aria-hidden="true"><svg class="ico txt-brand" aria-hidden="true"><use href="#i-drive"/></svg>Sao lưu &amp; khôi phục</span>
+      <span class="hint card__bar-count" id="backupHint">Chưa sao lưu</span>
+    </div>
+    <div class="card__body">
+      <section class="bak-sec">
+        <h3 class="bak-sec__t">File sao lưu trên máy này</h3>
+        <div class="bak-dir" hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span class="bak-dir__p">Thư mục sao lưu: data\luu-tru</span>
+          <button class="btn" type="button" data-action="open-backup-dir" hidden>Mở thư mục</button>
+        </div>
+        <p class="hint" id="backupLast">Chưa có bản sao lưu nào.</p>
+        <div class="bak-actions mt-10">
+          <button class="btn btn--primary" type="button" data-action="backup-now">
+            <svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Sao lưu ngay
+          </button>
+          <button class="btn bak-restore" type="button" data-action="restore-file">
+            <svg class="ico" aria-hidden="true"><use href="#i-cloud-down"/></svg>Khôi phục từ file…
+          </button>
+          <input type="file" id="restoreInput" accept=".json,application/json" hidden>
+          <span class="hint">Khôi phục thay thế toàn bộ dữ liệu, kể cả trên máy chủ.</span>
+        </div>
+        <label class="chk mt-10" for="autoBackup">
+          <input type="checkbox" id="autoBackup" checked>
+          <span>Tự sao lưu mỗi ngày khi mở trang</span>
+        </label>
+      </section>
+      <section class="bak-sec">
+        <div class="bak-sec__bar">
+          <h3 class="bak-sec__t">Bản sao lưu trên máy chủ</h3>
+          <button class="btn btn--icon" type="button" id="bakRefresh" data-action="bak-refresh" aria-label="Làm mới danh sách" title="Làm mới"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div id="bakList" role="list"><p class="hint bak-empty" role="none">Đang tải…</p></div><p class="sr" id="bakStat" role="status"></p>
+        <div class="bak-pg" id="bakPager"></div>
+        <p class="hint bak-note">Chỉ xem. Khôi phục: dừng máy chủ, chép đè data/app.db, xóa app.db-wal và app.db-shm nếu có, rồi khởi động lại (xem README).</p>
+        <div id="closeBox" class="mt-10" hidden>
+          <h3 class="bak-sec__t">Chốt sổ năm</h3>
+          <div id="arcList"></div>
+          <button class="btn" type="button" data-action="close-preview" id="closeBtn" hidden>Chốt sổ…</button>
+          <button class="btn" type="button" data-action="guide-open" id="closeGuideBtn" hidden>Hướng dẫn chốt sổ</button>
+          <div id="closeOut"></div>
+        </div>
+      </section>
+    </div>
+  </details>
+</main>
+
+<dialog class="dlg" id="editDlg" aria-labelledby="editTitle">
+  <div class="card dlg__card">
+    <div class="card__head">
+      <svg class="ico txt-brand" aria-hidden="true"><use href="#i-edit"/></svg>
+      <h2 class="card__title" id="editTitle">Chỉnh sửa vị thuốc</h2>
+    </div>
+    <div class="card__body">
+      <input type="hidden" id="editId">
+      <div class="field">
+        <label class="lbl" for="editName">Tên vị thuốc</label>
+        <input class="inp" id="editName" type="text" autocomplete="off" maxlength="200" required>
+      </div>
+      <div class="field mt-12">
+        <label class="lbl" for="editPrice">Giá nhập (k/kg)</label>
+        <input class="inp inp--num" id="editPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal">
+      </div>
+    </div>
+    <div class="card__foot dlg__foot">
+      <button class="btn" type="button" data-action="close-edit">Hủy</button>
+      <button class="btn btn--primary" type="button" data-action="save-edit">Lưu thay đổi</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg dlg--wide" id="recDlg" aria-labelledby="recTitle">
+  <div class="card dlg__card">
+    <div class="card__head">
+      <svg class="ico txt-brand" aria-hidden="true"><use href="#i-swap"/></svg>
+      <h2 class="card__title" id="recTitle">Đối chiếu tồn kho với lịch sử</h2>
+    </div>
+    <div class="card__body">
+      <p class="hint" id="recHint"></p>
+      <div class="tw mt-12">
+        <table>
+          <caption class="sr">Các vị thuốc có tồn lệch với lịch sử</caption>
+          <thead><tr>
+            <th scope="col">Vị thuốc</th>
+            <th class="num" scope="col">Tồn hiện tại</th>
+            <th class="num" scope="col">Theo lịch sử</th>
+            <th class="num" scope="col">Chênh</th>
+            <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
+          </tr></thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card__foot dlg__foot">
+      <button class="btn" type="button" data-action="close-rec">Đóng</button>
+      <button class="btn btn--primary" type="button" data-action="rec-fix-all" id="recFixAll">Áp dụng tất cả</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg dlg--wide" id="guideDlg" aria-labelledby="guideTitle">
+  <div class="card dlg__card">
+    <div class="card__head">
+      <svg class="ico txt-brand" aria-hidden="true"><use href="#i-drive"/></svg>
+      <h2 class="card__title" id="guideTitle">Chốt sổ năm (theo năm âm lịch)</h2>
+    </div>
+    <div class="card__body">
+      <p>Chốt sổ làm gì:</p>
+      <ul>
+        <li>Gỡ giao dịch cũ khỏi app. App chỉ giữ năm sổ hiện tại và năm sổ trước (mỗi năm sổ tính từ Tết đến hết tháng Chạp).</li>
+        <li>Mỗi vị thuốc còn tồn tại mốc chốt có thêm 1 dòng "Tồn đầu kỳ" (không hiện trong Lịch sử nhập), giữ đúng số tồn và giá vốn.</li>
+        <li>Doanh thu, lợi nhuận các tháng cũ vẫn có trong Thống kê (xem theo Tháng hoặc Năm).</li>
+        <li>Toàn bộ giao dịch bị gỡ được lưu vào file lưu trữ trên máy chủ.</li>
+      </ul>
+      <p>Khi nào: mỗi năm 1 lần, sau Tết. Lần đầu có dữ liệu để gỡ là sau Tết 26/01/2028.</p>
+      <p>Trước khi chốt:</p>
+      <ol>
+        <li>Các máy khác không đang nhập dở; chấm đồng bộ trên các máy màu xanh.</li>
+        <li>Kho tồn → Đối chiếu: không còn vị lệch tồn. Nếu còn lệch, app sẽ chặn chốt.</li>
+        <li>Bấm "Sao lưu ngay" để có thêm 1 bản dự phòng.</li>
+      </ol>
+      <p>Các bước:</p>
+      <ol>
+        <li>Bấm "Chốt sổ…", giữ ngày app đề xuất (ngày cuối năm âm vừa hết) → OK.</li>
+        <li>Đọc bản xem trước (hiện ngay dưới nút): mốc chốt, số giao dịch bị gỡ, tồn tại mốc và giá vốn từng vị. Thấy gì bất thường thì DỪNG, không chốt. Có dòng chữ đỏ (ví dụ "Chưa có gì để chốt") thì nút chạy bị khóa.</li>
+        <li>Gõ đúng chữ app yêu cầu (CHOT kèm năm) vào ô, bấm "Chốt sổ", rồi xác nhận.</li>
+        <li>Xong thì tải file lưu trữ về máy (nút "Tải luu-tru-truoc-….json" ở mục Chốt sổ năm này), cất thêm 1 bản ở nơi khác (USB hoặc đám mây). Máy nào báo "Sổ đã chốt…, hãy Tải lại" thì tải lại app.</li>
+      </ol>
+      <p>Kiểm sau khi chốt:</p>
+      <ul>
+        <li>Kho tồn: số tồn từng vị không đổi.</li>
+        <li>Thống kê: các tháng cũ không đổi.</li>
+      </ul>
+      <p>Nếu có sai:</p>
+      <ul>
+        <li>Không chốt thêm lần nữa.</li>
+        <li>Nhờ người kỹ thuật khôi phục bản sao lưu "truoc-chot" trên máy chủ.</li>
+        <li>Không khôi phục từ file sao lưu cũ hơn mốc chốt: máy chủ sẽ từ chối.</li>
+      </ul>
+    </div>
+    <div class="card__foot dlg__foot">
+      <button class="btn" type="button" data-action="guide-close">Đóng</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="txDlg" aria-labelledby="txEditTitle">
+  <div class="card dlg__card">
+    <div class="card__head">
+      <svg class="ico txt-brand" aria-hidden="true"><use href="#i-edit"/></svg>
+      <h2 class="card__title" id="txEditTitle">Sửa giao dịch</h2>
+    </div>
+    <div class="card__body">
+      <div class="field">
+        <label class="lbl" for="txEditName">Vị thuốc</label>
+        <input class="inp" id="txEditName" type="text" readonly>
+      </div>
+      <p class="hint mt-10" id="txEditMeta"></p>
+      <div class="grid2 mt-12 gap-12">
+        <div class="field">
+          <label class="lbl" for="txEditQty" id="txEditQtyLbl">Số lượng (kg)</label>
+          <input class="inp inp--num" id="txEditQty" type="number" step="any" min="0" inputmode="decimal">
+        </div>
+        <div class="field" id="txEditPriceField">
+          <label class="lbl" for="txEditPrice">Đơn giá (k/kg)</label>
+          <input class="inp inp--num" id="txEditPrice" type="number" step="any" min="0" max="1000000000" inputmode="decimal">
+        </div>
+      </div>
+      <div class="hintbox mt-12">
+        <span class="lbl lbl--flat">Thành tiền</span>
+        <span class="b txt-brand num" id="txEditTotal">0</span>
+      </div>
+    </div>
+    <div class="card__foot dlg__foot">
+      <button class="btn" type="button" data-action="close-tx">Hủy</button>
+      <button class="btn btn--primary" type="button" data-action="save-tx">Lưu thay đổi</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg dlg--wide" id="orderDlg" aria-labelledby="orderTitle">
+  <div class="card dlg__card">
+    <div class="card__head">
+      <svg class="ico txt-green" aria-hidden="true"><use href="#i-receipt"/></svg>
+      <h2 class="card__title" id="orderTitle">Chi tiết đơn</h2>
+    </div>
+    <div class="card__body">
+      <p class="hint" id="orderMeta"></p>
+      <div class="note mt-12" id="orderNote">
+        <div class="note__head"><span id="orderNoteTitle">Tờ ghi đơn</span><span id="orderNotePg"></span></div>
+        <table>
+          <caption class="sr">Các vị thuốc trong đơn</caption>
+          <thead><tr>
+            <th class="c-num" scope="col">STT</th>
+            <th scope="col">Tên</th>
+            <th class="num" scope="col" id="orderQtyHead">SL</th>
+            <th class="num" scope="col" id="orderPriceHead" hidden>Đơn giá</th>
+            <th class="num" scope="col" id="orderMoneyHead" hidden>Thành tiền</th>
+            <th class="c-act" scope="col"><span class="sr">Thao tác</span></th>
+          </tr></thead>
+          <tbody id="orderBody"></tbody>
+          <tfoot><tr>
+            <td colspan="2" id="orderFootLabel">Tổng cộng</td>
+            <td class="num txt-green" id="orderFootQty">0</td>
+            <td class="num txt-green r" id="orderFootPrice" hidden></td>
+            <td class="num txt-green r" id="orderFootMoney" hidden>0</td>
+            <td class="c-act"></td>
+          </tr></tfoot>
+        </table>
+        <div class="foot" id="orderPager" hidden></div>
+      </div>
+      <div class="hintbox mt-12" id="orderParams" hidden>
+        <div class="inline-row">
+          <span class="lbl lbl--flat">Số thang</span>
+          <span class="b num" id="orderThang">—</span>
+        </div>
+        <span class="b txt-brand" aria-hidden="true">×</span>
+        <div class="inline-row">
+          <span class="lbl lbl--flat">Giá 1 thang</span>
+          <span class="b num" id="orderUnitPrice">—</span>
+        </div>
+        <span class="b txt-brand" aria-hidden="true">=</span>
+        <div class="inline-row">
+          <span class="lbl lbl--flat">Thành tiền</span>
+          <span class="b txt-brand num" id="orderTotal">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="card__foot dlg__foot">
+      <button class="btn" type="button" data-action="close-order">Đóng</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="ico toast__ok" aria-hidden="true"><use href="#i-check"/></svg>
+  <svg class="ico toast__warn" aria-hidden="true"><use href="#i-warn"/></svg>
+  <span id="toastMsg">Đã lưu</span>
+</div>
+<script>
+%%APP%%</script>
+</body>
+</html>

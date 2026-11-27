@@ -1,17 +1,11 @@
 /**
- * Lint phần JS client nhúng trong PAGE. Có cảnh báo thì thoát mã 1 (chặn CI từ 2.38.31).
+ * Lint thẳng src/app.js (JS client). Có cảnh báo thì thoát mã 1 (chặn CI từ 2.38.31).
  * Chạy: node scripts/lint-client.mjs
  */
 import { Linter } from 'eslint';
-import { PAGE } from '../src/page.js';
+import { readFileSync } from 'node:fs';
 
-const blocks = [...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
-let code = blocks.find(b => b.includes('var doc = document;'));
-if (!code) {
-  console.error('Không tìm thấy script client trong PAGE.');
-  process.exit(1);
-}
-code = code.replace(/%%BOOT%%/g, 'null').replace(/%%NEEDFETCH%%/g, 'false');
+const code = readFileSync(new URL('../src/app.js', import.meta.url), 'utf8');
 
 const browserGlobals = {
   window: 'readonly', document: 'readonly', console: 'readonly', localStorage: 'readonly',

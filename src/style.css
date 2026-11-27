@@ -1,0 +1,864 @@
+*,*::before,*::after{box-sizing:border-box}
+:root{
+color-scheme:light;
+--bg:#e3dad5;--surface:#f6f2ef;--surface2:#e9e2de;--border:#d8ccc7;--border2:#e4dad6;
+--text:#1e293b;--text2:#475569;--muted:#5b6b81;
+--brand:#4f46e5;--brand-text:#4338ca;--brand-soft:#e8ebf8;
+--green-text:#047857;--tab-ico:#047857;
+--amber:#b45309;--amber-soft:#fbf5e6;--amber-text:#b45309;
+--red:#be123c;--red-soft:#f8e7ea;--red-text:#be123c;
+--blue-text:#1d4ed8;
+--r:14px;--r-sm:10px;
+--sh:inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(15,23,42,.06),0 4px 10px rgba(15,23,42,.06),0 14px 28px rgba(15,23,42,.05);
+--glass:var(--surface);
+--chart-imp:#5b5fd0;--chart-exp:#2f9e76;
+--ring:0 0 0 3px rgba(79,70,229,.30);
+}
+html{-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(40% 40% at 82% 16%,rgba(217,152,171,.48),transparent),radial-gradient(45% 45% at 10% 88%,rgba(126,167,138,.43),transparent),radial-gradient(38% 38% at 45% 42%,rgba(220,200,149,.48),transparent),radial-gradient(40% 40% at 88% 85%,rgba(140,178,174,.39),transparent),radial-gradient(32% 32% at 8% 14%,rgba(219,165,180,.35),transparent),radial-gradient(36% 30% at 55% 95%,rgba(164,194,171,.35),transparent),linear-gradient(135deg,#e6d8d1,#d3ddd4)}
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;src:url(/inter.woff2) format("woff2")}
+body{margin:0;background:var(--bg);color:var(--text);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,"Segoe UI",sans-serif;
+padding-bottom:48px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+[hidden]{display:none!important}
+h1,h2,p{margin:0}
+a{color:var(--brand-text)}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ico{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.18em}
+.skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--surface);color:var(--text);padding:10px 16px;border-radius:0 0 10px 0}
+.skip:focus{left:0}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+/* ---------- layout ---------- */
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.top{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--border)}
+.bar{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;min-height:60px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-.01em;background:none;border:0;padding:0;font-family:inherit;cursor:pointer}
+.brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.brand__yin{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:10px;background:none;color:var(--brand-text)}
+.brand__yin .ico{width:24px;height:24px}
+.bar__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sync-badge{max-width:min(440px,72vw);margin:0;padding:6px 10px;border-radius:12px;
+border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber-text);
+font:inherit;font-size:12px;font-weight:700;line-height:1.35;text-align:left;white-space:pre-line;cursor:default}
+.sync-discard{max-width:min(280px,70vw);white-space:normal;line-height:1.3}
+.main{padding:18px 0 0}
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 14px;
+border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);
+font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(15,23,42,.07);
+transition:background .15s,border-color .15s,color .15s}
+.btn:hover{background:var(--surface2)}
+.btn:active{transform:translateY(1px)}
+.btn--primary{background:#4f46e5;border-color:#4f46e5;color:#fff}
+.btn--primary:hover{background:#4338ca;border-color:#4338ca}
+.btn--green{background:#047857;border-color:#047857;color:#fff}
+.btn--green:hover{background:#065f46;border-color:#065f46}
+.btn--dark{background:#334155;border-color:#334155;color:#fff}
+.btn--dark:hover{background:#1e293b;border-color:#1e293b}
+.btn--icon{min-width:38px;min-height:38px;padding:6px}
+.btn--sm{min-height:34px;padding:5px 11px;font-size:13px}
+.btn--danger{color:var(--red-text);background:transparent;border-color:transparent;box-shadow:none}
+.btn--danger:hover{background:var(--red-soft)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+/* ---------- menu ---------- */
+.menu__item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;background:transparent;
+color:var(--text);border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
+.menu__item:hover{background:var(--surface2)}
+/* ---------- row action menu (···) ---------- */
+.rowmenu{position:static;display:inline-flex}
+.rowmenu__list{position:fixed;z-index:120;min-width:180px;background:var(--surface);
+border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px rgba(15,23,42,.18);padding:6px}
+.menu__item--danger{color:var(--red-text)}
+.menu__item--danger:hover{background:var(--red-soft);color:var(--red-text)}
+/* ---------- cards ---------- */
+.card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.card__head{display:flex;align-items:center;gap:10px;padding:13px 16px;flex-wrap:wrap}
+.card__title{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.card__body{padding:16px}
+.card__foot{padding:13px 16px;border-top:1px solid var(--border2)}
+details>.card__head{cursor:pointer;list-style:none;user-select:none}
+details>.card__head::-webkit-details-marker{display:none}
+details[open]>.card__head{border-bottom:1px solid var(--border2)}
+details>.card__head:hover{background:var(--surface2)}
+/* ---------- stats ---------- */
+/* 2.11.0: dải số liệu mỏng (2 nửa) và ô số trong Thống kê; không biểu tượng. */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;background:var(--glass);
+border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--sh)}
+.thk{display:none}
+.stats__c{padding:6px 12px;min-width:0}
+.stats__c+.stats__c{border-left:1px solid var(--border2)}
+.stat__k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.2}
+.stat__v{font-size:16px;font-weight:800;letter-spacing:-.02em;margin-top:1px;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat__sub{font-size:10px;color:var(--muted);margin-top:1px;line-height:1.3}
+.stat__sub b{color:var(--text2);font-weight:700;font-variant-numeric:tabular-nums}
+.stat__sub span+span::before{content:"· "}
+/* 2.38.0: desktop — thẻ Bán/Lợi nhuận tháng nằm trong thanh bên, dưới logo, trên tab (ngoài khối desktop vì trần 20736 B) */
+html.desktop{--sth:216px}
+html.desktop .stats__c{padding:12px 14px}
+html.desktop .stat__sub{margin-top:3px}
+@media (min-height:641px){
+html.desktop .stats .stats__c{display:flex;flex-direction:column;justify-content:center;padding:8px 10px}
+html.desktop .stats .stat__k{font-size:12px;line-height:1.2}
+html.desktop .stats .stat__v{font-size:22px;line-height:1.15;margin-top:5px}
+html.desktop .stats .stat__sub{font-size:13px;line-height:1.3;margin-top:4px}
+}
+html.desktop .stats{grid-area:1/1/3/2;align-self:start;grid-template-columns:minmax(0,1fr);grid-template-rows:1fr 1fr;height:var(--sth);margin:52px 10px 0;z-index:1}
+html.desktop .stats__c+.stats__c{border-left:0;border-top:1px solid var(--border2)}
+html.desktop .stat__sub span{display:block}
+html.desktop .stat__sub span+span::before{content:none}
+@media (max-width:600px){
+.stats__c{padding:6px 10px}
+.stat__sub span{display:block}
+.stat__sub span+span::before{content:none}
+}
+/*@@tach-style@@*/
+/* ---------- forms ---------- */
+.lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.inp{width:100%;min-height:42px;padding:9px 12px;border-radius:var(--r-sm);border:1px solid var(--border);
+background:var(--surface);color:var(--text);font:inherit;font-size:14px}
+.inp::placeholder{color:var(--muted);opacity:.85}
+.inp:focus{outline:none;border-color:var(--brand);box-shadow:var(--ring)}
+.inp--sm{min-height:36px;padding:6px 9px;font-size:13px;border-radius:8px}
+.inp--num{text-align:right;font-variant-numeric:tabular-nums}
+/* Ẩn mũi tên spin của mọi input number (desktop) — mobile vẫn nhập số qua bàn phím */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+select.inp{cursor:pointer}
+.datefield,.monthfield{position:relative}
+.monthfield .inp{padding-right:32px}
+.monthfield__ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.monthfield__ico{width:15px;height:15px;right:9px}
+.monthfield__native{position:absolute;right:0;top:0;height:100%;opacity:0;border:0;padding:0;cursor:pointer}
+.monthfield__native{width:30px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+/* ---------- table ---------- */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+font-weight:700;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:5px 8px;vertical-align:middle}
+/* 2.38.30 (W): mỗi ranh giới đúng 1 vạch liền — ngăn dòng = vạch TRÊN dòng sau, đặt trên tr (không trên td: ô lưới có khe làm vạch đứt); dòng cuối không có vạch chân, khu bên dưới (Tổng, chân, phân trang) tự có vạch trên. */
+tbody tr+tr{border-top:1px solid var(--border2)}
+tbody tr:hover{background:var(--surface2)}
+.num{font-variant-numeric:tabular-nums}
+:is(td,th).num:not(.c-num){text-align:right} /* 2.39.8: mọi cột số (ô + tiêu đề) căn phải, một luật chung */
+.c-num{width:46px;text-align:center}
+.c-del{width:46px;text-align:center}
+.c-act{width:104px;text-align:center}
+.c-act .inline-row{justify-content:center;gap:4px}
+.c-qty{width:110px}
+.c-money{width:130px}
+/* 2.14.0 (giai đoạn 4, M3a): nút … Kho tồn 32px (hàng máy tính ≈43px); điện thoại 34px, vùng bấm ≥40 (::after). */
+table.inv td.c-del .btn--icon,table.his td.c-act .btn--icon{width:32px;min-width:32px;height:32px;min-height:32px;padding:0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.empty-cell{padding:22px 10px;text-align:center}
+.b{font-weight:700}
+.linkbtn{padding:0;border:0;background:transparent;color:var(--brand-text);font:inherit;font-weight:700;
+text-align:left;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.linkbtn:hover{color:var(--brand)}
+.txt-blue{color:var(--blue-text)}
+.txt-green{color:var(--green-text)}
+.txt-red{color:var(--red-text)}
+.txt-brand{color:var(--brand-text)}
+/* ---------- suggest ---------- */
+.sug{position:relative}
+.sug__list{position:absolute;z-index:40;left:0;right:0;top:calc(100% + 4px);max-height:288px;overflow:auto;
+background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+box-shadow:0 16px 36px rgba(15,23,42,.20);padding:4px}
+.sug__item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:8px 10px;
+border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:14px;cursor:pointer;text-align:left}
+.sug__item:hover,.sug__item[aria-selected=true]{background:var(--brand-soft)}
+.sug__name{font-weight:600;flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap}
+.sug__meta{font-size:12px;color:var(--muted);white-space:nowrap;flex:none}
+/* 2.17.8: điện thoại – khung gợi ý rộng bằng cả thanh thẻ, mỗi vị 1 dòng cao ~40px */
+@media (max-width:600px){.sug{position:static}.card__bar{position:relative}.sug__list{top:calc(100% + 2px)}.sug__item{padding:9px 10px;gap:8px}}
+.sug__empty{padding:10px;font-size:13px;color:var(--muted)}
+/* ---------- misc ---------- */
+.mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-18{margin-top:18px}
+.w-70{width:70px}.w-120{width:120px}
+.gap-12{gap:12px}
+.lbl--flat{margin:0}
+.inline-row{display:flex;align-items:center;gap:6px}
+.bak-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.chk{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
+.chk input{width:18px;height:18px;accent-color:var(--brand);cursor:pointer}
+.hintbox{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px}
+.hint{font-size:12px;color:var(--muted)}
+.pager{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pager__num{min-width:34px;justify-content:center}
+.pager__num[aria-current=page]{background:var(--brand);border-color:var(--brand);color:#fff}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+margin-top:14px;padding-top:13px;border-top:1px solid var(--border2)}
+.note{margin-top:12px;border:1px solid var(--border);border-radius:var(--r-sm);overflow-x:auto;overflow-y:hidden;background:var(--amber-soft);
+border-left:3px solid var(--red)}
+.note__head{display:flex;justify-content:space-between;gap:10px;padding:7px 12px;font-size:11px;font-weight:700;
+letter-spacing:.05em;text-transform:uppercase;color:var(--amber-text);border-bottom:1px solid var(--border)}
+.note td{height:34px;padding:4px 10px}/* 2.14.0 (giai đoạn 4, M6): hàng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) cao theo nội dung, không ép 34px; ô nhập block để đáy thẳng với nút +. Đặt SAU .note td (độ cụ thể cao hơn). Dòng đã thêm không đổi. */
+.note .note__pending tr.is-row>td{height:auto;vertical-align:bottom}
+.note tbody tr:hover{background:transparent}
+.note tfoot td{height:40px;font-weight:800}
+.note tfoot tr{border-top:1px solid var(--border)}
+.note .foot{margin:0;padding:8px 12px}
+.note .r{text-align:right}
+.chart{display:block;width:100%;height:300px;cursor:pointer}
+/* 2.13.2: đầu thẻ Thống kê có số liệu; ô năm một khung; dòng dữ liệu tháng + hai ô màu (màu = màu cột). */
+#chartBox>summary.chart-head{flex-wrap:wrap;row-gap:6px}
+.chart-head__stats{display:flex;gap:14px;margin-left:auto;align-items:center}
+.chart-head__c{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
+.chart-head__c>span{display:block}
+.chart-head__c .stat__v{font-size:15px;margin-top:0}
+.chart-tip{display:flex;margin-top:10px;min-height:28px;font-size:13px;color:var(--text2)}
+.chart-tip__m{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.chart-chip{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text)}
+.chart-chip__sw{display:inline-block;width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+.chart-chip--imp .chart-chip__sw{background:var(--chart-imp)}
+.chart-chip--exp .chart-chip__sw{background:var(--chart-exp)}
+.chart-chip__k{font-weight:600;color:var(--text2);min-width:2.2em}
+.chart-chip--prf,.chart-chip--stk{display:none}
+/* 2.15.0: chú giải tháng – mỗi dòng "[ô màu] Nhập  số tiền"; ô năm nằm cùng hàng tiêu đề Thống kê. */
+.chart-tip{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px}
+#chartBox>summary.chart-head .chart-head__stats{margin-left:0}
+@media (max-width:600px){
+#chartBox>summary.chart-head .chart-head__stats{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chart-head__c{align-items:flex-start}
+.chart-tip{gap:4px 10px}
+.chart-chip{gap:5px}
+.chart-chip__k{min-width:0}
+}
+/* ---------- toast ---------- */
+.toast{position:fixed;z-index:120;left:50%;bottom:22px;transform:translate(-50%,150%);
+opacity:0;visibility:hidden;
+display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);
+padding:11px 16px;border-radius:12px;background:#111827;color:#f8fafc;font-size:14px;font-weight:500;
+box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .26s ease,opacity .26s ease;pointer-events:none}
+.toast.is-on{transform:translate(-50%,0);opacity:1;visibility:visible}
+.toast .ico{color:#34d399}
+.toast[data-kind=error] .ico{color:#fbbf24}
+.toast .toast__warn{display:none}
+.toast[data-kind=error] .toast__warn{display:inline-block}
+.toast[data-kind=error] .toast__ok{display:none}
+/* N2 (2.13.0): điện thoại – thông báo hiện ở ĐẦU màn hình, dưới thanh header (kể cả safe-area), trượt từ trên xuống. Đặt SAU quy tắc gốc. */
+@media (max-width:600px){
+.toast{top:calc(env(safe-area-inset-top,0px) + 64px);bottom:auto;transform:translate(-50%,-150%)}
+}
+/* ---------- dialog ---------- */
+.dlg{border:0;padding:0;background:transparent;max-width:min(440px,calc(100% - 24px));width:100%;
+max-height:calc(100dvh - 24px);overflow:auto}
+.dlg::backdrop{background:rgba(10,15,26,.5)}
+.dlg__card{width:100%}
+.dlg--wide{max-width:min(640px,calc(100% - 24px))}
+.note td.num{white-space:nowrap}
+.dlg__foot{display:flex;justify-content:flex-end;gap:8px}
+/* N2: khung lỗi trong hộp thoại (role=alert), tạo bằng JS khi có toast lỗi lúc hộp thoại mở. */
+.dlg__err{margin:0 0 12px;padding:9px 12px;border-radius:10px;border:1px solid var(--red-text);background:var(--red-soft);color:var(--red-text);font-size:14px;font-weight:600;line-height:1.4}
+/* 2.14.0 (giai đoạn 1) Bán lẻ: tiêu đề là thanh (bar); summary ẩn trực quan nhưng còn tên truy cập; dòng nhập nằm trong tờ ghi. */
+#retailBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.card__bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border2)}
+.card__bar-title{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:15px;color:var(--text);margin-right:auto}
+.card__bar-title .ico{width:20px;height:20px}
+.card__bar-search{flex:1 1 220px;min-width:0;margin:0}
+.card__bar-date{flex:0 0 150px;min-width:0}
+.card__bar-date .inp{padding-right:34px}
+#retailNote table{table-layout:fixed;width:100%}
+#retailNote .note__pending thead{display:none}
+.note__foot{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border)}
+.note__tot{font-size:14px;color:var(--text2)}
+/* 2.14.0 N6: gợi ý đơn vị trong ô số lượng (chỉ hiển thị; không đổi giá trị). */
+.qty-host{position:relative;display:block}
+.qty-host>input{display:block}
+.qty-hint{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--muted);pointer-events:none;white-space:nowrap}
+/* 2.14.0 S2: hết chỗ trong ô → gợi ý lên dòng nhãn, mép phải (định vị theo td.c-qty); ngoài bảng thì ngay trên ô. Sau quy tắc gốc. */
+.qty-host.qty-host--lbl{position:static}
+.qty-hint.qty-hint--label{left:auto;right:0;top:0;transform:none;line-height:12px;background:transparent;text-align:right}
+.qty-hint.qty-hint--above{top:-14px}
+td.c-qty{position:relative}
+/* 2.14.0 S1: không còn padding-left cố định; JS đặt padding-left (class .has-hint) chỉ khi gợi ý đang hiện và còn đủ chỗ. */
+.note__tot b{font-size:16px}
+/* 2.14.0 (giai đoạn 2a) Thuốc chén: cùng mẫu Bán lẻ – summary ẩn, thanh tiêu đề, dòng nhập trong tờ ghi, chân một hàng. */
+#remedyBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.card__bar-preset{flex:1 1 180px;min-width:0}
+#remedyPresetBox,#remedyFindBox{display:none}
+#remedyNote .note__search{padding:8px 10px}
+#remedyNote table{table-layout:fixed;width:100%}
+#remedyNote .note__pending thead{display:none}
+.note__pending tr.is-empty{display:none}
+#remedyNote .note__foot{display:block;padding:8px 10px;border-top:1px solid var(--border)}
+.note__row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:flex-end}
+.note__row+.note__row{margin-top:8px}
+.note__row:first-child{justify-content:flex-start}
+.note__name{flex:1 1 160px;min-width:0}
+.note__lbl{font-size:13px;color:var(--text2)}
+/* 2.14.0 (giai đoạn 2b) Nhập hàng: thanh tiêu đề có tên + ô tìm; dòng đang nhập và tờ ghi luôn hiện; chân một hàng. */
+#nhapBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+#nhapListBox table{table-layout:fixed;width:100%}
+#nhapListBox .note__pending thead{display:none}
+.nhap-pend__name{font-weight:600;overflow-wrap:anywhere}
+.nhap-pend__name.is-muted{color:var(--muted);font-weight:400}
+.nhap-pend__tot{float:right;font-size:13px}
+.nhap-hint{font-size:11px;margin:4px 0 0;text-align:left}
+.nhap-foot__tot{display:none}
+#nhapListBox .note__pending .nhap-add{height:36px;min-height:36px;width:36px;min-width:36px;display:block;margin-left:auto}
+/* 2.14.0 (giai đoạn 4, M8): máy tính – nút + dòng đang nhập (Bán lẻ, Thuốc chén, Nhập hàng) 36×36 bằng ô inp--sm. Điện thoại ghi đè 44×44 ở khối ≤600px phía sau. */
+#nhapListBox .note__foot{margin-top:8px}
+/* 2.14.0 (giai đoạn 3): Kho tồn, Lịch sử nhập, Lịch sử bán – thanh một hàng, không nhãn chữ; số liệu nhỏ trong thanh. */
+#invBox>summary.sr-summary,#impBox>summary.sr-summary,#expBox>summary.sr-summary,#backupBox>summary.sr-summary{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px;padding:0;border:0}
+.card__bar-month{flex:0 0 130px;min-width:0}
+.card__bar-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.card__bar-btn{flex:0 0 auto}
+/* 2.32.0: Kho tồn – viên lọc Gần hết/Hết hàng (chữ ≥601px, icon + số đếm ≤600px), nút Đối chiếu chỉ icon + chấm số lệch. Bật/tắt qua --nb/--kb của luật nút kính. */
+#invBox .inv-chip{flex:none;min-height:30px;padding:0 12px;gap:6px;font-size:13px;white-space:nowrap;--nb:rgba(255,255,255,.08);--kb:rgba(255,255,255,.12)}
+#invBox .inv-chip.on{font-weight:700;--nb:rgba(255,255,255,.22);--kb:rgba(255,255,255,.4)}
+#invBox .inv-chip .ico{display:none}
+.inv-chip__n{color:var(--muted)}
+/* 2.33.0: công tắc Tháng|Ngày của Thống kê (ngoài khối desktop để khỏi vượt trần 20736 B; .thk chỉ hiện ở desktop) */
+html.desktop .thk__r{display:flex;align-items:center;gap:12px}
+html.desktop .thk__m{display:inline-flex;height:26px;border-radius:999px;border:1px solid var(--border);padding:1px;box-sizing:border-box}
+html.desktop .thk__m button{border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:0 12px;cursor:pointer}
+html.desktop .thk__m button.on{background:rgba(255,255,255,.18);color:var(--text)}
+html.desktop #chartTip[data-m=D] .chart-tip__m{min-width:84px}
+/* 2.34.0: chip Lợi nhuận / Tổng tồn kho chỉ ở desktop; vùng Thống kê nhận focus (←→) không viền */
+html.desktop #chartTip .chart-chip--prf,html.desktop #chartTip .chart-chip--stk{display:inline-flex}
+html.desktop #chartTip .chart-chip--stk{margin-left:auto}
+.chart-chip--prf .chart-chip__sw{background:#4ade80}
+.chart-chip--stk .chart-chip__sw{background:#a78bfa}
+/* 2.35.0: Thống kê điện thoại dùng chung công tắc Năm|Tháng|Ngày, biểu đồ cột đôi và 4 chip với desktop (ngoài khối cap desktop) */
+html:not(.desktop) .thk{display:block}
+html:not(.desktop) .thk__h{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+html:not(.desktop) .thk__t{margin:0;font-size:14px;font-weight:700}
+html:not(.desktop) .thk__r{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+html:not(.desktop) .thk__m{display:inline-flex;height:36px;box-sizing:border-box;padding:2px;border-radius:999px;background:var(--surface2)}
+html:not(.desktop) .thk__m button{border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:0 16px;min-height:32px}
+html:not(.desktop) .thk__m button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+html:not(.desktop) .thk__y{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+html:not(.desktop) .thk__y .btn{min-width:40px;height:36px;padding:0;font-size:18px;line-height:1}
+html:not(.desktop) .thk__y b{min-width:60px;text-align:center;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
+html:not(.desktop) .chart-chip--prf,html:not(.desktop) .chart-chip--stk{display:inline-flex}
+html:not(.desktop) #statsChart{touch-action:pan-x pan-y}
+html:not(.desktop) .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#chartBox .card__body:focus{outline:none}
+#invBox .card__bar-btn{position:relative}
+.inv-dot{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
+.inv-dot[hidden]{display:none}
+@media (min-width:601px){
+#invBox .card__bar-btn{width:30px;min-width:30px;height:30px;min-height:30px;padding:0}
+#invBox :is(.card__bar-title,.card__bar-count){order:-1;margin:0}
+#invBox .card__bar-count{margin-right:auto;font-size:13px}
+#invBox .card__bar-count::before{content:"· "}
+}
+@media (max-width:600px){
+.card__bar-month{order:2}
+.card__bar-btn{order:2}
+.inv-chip__l{display:none}
+#invBox .inv-chip{order:2;min-height:38px;padding:0 9px;gap:4px}
+#invBox .inv-chip .ico{display:inline-block}
+.inv-chip__n{font-size:11px}
+/* 2.15.0: điện thoại – ô tìm nằm cùng hàng tiêu đề (giữa tên mục và ô ngày/tháng); không đủ chỗ thì ô ngày/tháng xuống hàng dưới. */
+.card__bar{gap:6px}
+.card__bar-search,.card__bar-search.is-inline,.card__bar>.inp.card__bar-search{order:1;flex:1 1 80px;min-width:0}
+.card__bar-title{margin-right:0;flex:0 0 auto}
+.card__bar-count{order:4;margin-left:0}
+/* 2.38.10: "Đọc hết" cuối dòng thông tin (sau số giao dịch), canh phải, chữ nhỏ dạng liên kết, vùng chạm 44px; không chen vào hàng tiêu đề. */
+html:not(.desktop) :is(#expCount,#impCount){flex:1 1 200px;min-width:0;white-space:normal}
+html:not(.desktop) .card__bar>.btn[data-action=unread-all]{order:5;margin-left:auto;min-height:44px;padding:0 4px;border:0;background:none;box-shadow:none;font-size:12px;color:var(--text2);text-decoration:underline}
+/* 2.14.0 (giai đoạn 4, M3c): phân trang điện thoại gọn – nút cao 36px (vùng bấm do khoảng cách), khoảng cách 4px. */
+.pager{gap:4px}
+.pager .btn--sm{min-height:36px}
+}
+#remedyNote .note__foot>.note__name{display:block;width:100%;margin:0 0 8px}
+#remedyNote .note__row--btns{flex-wrap:nowrap;gap:6px}
+html:not(.desktop) #remedyNote>.note__list>table:has(#remedyNoteBody:empty)>thead{display:none}
+#remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead{display:table-header-group}
+@media (max-width:600px){
+#remedyBox .card__bar-preset{order:1;flex:1 1 90px;min-width:90px}
+/* 2.15.1: ô chọn đơn lấy phần chỗ thừa, không hẹp hơn chữ "Đơn mới" (61px chữ + đệm/mũi tên ≈ 87px); ô ngày xuống hàng khi không đủ chỗ (320px). */
+/* 2.17.2: Xóa đơn | Lưu/Sửa đơn | Bán đơn đúng một hàng (mọi cỡ màn hình). */
+#remedyNote .note__row--btns .btn{flex:1 1 0;min-width:0;min-height:var(--ctl-h,44px);padding-left:8px;padding-right:8px;white-space:nowrap;overflow:hidden}
+#remedyNote .note__row--btns .btn .ico{display:none}
+#remedyNote .note__row--btns #remedySaveLabel{overflow:hidden;min-width:0}
+#remedyNote .note__row--btns{margin-top:3px}
+#remedyNote .note__row:first-child{gap:6px 8px}
+#remedyNote .note__row:first-child #remedyTotal{margin-left:auto}
+}
+@media (max-width:360px){#remedyNote #remedyThang{width:60px}#remedyNote #remedyUnitPrice{width:100px}}
+@media (max-width:600px){
+.card__bar-date{order:2;flex:0 0 122px;margin-left:auto}
+.card__bar-date .inp{padding-left:8px;padding-right:8px}
+.card__bar-month .inp{padding-left:8px}
+}
+@media (max-width:400px){
+.card__bar-title .ico{display:none}
+/* 2.15.2: ô ngày Thuốc chén – dd/mm/yyyy cỡ 16px rộng ~81px; vùng chữ = 118 - viền 2 - đệm 6 - 24 = 86px. Thanh gọn lại (đệm 10, khe 4) để tiêu đề + ô chọn đơn (>=90) + ô ngày vẫn một hàng ở 375px. */
+#remedyBox .card__bar{padding-left:10px;padding-right:10px;gap:4px}
+#remedyBox .card__bar-date{flex:0 0 118px}
+#remedyBox .card__bar-date .inp{padding-left:6px;padding-right:6px}
+/* 2.15.1: chú giải tháng cùng một hàng ở 375px kể cả số lớn. */
+.chart-tip,.chart-tip__m{font-size:12px}
+.chart-chip{font-size:12px;gap:4px}
+}
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+.grid2{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+.wrap{padding:0 12px}
+#syncBadge{flex:1 1 100%;order:99;margin:.5rem 0 0;max-width:none}
+.card__body{padding:13px}
+.btn{min-height:var(--ctl-h,44px)}
+.btn--sm{min-height:38px}
+.inp{min-height:var(--ctl-h,44px);font-size:var(--ctl-fs,16px)}
+#retailBox,#remedyBox{overflow:visible}
+html{scroll-padding-bottom:230px}
+html:not(.desktop){scroll-padding-top:110px}
+/* 2.15.6/2.15.8: đang nhập: danh sách đã ghi gọn còn vùng cao đúng 2 dòng cuối (JS đặt max-height), cuộn được; mép trên mờ dần như guồng nước. */
+.kb-compact .note__list{overflow-y:auto;-webkit-mask-image:linear-gradient(to bottom,transparent 0,black 12px);mask-image:linear-gradient(to bottom,transparent 0,black 12px)}
+#retailBody tr[data-pid],#remedyBody tr[data-pid]{scroll-margin-top:8px;scroll-margin-bottom:72px}
+/* 2.15.18: khi gọn, tiêu đề cột trong danh sách (hiện khi có dòng nhập, +29px) bị ẩn: chiều cao danh sách không nhảy khi chọn vị, dòng cuối không lệch khỏi đáy. */
+#remedyBox.kb-compact #remedyNote:has(#remedyBody tr[data-pid])>.note__list>table>thead,#remedyBox.kb-compact #remedyNote>.note__list>table>thead{display:none}
+.chart{height:260px}
+}
+@media (max-width:600px){
+.tw{overflow-x:visible}
+table.ord,table.inv,table.his{display:block}
+table.ord thead,table.inv thead,table.his thead{display:none}
+table.ord tbody,table.inv tbody,table.his tbody{display:block}
+table.ord tr,table.inv tr,table.his tr{display:block}
+table.ord td,table.inv td,table.his td{display:block;width:auto;padding:0;border:0}
+table.ord tr.is-row,table.inv tr.is-row,table.his tr.is-row{display:grid;gap:7px 10px;align-items:center;
+padding:6px 2px}
+table.ord tr.is-row>td:nth-child(2){grid-area:1/2/2/5;min-width:0;overflow-wrap:anywhere}
+/* 2.12.1: nút + ở cột cuối đúng hàng 2 (thẳng hàng đáy ô nhập), vuông 44px. Đặt SAU quy tắc gốc cùng bộ chọn. */
+table.ord tr.is-row>td:nth-child(5) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}
+/* 2.14.0 (giai đoạn 4, M7): Thuốc chén điện thoại – dòng đang nhập chỉ 4 ô (STT, tên, gram, +): gram chiếm 2 cột 1fr (2/2–3/4), nút + ở cột 46px cuối (2/4), đáy căn theo hàng, 44×44. Đặt SAU quy tắc chung table.ord. */
+#remedyNote .note__pending tr.is-row>td:nth-child(4) .btn{width:44px;min-width:44px;height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);padding:0}
+/* 2.14.0 (giai đoạn 4, M8): điện thoại – nút + dòng đang nhập giữ 44×44 (ghi đè quy tắc máy tính 36px ở trên). */
+#nhapListBox .note__pending .nhap-add{height:var(--ctl-h,44px);min-height:var(--ctl-h,44px);width:44px;min-width:44px}
+table.ord tr.is-row>td.c-qty::before,table.ord tr.is-row>td.c-money::before,
+table.his tr.is-row>td:nth-child(3)::before,table.his tr.is-row>td:nth-child(4)::before,
+table.his tr.is-row>td:nth-child(5)::before{content:attr(data-label);display:block;font-size:10px;font-weight:700;
+letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+/* 2.14.0 (giai đoạn 4, M3a): Kho tồn điện thoại – hàng 1 tên + nút …; hàng 2 ba số liệu một dòng có nhãn nhỏ. Ước tính ≈52px (≤60). */
+/* 2.39.9: không nhãn lặp từng dòng; 3 cột số bằng nhau căn phải, không xuống dòng; tên 1 dòng cắt "…" → mọi dòng cao bằng nhau. Hàng tiêu đề cùng lưới, ghim dưới thanh trên. */
+table.inv tr.is-row,html:not(.desktop) table.inv thead tr{grid-template-columns:repeat(3,minmax(0,1fr)) 34px;column-gap:10px;row-gap:2px;padding:4px 2px}
+table.inv tr.is-row>td:nth-child(1){grid-area:1/1/2/4;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.inv tr.is-row>td:nth-child(5){grid-area:1/4/3/5;justify-self:end;align-self:center}
+table.inv tr.is-row>td:nth-child(2){grid-area:2/1}
+table.inv tr.is-row>td:nth-child(3){grid-area:2/2}
+table.inv tr.is-row>td:nth-child(4){grid-area:2/3}
+table.inv tr.is-row>td.num{text-align:right;white-space:nowrap}
+html:not(.desktop) #invBox{overflow:clip}
+html:not(.desktop) table.inv thead{display:block;position:sticky;top:calc(var(--top-h,0px) + var(--vv-top,0px));z-index:2;background:var(--surface);border-bottom:1px solid var(--border)}
+html:not(.desktop) table.inv thead tr{display:grid;padding-block:6px}
+html:not(.desktop) table.inv th{padding:0;border:0;text-align:right;white-space:nowrap}
+html:not(.desktop) table.inv th:first-child{display:none}
+table.inv tr.is-row>td.c-del .btn--icon{width:34px;min-width:34px;height:34px;min-height:34px;padding:0;position:relative}
+table.inv tr.is-row>td.c-del .btn--icon::after{content:"";position:absolute;inset:-3px}
+/* 2.14.0 (giai đoạn 4, M3b): Lịch sử điện thoại – hàng 1 tên + ngày + …; hàng 2 SL, đơn giá, thành tiền (không nhãn chữ). Ước tính ≈49px (≤52). */
+table.his tr.is-row{grid-template-columns:minmax(0,1fr) auto auto auto;column-gap:10px;row-gap:2px;padding:4px 2px}
+table.his tr.is-row>td:nth-child(2){grid-area:1/1/2/3;min-width:0;overflow-wrap:anywhere}
+table.his tr.is-row>td:nth-child(1){grid-area:1/3;font-size:11px;text-align:right;white-space:nowrap}
+table.his tr.is-row>td:nth-child(6){grid-area:1/4/3/5;justify-self:end;align-self:center}
+table.his tr.is-row>td:nth-child(3){grid-area:2/1}
+table.his tr.is-row>td:nth-child(4){grid-area:2/2}
+table.his tr.is-row>td:nth-child(5){grid-area:2/3;text-align:right}
+table.his tr.is-row>td:nth-child(3)::before,table.his tr.is-row>td:nth-child(4)::before,table.his tr.is-row>td:nth-child(5)::before{content:none}
+table.his tr.is-row>td.c-act .btn--icon{width:34px;min-width:34px;height:34px;min-height:34px;padding:0;position:relative}
+table.his tr.is-row>td.c-act .btn--icon::after{content:"";position:absolute;inset:-3px}
+table.ord tr.is-empty td,table.inv tr.is-empty td,table.his tr.is-empty td{display:block;padding:18px 4px;
+text-align:center}
+table.inv .c-del,table.his .c-act{width:auto}
+.note .c-act{width:76px}
+.note td,.note th{padding-left:5px;padding-right:5px}
+/* 2.14.0 M4: điện thoại – ẩn hàng tiêu đề cột của tờ ghi (mỗi ô đã có nhãn riêng); máy tính giữ. */
+.note>table>thead,.note>.note__list>table>thead{display:none}
+.note .c-act .btn--icon{min-width:32px;width:32px;min-height:32px;height:32px}
+}
+/* 2.10.0: tab. 8 <details> giữ nguyên DOM; chỉ mục đang mở hiện (toàn chiều rộng), các mục khác ẩn. */
+.main>.grid2{display:contents}
+.main>details.card,.main>.grid2>details.card{margin-top:0}
+.main>details.card:not([open]),.main>.grid2>details.card:not([open]){display:none}
+.main>details.card[open]>summary.card__head,.main>.grid2>details.card[open]>summary.card__head{cursor:default}
+.main>details.card[open]>summary.card__head:hover,.main>.grid2>details.card[open]>summary.card__head:hover{background:var(--surface)}
+.tabs{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:0;min-height:44px;padding:5px 6px;
+border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text2);font:inherit;
+font-size:13px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 1px 2px rgba(15,23,42,.07)}
+.tab:hover{background:var(--surface2);color:var(--text)}
+.tab:focus-visible{outline:none;box-shadow:var(--ring)}
+.tab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
+@media (max-width:600px){
+.tab{padding:4px 2px;font-size:12px}
+}
+/* 2.15.8 (máy tính >640px): biểu tượng cạnh nhãn hai hàng (cùng icon với tiêu đề thẻ); điện thoại giữ chữ hai dòng, ẩn icon. */
+/* 2.15.13: mọi icon tab cùng một màu xanh lá (--tab-ico, = màu icon Bán lẻ); tab đang chọn (nền tím) đặt icon xanh trên chip --brand-soft để vẫn nổi bật. */
+.tab__ic{color:var(--tab-ico);border-radius:4px}
+.tab.is-active .tab__ic{background:var(--brand-soft);box-shadow:0 0 0 3px var(--brand-soft)}
+/* H.2: điện thoại (không html.desktop): thanh đầu cố định nền đặc; hàng 1 logo | Bán | Lợi nhuận | đồng bộ, hàng 2 tám tab chỉ icon (JS phoneTop chuyển nút có sẵn vào .top) */
+html:not(.desktop) .top{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border-bottom:1px solid var(--text)}
+html:not(.desktop) .top .bar{min-height:0}
+html:not(.desktop) .brand-wrap{display:none}
+html:not(.desktop) .top__r{display:flex;align-items:stretch;gap:4px;padding:3px 4px 0}
+html:not(.desktop) .top .stats{display:contents}
+html:not(.desktop) .top .stats__c{flex:1 1 0;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:none}
+html:not(.desktop) .top .stat__v{font-size:15px;white-space:nowrap;overflow-wrap:normal}
+html:not(.desktop) .top .stat__sub{white-space:nowrap}
+html:not(.desktop) .top .stat__sub span+span{display:none}
+html:not(.desktop) #brandBtn{font-size:0;flex:none;justify-content:center;width:44px;min-height:44px}
+.syncm{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:48px;min-height:44px;padding:0;border:0;background:none;color:var(--text2);font:inherit;font-size:11px;font-variant-numeric:tabular-nums}
+.syncm__d{width:9px;height:9px;border-radius:50%;background:#34C759}
+.syncm[data-st=err] .syncm__d{background:#FF5F57}
+.syncm[data-st=warn] .syncm__d{background:#FEBC2E} /* 2.39.10: quá 60s chưa xác nhận khớp bản hub */
+html:not(.desktop) .top .tabs{grid-template-columns:repeat(8,minmax(0,1fr));gap:0;margin:0;padding:2px 4px 3px}
+html:not(.desktop) .top .tabs .tab{display:flex;min-height:44px;padding:0;position:relative}
+.tab__bd{position:absolute;top:1px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#FF5F57;color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center;pointer-events:none}
+html.desktop .tab__bd{top:50%;right:8px;margin-top:-8px}
+.udot{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#FF5F57;vertical-align:middle}
+html:not(.desktop) .top .tabs .tab:not(.is-active){border-color:transparent;background:none;box-shadow:none}
+html:not(.desktop) .top .tabs .tab__l1,html:not(.desktop) .top .tabs .tab__l2{display:none}
+html:not(.desktop) .top .tabs .tab__ic{display:block;width:22px;height:22px;color:var(--text)}
+html:not(.desktop) .top .tabs .tab.is-active .tab__ic{background:none;box-shadow:none}
+html:not(.desktop,.pt) .top .tabs .tab.is-active .tab__ic{color:#fff}
+@media (min-width:641px){
+.tab{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;align-content:center;justify-items:center;padding:5px 4px}
+.tab__ic{display:block;grid-row:1/3;grid-column:1;align-self:center;width:16px;height:16px;vertical-align:0}
+.tab__l1{grid-column:2;grid-row:1}
+.tab__l2{grid-column:2;grid-row:2}
+}
+@media (max-width:600px){
+/* Hàng Tổng nằm trong bảng dòng nhập (table.ord là block trên điện thoại): dựng lại lưới cùng độ rộng cột với bảng tờ ghi để số tổng thẳng cột tiền. */
+.note__pending tfoot{display:block}
+.note__pending tfoot tr{display:grid}
+}
+.bak-sec{margin-top:12px;padding:10px 12px;border:1px solid var(--kb,var(--border));border-radius:14px;background:var(--pnl,rgba(255,255,255,.2))}
+.bak-sec:first-child{margin-top:0}
+.bak-sec__t{margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.bak-sec__bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.bak-sec__bar .bak-sec__t{margin:0}
+.bak-dir{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.bak-dir[hidden]{display:none}
+.bak-dir__p{flex:1;min-width:0;word-break:break-all}
+.bak-restore{color:var(--red-text)}
+.bak-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;align-items:center;padding:2px 0;font-size:13px;line-height:1.3}
+.bak-row+.bak-row{border-top:1px solid var(--border)}
+.bak-row__name{font-weight:700;word-break:break-all}
+.bak-row__size,.bak-row__time{text-align:right;color:var(--muted);white-space:nowrap}
+.bak-busy{opacity:.5}
+.bak-row__tag{margin-left:6px;padding:0 6px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.bak-note{margin:6px 0 0}
+.bak-pg:empty{display:none}
+.bak-pg{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+@media (max-width:480px){.bak-row{grid-template-columns:auto minmax(0,1fr)}.bak-row__name{grid-column:1/-1}.bak-row__size{text-align:left}}
+/* 2.23.0 chế độ desktop */
+html.desktop,html.desktop body{background:transparent}
+html.desktop{--sw:180px;--g:16px;--tab-h:30px;overflow:hidden}
+html.desktop body{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--g);width:100%;height:100vh;margin:0;box-sizing:border-box;overflow:hidden;padding:10px var(--g) var(--g)}
+html.desktop.tauri body{padding-top:34px}
+html.desktop body::after{content:"";grid-area:1/1/3/2;border:1px solid var(--border);border-radius:24px;z-index:-1}
+html.desktop .top{position:static;grid-area:1/1;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.desktop .top .wrap{padding:0 10px}
+html.desktop .brand{font-size:13px;font-weight:700;min-height:28px}
+html.desktop .top .bar{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;min-height:0;padding-top:10px}
+html.desktop .main{display:contents}
+html.desktop .tabs{grid-area:1/1/3/2;display:flex;flex-direction:column;gap:6px;margin:calc(58px + var(--sth)) 10px 0;align-self:start}
+html.desktop .tab{position:relative;display:block;min-height:var(--tab-h);padding:6px 10px 6px 34px;border-radius:999px;border:1px solid;color:var(--text);font-size:12.5px;font-weight:700;line-height:16px;text-align:left}
+html.desktop .tab__ic{position:absolute;left:10px;top:50%;margin-top:-9px;width:18px;height:18px;color:var(--text);stroke-width:1.5}
+html.desktop .tab__l1::after{content:" "}
+html.desktop .tab__l2{display:inline-block}
+html.desktop .tab.is-active .tab__ic{background:none;box-shadow:none}
+html.desktop #tb{height:24px}
+html.desktop #tb span{line-height:24px}
+html.desktop #tb button{width:36px}
+html.desktop .main details.card{grid-area:1/2/3/3;min-height:0;min-width:0;margin:0;overflow:hidden}
+html.desktop .main details#backupBox{border-color:transparent;background:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.desktop .card:not(.dlg__card){border-radius:20px;border:1px solid var(--border);background:none;box-shadow:none}
+html.desktop .card__body{padding:0}
+html.desktop .dlg__card .card__body{padding:0 16px 16px}
+html.desktop .card__bar{position:static;background:none;padding:12px 16px;border-bottom:0}
+html.desktop .card__bar .inp{height:32px;min-height:32px;padding-top:3px;padding-bottom:3px}
+html.desktop .card__bar-title{font-size:15px;font-weight:700;white-space:nowrap}
+html:is(.desktop,.pt) :is(.tab,.card__bar .inp,.note .inp),html:is(.desktop,.pt) .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]){border-color:var(--kb);background-color:var(--nb);box-shadow:none;transition:background-color .12s,border-color .12s}
+html:is(.desktop,.pt) .tab{--nb:rgba(255,255,255,.05);--kb:rgba(255,255,255,.09)}
+html.desktop .tab:hover{border-color:var(--sel-bd)}
+html.desktop .btn:not(.btn--primary,.btn--green,.btn--dark,.btn--danger,[aria-current]):hover{border-color:var(--sel-bd)}
+html:is(.desktop,.pt) .tab.is-active{color:var(--sel-fg);border-color:var(--sel-bd);background-color:var(--sel-bg)}
+html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark){color:#fff;font-weight:600;border-color:transparent;background-color:rgba(64,128,242,.5)}
+html:is(.desktop,.pt) :is(.btn--green,.btn--primary,.btn--dark):hover{background-color:rgba(64,128,242,.6)}
+html:is(.desktop,.pt) .btn--danger{background-color:var(--nb);border-color:var(--kb)}
+html:is(.desktop,.pt) .pager__num[aria-current]{color:#fff;font-weight:600;border-color:transparent;background-color:rgba(255,255,255,.22)}
+html.desktop :is(input,select).inp,html.desktop .btn{border-radius:999px}
+html.desktop table.inv td.c-del .btn--icon,html.desktop table.his td.c-act .btn--icon{min-height:calc(var(--tab-h) - 6px);height:calc(var(--tab-h) - 6px)}
+html.desktop .pager{gap:2px;padding:2px;border:1px solid;border-color:var(--kb);border-radius:999px;background-color:var(--nb);box-shadow:none}
+html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current]){border-color:transparent;background:none;box-shadow:none;transform:none}
+html.desktop .pager .btn:not(.btn--primary,[aria-pressed=true],[aria-current],:disabled):hover{background:var(--hv)}
+html.desktop .pager :is([aria-pressed=true],[aria-current],.btn--primary){box-shadow:none}
+html:is(.desktop,.pt)[data-bg=navy],html:is(.desktop,.pt) .bgd[data-bg=navy]{--bt:linear-gradient(135deg,#0A1433,#12265C);--muted:rgba(255,255,255,.58);--red-text:#FF7676}
+html:is(.desktop,.pt)[data-bg=prism],html:is(.desktop,.pt) .bgd[data-bg=prism]{--bt:linear-gradient(135deg,#291457,#0D4D73);--muted:rgba(255,255,255,.72);--red-text:#FFB9B9}
+html:is(.desktop,.pt)[data-bg=cyan],html:is(.desktop,.pt) .bgd[data-bg=cyan]{--bt:linear-gradient(135deg,#052E3D,#08667A);--muted:rgba(255,255,255,.87);--red-text:#FFE0E0}
+html:is(.desktop,.pt)[data-bg=emerald],html:is(.desktop,.pt) .bgd[data-bg=emerald]{--bt:linear-gradient(135deg,#05291F,#0A5C42);--muted:rgba(255,255,255,.77);--red-text:#FFC7C7}
+html:is(.desktop,.pt)[data-bg=gold],html:is(.desktop,.pt) .bgd[data-bg=gold]{--bt:linear-gradient(135deg,#381F05,#6B420A);--muted:rgba(255,255,255,.73);--red-text:#FFBFBF}
+html:is(.desktop,.pt)[data-bg=rose],html:is(.desktop,.pt) .bgd[data-bg=rose]{--bt:linear-gradient(135deg,#3D0D1F,#701A3D);--muted:rgba(255,255,255,.64);--red-text:#FF9A9A}
+html:is(.desktop,.pt)[data-bg=graphite],html:is(.desktop,.pt) .bgd[data-bg=graphite]{--bt:linear-gradient(135deg,#141417,#2E2E33);--muted:rgba(255,255,255,.58);--red-text:#FF8484}
+html:is(.desktop,.pt)[data-bg]{color-scheme:dark;--text:#f8fafc;--text2:rgba(255,255,255,.85);--brand:#34d399;--brand-soft:rgba(52,211,153,.18);--red-text:#FF7373;--surface:#141c3c;--surface2:#1b264f;--border:rgba(255,255,255,.14);--border2:rgba(255,255,255,.07);--vien:rgba(255,255,255,.14);--glass:rgba(255,255,255,.07);--pnl:rgba(255,255,255,.07);--ring:0 0 0 2px rgba(255,255,255,.35);--kb:rgba(255,255,255,.10);--chart-imp:#44DAFE;--chart-exp:#FFA33D;--nb:rgba(255,255,255,.07);--hv:rgba(255,255,255,.13);--sel-bg:rgba(255,255,255,.14);--sel-bd:rgba(255,255,255,.32);--sel-fg:#f8fafc}
+html.desktop[data-bg]{--text2:var(--text);--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text)}
+html.desktop .linkbtn{text-decoration-color:rgba(255,255,255,.3)}
+html.desktop .linkbtn:hover{color:var(--text)}
+html:is(.desktop,.pt)[data-bg] body::before{background:var(--bt)}
+html:is(.desktop,.pt)[data-bg] *{scrollbar-color:rgba(255,255,255,.3) transparent}
+html:is(.desktop,.pt)[data-bg] .dlg__card .note{background:rgba(255,255,255,.04)}
+html:is(.desktop,.pt)[data-bg] .inp{background-color:rgba(255,255,255,.10);border-color:rgba(255,255,255,.14)}
+html:is(.desktop,.pt)[data-bg] .inp:focus{background-color:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);box-shadow:none}
+html.desktop[data-bg] tbody tr:hover{background:none}
+html.desktop[data-bg] tbody tr:hover :is(td,th){color:var(--text)}
+html:is(.desktop,.pt) select option,html:is(.desktop,.pt) select optgroup{background:var(--surface);color:var(--text)}
+html:is(.desktop,.pt) .toast{background:rgba(20,28,60,.92);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+html:is(.desktop,.pt) .dlg__card{background:var(--bt);border:1px solid rgba(255,255,255,.14)}
+html.desktop .note{margin:0;border:1px solid var(--border);border-radius:18px;background:none}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox){overflow:clip}
+html.desktop :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.desktop #remedyBox #remedyPresetBox{border-left:1px solid rgba(255,255,255,.10)}
+html.desktop .note__head{height:32px;align-items:center;padding:0 14px;background:none;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid var(--border)}
+html.desktop .note td{height:25px;padding:1px 10px;font-size:13px}
+html.desktop .note .c-act .inline-row{justify-content:flex-start}
+html.desktop .note th{height:28px;padding:0 10px;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+html.desktop .btn{min-height:30px;padding:3px 14px;font-size:13px}
+html.desktop .btn--icon{min-width:32px;padding:3px}
+html.desktop .pager .btn{min-height:24px;min-width:24px;padding:1px 9px}
+html.desktop input.inp.inp--num{width:80px;max-width:100%;height:28px;min-height:28px;padding:2px 8px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+html.desktop input.inp.inp--num::placeholder{font-weight:400}
+html.desktop .note .inp{height:28px;min-height:28px;padding-top:2px;padding-bottom:2px;font-size:13px}
+html.desktop .note td .btn--icon{min-height:22px;height:22px;width:22px;min-width:22px}
+html.desktop .note .foot{margin:0;padding:3px 12px;border-top:1px solid var(--border);justify-content:flex-end}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__foot{display:flex;align-items:center;gap:10px;padding:4px 12px;background:none;border-top:1px solid var(--border)}
+html.desktop .note__foot>.btn{margin-left:auto;height:30px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-num{width:38px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-name{width:auto}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:120px;min-width:120px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-money{width:110px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) col.cg-act{width:34px}
+html.desktop .note :is(td,th):is(.c-num,.c-qty,.c-money,.c-act,.c-del){width:auto}
+html.desktop .note :is(td,th):is(.c-act,.c-del){text-align:left;padding:0 10px 0 2px}
+html.desktop .pend .nhap-add{display:inline-flex;width:22px;min-width:22px;height:22px;min-height:22px;padding:0}
+html.desktop td .qty-hint.qty-hint--label{left:auto;right:96px;top:50%;transform:translateY(-50%);width:max-content;max-width:72px;box-sizing:border-box;padding:1px 5px;border:1px solid var(--kb);border-radius:999px;background:rgba(255,255,255,.10);color:var(--muted);font-size:11px;line-height:16px;text-align:center}
+html.desktop .note__row{flex-wrap:nowrap;justify-content:flex-start}
+html.desktop .note__row--btns{margin:0 0 0 auto}
+html.desktop .sug__list{scrollbar-width:none;background:#141c3c;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:0;max-height:116px;scroll-snap-type:y mandatory}
+html.desktop .sug__item{height:38px;scroll-snap-align:start}
+html.desktop :is(.sug__meta,table.his .muted:not(.num)){font-size:13px}
+html.desktop .sug__list::-webkit-scrollbar{display:none}
+html.desktop #chartBox>summary{display:none}
+html.desktop #chartBox .card__body{position:relative;padding:16px}
+html.desktop .thk{display:block}
+html.desktop .thk__h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;height:32px}
+html.desktop .thk__y{display:flex;align-items:center;gap:8px}
+html.desktop .thk__y .btn{width:44px;min-width:44px;height:30px;min-height:30px;padding:0;font-size:18px;line-height:1}
+html.desktop .thk__y span{font-size:13px;color:var(--muted)}
+html.desktop .thk__y b{min-width:44px;text-align:center;font-size:15px;font-variant-numeric:tabular-nums}
+html.desktop .thk__t{margin:0;font-size:15px;line-height:1.2;font-weight:700}
+html.desktop #chartTip{align-items:center;gap:12px;height:24px;min-height:0;margin:0 0 12px;font-size:13px;white-space:nowrap}
+html.desktop #chartTip .chart-tip__m{min-width:56px}
+html.desktop #chartTip .chart-chip{gap:6px;padding:3px 10px;line-height:18px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px}
+html.desktop #chartTip .chart-chip__sw{width:9px;height:9px;flex-basis:9px;border-radius:50%}
+html.desktop #chartTip .chart-chip__k{min-width:0;font-weight:400;color:var(--muted)}
+html.desktop .chart-scroll{flex:1;min-height:0;display:flex;flex-direction:column}
+html.desktop .chart{flex:1;min-height:0;height:auto}
+html.desktop .main details:not(#backupBox)[open]{display:flex;flex-direction:column}
+html.desktop .main details:not(#backupBox)[open]::details-content{display:flex;flex-direction:column;flex:1;min-height:0}
+html.desktop :is(#retailBox,#remedyBox,#nhapBox,#chartBox,#invBox,#impBox,#expBox)>.card__body{flex:1;min-height:0;display:flex;flex-direction:column}
+html.desktop :is(#invBox,#impBox,#expBox) .tw{flex:1;min-height:0;overflow:hidden}
+html.desktop table:is(.inv,.his) td{height:var(--tab-h);padding:1px 8px;white-space:nowrap}
+html.desktop :is(td,th).num:not(.c-num){padding-left:24px;white-space:nowrap} /* 2.39.8: cột số cách nhau ≥ 24px, cột Tên nhường chỗ */
+html.desktop :is(.inv td:first-child,.his td:nth-child(2)){width:100%;max-width:0;overflow:hidden;text-overflow:ellipsis}
+html.desktop #expBox .card__bar-search{flex-basis:80px}
+html.desktop table:is(.inv,.his) th{height:30px;padding:0 8px;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--muted)}
+html.desktop :is(#invPager,#impPager,#expPager){flex:none;margin:0;padding:8px 16px}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox){flex:1;min-height:0;display:flex;flex-direction:column}
+/* 2.39.6: tờ ghi không phân trang: khung cuộn, đầu bảng ghim (nền = nền cửa sổ, cố định theo viewport), dòng cao bằng tab thanh bên (--tab-h); Tổng + chân không cuộn */
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__list td{height:var(--tab-h)}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox) .note__list th{position:sticky;top:0;z-index:1;background:var(--bt) fixed}
+html.desktop :is(#retailNote,#remedyNote,#nhapListBox)>:not(.note__list){flex:none}
+html.desktop #remedyBox>.card__body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+html.desktop #remedyBox .card__bar{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+html.desktop :is(.rbl,.rbr){display:flex;align-items:center;gap:8px;min-width:0}
+html.desktop #remedyPreset{display:none}
+html.desktop #remedyFindBox{position:relative;display:flex;flex:1 1 0;min-width:0;align-items:center}
+html.desktop #remedyFind{width:100%;padding-left:30px}
+html.desktop #remedyFindBox>.ico{position:absolute;left:10px;width:14px;height:14px;opacity:.5;pointer-events:none}
+html.desktop #remedyOpen{display:none;flex:1;min-width:0;align-items:center;height:32px;padding:0 4px 0 14px;border:1px solid var(--kb);border-radius:999px;background-color:var(--nb);font-size:13px;font-weight:700}
+html.desktop #remedyOpenName{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html.desktop #remedyClose{width:24px;min-width:24px;height:24px;min-height:24px;padding:0}
+html.desktop #remedyFindBox.is-open>:is(.ico,#remedyFind,#remedyFindList){display:none}
+html.desktop #remedyFindBox.is-open>#remedyOpen{display:flex}
+html.desktop #remedyFindList{top:38px;max-height:182px}
+html.desktop #remedyFindList .sug__item{height:36px}
+html.desktop #remedyList{top:30px;right:auto;width:380px}
+html.desktop .pend .empty-cell{text-align:left}
+html.desktop .pend .empty-cell::after{content:"Tên vị thuốc"}
+html.desktop #retailBody .empty-cell::after{content:"Chọn vị thuốc ở ô trên"}
+html.desktop .pend .c-num{font-size:0}
+html.desktop .pend .c-num::before{content:"+";font-size:13px}
+html.desktop .pend input.inp.inp--num{height:22px;min-height:22px;padding:2px 5px;margin-left:auto}
+html.desktop #remedyBody input.inp.inp--num{width:52px}
+html.desktop .pend td .qty-hint--label{padding:0;border:0;background:none}
+html.desktop #remedyBody .qty-hint--label{right:64px}
+html.desktop :is(#retailBody,#remedyBody,#nhapPendingBody) .inp{background:none;border-color:transparent;box-shadow:none}
+html.desktop :is(.nhap-pend__tot,.nhap-hint){display:none}
+html.desktop .nhap-foot__tot{display:block;font-size:15px;color:var(--muted)}
+html.desktop .nhap-foot__tot b{font-weight:400}
+html.desktop .note__foot>.nhap-foot__tot+.btn .ico{display:none}
+html.desktop .pend .c-money input:placeholder-shown{padding-inline:0;font-size:13px}
+html.desktop .bx{height:32px;white-space:nowrap}
+html.desktop #remedyNoteFoot td{height:38px;background:#ffffff0f}
+html.desktop .pend button{padding:0}
+html.desktop #remedyNote{margin-right:6px}
+html.desktop #remedyPresetBox{display:flex;flex-direction:column;min-height:0;margin-left:6px;overflow:clip}
+html.desktop #remedyPresetBox .rp-rows{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+html.desktop #remedyNote .note__foot{flex-wrap:wrap;gap:6px;padding:4px 8px}
+html.desktop #remedyNote #remedyThang{width:44px}
+html.desktop #remedyNote #remedyUnitPrice{width:58px}
+html.desktop #remedyNote :is(.note__lbl,.note__row--btns .btn){white-space:nowrap}
+html.desktop #remedyNote .note__row--btns .btn{padding:3px 8px}
+html.desktop #remedyNote .note__row--btns .btn .ico{display:none}
+html.desktop .rp-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;width:100%;flex:none;height:var(--tab-h);padding:0 10px;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+html.desktop .rp-row:disabled{cursor:default}
+html.desktop .rp-row:not(:disabled):hover{background:var(--hv)}
+html.desktop .rp-row[aria-current]{background:var(--sel-bg);font-weight:800}
+html.desktop .rp-row__name{overflow:hidden;white-space:nowrap}
+html:is(.desktop,.pt) .btn.bak-restore{border-color:rgba(255,120,120,.5)}
+html.desktop #backupBox{align-self:start}
+html.desktop .bak-sec{padding:16px;border-radius:18px}
+html.desktop.tauri .bak-sec{padding:12px 16px}
+html.desktop.tauri .bak-row{padding:0}
+html:is(.desktop,.pt) .bgd{position:relative;display:block;width:22px;height:22px;padding:0;border:0;background:none;font-size:0;cursor:pointer}
+html:is(.desktop,.pt) .bgd::before{content:"";position:absolute;inset:0;box-sizing:border-box;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:var(--bt)}
+html:is(.desktop,.pt) .bgd[aria-pressed=true]::before{border:2px solid rgba(255,255,255,.95)}
+html.desktop .bgdots{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:5;width:106px;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--vien);border-radius:14px;background:var(--surface)}
+html.desktop .bgdots.is-open{display:flex}
+html.desktop .sbf{grid-area:2/1;align-self:end;display:flex;flex-direction:column;gap:8px;margin:0 10px 10px}
+html.desktop .sbr{position:relative;display:flex;align-items:center;gap:6px}
+html.desktop .sbp{width:28px;height:28px;padding:3px;border:0;background:none;color:var(--text);cursor:pointer}
+html.desktop .sbp .ico{width:22px;height:22px}
+html.desktop .szpick{display:flex;gap:6px}
+html.desktop .szpick button{flex:1;min-height:26px;border-radius:999px;border:1px solid var(--border);background:none;color:var(--text);font:600 12px/1 inherit;cursor:pointer}
+html.desktop .sbs{flex:1;min-width:0;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+html.desktop .sbs::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#34C759}
+html.desktop .sbs[data-st=err]::before{background:#FF5F57}
+html.desktop .sbs[data-st=warn]::before{background:#FEBC2E}
+html.desktop .brand__yin{cursor:pointer}
+@media (prefers-reduced-motion:reduce){
+*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+/* 2.38.12 (điện thoại): MỘT bộ cỡ chung theo ô "Đơn mới" (#remedyPreset): cao 40 (chỉ iPhone thật đo được: "Đơn mới" ~39), bo 10, đệm dọc 7, chữ ô nhập 16 (dưới 16 iOS tự phóng to), chữ nút/dòng tờ ghi 14 = danh sách Kho tồn. Nút kiểu tab điện thoại: nền/viền trong suốt, chữ + icon var(--text); Xóa đơn chữ đỏ; không màu mới. */
+html:not(.desktop){--ctl-h:40px;--ctl-r:10px;--ctl-py:7px;--ctl-fs:16px;--ctl-tx:14px}
+html:not(.desktop) :is(input,select).inp{height:var(--ctl-h);padding-top:var(--ctl-py);padding-bottom:var(--ctl-py);border-radius:var(--ctl-r)}
+html:not(.desktop) :is(.note__foot,.note__row--btns,.note__pending) .btn:not(.pager__num){height:var(--ctl-h);min-height:var(--ctl-h);border-radius:var(--ctl-r);font-size:var(--ctl-tx)}
+html:not(.desktop) :is(.note__lbl,.note__eq,#remedyTotal,.note__tot b){font-size:var(--ctl-tx)}
+/* 2.38.14: tờ ghi phẳng: chỉ khung tab (card) có nền; .note bỏ nền/viền/bo/bóng (như desktop F.1), phân vùng bằng đường kẻ mảnh --border. */
+html:not(.desktop) :is(#retailBox,#remedyBox,#nhapBox) .note{border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+/* 2.38.15: giao diện tối giản (điện thoại): thanh đầu cố định + đúng 1 nét trắng phân cách; bỏ khung card quanh nội dung tab; mọi ô/nút trong suốt, viền 1px + chữ var(--text) (trắng #f8fafc, không thêm màu), không bóng/blur; placeholder trắng mờ; tab chọn chỉ viền trắng. :not([hidden]) nâng độ ưu tiên hơn luật kính .pt; Xóa đơn giữ chữ đỏ; chip/trang đang chọn giữ nền. */
+html:not(.desktop) .card:not(.dlg__card){border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) :is(input,select,textarea).inp:not([hidden]){background:transparent;border:1px solid var(--border);color:var(--text);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) :is(input,select,textarea).inp:focus{border-color:var(--sel-bd)}
+html:not(.desktop) :is(input,select,textarea,.btn):disabled{opacity:.5}
+html:not(.desktop) .inp::placeholder{color:rgba(255,255,255,.5);opacity:1}
+html:not(.desktop) .btn:not([data-action=unread-all],[aria-current],[aria-pressed=true],.on){background:transparent;border:1px solid var(--border);color:var(--ctl-c,var(--text));box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.desktop) .btn--danger{--ctl-c:var(--red-text)}
+html:not(.desktop) .top .tabs .tab.is-active{background:none;border-color:var(--text);box-shadow:none}
+/* 2.38.16 (điện thoại): tờ ghi cột thẳng hàng. Tiêu đề "TỜ GHI" + nhãn cột (SL, Giá) cùng lưới --cols với dòng đã ghi (bảng, colgroup) và dòng đang nhập (1 hàng: STT | tên | SL | giá | +). Tên dài cắt "…". "Trang x / y" chỉ hiện khi > 1 trang. Desktop: nhãn cột ẩn, tiêu đề đủ chữ. */
+.nh-q,.nh-m{display:none}
+html:not(.desktop){--cn:26px;--cq:80px;--cm:70px;--ca:44px}
+html:not(.desktop) :is(#retailNote,#nhapListBox){--cols:var(--cn) minmax(0,1fr) var(--cq) var(--cm) var(--ca)}
+html:not(.desktop) #remedyNote{--cols:var(--cn) minmax(0,1fr) var(--cq) var(--ca)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__head{display:grid;grid-template-columns:var(--cols);column-gap:0;align-items:center;padding:7px 0}
+html:not(.desktop) .note__head .nh-d{display:none}
+html:not(.desktop) .note__head>:first-child{grid-area:1/1/2/3;padding-left:5px}
+html:not(.desktop) .note__head>:is([id$=Pg],#nhapListCount){grid-area:1/2;justify-self:end;padding-right:5px}
+html:not(.desktop) .note__head :is(.nh-q,.nh-m){display:block;text-align:right;padding:0 5px;white-space:nowrap}
+html:not(.desktop) .note__head .nh-q{grid-area:1/3}
+html:not(.desktop) .note__head .nh-m{grid-area:1/4}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-num{width:var(--cn)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-qty{width:var(--cq)}
+html:not(.desktop) :is(#retailNote,#nhapListBox) col.cg-money{width:var(--cm)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) col.cg-act{width:var(--ca)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) :is(tbody:not(.pend),tfoot) td.b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) :is(tbody:not(.pend),tfoot) td:nth-child(3){text-align:right}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row{grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td{grid-row:1;min-width:0;padding:0 5px;align-self:center}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(1){grid-column:1;text-align:center;padding:0}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(2){grid-column:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(3){grid-column:3}
+html:not(.desktop) :is(#retailNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(4){grid-column:4}
+html:not(.desktop) :is(#retailNote,#nhapListBox) .note__pending tr.is-row>td:nth-child(5){grid-column:5;padding:0;justify-self:end}
+html:not(.desktop) #remedyNote .note__pending tr.is-row>td:nth-child(4){grid-column:4;padding:0;justify-self:end}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row>td::before{display:none}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tr.is-row input.inp{padding-left:6px;padding-right:6px}
+html:not(.desktop) #nhapListBox .nhap-pend__tot{display:none}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoot tr{grid-template-columns:var(--cols)}
+html:not(.desktop) :is(#retailNote,#remedyNote,#nhapListBox) .note__pending tfoot td{padding:4px 5px}
+/* 2.38.17 (điện thoại): gợi ý đơn vị dạng nhãn trên ô SL ẩn (không đè viền ô ở bố cục 1 hàng). 2.38.19: .top bám visualViewport khi bàn phím mở (--vv-top do JS đặt). */
+html:not(.desktop) .top{transform:translateY(var(--vv-top,0px))}
+html:not(.desktop) td .qty-hint.qty-hint--label{display:none}
+/* 2.38.20 (điện thoại): Bán lẻ/Nhập hàng — ô tên nằm trong dòng nhập (JS chuyển .sug vào ô tên; gợi ý rộng hết tờ ghi theo dòng), nút lưu lên hàng đầu thẻ; dòng gợi ý giá nhập ẩn (giá đã điền sẵn, gợi ý có giá tham khảo). */
+html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.card__bar-search{display:none}
+html:not(.desktop) :is(#retailBox,#nhapBox) .card__bar>.btn{order:3;flex:none;margin-left:auto}
+html:not(.desktop) #retailBox .card__bar>.btn{margin-left:0}
+html:not(.desktop) .note{overflow:visible}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row){position:relative}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty{display:grid;grid-template-columns:var(--cols);gap:0;padding:6px 0;align-items:center}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td{grid-row:1;padding:0 5px;height:auto;align-self:stretch}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td:nth-child(1){grid-column:1;padding:0;display:flex;align-items:center;justify-content:center}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td:nth-child(2){grid-column:2}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr.is-empty>td:nth-child(3){grid-column:3}
+html:not(.desktop) #remedyBody tr.is-empty>td:nth-child(4){grid-column:4;padding:0;justify-self:end}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(4){grid-column:4}
+html:not(.desktop) #retailBody tr.is-empty>td:nth-child(5){grid-column:5;padding:0;justify-self:end}
+html:not(.desktop) #remedyNote>.note__search{display:none} /* 2.38.28: ô tên chuyển vào dòng nhập (entryMount); đang cất thì ẩn */
+html:not(.desktop) #remedyNote .note__search{position:relative} /* 2.38.27: gợi ý Thuốc chén neo vào ô tìm (từ 2.38.11 không còn khối chứa nào nên danh sách rơi ra ngoài màn hình) */
+html:not(.desktop) #remedyBody .note__search{padding:0;border:0}
+html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) td>.sug{position:static}
+html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) td>.sug>.inp{width:100%;min-width:0;padding-left:6px;padding-right:6px}
+html:not(.desktop) :is(#retailBody,#remedyBody,#nhapPendingBody) .sug__list{left:0;right:0;top:100%}
+html:not(.desktop) :is(#retailBody,#remedyBody) tr[data-pid]>td:nth-child(2){cursor:pointer}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row)>td :is(.inp,.qty-host){display:block}
+html:not(.desktop) :is(#retailBody tr.is-empty,#retailBody tr.is-row,#remedyBody tr.is-empty,#remedyBody tr.is-row,#nhapPendingBody tr.is-row)>td>.btn{display:flex}
+html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child(n){padding-bottom:3px} /* 2.38.29: vạch chân dòng nhập cách đáy ô 3px (trước: chạm đáy 4 ô). STT lệch lên 1,5px nên bù padding-top 3px */
+html:not(.desktop) :is(#retailNote,#remedyNote) :is(#retailBody,#remedyBody) :is(tr.is-empty,tr.is-row)>td:nth-child(1){padding-top:3px}
+html:not(.desktop) #nhapPendingBody :is(#nhapPendName,.nhap-hint){display:none}
+/* 2.38.33: Lịch sử bán/nhập điện thoại — chấm chưa đọc + tên + "· N vị" cùng 1 dòng; tên dài cắt "…", "· N vị" luôn đủ. Dòng giao dịch lẻ (không có nút tên): cả ô cắt "…". Desktop không đổi. */
+html:not(.desktop) table.his tr.is-row>td:nth-child(2):not(.his-ord){overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html:not(.desktop) table.his td.his-ord{display:flex;align-items:center;white-space:nowrap}
+html:not(.desktop) table.his td.his-ord .linkbtn{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html:not(.desktop) table.his td.his-ord :is(.udot,.muted){flex:none}
+html:not(.desktop) table.his td.his-ord .muted{margin-left:4px}
+/* 2.38.22 (desktop): tối giản như điện thoại — nền trong suốt, chỉ viền var(--border); focus viền --sel-bd, vô hiệu mờ 50%; tab chọn/trang hiện tại giữ --sel-*. Đặt ngoài khối desktop (trần 20736 B). */
+html.desktop[data-bg]{--nb:transparent;--kb:var(--border)}
+html.desktop .tab,html.desktop #invBox .inv-chip:not(.on){--nb:transparent;--kb:var(--border)}
+html.desktop :is(.btn--green,.btn--primary,.btn--dark){color:var(--text);border-color:var(--border);background-color:transparent;box-shadow:none}
+html.desktop :is(.btn--green,.btn--primary,.btn--dark):hover{border-color:var(--sel-bd);background-color:transparent}
+html.desktop[data-bg] .inp{background-color:transparent;border-color:var(--border)}
+html.desktop[data-bg] .inp:focus{background-color:transparent;border-color:var(--sel-bd)}
+html.desktop :is(input,select,textarea,.btn):disabled{opacity:.5}
+html.desktop .stats{background:none;box-shadow:none}
+html.desktop .stats__c+.stats__c{border-color:var(--border)}
+html.desktop .bak-sec{background:none;border-color:var(--border)}
+html.desktop .pager .btn[aria-current]{color:var(--sel-fg);border-color:var(--sel-bd);background-color:var(--sel-bg)}
+/* 2.38.3: cửa sổ thấp (ngoài khối desktop vì trần 20736 B; sau các luật .tab/.sbf để thắng thứ tự); cuộn chỉ là đường lui khi vh < 480 */
+@media (max-height:640px){
+html.desktop{--sth:76px;--tab-h:26px}
+html.desktop .stats{margin-top:44px}
+html.desktop .tabs{margin-top:calc(50px + var(--sth));gap:3px;max-height:calc(100vh - 265px);overflow-y:auto;scrollbar-width:thin}
+html.desktop .stat__sub{display:none}
+html.desktop .stats__c{padding-top:2px;padding-bottom:2px}
+html.desktop .tab{padding-top:4px;padding-bottom:4px}
+html.desktop .sbf{gap:4px;margin-bottom:6px}
+}
+/* 2.20.13 điện thoại (html.pt: màn cảm ứng, hoặc ?pt=1; ?pt=0 tắt): CHỈ lớp nền/thẻ dùng chung token html[data-bg] của desktop; không đổi cỡ/bố cục. 2.23.0: phẳng, không kính */
+html.pt[data-bg]{--bg:#0A1433;--brand-text:var(--text);--green-text:var(--text);--blue-text:var(--text);--sh:none;--r:20px}
+html.pt .note{background:var(--glass);border-color:var(--kb)}
+html.pt .note__head{color:var(--muted)}
+html.pt .bgdots{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:0;margin-top:14px}
+html.pt .bgdots::before{content:"Nền";flex:0 0 100%;margin-bottom:4px;font-size:11px;color:var(--muted)}

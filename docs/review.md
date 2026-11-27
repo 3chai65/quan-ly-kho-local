@@ -16,6 +16,7 @@ Lỗi better-sqlite3: xóa `node_modules` rồi `npm ci` (không dùng `npm rebu
 - Một chủ dùng, chạy trong LAN sau Caddy HTTPS.
 - Mọi giao dịch (Nhập, Bán lẻ, Thuốc chén) luôn ghi ngày hôm nay.
 - Đồng bộ: `PUT /api/state` gửi toàn bộ snapshot, có `X-Base-Updated` (409/428) và `X-Op-Id`.
+- Client tách `src/index.html` + `src/style.css` + `src/app.js` (từ 2.40.5); `src/page.js` chỉ ghép lại thành `PAGE`. Soi JS client ở `src/app.js`, HTML/SVG ở `src/index.html`.
 - Dữ liệu trên máy lưu ở IndexedDB (rớt về localStorage nếu lỗi); gửi nén gzip; trần 32 MB sau giải nén.
 
 ## 5. Đã quyết KHÔNG làm (đừng báo lại trừ khi có bằng chứng mới)

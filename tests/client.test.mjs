@@ -5,10 +5,10 @@ import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { PAGE } from '../src/page.js';
+import { PAGE, APP } from '../src/page.js';
 
 /* ------------------------------------------------------------------ */
-/* Nạp phần JS chạy trên trình duyệt từ src/page.js vào sandbox vm.    */
+/* Nạp phần JS chạy trên trình duyệt từ src/app.js vào sandbox vm.     */
 /* ------------------------------------------------------------------ */
 
 function makeEl() {
@@ -27,10 +27,8 @@ function makeEl() {
 }
 
 function loadClient(extra = {}) {
-  const blocks = [...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)]
-    .map(m => m[1]);
-  const code = blocks.find(b => b.includes('var doc = document;'));
-  if (!code) throw new Error('Không tìm thấy script chính trong src/page.js');
+  const code = APP;
+  if (!code.includes('var doc = document;')) throw new Error('Không tìm thấy script chính trong src/app.js');
 
   let js = code
     .replace(/%%BOOT%%/g, 'null')

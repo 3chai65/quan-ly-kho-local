@@ -17,7 +17,7 @@ Windows (192.168.2.47) chỉ để phát triển; Docker/`G:\...\data` là bản
 - Một người dùng, nhiều thiết bị đã duyệt cùng dùng một kho: iPhone (PWA), PC/Mac qua
   trình duyệt, app desktop Tauri. Đồng bộ theo snapshot: bản gửi cũ bị máy chủ từ chối
   (409/428), không ghi đè âm thầm. Tab đang ẩn không tự tải (`document.hidden`).
-- Giao diện có hai chế độ trong cùng `src/page.js`: điện thoại, và desktop
+- Giao diện có hai chế độ trong cùng client `src/index.html` + `src/style.css` + `src/app.js`: điện thoại, và desktop
   (`html.desktop`, bật trong app Tauri: thanh bên dọc, khung 1280x720 phóng đều,
   viền mảnh trong suốt). Phần dành riêng cho desktop không đổi giao diện điện thoại.
 
@@ -50,7 +50,7 @@ Mac mini 192.168.2.46 (máy chủ)                 iPhone / PC / app Tauri (cùn
   bằng LaunchDaemon `vn.kho.server` (tự chạy lại, ghi log `~/kho/logs/`).
 - **Caddy (HTTPS)**: reverse proxy cổng 443, chứng chỉ `tls internal`; cấu hình chạy thật
   là `~/kho/Caddyfile.mac` (ngoài repo). `Caddyfile` trong repo là bản Docker cũ, không dùng.
-- **Client**: toàn bộ HTML + CSS + JS trong `src/page.js`, nhúng inline khi trả trang.
+- **Client**: HTML `src/index.html`, CSS `src/style.css`, JS `src/app.js`; `src/page.js` ghép lại lúc khởi động, nhúng inline khi trả trang.
 - **Dữ liệu**: `~/kho/data/app.db` (kho) và `auth.db` (thiết bị), ngoài repo.
 - **Truy cập**: mọi thiết bị vào `https://192.168.2.46`; trên Mac có thêm `https://localhost`.
 - **Sao lưu**: `~/kho/sao-luu.sh` (LaunchAgent `vn.kho.saoluu`, 19:00 hằng ngày) chép
@@ -71,7 +71,7 @@ Mac mini 192.168.2.46 (máy chủ)                 iPhone / PC / app Tauri (cùn
 | File/Thư mục | Vai trò |
 |---|---|
 | `server.js` | Server: API `/api/state`, đọc/ghi SQLite, lắp trang, tự động backup |
-| `src/page.js` | `PAGE`: toàn bộ HTML + CSS + JS client (nhúng inline), cả điện thoại lẫn desktop |
+| `src/page.js` | Ghép `src/index.html` + `src/style.css` + `src/app.js` thành `PAGE` (nhúng inline), cả điện thoại lẫn desktop |
 | `auth.js` | Xác thực thiết bị (cookie, mã mời, tối đa 2 thiết bị chủ) |
 | `pwa.js`, `src/icons/` | Manifest, icon, service worker passthrough (cài như ứng dụng) |
 | `tests/client.test.mjs` | Test logic client (tiền, tồn kho, đồng bộ) |

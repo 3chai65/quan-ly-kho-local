@@ -12,7 +12,7 @@
  *   GET  /api/backups -> danh sách file backup (không trả đường dẫn thư mục)
  *   POST /api/close-year -> chốt sổ năm âm lịch (chỉ owner; { cutoff, dryRun }), docs/chot-so.md
  *   GET  /api/close-archive[/<file>] -> danh sách / tải file lưu trữ phần đã chốt (chỉ owner)
- *   GET  /            -> HTML (src/page.js, CSP inline, không nonce)
+ *   GET  /            -> HTML (src/page.js ghép index.html + style.css + app.js, CSP inline, không nonce)
  *
  * Chỉ thiết bị đã được duyệt mới vào được (auth.js, cookie qlk_dev; danh sách thiết bị
  * nằm ở data/auth.db). Thiết bị chủ đầu tiên thiết lập bằng mã in trong log, qua /auth/setup.
@@ -231,7 +231,7 @@ function readState() {
   };
 }
 
-/* Cùng luật với inRange ở src/page.js: chỉ nhận number hữu hạn hoặc chuỗi số thập phân; loại boolean, '', ' ', null, mảng, '0x10'. */
+/* Cùng luật với inRange ở src/app.js: chỉ nhận number hữu hạn hoặc chuỗi số thập phân; loại boolean, '', ' ', null, mảng, '0x10'. */
 const DEC_STR_RE = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i;
 function isNumLike(value) {
   if (typeof value === 'number') return Number.isFinite(value);
@@ -257,7 +257,7 @@ function isRealDate(value) {
   return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
 }
 
-/* Khóa so tên (vị thuốc và đơn thuốc dùng chung; cùng luật với nameKey ở src/page.js): NFC, gọn khoảng trắng, không phân biệt hoa/thường. */
+/* Khóa so tên (vị thuốc và đơn thuốc dùng chung; cùng luật với nameKey ở src/app.js): NFC, gọn khoảng trắng, không phân biệt hoa/thường. */
 function normNameKey(name) {
   return String(name).normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 }

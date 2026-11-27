@@ -16,7 +16,7 @@ import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PAGE } from '../src/page.js';
+import { PAGE, APP, CSS, STYLE_MARK } from '../src/page.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SETUP_CODE = 'TESTCODE2026KHO';
@@ -91,10 +91,9 @@ async function getState() {
 }
 
 
-/* Nạp sanitize/parseBackup thật từ src/page.js để kiểm tương thích client-server. */
+/* Nạp sanitize/parseBackup thật từ src/app.js để kiểm tương thích client-server. */
 function loadClientStateFns() {
-  const blocks = [...PAGE.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
-  let js = blocks.find(b => b.includes('var doc = document;'))
+  let js = APP
     .replace(/%%BOOT%%/g, 'null').replace(/%%NEEDFETCH%%/g, 'false');
   const end = js.lastIndexOf('})();');
   js = js.slice(0, end) + '\nglobalThis.__compat = { sanitize: sanitize, parseBackup: parseBackup };\n})();';
@@ -155,6 +154,14 @@ const rmDir = (d) => fs.rmSync(d, { recursive: true, force: true, maxRetries: 10
 test.after(async () => {
   if (child) { child.kill(); await waitExit(child); }
   if (dataDir) rmDir(dataDir);
+});
+
+test('2.40.5 src/page.js ghép index.html + style.css + app.js: đủ khối, không sót chỗ đánh dấu', () => {
+  assert.equal(CSS.split(STYLE_MARK).length, 2, 'style.css có đúng một dấu tách khối style');
+  assert.ok(PAGE.includes('<script>\n' + APP + '</script>'), 'app.js nằm nguyên văn trong trang');
+  assert.ok(!/%%STYLE%%|%%APP%%|@@tach-style@@/.test(PAGE), 'không sót chỗ đánh dấu');
+  assert.equal(PAGE.split('<style>').length, 3);
+  assert.equal(PAGE.split('<script>').length, 3);
 });
 
 test('server.js: GET /api/state trả state rỗng ban đầu', async () => {

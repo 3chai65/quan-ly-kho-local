@@ -5,6 +5,12 @@ Mọi thay đổi đáng chú ý của dự án **Quản Lý Kho** được ghi 
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/) và
 tuân theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.40.5] - 2026-11-27
+
+### Đổi (việc AR, không đổi hành vi)
+- Tách `src/page.js` thành `src/index.html` (khung, gồm script khởi động có %%BOOT%%), `src/style.css` (hai khối style, dấu `/*@@tach-style@@*/` giữa), `src/app.js` (JS client). `src/page.js` nay chỉ ghép lại lúc khởi động (xuất `PAGE`, `CSS`, `APP`); trang trả về trùng từng byte bản 2.40.4 (đã so bằng mẫu tạm, xóa sau khi xanh).
+- `lint:client`, `tools/kiem-cu-phap.mjs` chạy thẳng trên `src/app.js`; test client/server nạp JS từ `APP`. Thêm test cấu trúc ghép (đủ khối, không sót dấu).
+
 ## [2.40.4] - 2026-11-27
 
 ### Sửa (review f55a679, việc AQ)
